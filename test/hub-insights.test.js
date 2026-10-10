@@ -23,6 +23,7 @@ const {
   metadataFilterOptions, normalizeMetadataFilters, fitsMetadataFilters,
 } = require('../public/js/draw-pool');
 const { PRIOR_DEFAULT } = require('../public/js/vote-score');
+const { newestSessionsFirst } = require('../public/js/session-order');
 
 const deps = {
   outcomeOf: sessionOutcome,
@@ -34,6 +35,7 @@ const deps = {
   filterOptions: metadataFilterOptions,
   normalizeMetadata: normalizeMetadataFilters,
   fitsMetadata: fitsMetadataFilters,
+  newestFirst: newestSessionsFirst,
 };
 
 // A local timestamp, so every assertion below reads in the same calendar the

@@ -135,6 +135,21 @@ reason — they are the frontend's own two screens agreeing with each other — 
 the DOM that renders the controls deliberately did **not** join this file (see
 `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §4).
 
+**#1627 added `gamePlaytime` and `PLAYTIME_OVERRIDE_MAX`.** The resolver is the
+logic half: a round's hand-set playing time beats BGG's pair, and the filter
+clause, the shelf options, the vote-link ballot (`lib/routes/vote-link.js`) and
+every client surface read through it — a reader that skipped it would filter on
+one number while the page shows another. The ceiling is the value half: the
+route's zod bound and the editor's input.
+
+**#743 gave the ladders a third reader, `lib/quiz-generate.js`**: the weekly quiz
+asks for a game's weight and playing time in bands cut from `WEIGHT_CHOICES` and
+`PLAYTIME_CHOICES`, so a quiz answer names the same bands the Regal filter and
+the draw preview use. A hand-copied ladder there would let the quiz call „2–3" a
+band the filter has since split, with nothing red. The same file also requires
+`creditedDesigners` (the fifteenth entry), so BGG's „(Uncredited)" can never be
+a designer the quiz asks about or offers.
+
 It gained two more exports with owned expansions (#653), each for a different
 half of this rule. **`requiredExpansions`** is the logic half again: the results
 screen's „Braucht Erweiterung: …" line has to name the same set that made the
@@ -447,7 +462,7 @@ would let the member page and the profile state different numbers for one person
 
 It carries the trap that this direction of sharing creates, and it is worth
 stating because the obvious fix is forbidden here: `memberStats` reads four
-siblings off the shared global scope (`sessionEnding`, `sessionPartyCount`,
+siblings off the shared global scope (`sessionEnding`, `isContestSession`,
 `sessionPartyGroups`, `isNameableGame`),
 and **a public/js file cannot require() a sibling**. So they are **injected** as a
 `deps` object, the shape recap.js and period-recap.js already use,
@@ -489,6 +504,11 @@ that is its own shape, so there is no second regex to drift out of sync with the
 route table. Generalise that rather than the constant: **where a client
 normalises a value, share the normaliser and validate by idempotence**, instead
 of sharing the value and writing a pattern for it at the far end.
+
+**#1515 added `redactCapabilityPath`**, the same idea for the feedback form,
+which keeps a real path (the operator wants the screen) but must not store a
+vote or invite link's live token: `core.js` applies it to the link it opens and
+`lib/routes/contact.js` again before storing, since the form is public.
 
 Note what deliberately did **not** join it: `uaEngine` lives in
 `lib/observability.js`, because the engine is derived **server-side** from the
@@ -639,6 +659,34 @@ retired still counts as someone's favourite. It was required from
 substring, and the word „recap" already stood in unrelated prose here, so the
 missing entry stayed green (`.claude/rules/source-scanning-guards-enumerate-shapes.md`).
 The test now matches entry headings of this shape only.
+
+**The twenty-sixth is `public/js/played-on.js`** (#1616): the day a session
+was played when it is not today. The client turns a picked calendar day into an
+instant (`playedOnInstant`, 20:00 LOCAL, capped at now) and offers
+`PLAYED_ON_MIN` as the date input's floor; `lib/routes/sessions.js` validates
+the submitted instant with `normalizePlayedOn` from the same file. The plain
+offer/validate shape — a drifted server floor or skew would 400 a date the
+picker offered — with one property the others lack: the conversion that makes
+the stored value correct runs where the ZONE is known, which is only the
+client, so the server validates a shape and a range and never converts. Its
+`toISOString` normalisation is load-bearing beyond tidiness: both backends
+order a round's sessions by the raw `createdAt` string (`public/js/session-order.js`),
+and an offset-carrying stamp would sort out of place among `Z` ones.
+
+**The twenty-seventh is `public/js/session-order.js`** (#1616, moved from `lib/`
+by #1622): the two orders a round's sessions are read in. `sortSessionsByDate`
+is what both repo backends apply when they assemble a round (chronological,
+insertion order on a tie); `newestSessionsFirst` is what every newest-first
+reader uses — the JSON backend's `lastPlayed`/`openSessions` summaries and a
+dozen frontend lists. It is logic rather than a value, and it earns the shape
+because the failure is a plausible wrong ORDER: a descending comparator written
+inline keeps tied stamps in their ascending insertion order, so two sessions
+logged for one past day (both 20:00 local) listed the first-entered one on top,
+with nothing red anywhere. Postgres cannot require it and restates the tiebreak
+as `ORDER BY createdAt DESC NULLS LAST, seq DESC` (a bare DESC puts an undated
+row first); the repo contract pins both backends against a tied and an undated
+fixture. `hub-insights.js` takes it injected as
+`deps.newestFirst`, the shape that file's header explains.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

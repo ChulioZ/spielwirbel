@@ -40,6 +40,9 @@ function ctxOf(cells, caps) {
   const ctx = {
     cell: (pid, gid) => cells[pid][gid],
     capOf: (gid) => caps[gid],
+    // One seat per party: these cases are about the scoring tiers, not about
+    // own-seat teams (#1610), which test/team-seats-split.test.js covers.
+    seatsAt: (tb) => tb.partyIds.length,
     aggregate: (tb) => {
       let violations = 0;
       let sum = 0;

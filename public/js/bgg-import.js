@@ -77,7 +77,7 @@ async function showBggImport(round, status = 'own') {
     const form = h(`<form class="bgg-import__link">
         <div class="field">
           <label for="bggName">${esc(t('bggImport.handleLabel'))}</label>
-          <input id="bggName" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" />
+          <input id="bggName" class="input" autocomplete="off" spellcheck="false" value="${esc(current || '')}" autocorrect="off" />
           <p class="field__hint muted">${esc(t('bggImport.handleHint'))}</p>
         </div>
         <div class="toolbar sheet__actions">

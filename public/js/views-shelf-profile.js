@@ -24,6 +24,7 @@
 // prints, so the ranked lists can never disagree with the shelf (#1556).
 const shelfProfileDeps = (statsByGame) => ({
   fitsPlayerCount,
+  gamePlaytime,
   creditedDesigners,
   scoreOf: (g) => { const st = statsByGame[g.id]; return st ? st.score : null; },
 });

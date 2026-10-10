@@ -8,7 +8,7 @@
    to find both.
 
    Pure and dependency-free: `deps` carries `sessionEnding` (session-outcome.js)
-   and `sessionPartyCount` (session-people.js), injected — the memberStats shape,
+   and `isContestSession` (session-people.js), injected — the memberStats shape,
    since a public/js file cannot require() a sibling. The browser passes the
    shared-scope functions; the spec passes the required ones. */
 
@@ -38,10 +38,13 @@
      which is breaking it by another name. A night a guest won TOGETHER with
      members is not skipped: the guest is dropped and it is a shared win for
      the members (#1421), exactly as a tie between members is;
-   - a SOLO one (#895): one party wins by definition, so twenty logged solo
-     plays would read as a twenty-night streak;
-   - one recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038): not a
-     contest. „Verloren" is NOT skipped — the table played to win and did not,
+   - one with a single PERSON at the table (#895): one person wins by
+     definition, so twenty logged solo plays would read as a twenty-night
+     streak. A whole-table TEAM is not skipped (#1624) — its shared win extends
+     the streak for every winner, its shared „Verloren" breaks it;
+   - one recorded as „Kein Sieger" or „Fortsetzung folgt" (#1038).
+   The last two are `isContestSession`, the rule the win rate and the contest
+   badges read too. „Verloren" is NOT skipped — the table played to win and did not,
      which breaks a streak exactly as somebody else's win does (no winner is
      left among the candidates). An UNRECORDED night also still breaks one; the
      fix for that is recording it.
@@ -57,13 +60,8 @@ function winStreak(round, sessions, deps) {
     return (s.winnerIds || []).filter((wid) => !gids.has(wid));
   };
   const wonOnlyByGuests = (s) => (s.winnerIds || []).length > 0 && memberWinners(s).length === 0;
-  const isSolo = (s) => deps.sessionPartyCount(round, s) === 1;
-  const notAContest = (s) => {
-    const e = deps.sessionEnding(s);
-    return e === 'noWinner' || e === 'ongoing';
-  };
   const chrono = [...sessions]
-    .filter((s) => !wonOnlyByGuests(s) && !isSolo(s) && !notAContest(s))
+    .filter((s) => !wonOnlyByGuests(s) && deps.isContestSession(round, s, deps.sessionEnding))
     .sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
   let holders = null;
   let n = 0;

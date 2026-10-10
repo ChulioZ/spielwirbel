@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-10-04
+**Stand:** 2026-10-09
 
 ## Eingang & Identitätsprüfung
 
@@ -38,7 +38,8 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   für das Weglassen — ein neues Feld kann also nicht still herausfallen.
 - Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
-  Postfach (Inbox), Einladungen und Runden-Freigaben (Grants)** — genau die
+  Postfach (Inbox), Einladungen, Runden-Freigaben (Grants), — seit #680 —
+  Preisalarme und — seit #743 — die Antworten im Wochenquiz** — genau die
   Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
   Löschung decken damit dieselben Datensätze ab — mit **einer bewussten
   Ausnahme**: die **Abstimmungslinks** (#652, VVT Zeile 19) werden bei der
@@ -49,6 +50,9 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   weitergereicht werden kann (`exportAccountData` in `lib/repo/json.js` bzw.
   `postgres.js` begründet das im Code). Auf eine Anfrage, die ausdrücklich nach
   den Links fragt, genügt die Auskunft über ihre Anzahl und Ablaufzeit.
+  Dasselbe gilt aus demselben Grund für die **Einladungslinks** einer Runde
+  (#1515, VVT Zeile 13): gelöscht mit dem Konto, nicht exportiert — ein
+  exportierter Link wäre eine funktionierende Einladung in die Runden des Kontos.
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
 - **Was der Export NICHT abdeckt — von Hand durchsuchen.** Drei Bestände auf

@@ -422,7 +422,7 @@ function initFooter() {
         // load-order trap (.claude/rules/frontend-script-load-order.md).
         setContactAvailable(true);
         fb.addEventListener('click', () => {
-          const q = new URLSearchParams({ category: 'feedback', path: location.pathname });
+          const q = new URLSearchParams({ category: 'feedback', path: redactCapabilityPath(location.pathname) });
           // Open in a new tab (#390) so the SPA stays loaded behind the contact
           // page; noopener prevents a window.opener leak.
           window.open('/kontakt.html?' + q.toString(), '_blank', 'noopener');

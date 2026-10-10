@@ -140,7 +140,7 @@ before assuming you have them all:
   `.claude/rules/expansions-widen-by-union.md` before touching it. That collapses two of the frontend sites below
   and is why this bullet no longer names a filter that a `grep retired` in `lib/`
   would find. The **player-count arithmetic** still lives per caller and still has
-  a team term in it since #575 (`.claude/rules/session-teams.md` §2) — only the
+  a team term in it since #575, seat-weighted since #1610 (`.claude/rules/session-teams.md` §2) — only the
   *range check* it feeds is shared.
 - `lib/repo/{json,postgres}.js` `createRound` import filter (Postgres needs one
   `whereRaw` per state, the JSON one a `&&` per state).

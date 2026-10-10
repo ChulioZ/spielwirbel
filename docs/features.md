@@ -74,7 +74,12 @@ What the app does, in detail. For a short overview see the
   them as their own section, so a voter facing an unfamiliar game sees more than
   a cover. Playing time is shown as a **range** wherever the bounds differ
   (`20–600 Min.`), because that spread is what tells you a game is a campaign
-  rather than a filler. BGG's **community rating** is shown on the detail page
+  rather than a filler. A round can **correct the playing time by hand** on the
+  game's page (tap the pill) when BGG's figure is not its own — a long setup, a
+  variant, a slow table — or set one for a game BGG knows nothing about; the
+  duration filter, the draw, both voting screens and the Regal then all use the
+  round's number, the page notes „eigene Angabe · BGG: …" beside it, and one tap
+  goes back to BGG's value. A later BGG refresh never overwrites the correction. BGG's **community rating** is shown on the detail page
   only, and never on either voting screen — a score next to a ballot anchors the
   vote. BGG's *rank* and *geek rating* are not imported at all, and neither is
   the game's **description** — publisher blurbs turned out to put readers off
@@ -154,13 +159,50 @@ What the app does, in detail. For a short overview see the
   current or shown past seven days. A lookup that settles on "nobody stocks
   this" says so instead of showing nothing. Which **edition** is priced follows
   the cover the round picked, so everyone in it sees one price for one wish;
-  where it ships to and in what currency still follows each reader. Read-only and
-  server-side: no alerts, no price history, and no affiliate links of any kind.
+  where it ships to and in what currency still follows each reader. No price
+  history and no affiliate links of any kind.
+- **Price alerts** – *accounts mode, where prices are on* (issue #680). Under a
+  wished game's price, „Preis beobachten" sets an alert: tell me when this game
+  costs at most X. The alert belongs to the **account and the game**, not to the
+  wish — it shows on every wished copy of that game in any round, and it stays
+  until its owner ends it. The account menu's **Preisalarme** lists every alert
+  (threshold, the price last seen, shipping region and edition), lets you change
+  or end one, and adds one by searching a game name. Prices are checked once a
+  day; a drop to the threshold or below puts a message in the in-app inbox —
+  never an e-mail — saying the price and when it was seen. Each dip is reported
+  once, a further drop again, and a price rising back above the threshold arms
+  the alert for the next dip. Up to 50 alerts per account
+  (`MAX_PRICE_WATCHES_PER_USER`).
+- **Weekly quiz** – *accounts mode, where the operator switched it on* (issue
+  #743, `QUIZ_ENABLED`). Five questions a week about well-known board games,
+  built from the BGG corpus: complexity, the box's player range and playing time,
+  year, category, mechanic, designer, and a ranking duel between four games.
+  Each answer is checked by the server the moment it is given and cannot be
+  changed afterwards; the browser never holds the answer key of an unanswered
+  question. **Wochenquiz** in the account menu and a home tile lead to `/quiz`,
+  which also shows the week's leaderboard among the account's confirmed friends.
+  A new round opens every Monday (Berlin time) and puts an inbox item — never an
+  e-mail — in front of everyone who played before. The leaderboard leaves out a
+  friend who hid their numbers (`statsVisible`). A guest demo cannot play — the
+  round is the same for everyone and every answer reveals its key — so the demo
+  and the logged-out landing page show a **teaser** instead: one real question
+  with its choices and, in place of an answer, the way to register or sign in.
+  A public **statistics and archive** page (`/quiz/archiv`, also logged out)
+  publishes **percentages only** — never a player count, nor any absolute number
+  one could be read off. The running week shows the share of answers right,
+  overall and per question, its trickiest question so far and when the next
+  round opens — never the choices or the key while it can still be played. Every
+  closed week of the last year shows its questions, the right answer and each
+  choice's share of the picks. No names; the totals are taken when a week closes
+  and kept with the round for 52 weeks, the answers themselves only eight.
+  Category, mechanic and designer
+  names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch
   gefallen"** — games the round does *not* own, ranked against its own taste.
   The profile comes from the three things BoardGameGeek cannot know: which games
   this group actually rated well, which ones it keeps putting on the table, and
-  how many people really sit at their table (parties, so a team counts once).
+  how many people really sit at their table (seats, so a team sharing one hand
+  counts once and a cooperative table counts everyone).
   That middle one matters most to a round that picks its games directly instead
   of voting: those evenings leave no ratings behind, so without counting the
   plays the app would know nothing about them. A game by a designer whose
@@ -212,8 +254,9 @@ What the app does, in detail. For a short overview see the
   game keeps counting everywhere. Deleting one game permanently requires it to be
   off the shelf first — archived or wished-for — so nothing in the active
   collection can be erased by a single stray tap.
-  A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode that
-  turns the covers into a selection: it keeps the search, the tag chips, the
+  A shelf can also be **tidied in bulk**. The Regal has a „Auswählen" mode (on a phone
+  it sits in the toolbar's „…" menu, beside the BGG import) that turns the covers
+  into a selection: it keeps the search, the tag chips, the
   metadata filters and the sort working, so „Alle auswählen" means everything you
   have narrowed to, and the picked games can be retired, have their **owners set**
   or their **tags changed** in one step — or be deleted outright. Setting owners replaces whatever each game held, so picking
@@ -455,9 +498,11 @@ What the app does, in detail. For a short overview see the
     a deliberate trade: weighting a win by the size of the field it beat is
     fairer and was how the standings worked for a while, but it needed a
     paragraph to explain and left everyone but the leader on a negative number,
-    which a leaderboard cannot afford. The winning-streak tile still skips solo
-    evenings, for the reason it already skipped nights only a guest won: an evening
-    that was not a contest can neither break nor extend a streak.
+    which a leaderboard cannot afford. The winning-streak tile still skips
+    evenings with only one person at the table, for the reason it already skipped
+    nights only a guest won: an evening that was not a contest can neither break
+    nor extend a streak. A table that played as one team against the game is a
+    contest (issue #1624): its shared win extends the streak, its loss breaks it.
     A shared win is a full win for every winner, and it continues the streak
     for each of them (issue #1421); two who keep winning together hold it
     jointly, and the tile names both. A win shared with a guest counts the
@@ -573,10 +618,18 @@ What the app does, in detail. For a short overview see the
   exactly the same five faces a member does.
 - **Teams** – two or more of the people joining a session — members and guests
   in any mix — can be grouped into a team that plays and wins together, for that
-  session only. A team counts as **one player** when the draw matches a game's
-  player range, so six people in three pairs can draw a three-player game, and
-  the winner picker offers the team as a single chip: recording it credits every
-  member individually, so the standings and the history read as before.
+  session only. Each team says whether its people have **their own seats** (the
+  default — a cooperative table, or the pairs in Tichu, count everyone) or
+  **share one seat** (one hand between them, so the team counts as one player).
+  The draw matches a game's player range against those seats, so four people
+  cooperating draw a four-player game while six people in three pairs sharing a
+  hand can draw a three-player one; the recommender reads the same seat count
+  and a multi-table split sizes its tables by it. The winner picker offers the
+  team as a single chip: recording it credits every member individually, so the
+  standings and the history read as before. A table that played as one team
+  against the game counts as a contest for the win rate, the streak and the
+  badges (issue #1624): a shared win raises everyone's rate and a shared
+  „Verloren" lowers it, exactly as the same evening recorded without a team.
 - **Removing a person** – someone ticked by mistake, or who left before the
   game, can be taken out of a session from the voting lobby or the results
   screen, even after the game is finished („Person entfernen"). They stop
@@ -588,6 +641,16 @@ What the app does, in detail. For a short overview see the
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on
   the results screen with that game chosen.
+  The sheet also asks **Wann?** (when): left on today it is the ordinary direct
+  play; a past day **logs** the session instead — it is created already played
+  on that day, and lands on its results with the winner picker open.
+- **Session nachtragen** (log a past session) – the Chronik offers it for an
+  evening played before the group found the app, or entered a day late: pick a
+  game from the shelf, then the same sheet, dated yesterday. A logged session
+  counts in the Chronik, the recaps, Pokale and the badges on its own day, and is
+  not announced to friends (it is bookkeeping, not news).
+- **Datum ändern** (change date) – any played session can be moved to another
+  day from its results screen; the session's log records who changed it.
 - **Finale & results** – votes stay sealed until everyone is done, then a
   little show reveals the results: the ranked rows fill in as a race, shortest
   first, and the game that won the vote is last to finish — rows sharing first
@@ -607,7 +670,8 @@ What the app does, in detail. For a short overview see the
   campaign session that is over for tonight while the campaign is not). A winner
   and an ending are mutually exclusive, every screen that lists a finished
   session says the ending where there is one, and the statistics treat a loss as
-  a contested night everybody lost while the other two count as non-competitive.
+  a contested night everybody lost — whether or not the table was recorded as
+  one team — while the other two count as non-competitive.
   Or
   cancel the session if nothing appealed. Sessions can be deleted later, and a
   single game can be removed from a session's results.
@@ -653,8 +717,8 @@ What the app does, in detail. For a short overview see the
   and every other per-session number are deliberately **not** shrunk: there `n`
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
-- **Colour marker** – each round carries **one colour**, picked under
-  Einstellungen → Farbmarker and shown to everyone in the round: on the lobby
+- **Colour marker** – each round carries **one colour**, picked right on
+  Einstellungen and shown to everyone in the round: on the lobby
   tile, beside the round's name in the top bar, on the session screens and along
   the head of the recap card a group shares. It is **not** a design — the colour
   is stored as one of eight *slots*, and each design paints those slots in its
@@ -789,6 +853,18 @@ What the app does, in detail. For a short overview see the
   that person's member page; a grantee can always leave a round themselves.
   Whatever the UI offers, the server decides: an action a role may not perform
   is refused even if the request is made by hand.
+- **Invite links** – *accounts mode only* (issue #1515). In the same
+  „Einladen" sheet the owner can also create a **link** and share it anywhere
+  (the group chat, a message). Whoever opens it and is signed in sees „Runde X
+  beitreten?" and joins with one tap as **Mitspielen** (player) — any account
+  but a guest demo, which cannot join a real round; a logged-out
+  visitor is told what the link is and sent to sign in, landing back on it
+  afterwards. The owner fixes the seat when creating the link, exactly as for an
+  invitation: a **fresh seat** (the link stays usable for everyone who opens it)
+  or one **unclaimed seat** (the link works once). There is at most one link per
+  seat choice — a new one replaces the old — and every link expires after
+  **7 days**; the sheet lists the live ones to share again or revoke. The
+  round's member quota bounds how many people a fresh-seat link can bring in.
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

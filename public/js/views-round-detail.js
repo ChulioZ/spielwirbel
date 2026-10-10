@@ -288,6 +288,7 @@ async function showGameDetail(rid, gameId) {
     rid, round, game, updateGame, refresh: () => showGameDetail(rid, gameId),
   };
   const editPlayers = (anchor) => openPlayersPopover(editorCtx, anchor);
+  const editPlaytime = (anchor) => openPlaytimePopover(editorCtx, anchor);
   const editOwners = (anchor) => openOwnersPopover(editorCtx, anchor);
   const editTags = (anchor) => openTagsPopover(editorCtx, anchor);
   const editImage = (anchor) => openImagePopover(editorCtx, anchor);
@@ -308,7 +309,7 @@ async function showGameDetail(rid, gameId) {
 
   // Activate the title → inline input; Enter/blur saves, Escape cancels.
   function startTitleEdit(spanEl) {
-    const input = h('<input class="input gd-title-input" />');
+    const input = h('<input class="input gd-title-input" autocorrect="off" spellcheck="false" />');
     input.value = game.title;
     spanEl.replaceWith(input);
     input.focus();
@@ -339,9 +340,8 @@ async function showGameDetail(rid, gameId) {
 
   // Related sessions (those that drew this game) – newest first. Computed up
   // here, not at its own section below, because `sparse` needs it.
-  const related = round.sessions
-    .filter((s) => s.gameIds.includes(gameId))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const related = newestSessionsFirst(round.sessions
+    .filter((s) => s.gameIds.includes(gameId)));
 
   // A game nobody has touched yet: no cover, no rating, no session, no tags
   // (#256). Rendering the normal layout for it produced a page of near-empty
@@ -638,7 +638,7 @@ async function showGameDetail(rid, gameId) {
       if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
-      factsNode = swap(factsNode, gameGlanceFacts(game));
+      factsNode = swap(factsNode, gameGlanceFacts(game, { editPlaytime, offerEmpty: !sparse && !game.wish }));
       restNode = swap(restNode, gameInfoRest(game));
       ensureMore();
     };
@@ -716,6 +716,9 @@ async function showGameDetail(rid, gameId) {
   if (game.wish && game.source && game.source.externalId) {
     const priceAnchor = h('<div></div>');
     tale.appendChild(priceAnchor);
+    // The price watch (#680) sits under the box, once a LIVE price is on screen.
+    const watchAnchor = h('<div></div>');
+    tale.appendChild(watchAnchor);
     // Stale-while-revalidate (#707): two requests race. `stored=1` answers from
     // the last-known-price store instantly; the full request may block on the
     // upstream for seconds (every in-memory cache miss — hourly, and after each
@@ -737,7 +740,16 @@ async function showGameDetail(rid, gameId) {
     api('GET', `/api/rounds/${rid}/games/${gameId}/prices?${q}`)
       .then((p) => {
         liveSettled = true;
-        if (p && p.available) return swap(renderPriceSection(p));
+        if (p && p.available) {
+          swap(renderPriceSection(p));
+          // Not returned: a failing control must never reach the .catch below,
+          // which would swap this live price back to the stored one.
+          renderPriceWatchControl(watchAnchor, game, p).catch(() => watchAnchor.remove());
+          return undefined;
+        }
+        // No live price: an existing watch still shows (it belongs on every
+        // wished copy of its game); only a NEW one needs today's price.
+        renderPriceWatchControl(watchAnchor, game, null).catch(() => watchAnchor.remove());
         // A settled "nobody stocks this" is stated, not blanked — also when no
         // stored price was on screen first (operator decision on #707). Any
         // other unavailable answer has nothing honest to show.
@@ -746,6 +758,7 @@ async function showGameDetail(rid, gameId) {
       })
       .catch(() => {
         liveSettled = true;
+        renderPriceWatchControl(watchAnchor, game, null).catch(() => watchAnchor.remove());
         // Our own server became unreachable mid-view. A stored price already on
         // screen stays — re-rendered without the "checking…" note, which would
         // otherwise claim a check that is no longer running.

@@ -165,3 +165,41 @@ test('invariants: at most one seat per user; decline is silent; only the address
   await request(app).post(`/api/account/invitations/${item.payload.invitationId}/accept`).set(auth(invitee.token));
   assert.equal((await send(owner, { roundId: round.id, username: invitee.username })).body.error, 'already_member');
 });
+
+test('accepting into a fresh seat respects the member quota, and the invitation stays open (#1604)', async (t) => {
+  const prev = process.env.MAX_MEMBERS_PER_ROUND;
+  t.after(() => { if (prev === undefined) delete process.env.MAX_MEMBERS_PER_ROUND; else process.env.MAX_MEMBERS_PER_ROUND = prev; });
+  const owner = await makeAccount('inv-quota-owner@example.com');
+  const invitee = await makeAccount('inv-quota-invitee@example.com');
+  const round = await makeRound(owner, ['Anna', 'Bob']);
+  const sent = await send(owner, { roundId: round.id, username: invitee.username });
+  process.env.MAX_MEMBERS_PER_ROUND = '2';
+  const res = await request(app).post(`/api/account/invitations/${sent.body.invitation.id}/accept`).set(auth(invitee.token));
+  assert.equal(res.status, 403);
+  assert.equal(res.body.error, 'quota_members');
+  assert.equal((await repo.getInvitation(sent.body.invitation.id)).status, 'pending', 'it works once a seat is freed');
+  assert.equal((await repo.listGrantsForUser(invitee.user.id)).length, 0);
+  delete process.env.MAX_MEMBERS_PER_ROUND;
+  assert.equal((await request(app).post(`/api/account/invitations/${sent.body.invitation.id}/accept`).set(auth(invitee.token))).status, 200);
+});
+
+test('a suspended account can neither send nor accept; a fresh-seat invite to a full round is refused at send (#1604)', async (t) => {
+  const prev = process.env.MAX_MEMBERS_PER_ROUND;
+  t.after(() => { if (prev === undefined) delete process.env.MAX_MEMBERS_PER_ROUND; else process.env.MAX_MEMBERS_PER_ROUND = prev; });
+  const owner = await makeAccount('inv-susp-owner@example.com');
+  const invitee = await makeAccount('inv-susp-invitee@example.com');
+  const round = await makeRound(owner, ['Anna']);
+  const sent = await send(owner, { roundId: round.id, username: invitee.username });
+  assert.equal(sent.status, 201);
+  await repo.updateUser(invitee.user.id, { disabled: true });
+  const accept = await request(app).post(`/api/account/invitations/${sent.body.invitation.id}/accept`).set(auth(invitee.token));
+  assert.equal(accept.status, 403);
+  assert.equal(accept.body.error, 'account_disabled');
+  assert.equal((await repo.listGrantsForUser(invitee.user.id)).length, 0);
+  await repo.updateUser(owner.user.id, { disabled: true });
+  assert.equal((await send(owner, { roundId: round.id, username: 'someone' })).body.error, 'account_disabled');
+  await repo.updateUser(owner.user.id, { disabled: false });
+  process.env.MAX_MEMBERS_PER_ROUND = '1';
+  const third = await makeAccount('inv-susp-third@example.com');
+  assert.equal((await send(owner, { roundId: round.id, username: third.username })).body.error, 'quota_members');
+});

@@ -186,7 +186,7 @@ function openTagsPopover(ctx, anchor) {
     // without this the field is an unnamed text input to a screen reader.
     // The Tags screen's own copy of this control already carries it.
     const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
-            aria-label="${esc(t('tags.addPlaceholder'))}" />`);
+            aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
     const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
     // Icon picker for the inline "create new tag" (#255). The trigger joins
     // the input row and the grid opens below it (#293) — an always-open grid
@@ -575,7 +575,7 @@ function openExpansionEditor(ctx, anchor) {
           if (rows.length > EXPANSION_FILTER_FROM && !filterEl) {
             filterEl = h(`<input class="input exp-filter" type="search" autocomplete="off"
                  placeholder="${esc(t('detail.expansionFilterPlaceholder'))}"
-                 aria-label="${esc(t('detail.expansionFilterPlaceholder'))}" />`);
+                 aria-label="${esc(t('detail.expansionFilterPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
             filterEl.addEventListener('input', () => { filterText = filterEl.value; paintList(); });
             el.insertBefore(filterEl, listEl);
           }
@@ -595,7 +595,7 @@ function openExpansionEditor(ctx, anchor) {
     const own = h(`<details class="exp-own">
          <summary class="exp-own__head">${esc(t('detail.expansionOwnTitle'))}</summary>
          <div class="exp-own__body">
-           <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" />
+           <input class="input exp-own__name" maxlength="${EXPANSION_TITLE_MAX}" placeholder="${esc(t('detail.expansionNamePlaceholder'))}" autocorrect="off" spellcheck="false" />
            <div class="pp-row exp-own__range" hidden></div>
            <div class="muted popover__hint">${esc(t('detail.expansionRangeHint'))}</div>
          </div>

@@ -110,9 +110,24 @@ or an OR into the tenant policy.
 4. **`req.userId` gates the whole thing.** Legacy mode (accounts off) and
    unauthenticated callers have no `req.userId`, so `resolveRoundGrant` is a
    no-op and a password-only (accounts-off) instance is byte-for-byte unchanged. The
-   feature is also **inert until a grant exists**, and one route creates them:
+   feature is also **inert until a grant exists**, and two routes create them:
    invitation accept (`POST /api/account/invitations/:id/accept`,
-   `lib/routes/invitations.js`) seats the invitee and then calls `createGrant`.
+   `lib/routes/invitations.js`) and, since #1515, joining through an invite link
+   (`POST /api/account/join`, `lib/routes/join.js`). Both go through ONE repo
+   write, `joinRound` (#1604): claim, seat and grant in a single transaction
+   under the round's row lock, or none of them — as separate writes a failure
+   or a concurrent request between them left a claimed invitation without a
+   seat, or a grant on a seat deleted in between. A third producer must use it
+   too, and must refuse the owner's own account itself — an owner who created
+   the round without a seat has none for a seat check to find.
+
+5. **A GLOBAL store keyed by `:rid` must be reached through `req.repo` first.**
+   No grant on a round means "owner" to the role gate — of the caller's OWN
+   tenant. A handler that goes straight to a global store (`round_grants`,
+   `round_invite_links`) with `req.params.rid` therefore acts on any tenant's
+   round whose id the caller knows. `req.repo.getRoundMeta(rid)` is the check:
+   tenant-scoped, it 404s a foreign round. #1515's revoke shipped without it
+   (caught by CodeRabbit); `test/round-invite-links.test.js` pins it.
 
 ## Verifying a change here
 

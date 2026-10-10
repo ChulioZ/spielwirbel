@@ -71,7 +71,7 @@ const CLIENT_ERROR_MAX_PER_LOAD = 5;
 // The three lists mirror resolveRoute() in public/js/router.js. They are
 // ALLOWLISTS — anything off them folds to '/other'.
 const CLIENT_ERROR_SCREENS = [
-  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password',
+  'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password', 'preisalarme', 'quiz',
 ];
 const CLIENT_ERROR_ROUND_TABS = [
   'start', 'regal', 'chronik', 'pokale', 'retired', 'completed', 'wishlist',
@@ -84,7 +84,9 @@ function clientErrorPathShape(pathname) {
   if (!parts.length) return '/';
   if (parts.length === 1 && CLIENT_ERROR_SCREENS.indexOf(parts[0]) !== -1) return '/' + parts[0];
   if (parts[0] === 'u' && parts.length === 2) return '/u/:username';
+  if (parts[0] === 'quiz' && parts.length === 2 && parts[1] === 'archiv') return '/quiz/archiv';
   if (parts[0] === 'vote' && parts.length >= 2) return '/vote/:token';
+  if (parts[0] === 'join' && parts.length >= 2) return '/join/:token';
   if (parts[0] === 'round') {
     if (parts.length === 2) return parts[1] === 'new' ? '/round/new' : '/round/:rid';
     if (parts.length === 3 && CLIENT_ERROR_ROUND_TABS.indexOf(parts[2]) !== -1) {
@@ -95,6 +97,15 @@ function clientErrorPathShape(pathname) {
     }
   }
   return '/other';
+}
+
+// A path with any live capability token — a vote link's or a round invite
+// link's — replaced by its placeholder; every other path as given. For the
+// FEEDBACK form's context, which keeps the real path because the operator wants
+// to know the screen (so it cannot use the shape above), but must never store a
+// working credential where the operator panel reads it (#1515 review).
+function redactCapabilityPath(pathname) {
+  return String(pathname || '').replace(/^\/(vote|join)\/[^/]+/, '/$1/:token');
 }
 
 // A shape is exactly a string that is its OWN shape — so the server validates
@@ -251,6 +262,7 @@ if (typeof module !== 'undefined' && module.exports) {
     CLIENT_ERROR_MAX_PER_LOAD,
     clientErrorPathShape,
     isClientErrorPathShape,
+    redactCapabilityPath,
     clientErrorSource,
     clientErrorMessage,
     clientErrorReport,

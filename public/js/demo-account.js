@@ -201,3 +201,13 @@ function leaveDemoForRegister() {
   showRegister();
 }
 
+// The same exit toward signing in to an account the visitor already has — the
+// weekly quiz's teaser offers both (#743).
+function leaveDemoForLogin() {
+  clearTokens();
+  accountUser = null;
+  setupDemoBanner();
+  setupAccountUi();
+  showLogin();
+}
+

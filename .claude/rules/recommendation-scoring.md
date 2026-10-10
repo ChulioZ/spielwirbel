@@ -98,10 +98,11 @@ own case, with the link on **one** side only.
 
 ## 4. The party-size distribution must come from the shared resolver
 
-The round's real table sizes are the half BGG cannot know, and they are **parties,
-not bodies** — six people in three pairs want a three-player game. Deriving it
-here from `round.members` would silently drop guests and flatten teams, so
-`lib/recommend.js` requires `sessionPartyCount` out of `public/js/session-people.js`
+The round's real table sizes are the half BGG cannot know, and they are **seats**
+(#1610) — six people in three pairs sharing a hand want a three-player game, four
+people cooperating as one own-seat team a four-player one. Deriving it here from
+`round.members` would silently drop guests and flatten teams, so
+`lib/recommend.js` requires `sessionSeatCount` out of `public/js/session-people.js`
 (the deliberate direction in
 `.claude/rules/shared-constants-across-the-stack.md`). That function exists
 *because* the naming path (`partyName` → `t()`) is unreachable from Node — see

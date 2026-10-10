@@ -92,6 +92,8 @@ function setupAccountUi() {
   // rather than being called from each of those sites separately.
   setupDemoBanner();
   setupTermsBanner(); // #521, same transitions
+  // Warm the cached /api/config, which the menu's price-watch row reads (#680).
+  withAppConfig(() => {});
   // #841, same transitions. Seats the CALLER'S OWN picture into the avatar cache
   // so their linked seat renders it without a batch request — and so a login as
   // a different account overwrites the previous one's entry rather than
@@ -158,6 +160,19 @@ function openAccountMenu(btn) {
     const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
     friends.addEventListener('click', () => { close(); showFriends(); });
     el.appendChild(friends);
+    // Preisalarme (#680): only where prices exist — the flag rides the cached
+    // /api/config, so the menu stays synchronous.
+    if (priceWatchesAvailable()) {
+      const watches = h(`<button class="popover__opt"><i class="ti ti-bell" aria-hidden="true"></i> ${esc(t('priceWatch.menu'))}</button>`);
+      watches.addEventListener('click', () => { close(); showPriceWatches(); });
+      el.appendChild(watches);
+    }
+    // Wochenquiz (#743): only where the quiz runs — the same cached-config gate.
+    if (quizAvailable()) {
+      const quizRow = h(`<button class="popover__opt"><i class="ti ti-bulb" aria-hidden="true"></i> ${esc(t('quiz.menu'))}</button>`);
+      quizRow.addEventListener('click', () => { close(); showQuiz(); });
+      el.appendChild(quizRow);
+    }
     // Konto (#482): account settings — password change today, passkeys (#418)
     // and account deletion (#419) later.
     const konto = h(`<button class="popover__opt"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('konto.menu'))}</button>`);

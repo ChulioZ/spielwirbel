@@ -38,7 +38,7 @@ function seatUser({ id = UID, tenantId = 't-ada', createdAt } = {}) {
 }
 
 // One round with `mine` seated, plus a second member so a session can be a
-// CONTEST (sessionPartyCount > 1 — a solo night is not one, #895).
+// CONTEST (more than one person — a solo night is not one, #895, #1624).
 function round({ tenantId = 't-ada', games = [], sessions = [], seat = UID }) {
   const r = {
     id: uid(),
@@ -125,6 +125,18 @@ test('the win rate is Σ contested wins / Σ contested sessions, not a mean of r
   // 2/4 = 0.5. The averaged-rates implementation gives (1 + 1/3) / 2 = 0.667.
   assert.equal(st.winRate, 0.5);
   assert.equal(st.rounds, 2, 'one seat per round');
+});
+
+// A whole-table team is a contest (#1624): the account-wide rate counts it
+// through memberStats' own counts, with no second rule here.
+test('the account-wide rate counts a whole-table team session as a contest', async () => {
+  reset();
+  seatUser();
+  const team = { ...played('s2', 'g1', { winner: null }), ending: 'lost',
+    teams: [{ id: 't', personIds: ['m-me', 'm-other'], sharedSeat: false }] };
+  round({ games: [game('g1', 'Azul')], sessions: [played('s1', 'g1'), team] });
+  const st = await accountStats(UID);
+  assert.equal(st.winRate, 0.5);
 });
 
 test('the rating average is weighted by COUNT, not averaged per seat', async () => {

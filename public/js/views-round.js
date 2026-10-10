@@ -32,7 +32,7 @@ const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
 const HUB_TAB_OF = {
   regal: ['game', 'retired', 'completed', 'wishlist', 'recommendations', 'shelf-profile'],
   chronik: ['session'],
-  start: ['member', 'design', 'tags', 'settings'],
+  start: ['member', 'tags', 'settings'],
 };
 const hubTabOwning = (sub) =>
   HUB_TABS.find((tab) => (HUB_TAB_OF[tab] || []).includes(sub)) || 'start';
@@ -204,7 +204,7 @@ function editableRoundName(round) {
   const el = h(`<span class="gd-title" role="button" tabindex="0" title="${esc(t('round.editName'))}">${esc(round.name)}</span>`);
 
   const startEdit = () => {
-    const input = h('<input class="input rn-title-input" />');
+    const input = h('<input class="input rn-title-input" autocorrect="off" spellcheck="false" />');
     input.value = round.name;
     el.replaceWith(input);
     input.focus();

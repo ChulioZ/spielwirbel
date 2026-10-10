@@ -64,7 +64,9 @@ function afterRemove() {
 function renderInboxItem(item) {
   const row = item.type === 'round_invitation' ? renderInvitationItem(item)
     : item.type === 'friend_request' ? renderFriendRequestItem(item)
-      : renderGenericItem(item);
+      : item.type === 'price_drop' ? renderPriceDropItem(item) // #680, views-price-watches.js
+        : item.type === 'quiz_round' ? renderQuizRoundItem(item) // #743, views-quiz.js
+          : renderGenericItem(item);
   // Der Tisch (#1272, T14.2), Ocean (#1219, O14.2), Das Programmheft
   // (#1380, P14.3), Die Brücke (#1246, B14.3 — the type glyph as the row's
   // kicker, the time beside it) and Forest (#1474, F14.4 — the glyph in a moss
@@ -91,13 +93,16 @@ function renderInboxItem(item) {
 const INBOX_ICONS = {
   round_invitation: 'ti-user-plus',
   friend_request: 'ti-users',
+  price_drop: 'ti-trending-down',
+  quiz_round: 'ti-bulb',
 };
 function composeInboxRow(row, item) {
   const kind = INBOX_ICONS[item.type] ? item.type : 'notice';
   const icon = INBOX_ICONS[item.type] || 'ti-mail';
   row.classList.add('inbox-row--composed', `inbox-row--${kind.replace('_', '-')}`);
   row.prepend(h(`<span class="inbox-row__icon" aria-hidden="true"><i class="ti ${icon}"></i></span>`));
-  if (kind !== 'notice' && item.createdAt) {
+  // A price drop states when its price was seen, which is the time that matters.
+  if (kind !== 'notice' && kind !== 'price_drop' && item.createdAt) {
     row.querySelector('.ds-row__main').appendChild(
       h(`<div class="ds-row__status muted inbox-row__when">${esc(fmtDateTime(item.createdAt))}</div>`));
   }
@@ -130,12 +135,20 @@ function renderInvitationItem(item) {
       refreshInboxBadge();
       showRound(roundId, 'start');
     } catch (e) {
-      // Any accept failure means the invite is no longer actionable (seat taken,
+      // Refusals that leave the invitation PENDING keep the row and say why: a
+      // full round (#1604) works once a seat is freed; a suspended account is
+      // refused before anything is claimed.
+      const pending = { quota_members: 'member.toast.quota', account_disabled: 'join.disabledBody' }[e.message];
+      if (pending) {
+        toast(t(pending), { tone: 'error' });
+        return;
+      }
+      // Any other failure means the invite is no longer actionable (seat taken,
       // round gone, already resolved) — the server has cleared it, so drop the row
       // and stay on the inbox (afterRemove re-renders the empty state if needed).
       row.remove();
       afterRemove();
-      toast(e.message === 'seat_unavailable' ? t('inbox.invite.seatGone') : t('inbox.invite.failed'), { tone: 'error' });
+      toast(t(e.message === 'seat_unavailable' ? 'inbox.invite.seatGone' : 'inbox.invite.failed'), { tone: 'error' });
     }
   });
 

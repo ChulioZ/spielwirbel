@@ -46,6 +46,10 @@ const isVoteLinkRoute = (p) => /^\/vote\/[^/]+\/*$/.test(p);
 // and its whole point is being shareable to someone who has never seen the app.
 const isPublicStatsRoute = (p) => p.replace(/\/+$/, '') === '/entdecken';
 
+// The weekly quiz's public statistics and archive (#743) — anonymous totals and
+// past weeks, published for logged-out visitors exactly like /entdecken.
+const isQuizArchiveRoute = (p) => p.replace(/\/+$/, '') === '/quiz/archiv';
+
 // Where to continue after a successful login: the deep link a logged-out visitor
 // arrived on, captured by bootApp() before it hands them to /login and consumed
 // by enterApp(). It lives in memory rather than in the URL because the auth
@@ -117,6 +121,11 @@ async function bootApp() {
     // shared "look what this instance is playing" link with a login wall, which
     // is exactly the audience the screen is published for.
     if (isPublicStatsRoute(path)) return routeTo(path);
+    if (isQuizArchiveRoute(path)) return routeTo(path);
+    // A round invite link (#1515) DOES need an account, but a bare login wall
+    // would not say why — the link's screen explains it and parks itself in
+    // pendingPath when the visitor chooses to sign in.
+    if (isJoinLinkRoute(path)) return routeTo(path);
     pendingPath = path;
     // routeTo() rather than showLogin() directly: it sets `routing`, which makes
     // the login screen's syncUrl REPLACE the deep link's history entry instead

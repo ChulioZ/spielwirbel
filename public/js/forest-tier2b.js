@@ -91,7 +91,7 @@ function composeForestSettings(round, rid) {
 function forestNameCard(round) {
   const card = h(`<section class="rs-fo__card rs-fo__card--name">
        <label class="rs-fo__label" for="rsFoName">${esc(t('newRound.nameLabel'))}</label>
-       <input class="input rs-fo__name" id="rsFoName" type="text" autocomplete="off" enterkeyhint="done" />
+       <input class="input rs-fo__name" id="rsFoName" type="text" autocomplete="off" enterkeyhint="done" autocorrect="off" spellcheck="false" />
      </section>`);
   wireRoundNameField(card.querySelector('input'), round);
   return card;

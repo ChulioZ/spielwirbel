@@ -48,6 +48,189 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1616, logging a past session. A capability that did not exist: every
+   * session was dated „now", so a group that found the app midway could not
+   * get its earlier evenings into the Chronik. Says where both entry points
+   * are and that a date can be corrected afterwards.
+   */
+  {
+    revision: '2026-10-11',
+    kind: 'new',
+    de: {
+      title: 'Sessions nachtragen',
+      body: 'Ihr habt schon gespielt, bevor ihr Spielwirbel genutzt habt, oder vergessen, eine Session einzutragen? In der Chronik gibt es jetzt „Session nachtragen“: Spiel wählen, Tag wählen, wer dabei war und wer gewonnen hat – fertig. Auch „Jetzt spielen“ fragt jetzt „Wann?“. Und stimmt das Datum einer gespielten Session nicht, änderst du es auf ihrer Ergebnisseite. Chronik, Rückblick und Abzeichen richten sich nach dem Tag, an dem ihr gespielt habt.',
+    },
+    en: {
+      title: 'Log past sessions',
+      body: 'Played before you started using Spielwirbel, or forgot to enter a session? The history now has “Log a past session”: pick the game, the day, who was there and who won – done. “Play now” also asks “When?” now. And if a played session has the wrong date, change it on its results page. The history, the recaps and the badges follow the day you actually played.',
+    },
+    es: {
+      title: 'Registrar sesiones pasadas',
+      body: '¿Jugasteis antes de usar Spielwirbel o se os olvidó apuntar una sesión? En el historial ahora está «Registrar una sesión pasada»: elige el juego, el día, quién estaba y quién ganó, y listo. «Jugar ya» también pregunta ya «¿Cuándo?». Y si una sesión jugada tiene la fecha mal, la cambias en su página de resultados. El historial, los resúmenes y las insignias siguen el día en que jugasteis de verdad.',
+    },
+    fr: {
+      title: 'Ajouter des sessions passées',
+      body: 'Vous avez joué avant d’utiliser Spielwirbel, ou oublié d’enregistrer une session ? L’historique propose désormais « Ajouter une session passée » : choisissez le jeu, le jour, qui était là et qui a gagné, c’est tout. « Jouer maintenant » demande aussi « Quand ? ». Et si la date d’une session jouée est fausse, vous la changez sur sa page de résultats. L’historique, les récapitulatifs et les badges suivent le jour où vous avez vraiment joué.',
+    },
+    it: {
+      title: 'Registrare sessioni passate',
+      body: 'Avete giocato prima di usare Spielwirbel, o vi siete dimenticati di registrare una sessione? Nella cronologia ora c’è «Registra una sessione passata»: scegli il gioco, il giorno, chi c’era e chi ha vinto, ed è fatta. Anche «Gioca subito» chiede adesso «Quando?». E se una sessione giocata ha la data sbagliata, la cambi nella sua pagina dei risultati. Cronologia, riepiloghi e distintivi seguono il giorno in cui avete giocato davvero.',
+    },
+    nl: {
+      title: 'Eerdere sessies toevoegen',
+      body: 'Speelden jullie al voordat jullie Spielwirbel gebruikten, of vergaten jullie een sessie in te voeren? In de geschiedenis staat nu “Eerdere sessie toevoegen”: kies het spel, de dag, wie er was en wie won – klaar. “Nu spelen” vraagt nu ook “Wanneer?”. En klopt de datum van een gespeelde sessie niet, dan wijzig je die op de resultatenpagina. Geschiedenis, overzichten en badges volgen de dag waarop jullie echt speelden.',
+    },
+    pt: {
+      title: 'Registrar sessões passadas',
+      body: 'Vocês jogaram antes de usar o Spielwirbel ou esqueceram de registrar uma sessão? No histórico agora tem “Registrar uma sessão passada”: escolha o jogo, o dia, quem estava e quem ganhou – pronto. “Jogar agora” também pergunta “Quando?”. E se uma sessão jogada estiver com a data errada, você muda na página de resultados dela. O histórico, os resumos e as insígnias seguem o dia em que vocês realmente jogaram.',
+    },
+    fi: {
+      title: 'Aiempien sessioiden lisääminen',
+      body: 'Pelasitteko jo ennen Spielwirbelin käyttöä, tai unohtuiko session kirjaaminen? Historiassa on nyt ”Lisää aiempi sessio”: valitse peli, päivä, ketkä olivat mukana ja kuka voitti – valmis. Myös ”Pelaa heti” kysyy nyt ”Milloin?”. Ja jos pelatun session päivämäärä on väärä, muutat sen sen tulossivulla. Historia, koosteet ja merkit seuraavat päivää, jona oikeasti pelasitte.',
+    },
+    ko: {
+      title: '지난 세션 추가',
+      body: 'Spielwirbel을 쓰기 전에 이미 플레이했거나 세션 기록을 잊으셨나요? 이제 기록 화면에 “지난 세션 추가”가 있어요. 게임, 날짜, 함께한 사람과 승자만 고르면 끝이에요. “바로 플레이”도 이제 “언제?”를 물어요. 플레이한 세션의 날짜가 틀렸다면 결과 페이지에서 바꿀 수 있어요. 기록, 요약, 배지는 실제로 플레이한 날을 따라가요.',
+    },
+  },
+  /*
+   * #743, the weekly quiz. A capability that did not exist: the first surface
+   * worth opening when no session is planned. Says what is asked, that the
+   * answer shows at once, where it lives and when a round starts.
+   */
+  {
+    revision: '2026-10-10',
+    kind: 'new',
+    de: {
+      title: 'Wochenquiz',
+      body: 'Jede Woche gibt es jetzt ein Quiz mit neuen Fragen rund um Brettspiele: wie komplex ein Spiel ist, für wie viele Personen, von wem es stammt, wann es erschien und mehr. Ob deine Antwort stimmt, siehst du sofort, und in der Rangliste vergleichst du dich mit deinem Freundeskreis. Du findest das Quiz im Konto-Menü unter „Wochenquiz“ und auf der Startseite; montags kommt eine neue Runde.',
+    },
+    en: {
+      title: 'Weekly quiz',
+      body: 'There is now a quiz every week with new questions about board games: how complex a game is, how many players it is for, who designed it, when it came out and more. You see straight away whether your answer is right, and the leaderboard compares you with your friends. Find it in the account menu under “Weekly quiz” and on the home screen; a new round starts every Monday.',
+    },
+    es: {
+      title: 'Quiz semanal',
+      body: 'Ahora hay cada semana un quiz con preguntas nuevas sobre juegos de mesa: lo complejo que es un juego, para cuántas personas es, quién lo diseñó, cuándo salió y más. Ves al instante si tu respuesta es correcta, y la clasificación te compara con tus amistades. Lo encontrarás en el menú de la cuenta, en «Quiz semanal», y en la pantalla de inicio; cada lunes empieza una ronda nueva.',
+    },
+    fr: {
+      title: 'Quiz de la semaine',
+      body: 'Chaque semaine, un quiz de nouvelles questions sur les jeux de société : la complexité d’un jeu, pour combien de personnes il est, qui l’a conçu, quand il est paru, et plus encore. Vous voyez aussitôt si votre réponse est juste, et le classement vous compare à vos amis. Vous le trouverez dans le menu du compte, sous « Quiz de la semaine », et sur l’écran d’accueil ; une nouvelle manche commence chaque lundi.',
+    },
+    it: {
+      title: 'Quiz settimanale',
+      body: 'Ogni settimana c’è ora un quiz con nuove domande sui giochi da tavolo: quanto è complesso un gioco, per quante persone è, chi l’ha ideato, quando è uscito e altro. Vedi subito se la risposta è giusta, e la classifica ti confronta con i tuoi amici. Lo trovi nel menu dell’account, alla voce «Quiz settimanale», e nella schermata iniziale; ogni lunedì inizia un nuovo turno.',
+    },
+    nl: {
+      title: 'Weekquiz',
+      body: 'Er is nu elke week een quiz met nieuwe vragen over bordspellen: hoe complex een spel is, voor hoeveel personen, wie het ontwierp, wanneer het verscheen en meer. Je ziet meteen of je antwoord klopt, en de ranglijst vergelijkt je met je vrienden. Je vindt de quiz in het accountmenu onder “Weekquiz” en op het startscherm; elke maandag begint een nieuwe ronde.',
+    },
+    pt: {
+      title: 'Quiz semanal',
+      body: 'Agora toda semana tem um quiz com novas perguntas sobre jogos de tabuleiro: a complexidade de um jogo, para quantas pessoas ele é, quem o criou, quando saiu e mais. Você vê na hora se acertou, e a classificação compara você com seus amigos. O quiz fica no menu da conta, em “Quiz semanal”, e na tela inicial; toda segunda-feira começa uma nova rodada.',
+    },
+    fi: {
+      title: 'Viikkovisa',
+      body: 'Nyt joka viikko on visa, jossa on uusia kysymyksiä lautapeleistä: kuinka monimutkainen peli on, monelleko pelaajalle, kuka sen suunnitteli, milloin se julkaistiin ja muuta. Näet heti, oliko vastauksesi oikein, ja tulostaulu vertaa sinua ystäviisi. Löydät visan tilivalikosta kohdasta ”Viikkovisa” ja aloitusnäkymästä; uusi kierros alkaa joka maanantai.',
+    },
+    ko: {
+      title: '주간 퀴즈',
+      body: '이제 매주 보드게임에 관한 새 질문으로 된 퀴즈가 열려요. 게임의 복잡도, 인원, 디자이너, 출시 연도 등을 묻습니다. 답이 맞았는지 바로 확인할 수 있고, 순위표에서 친구들과 비교할 수 있어요. 계정 메뉴의 “주간 퀴즈”와 홈 화면에서 찾을 수 있으며, 매주 월요일에 새 라운드가 시작돼요.',
+    },
+  },
+  /*
+   * #680, price alerts. A capability that did not exist: the price on a wished
+   * game was only ever shown, never watched. Says where it lives (under the
+   * price, and „Preisalarme" in the account menu), that it belongs to the
+   * person rather than the round, and how often it checks.
+   */
+  {
+    revision: '2026-10-09',
+    kind: 'new',
+    de: {
+      title: 'Preisalarme',
+      body: 'Unter dem Preis eines Spiels auf der Wunschliste kannst du jetzt einen Preisalarm setzen: Fällt der Preis auf deinen Betrag oder darunter, bekommst du eine Nachricht in dein Postfach. Der Alarm gehört dir, nicht der Runde — er gilt für das Spiel in jeder deiner Runden. Alle Alarme findest du im Konto-Menü unter „Preisalarme"; dort kannst du auch nach einem Spiel suchen, das auf keiner Wunschliste steht. Geprüft wird einmal täglich.',
+    },
+    en: {
+      title: 'Price alerts',
+      body: 'Under a wished game’s price you can now set a price alert: when the price drops to your amount or below, you get a message in your inbox. The alert is yours, not the group’s — it covers the game in every group you’re in. All your alerts are in the account menu under “Price alerts”, where you can also search for a game that’s on no wish list. Prices are checked once a day.',
+    },
+    es: {
+      title: 'Alertas de precio',
+      body: 'Bajo el precio de un juego de la lista de deseos ya puedes crear una alerta: si el precio baja a tu importe o menos, recibes un mensaje en tu buzón. La alerta es tuya, no del grupo, y vale para el juego en todos tus grupos. Todas tus alertas están en el menú de la cuenta, en «Alertas de precio», donde también puedes buscar un juego que no esté en ninguna lista. Los precios se comprueban una vez al día.',
+    },
+    fr: {
+      title: 'Alertes de prix',
+      body: 'Sous le prix d’un jeu de la liste d’envies, tu peux maintenant créer une alerte : si le prix descend à ton montant ou en dessous, tu reçois un message dans ta boîte. L’alerte est à toi, pas au groupe — elle vaut pour le jeu dans tous tes groupes. Toutes tes alertes sont dans le menu du compte, sous « Alertes de prix », où tu peux aussi chercher un jeu qui n’est sur aucune liste. Les prix sont vérifiés une fois par jour.',
+    },
+    it: {
+      title: 'Avvisi di prezzo',
+      body: 'Sotto il prezzo di un gioco della lista dei desideri ora puoi impostare un avviso: se il prezzo scende al tuo importo o sotto, ricevi un messaggio nella tua casella. L’avviso è tuo, non del gruppo, e vale per il gioco in tutti i tuoi gruppi. Trovi tutti gli avvisi nel menu dell’account, in «Avvisi di prezzo», dove puoi anche cercare un gioco che non è in nessuna lista. I prezzi vengono controllati una volta al giorno.',
+    },
+    nl: {
+      title: 'Prijsalarmen',
+      body: 'Onder de prijs van een spel op de verlanglijst kun je nu een prijsalarm instellen: daalt de prijs naar jouw bedrag of lager, dan krijg je een bericht in je inbox. Het alarm is van jou, niet van de groep — het geldt voor het spel in al je groepen. Al je alarmen staan in het accountmenu onder ‘Prijsalarmen’, waar je ook een spel kunt zoeken dat op geen enkele lijst staat. Prijzen worden één keer per dag gecontroleerd.',
+    },
+    pt: {
+      title: 'Alertas de preço',
+      body: 'Abaixo do preço de um jogo da lista de desejos agora você pode criar um alerta: se o preço cair até o seu valor ou menos, você recebe uma mensagem na caixa de entrada. O alerta é seu, não do grupo — vale para o jogo em todos os seus grupos. Todos os seus alertas ficam no menu da conta, em “Alertas de preço”, onde você também pode procurar um jogo que não está em nenhuma lista. Os preços são verificados uma vez por dia.',
+    },
+    fi: {
+      title: 'Hintahälytykset',
+      body: 'Toivelistan pelin hinnan alle voit nyt asettaa hintahälytyksen: kun hinta laskee summaasi tai alle, saat viestin postilaatikkoosi. Hälytys on sinun, ei porukan — se koskee peliä kaikissa porukoissasi. Kaikki hälytyksesi löytyvät tilivalikosta kohdasta ”Hintahälytykset”, jossa voit myös etsiä pelin, joka ei ole millään listalla. Hinnat tarkistetaan kerran päivässä.',
+    },
+    ko: {
+      title: '가격 알림',
+      body: '이제 위시리스트 게임의 가격 아래에서 가격 알림을 설정할 수 있어요. 가격이 설정한 금액 이하로 내려가면 받은 편지함으로 알려 드려요. 알림은 그룹이 아니라 내 것이라, 내가 속한 모든 그룹의 그 게임에 적용돼요. 모든 알림은 계정 메뉴의 “가격 알림”에서 볼 수 있고, 거기서 어떤 목록에도 없는 게임을 검색할 수도 있어요. 가격은 하루에 한 번 확인해요.',
+    },
+  },
+  /*
+   * #1515, round invite links. A capability that did not exist: until now a
+   * round could only be shared with an account whose username the owner typed.
+   * Says where it lives (Einstellungen → „Einladen") and the two limits a
+   * reader would otherwise ask about — seven days, revocable.
+   */
+  {
+    revision: '2026-10-08',
+    kind: 'new',
+    de: {
+      title: 'Per Link in die Runde einladen',
+      body: 'Unter Einstellungen → „Einladen" kannst du jetzt auch einen Link erstellen und ihn selbst in den Gruppenchat schicken. Wer ihn öffnet und angemeldet ist, tritt der Runde mit einem Klick bei — auf einem eigenen neuen Platz oder auf dem, den du dafür ausgesucht hast. Ein Link gilt sieben Tage, und du kannst ihn jederzeit widerrufen.',
+    },
+    en: {
+      title: 'Invite people to a group with a link',
+      body: 'Under Settings → “Invite” you can now also create a link and post it in the group chat yourself. Whoever opens it while signed in joins the group with one tap — on a seat of their own or on the one you picked for them. A link lasts seven days, and you can revoke it at any time.',
+    },
+    es: {
+      title: 'Invitar al grupo con un enlace',
+      body: 'En Ajustes → «Invitar» ahora también puedes crear un enlace y mandarlo tú al chat del grupo. Quien lo abra con la sesión iniciada se une al grupo con un toque: en una plaza propia o en la que hayas elegido. Un enlace vale siete días y puedes revocarlo cuando quieras.',
+    },
+    fr: {
+      title: 'Inviter dans un groupe par lien',
+      body: 'Dans Réglages → « Inviter », tu peux désormais aussi créer un lien et l’envoyer toi-même dans la discussion du groupe. Qui l’ouvre en étant connecté rejoint le groupe d’un geste — sur une place à lui ou sur celle que tu as choisie. Un lien vaut sept jours, et tu peux le révoquer à tout moment.',
+    },
+    it: {
+      title: 'Invitare nel gruppo con un link',
+      body: 'In Impostazioni → «Invita» ora puoi anche creare un link e inviarlo tu nella chat del gruppo. Chi lo apre dopo aver effettuato l’accesso entra nel gruppo con un tocco: su un posto tutto suo o su quello che hai scelto. Un link vale sette giorni e puoi revocarlo in qualsiasi momento.',
+    },
+    nl: {
+      title: 'Uitnodigen voor de groep met een link',
+      body: 'Onder Instellingen → ‘Uitnodigen’ kun je nu ook een link maken en die zelf in de groepschat zetten. Wie hem opent terwijl hij is ingelogd, komt met één tik bij de groep — op een eigen plek of op de plek die jij hebt gekozen. Een link is zeven dagen geldig en je kunt hem altijd intrekken.',
+    },
+    pt: {
+      title: 'Convidar para o grupo com um link',
+      body: 'Em Configurações → “Convidar” agora você também pode criar um link e mandá-lo você mesmo no chat do grupo. Quem abrir com a sessão iniciada entra no grupo com um toque — num lugar só seu ou no que você escolheu. Um link vale sete dias, e você pode revogá-lo a qualquer momento.',
+    },
+    fi: {
+      title: 'Kutsu porukkaan linkillä',
+      body: 'Kohdassa Asetukset → ”Kutsu” voit nyt myös luoda linkin ja lähettää sen itse porukan chattiin. Kirjautunut avaaja liittyy porukkaan yhdellä napautuksella — omalle paikalleen tai sille, jonka valitsit. Linkki on voimassa seitsemän päivää, ja voit perua sen milloin tahansa.',
+    },
+    ko: {
+      title: '링크로 그룹에 초대하기',
+      body: '이제 설정 → “초대”에서 링크를 만들어 단체 대화방에 직접 보낼 수 있어요. 로그인한 상태로 링크를 연 사람은 한 번만 눌러 그룹에 들어와요 — 새 자리로, 또는 여러분이 골라 둔 자리로요. 링크는 7일 동안 유효하고 언제든 취소할 수 있어요.',
+    },
+  },
+  /*
    * #1478, Forest goes live. A capability that did not exist: a sixth design
    * to choose besides Der Tisch, Ocean, Das Programmheft, Die Brücke and
    * Klassisch. Dated after the Brücke entry so every account that has read that

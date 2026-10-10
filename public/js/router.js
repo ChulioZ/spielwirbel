@@ -157,6 +157,14 @@ function navBack(fallback) {
 // invokes the matching show*(); unknown paths fall back to Home. Routes for the
 // transient voting/finale screens deliberately don't exist, so their (stale)
 // URLs resolve to the round hub or Home here.
+// A capability link's token segment, decoded — or left as it is when its
+// percent-encoding is malformed (`/join/%ZZ`), which decodeURIComponent throws
+// on mid-routing. The raw segment is no real token, so the screen's own server
+// round-trip lands on its dead-link state instead of the routing failing (#1515).
+function safeDecodeSegment(seg) {
+  try { return decodeURIComponent(seg); } catch { return seg; }
+}
+
 function resolveRoute(pathname) {
   const parts = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
   if (parts.length === 0) return () => showHome();
@@ -189,7 +197,16 @@ function resolveRoute(pathname) {
   // it sits here in the ordinary table rather than being an auth-screen special
   // case — bootApp only has to make sure a logged-out visitor gets here instead
   // of the login screen.
-  if (parts[0] === 'vote' && parts[1]) return () => showVoteLink(decodeURIComponent(parts[1]));
+  if (parts[0] === 'vote' && parts[1]) return () => showVoteLink(safeDecodeSegment(parts[1]));
+  // A round invite link (#1515). The screen handles both states itself — the
+  // confirmation for an account, the way to sign in for everyone else.
+  if (parts[0] === 'join' && parts[1]) return () => showJoinLink(safeDecodeSegment(parts[1]));
+  // The account's price watches (#680) — guarded in the view, like /inbox.
+  if (parts[0] === 'preisalarme') return () => showPriceWatches();
+  // The weekly quiz (#743) — guarded in the view, like /preisalarme. Its public
+  // statistics and archive answer logged out too, like /entdecken.
+  if (parts[0] === 'quiz' && parts[1] === 'archiv') return () => showQuizArchive();
+  if (parts[0] === 'quiz') return () => showQuiz();
   if (parts[0] === 'login') return () => showLogin();
   if (parts[0] === 'register') return () => showRegister();
   if (parts[0] === 'forgot-password') return () => showForgot();
@@ -205,7 +222,8 @@ function resolveRoute(pathname) {
     if (sub === 'wishlist') return () => showWishlist(rid);
     if (sub === 'recommendations') return () => showRecommendations(rid);
     if (sub === 'shelf-profile') return () => showShelfProfile(rid);
-    if (sub === 'design') return () => showMarker(rid);
+    // The marker screen's old address (#1581 put the picker on Einstellungen).
+    if (sub === 'design') return () => showRoundSettings(rid);
     if (sub === 'tags') return () => showTags(rid);
     if (sub === 'settings') return () => showRoundSettings(rid);
     if (sub === 'game' && parts[3]) return () => showGameDetail(rid, parts[3]);

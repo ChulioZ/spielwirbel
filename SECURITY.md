@@ -44,6 +44,17 @@ Security issues especially relevant given the current architecture:
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
   thresholds, or to attribute one of them to a particular tenant, is in scope;
   the published totals themselves are not.
+- **The weekly quiz's answer key** (#743). `GET /api/quiz/sample` is public by
+  design: one teaser question, without its answer, from games the week's scored
+  questions do not use. Reading the answer to a **scored** question before
+  answering it (from any endpoint, as any account), changing an answer once its
+  result was shown, playing as a guest demo, or seeing the leaderboard entry of
+  an account that is not a confirmed friend or that hid its numbers is in scope.
+  A second registered account learning the key by playing first is a known
+  limit of a shared weekly round, not a finding. `GET /api/quiz/archive` is
+  public too and carries percentages only: an account id or name in it, a player
+  count or any absolute count one could be read off, or the running week's
+  choices, key or pick split, is in scope.
 - **Abuse of the four write routes that sit OUTSIDE the auth gate.** Everything
   under `/api` is gated in `lib/app.js`, with deliberate exceptions mounted ahead
   of it. Four of them accept writes: `/api/account` (register, login, the demo);
@@ -64,6 +75,14 @@ Security issues especially relevant given the current architecture:
   *instance* warn/error buffer behind `GET /api/admin/logs`, or reaching any
   round, session or account data through it. That the endpoint accepts reports
   from unauthenticated callers at all is **by design** and is not a finding.
+- **Round invite links** (`/join/<token>`, `POST /api/account/join`,
+  `lib/routes/join.js`, #1515) — a capability token the round's owner shares,
+  which lets any **signed-in** account that holds it join that round as an
+  editor (demo accounts excepted). In scope: forging or guessing a token, joining a round other than the
+  one it names, obtaining any role but editor or any seat but the one the owner
+  chose, using a link after it was revoked, replaced, consumed or expired, or
+  reaching the token through a log, an error report or a data export. That a
+  link works for whoever holds it, until one of those ends it, is **by design**.
 - **The per-design web manifest** (`GET /manifest.webmanifest?design=<id>`,
   `lib/web-manifest.js`, #1199) — a read route outside the gate, as open as the
   static file it stands in front of. It reads no account and no round; the id is

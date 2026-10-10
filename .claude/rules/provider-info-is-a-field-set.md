@@ -184,9 +184,24 @@ match is safe.
 
 #242 retired a hand-set `duration` **enum** and its filters in favour of custom
 tags. Nothing here reinstates it: `minPlaytime`/`maxPlaytime` are provider-sourced
-integers nobody types, and tags remain the only hand-assigned categorization. The
+integers nobody types (a round's own correction, #1627, is a separate integer pair —
+see the section below — not a bucket), and tags remain the only hand-assigned
+categorization. The
 user feedback that asked for this said the same thing — provider facts every round
 would otherwise re-enter by hand are not tag-shaped.
+
+## A HAND-SET correction of a provider field must be a SEPARATE key (#1627)
+
+"Values only accrete" protects a stored list from an *empty* answer — it does
+not protect a user's number from a *real* one. `assignProviderInfo` overwrites
+any field BGG answers for, and every writer (lazy backfill, corpus fill,
+re-link, both repo backends) goes through it. So a round's corrected playing
+time written into `minPlaytime`/`maxPlaytime` would be reverted, silently, on
+the next fill. It lives in `playtimeOverride` instead, never in
+`PROVIDER_INFO_FIELDS`, and every reader resolves it through one helper
+(`gamePlaytime`, `public/js/draw-pool.js`). The next hand-correctable provider
+field takes the same shape — a sibling key plus a resolver — never a "user-set"
+marker the shared writer has to respect.
 
 **Related:** `.claude/rules/provider-info-triggers-and-stamping.md` (the sibling
 this split from: where the backfill is triggered and what it may stamp),

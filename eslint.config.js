@@ -19,7 +19,7 @@ const frontendGlobals = {
   CLIENT_ERROR_MAX_PER_LOAD: 'readonly', CLIENT_ERROR_SCREENS: 'readonly',
   CLIENT_ERROR_ROUND_TABS: 'readonly', CLIENT_ERROR_ROUND_ITEMS: 'readonly',
   CLIENT_ERROR_SCRIPT_RE: 'readonly', CLIENT_ERROR_OPAQUE: 'readonly',
-  clientErrorPathShape: 'readonly', isClientErrorPathShape: 'readonly',
+  clientErrorPathShape: 'readonly', isClientErrorPathShape: 'readonly', redactCapabilityPath: 'readonly',
   clientErrorSource: 'readonly', clientErrorMessage: 'readonly',
   clientErrorReport: 'readonly', resetClientErrorBudget: 'readonly',
   reportClientError: 'readonly', installClientErrorReporting: 'readonly',
@@ -118,6 +118,7 @@ const frontendGlobals = {
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
+  playtimeRangeText: 'readonly',
   wantsGameInfo: 'readonly', mergeGameInfo: 'readonly',
   foldGameInfoList: 'readonly', refreshShelfGameInfo: 'readonly',
   // username-policy.js
@@ -159,6 +160,7 @@ const frontendGlobals = {
   // draw-pool.js's metadata filters (issue #725) — also required by lib/draw.js
   // and lib/routes/sessions.js
   fitsMetadataFilters: 'readonly', metadataFilterOptions: 'readonly',
+  gamePlaytime: 'readonly', PLAYTIME_OVERRIDE_MAX: 'readonly',
   hasMetadataFilterOptions: 'readonly', normalizeMetadataFilters: 'readonly',
   countMetadataFilters: 'readonly', isFiniteNum: 'readonly',
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
@@ -188,7 +190,8 @@ const frontendGlobals = {
   sessionPartyGroups: 'readonly',
   // Pre-existing omissions from the same file, folded in while adding the line
   // above: both are top-level names in the shared scope and neither was listed.
-  resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly',
+  resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly', isContestSession: 'readonly',
+  sessionSeatCount: 'readonly', teamSharesSeat: 'readonly',
   // bulk-tidy.js (issue #832)
   selectionTouchesHistory: 'readonly',
   setupArchiveSelection: 'readonly',
@@ -253,7 +256,7 @@ const frontendGlobals = {
   accountsActive: 'readonly', isLoggedIn: 'readonly', authFetch: 'readonly',
   currentUserId: 'readonly', currentUsername: 'readonly',
   isDemoAccount: 'readonly', bgStatsEnabled: 'readonly', setCachedPref: 'readonly',
-  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly',
+  startDemo: 'readonly', setupDemoBanner: 'readonly', leaveDemoForRegister: 'readonly', leaveDemoForLogin: 'readonly',
   setupTermsBanner: 'readonly',
   enterDemo: 'readonly', resumeDemo: 'readonly', endDemo: 'readonly',
   authErrorKey: 'readonly',
@@ -469,13 +472,16 @@ const frontendGlobals = {
   setupDesignMenu: 'readonly',
   // topbar-overflow.js (#1460) — the top bar's „…" menu, wired by main.js.
   setupTopbarOverflow: 'readonly', fitTopbar: 'readonly',
-  showMarker: 'readonly', showGameDetail: 'readonly',
+  showGameDetail: 'readonly',
   // game-editors.js (#968 — the five field editors, split out of
   // views-round-detail.js; each takes an explicit context)
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
+  editorRowButton: 'readonly', editorActions: 'readonly',
   setExpansionsCap: 'readonly',
+  // game-editor-playtime.js (#1627) — the playing-time editor
+  openPlaytimePopover: 'readonly', playtimeOverrideFrom: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
@@ -559,6 +565,13 @@ const frontendGlobals = {
   openEditor: 'readonly', formSheetDesign: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
   renderPriceSection: 'readonly', renderPriceNoOffers: 'readonly', priceAge: 'readonly',
   startDirectSession: 'readonly',
+  // A session's day when it is not today (#1616): played-on.js (pure, shared
+  // with the server) and session-date.js (the field and the two sheets).
+  PLAYED_ON_MIN: 'readonly', localDayKey: 'readonly', isPastDay: 'readonly', playedOnInstant: 'readonly',
+  playedOnField: 'readonly', readPlayedOnDay: 'readonly', showSessionDateSheet: 'readonly',
+  // The two session orders (#1616, #1622): session-order.js, shared with the repo.
+  sortSessionsByDate: 'readonly', newestSessionsFirst: 'readonly',
+  showLogSessionPicker: 'readonly', openResultPickerOnce: 'readonly', takeResultPickerOpen: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
   searchAllProviders: 'readonly',
@@ -635,10 +648,19 @@ const frontendGlobals = {
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',
-  renderSessionLog: 'readonly', showShareUrlSheet: 'readonly',
+  renderSessionLog: 'readonly',
+  // views-session-sheets.js (issue #1574): the lobby's share, QR and remove-person sheets
+  showShareUrlSheet: 'readonly', showVoteQrSheet: 'readonly',
   showRemovePersonSheet: 'readonly', removePersonEntry: 'readonly', // #1538
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
+  // views-join.js (#1515)
+  showJoinLink: 'readonly', joinPath: 'readonly', isJoinLinkRoute: 'readonly',
+  // views-price-watches.js (#680)
+  showPriceWatches: 'readonly', priceWatchesAvailable: 'readonly', renderPriceWatchControl: 'readonly', renderPriceDropItem: 'readonly',
+  // views-quiz.js (#743)
+  showQuiz: 'readonly', quizAvailable: 'readonly', renderQuizRoundItem: 'readonly', mountHomeQuiz: 'readonly', mountLandingQuiz: 'readonly',
+  showQuizArchive: 'readonly', quizArchiveLink: 'readonly',
   renderVoteLinkCards: 'readonly', renderVoteLinkDone: 'readonly',
   renderVoteLinkDead: 'readonly', voteLinkClaim: 'readonly',
   setVoteLinkClaim: 'readonly', voteLinkColor: 'readonly',

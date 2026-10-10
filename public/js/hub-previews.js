@@ -212,8 +212,7 @@ function hubChronikPreview(round) {
      the Chronik lists them in. */
   if (designIs('ocean')) {
     const body = card.querySelector('.hub-card__body');
-    [...finished]
-      .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
+    newestSessionsFirst(finished)
       .slice(0, HUB_PREVIEW_SESSIONS)
       .forEach((s) => {
         const game = round.games.find((g) => g.id === s.chosenGameId);

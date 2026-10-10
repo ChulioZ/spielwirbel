@@ -16,10 +16,11 @@
    frontend script and as a CommonJS module the tests require, without a second
    copy of any rule. `deps` is
    { outcomeOf, endingOf, monthKeyOf, dayIndexOf, monthsBetween, neutralScore,
-   filterOptions, normalizeMetadata, fitsMetadata } — sessionOutcome and
-   sessionEnding (session-outcome.js), periodKeyOf, dayIndexOf and monthsBetween
-   (period-recap.js), PRIOR_DEFAULT (vote-score.js) and the three
-   metadata-filter functions (draw-pool.js). Each is injected rather than
+   filterOptions, normalizeMetadata, fitsMetadata, newestFirst } — sessionOutcome
+   and sessionEnding (session-outcome.js), periodKeyOf, dayIndexOf and
+   monthsBetween (period-recap.js), PRIOR_DEFAULT (vote-score.js), the three
+   metadata-filter functions (draw-pool.js) and newestSessionsFirst
+   (session-order.js). Each is injected rather than
    restated because a second copy of any of them is exactly the drift
    .claude/rules/shared-constants-across-the-stack.md exists to prevent: the
    pulse must count the same evenings the Chronik counts, and a preset chip must
@@ -352,9 +353,8 @@ function careList(round, activeGames, deps) {
      campaign chapter as gaps to fix forever — the three things `ending` exists
      to record. A session that HAS an ending is finished business and leaves the
      list; an unrecorded one stays, which is the list's job. */
-  const winnerless = plays
-    .filter((s) => deps.endingOf(s) === 'unrecorded' && s.chosenGameId)
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const winnerless = deps.newestFirst(plays
+    .filter((s) => deps.endingOf(s) === 'unrecorded' && s.chosenGameId));
   const coverless = shelf.filter((g) => !g.image);
   const noRange = shelf.filter((g) => !isRange(g.minPlayers) || !isRange(g.maxPlayers));
   const out = {

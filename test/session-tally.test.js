@@ -11,9 +11,9 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { winStreak, sessionNumber, sessionWinNumber, sessionPlayNumber } = require('../public/js/session-tally');
 const { sessionEnding } = require('../public/js/session-outcome');
-const { sessionPartyCount } = require('../public/js/session-people');
+const { isContestSession } = require('../public/js/session-people');
 
-const DEPS = { sessionEnding, sessionPartyCount };
+const DEPS = { sessionEnding, isContestSession };
 const round = { members: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }, { id: 'c', name: 'C' }] };
 let seq = 0;
 const s = (winnerIds, extra = {}) => ({

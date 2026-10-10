@@ -45,7 +45,7 @@ function showAddGameSearch(round, { wish = false } = {}) {
         <div class="add-search__query">
           <i class="ti ti-search" aria-hidden="true"></i>
           <input id="addSearchQ" class="add-search__input" type="search" enterkeyhint="search" autocomplete="off"
-                 aria-label="${esc(t('addGame.searchLabel'))}" placeholder="${esc(t('addGame.titlePlaceholder'))}" />
+                 aria-label="${esc(t('addGame.searchLabel'))}" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocorrect="off" spellcheck="false" />
           <span class="add-search__count" id="addSearchCount" role="status" aria-live="polite" aria-atomic="true"></span>
         </div>
         ${designIs('forest') ? `<div class="add-search__credit">${forestBggBadge('add-search__credit-bgg')}</div>` : ''}
