@@ -285,9 +285,10 @@ function fitsMetadataFilters(game, filters) {
   //
   // Both bounds stay INCLUSIVE: a game pinned at the ceiling (120–120 under "at
   // most 120") takes exactly two hours and belongs in the pool.
-  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(g.maxPlaytime) && g.maxPlaytime > f.maxPlaytime)
+  const pt = gamePlaytime(g);
+  if (isFiniteNum(f.maxPlaytime) && isFiniteNum(pt.maxPlaytime) && pt.maxPlaytime > f.maxPlaytime)
     return false;
-  if (isFiniteNum(f.minPlaytime) && isFiniteNum(g.minPlaytime) && g.minPlaytime < f.minPlaytime)
+  if (isFiniteNum(f.minPlaytime) && isFiniteNum(pt.minPlaytime) && pt.minPlaytime < f.minPlaytime)
     return false;
   if (isFiniteNum(f.weightMin) && isFiniteNum(g.weight) && g.weight < f.weightMin) return false;
   if (isFiniteNum(f.weightMax) && isFiniteNum(g.weight) && g.weight > f.weightMax) return false;
@@ -302,6 +303,42 @@ function fitsMetadataFilters(game, filters) {
   if (excludesAnyOf(g.mechanics, f.excludeMechanics)) return false;
   return matchesAnyOf(g.categories, f.categories) && matchesAnyOf(g.mechanics, f.mechanics);
 }
+
+// The playing time a ROUND goes by (#1627): its own hand-set correction when it
+// has one, else the provider's pair. Every reader of a game's playing time goes
+// through this — the filter clause below, its shelf options, the vote card, the
+// ⓘ sheet, the Regal, the shared-vote ballot and the shelf profile — so the
+// number a group typed is the number every screen and the draw agree on.
+//
+// A SEPARATE `playtimeOverride: { min, max }` rather than writing into
+// `minPlaytime`/`maxPlaytime`, and that is load-bearing: `assignProviderInfo`
+// (provider-info-fields.js) overwrites those two whenever BGG answers with a
+// real value, and every backfill, corpus fill and re-link goes through it — so
+// a user's number written there would be reverted silently on the next fill.
+// Kept apart, the provider pair stays BGG's, clearing the override is deleting
+// one key, and the key never enters PROVIDER_INFO_FIELDS (it is not
+// provider-sourced, so it must neither trigger nor suppress a BGG fetch).
+//
+// Deliberately NOT read through this: the recommender and the weekly quiz,
+// which compare BGG figures with BGG figures from the cross-tenant corpus — a
+// round's correction would put two scales into one comparison.
+function gamePlaytime(game) {
+  const g = game || {};
+  const o = g.playtimeOverride;
+  if (o && isFiniteNum(o.min) && isFiniteNum(o.max)) {
+    return { minPlaytime: o.min, maxPlaytime: o.max, overridden: true };
+  }
+  return {
+    minPlaytime: isFiniteNum(g.minPlaytime) ? g.minPlaytime : null,
+    maxPlaytime: isFiniteNum(g.maxPlaytime) ? g.maxPlaytime : null,
+    overridden: false,
+  };
+}
+
+// The ceiling on a hand-set playing time, in minutes — the route's zod bound and
+// the editor's input agree on it. A week of play: past BGG's longest campaign
+// figures, short of a typo nobody meant.
+const PLAYTIME_OVERRIDE_MAX = 9999;
 
 // Named `isFiniteNum` rather than the obvious `isNumber`: these files share ONE
 // global scope, `no-redeclare` is off there, and a second file declaring a name
@@ -355,6 +392,9 @@ function excludesAnyOf(values, excluded) {
 function metadataFilterOptions(games) {
   const list = Array.isArray(games) ? games : [];
   const anyNumber = (key) => list.some((g) => isFiniteNum((g || {})[key]));
+  // Through gamePlaytime, so a hand-set time on a game BGG has none for still
+  // offers the control that filters on it.
+  const anyPlaytime = (key) => list.some((g) => isFiniteNum(gamePlaytime(g)[key]));
   const valuesOf = (key) => {
     const seen = new Set();
     list.forEach((g) => {
@@ -373,8 +413,8 @@ function metadataFilterOptions(games) {
     // only a lower bound render an "at most" control that every game passes,
     // i.e. one that can never do anything — the inverse of the empty pool this
     // function exists to rule out.
-    playtimeMin: anyNumber('minPlaytime'),
-    playtimeMax: anyNumber('maxPlaytime'),
+    playtimeMin: anyPlaytime('minPlaytime'),
+    playtimeMax: anyPlaytime('maxPlaytime'),
     weight: anyNumber('weight'),
     age: anyNumber('minAge'),
     // The suggested-players poll (#1005). Gated on a NON-EMPTY poll on some
@@ -513,6 +553,8 @@ if (typeof module !== 'undefined' && module.exports) {
     expansionAddedCounts,
     EXPANSION_TITLE_MAX,
     fitsMetadataFilters,
+    gamePlaytime,
+    PLAYTIME_OVERRIDE_MAX,
     metadataFilterOptions,
     hasMetadataFilterOptions,
     normalizeMetadataFilters,

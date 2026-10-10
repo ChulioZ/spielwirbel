@@ -7440,6 +7440,36 @@ a.k-tile:focus-visible,
 /* The weight pill reuses the info sheet's own markup, so its block-level
    margins have to be unwound to sit on one pill line. */
 .fact--weight .game-info__weight { margin: 0; gap: 8px; }
+/* The playing-time pill opens its editor (#1627), so it is a <button>: reset
+   only what the UA sets and the pill does not own — never the `font` shorthand,
+   which would beat the pill's own font-size
+   (.claude/rules/native-button-vs-focusable-span.md). The border reset is
+   scoped `:not(.fact--empty)` so it cannot tie with the empty pill's dash. */
+.fact--edit {
+  font-family: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: filter var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.fact--edit:not(.fact--empty) { border: 0; }
+.fact--edit:hover { filter: brightness(0.96); box-shadow: var(--shadow-1); }
+.fact--edit:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
+.fact.fact--empty {
+  background: transparent;
+  border: 1px dashed var(--brand-edge, var(--line));
+}
+.fact--empty .fact__value { font-weight: 400; color: var(--ink-soft); }
+/* „eigene Angabe · BGG: 60–90 Min." — present only on an overridden time, and
+   quiet on purpose: it explains a difference, it is not the figure. Its own line
+   inside the pill, so it stays attached to the number it explains (and in the
+   button's name) without squeezing that number in a narrow design column. */
+.fact:has(> .fact__note) { flex-wrap: wrap; row-gap: 2px; }
+/* `width`, never `flex-basis: 100%`: Das Programmheft lays its pill out as a
+   COLUMN, where a 100% basis sends the note into a second column outside the
+   pill. A full width breaks the line in a row and is inert in a column. */
+.fact__note { width: 100%; color: var(--ink-soft); font-size: var(--text-xs); }
 
 /* „Mehr zum Spiel" — the reference half, collapsed by default. A native
    <details>, so the platform owns the state, the keyboard and the accessible
@@ -8032,6 +8062,13 @@ a.k-tile:focus-visible,
 .editor { display: flex; flex-direction: column; gap: 6px; }
 :is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
 :is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
+/* The playing-time editor (#1627) is the players editor's shape with wider
+   fields — minutes run to four digits where seats run to two. The row wraps:
+   two 80px fields and „Übernehmen" measure 341px in a 300px popover. */
+:is(.popover--playtime, .editor--playtime) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:is(.popover--playtime, .editor--playtime) .pp-row .input { width: 80px; }
+.pp-hint { font-size: var(--text-sm); }
+.pp-reset { align-self: flex-start; }
 /* Capped because a popover cannot be scrolled into view, and hit the same way
    (#722): a round's tag list grows without bound — ~34 in the report — the
    chips are appended BEFORE the create row, and a popover cannot be scrolled

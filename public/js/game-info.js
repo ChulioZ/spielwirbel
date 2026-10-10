@@ -35,7 +35,7 @@
 // options object.
 function hasGameInfo(game, { rating = false } = {}) {
   return !!game && (game.weight != null
-    || game.minPlaytime != null || game.maxPlaytime != null || game.minAge != null
+    || playtimeText(game) != null || game.minAge != null
     || (game.categories || []).length > 0 || (game.mechanics || []).length > 0
     || creditedDesigners(game.designers).length > 0
     || (rating && game.rating != null));
@@ -76,9 +76,17 @@ function factList(values, cap) {
 // one number tells a voter the opposite of what they need. Shown as a range only
 // where the bounds actually differ; a game with one known bound reads as that
 // single number rather than as a half-open interval nobody can parse.
+//
+// The pair read is the round's own when it set one (#1627, `gamePlaytime` in
+// draw-pool.js) — every surface showing a playing time goes through here, so
+// none of them can show BGG's number beside a filter acting on the group's.
 function playtimeText(game) {
-  const lo = game.minPlaytime;
-  const hi = game.maxPlaytime;
+  return playtimeRangeText(gamePlaytime(game));
+}
+
+// The same rule over a bare pair — also what the detail page's override note
+// uses to state BGG's own figure.
+function playtimeRangeText({ minPlaytime: lo, maxPlaytime: hi }) {
   if (lo != null && hi != null && lo !== hi) return t('gameInfo.playtimeRange', { min: lo, max: hi });
   const one = lo != null ? lo : hi;
   return one == null ? null : t('gameInfo.playtimeValue', { n: one });
@@ -258,13 +266,32 @@ function openGameInfoSheet(game) {
 //
 // Returns null when the game carries none of the three, so the card renders no
 // empty row — the `.gd-facts` div itself would still occupy its gap.
-function gameGlanceFacts(game) {
+//
+// `editPlaytime` (#1627) makes the playing-time pill the way into its editor —
+// the detail page passes it, nothing else does. With it, a game that has no
+// playing time at all gets an empty pill to set one (`offerEmpty`, false on a
+// sparse page whose onboarding panel is the way in), and an overridden one says
+// so beside the number, with BGG's own figure, so nobody wonders why the page
+// disagrees with BGG. A voter never sees that note: only this page renders it.
+function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false } = {}) {
   const box = h('<div class="gd-facts"></div>');
   if (game.weight != null) {
     box.appendChild(h(`<span class="fact fact--weight">${weightInner(game)}</span>`));
   }
   const playtime = playtimeText(game);
-  if (playtime) box.appendChild(factPill(t('gameInfo.playtime'), playtime));
+  if (playtime || (editPlaytime && offerEmpty)) {
+    // The empty pill is its own invitation, like the dashed players chip — a
+    // label beside „Spieldauer angeben" would say the word twice.
+    const pill = factPill(playtime ? t('gameInfo.playtime') : null, playtime || t('detail.setPlaytime'), editPlaytime);
+    if (!playtime) pill.classList.add('fact--empty');
+    if (gamePlaytime(game).overridden) {
+      const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime ?? null, maxPlaytime: game.maxPlaytime ?? null });
+      const note = h('<span class="fact__note"></span>');
+      note.textContent = bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn');
+      pill.appendChild(note);
+    }
+    box.appendChild(pill);
+  }
   if (game.minAge != null) {
     box.appendChild(factPill(t('gameInfo.minAge'), t('gameInfo.minAgeValue', { n: game.minAge })));
   }
@@ -274,9 +301,17 @@ function gameGlanceFacts(game) {
 // One glance pill. The value goes in via textContent for the same reason
 // factRow's does — playtime and age are formatted here, but the function is one
 // edit away from carrying a BGG string, and the two must not disagree about it.
-function factPill(label, value) {
-  const pill = h(`<span class="fact"><span class="fact__label">${esc(label)}</span><span class="fact__value"></span></span>`);
+//
+// With `onEdit` it is a real <button> opening that editor, for the reasons
+// .claude/rules/native-button-vs-focusable-span.md gives (a pill is an atomic
+// inline-flex box already, so becoming a button changes none of its layout).
+function factPill(label, value, onEdit) {
+  const tag = onEdit ? 'button' : 'span';
+  const pill = h(`<${tag}${onEdit ? ' type="button"' : ''} class="fact${onEdit ? ' fact--edit' : ''}"`
+    + `${onEdit ? ` title="${esc(t('detail.editHint'))}"` : ''}>`
+    + `${label ? `<span class="fact__label">${esc(label)}</span>` : ''}<span class="fact__value"></span></${tag}>`);
   pill.querySelector('.fact__value').textContent = value;
+  if (onEdit) pill.addEventListener('click', () => onEdit(pill));
   return pill;
 }
 

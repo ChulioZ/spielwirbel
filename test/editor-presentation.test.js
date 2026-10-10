@@ -469,6 +469,8 @@ test('the editors\' inner layout rules are shared by both presentations', () => 
   for (const sel of [
     ':is(.popover--players, .editor--players) .pp-row',
     ':is(.popover--players, .editor--players) .pp-row .input',
+    ':is(.popover--playtime, .editor--playtime) .pp-row',
+    ':is(.popover--playtime, .editor--playtime) .pp-row .input',
     ':is(.popover--tags, .editor--tags) .pp-row',
     ':is(.popover--tags, .editor--tags) .pp-row .input',
     ':is(.popover--tags, .editor--tags) .filter-chips',

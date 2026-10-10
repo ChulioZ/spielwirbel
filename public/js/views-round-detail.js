@@ -288,6 +288,7 @@ async function showGameDetail(rid, gameId) {
     rid, round, game, updateGame, refresh: () => showGameDetail(rid, gameId),
   };
   const editPlayers = (anchor) => openPlayersPopover(editorCtx, anchor);
+  const editPlaytime = (anchor) => openPlaytimePopover(editorCtx, anchor);
   const editOwners = (anchor) => openOwnersPopover(editorCtx, anchor);
   const editTags = (anchor) => openTagsPopover(editorCtx, anchor);
   const editImage = (anchor) => openImagePopover(editorCtx, anchor);
@@ -637,7 +638,7 @@ async function showGameDetail(rid, gameId) {
       if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
-      factsNode = swap(factsNode, gameGlanceFacts(game));
+      factsNode = swap(factsNode, gameGlanceFacts(game, { editPlaytime, offerEmpty: !sparse && !game.wish }));
       restNode = swap(restNode, gameInfoRest(game));
       ensureMore();
     };

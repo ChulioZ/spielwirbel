@@ -135,6 +135,13 @@ reason — they are the frontend's own two screens agreeing with each other — 
 the DOM that renders the controls deliberately did **not** join this file (see
 `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md` §4).
 
+**#1627 added `gamePlaytime` and `PLAYTIME_OVERRIDE_MAX`.** The resolver is the
+logic half: a round's hand-set playing time beats BGG's pair, and the filter
+clause, the shelf options, the vote-link ballot (`lib/routes/vote-link.js`) and
+every client surface read through it — a reader that skipped it would filter on
+one number while the page shows another. The ceiling is the value half: the
+route's zod bound and the editor's input.
+
 **#743 gave the ladders a third reader, `lib/quiz-generate.js`**: the weekly quiz
 asks for a game's weight and playing time in bands cut from `WEIGHT_CHOICES` and
 `PLAYTIME_CHOICES`, so a quiz answer names the same bands the Regal filter and

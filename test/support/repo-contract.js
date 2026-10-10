@@ -2563,6 +2563,32 @@ module.exports = function repoContract(repo) {
     assert.equal(typeof repo.setProviders, 'undefined', 'the writer is gone with the setting');
   });
 
+  /* -------------------- Playing-time override (#1627) --------------------- */
+
+  test('updateGame stores a playing-time override and a cleared one leaves NO key', async () => {
+    const round = await freshRound({ name: 'Playtime' });
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Massive Darkness' }));
+    // The provider pair is what a BGG fill writes; the override sits beside it.
+    await repo.setGameProviderInfo(T, round.id, game.id, { minPlaytime: 60, maxPlaytime: 90 });
+
+    const set = await repo.updateGame(T, round.id, game.id, { playtimeOverride: { min: 120, max: 180 } });
+    assert.deepEqual(set.playtimeOverride, { min: 120, max: 180 });
+
+    // A later fill with DIFFERENT numbers must not touch it — the whole reason it
+    // is a separate key (assignProviderInfo overwrites the provider pair).
+    await repo.setGameProviderInfo(T, round.id, game.id, { minPlaytime: 45, maxPlaytime: 75 });
+    let read = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.deepEqual(read.playtimeOverride, { min: 120, max: 180 });
+    assert.equal(read.maxPlaytime, 75, 'the provider pair stays the provider\'s');
+
+    // Cleared alongside another field in the same patch: the other field lands,
+    // the key goes — absent, never a stored null, identically in both backends.
+    await repo.updateGame(T, round.id, game.id, { title: 'Massive Darkness 2', playtimeOverride: null });
+    read = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.equal('playtimeOverride' in read, false);
+    assert.equal(read.title, 'Massive Darkness 2');
+  });
+
   /* -------------------------- Game owners (#971) --------------------------- */
 
   test('createGame stores ownerIds, and leaves the key OFF when there are none', async () => {
