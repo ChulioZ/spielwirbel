@@ -1962,6 +1962,7 @@ module.exports = function repoContract(repo) {
 
     await repo.finishSession(T, round.id, session.id, { finished: false, winnerIds: [] });
     assert.deepEqual((await read()).scores, { m1: 42, m2: -3 }, 'un-finishing keeps the points');
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
 
     await repo.setSessionScores(T, round.id, session.id, {});
     assert.equal('scores' in (await read()), false, 'an empty object clears the key');
@@ -1969,12 +1970,32 @@ module.exports = function repoContract(repo) {
     await repo.setSessionScores(T, round.id, session.id, { m1: 7 });
     await repo.removeSessionGame(T, round.id, session.id, g.id);
     assert.equal('scores' in (await read()), false, 'removing the played game drops its points');
+    // The session is no longer finished, so a late write (a PUT validated
+    // before the removal) lands nothing and logs nothing.
+    const eventsBefore = (await read()).events.length;
+    await repo.setSessionScores(T, round.id, session.id, { m1: 3 }, { at: 'now', type: 'scored' });
+    assert.equal('scores' in (await read()), false, 'no points on an un-played session');
+    assert.equal((await read()).events.length, eventsBefore, 'and no log line');
+
+    // Deleting the played game from the SHELF scrubs it from the session the
+    // same way, points included — they must not ride along to the next game.
+    const other = await repo.createGame(T, round.id, gameFields());
+    const scored = await repo.createSession(T, round.id, {
+      createdAt: 'u', gameIds: [g.id, other.id], votes: {}, chosenGameId: g.id, chosenAt: 'u',
+      finished: true, finishedAt: 'u', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      scores: { m1: 9 },
+    });
+    await repo.retireGame(T, round.id, g.id, true);
+    await repo.deleteGame(T, round.id, g.id);
+    const after = (await repo.getRound(T, round.id)).sessions.find((x) => x.id === scored.id);
+    assert.equal(after.chosenGameId, null);
+    assert.equal('scores' in after, false, 'deleting the played game drops its points');
     assert.equal(await repo.setSessionScores(T, round.id, 'missing', { m1: 1 }), null);
 
-    await repo.updateGame(T, round.id, g.id, { lowScoreWins: true });
-    assert.equal((await repo.getGame(T, round.id, g.id)).lowScoreWins, true);
-    await repo.updateGame(T, round.id, g.id, { lowScoreWins: false });
-    assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, g.id)), false, 'false is absence');
+    await repo.updateGame(T, round.id, other.id, { lowScoreWins: true });
+    assert.equal((await repo.getGame(T, round.id, other.id)).lowScoreWins, true);
+    await repo.updateGame(T, round.id, other.id, { lowScoreWins: false });
+    assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, other.id)), false, 'false is absence');
   });
 
   // How a played session ended when nobody won (#1038). Like `guests` below it
