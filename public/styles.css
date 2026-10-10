@@ -760,7 +760,9 @@ h1, h2, h3 { font-family: var(--font-display); }
 
    1280 is measured, not taste: the rail costs --rail-w + --rail-gap = 292px, so
    below it a rail yields FEWER Regal columns than the plain 1000px column. At
-   1280 the two are equal (4 columns); by 1920 the rail shell gives 6.
+   1280 the two were equal (4 columns at the 220px floor) and by 1920 the rail
+   shell gave 6. Klassisch's floor is 160px since #1580, which keeps the
+   comparison but shifts both counts up (about 5 and 9).
 
    Below 1280 every rule here is inert — `.rail` is display:none and the dock /
    in-flow strip (#331) render exactly as before. */
@@ -2122,6 +2124,16 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .sort-select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 
 /* Filter chips: type (radio-like) and duration (multi-toggle). */
+/* „Session nachtragen" (#1616), under the Chronik's filter chips — a quiet
+   secondary action, so it sits left-aligned below the row it follows rather
+   than competing with the chips for their line. */
+.chronik-log { margin: -6px 0 16px; }
+/* The game list „Session nachtragen" opens: one button per shelf game, picking
+   is the action. A bounded box the sheet scrolls past, never a page-long list. */
+.log-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.log-pick li[hidden] { display: none; }
+.log-pick__row { width: 100%; font-family: inherit; color: var(--ink); text-align: left; }
+.log-pick__empty { margin: 8px 0 0; }
 .filter-chips {
   display: flex;
   align-items: center;
@@ -2226,6 +2238,44 @@ a.hub-row:hover { background: var(--sunken-soft); }
    sit beside the trigger as removable chips, which also say WHICH, where the
    count badge they replaced could only say how many. */
 .regal-filter { margin: 2px 0 16px; }
+/* Klassisch lifts the trigger into the toolbar on a phone (#1577), so with no
+   filter applied the bar is empty and would still cost its margin. Every design
+   that lifts it already says the same in its own sheet. */
+.regal-filter:not(:has(.fbar__trigger)):has(.fbar__chips[hidden]) { display: none; }
+/* The Regal's phone toolbar (#1577, Das Programmheft's P6.2 for every design
+   but Der Tisch): search on a row of its own, then ONE row — sort · ⓘ · Filter
+   · „…" — with „Auswählen" and the BGG import (the `regal-tool--wide` pair) in
+   the „…". One control per width: `display: none` keeps the hidden copy out of
+   the accessibility tree. Scoped by `:has(> .regal-more)`, which only the Regal
+   renders, and compounded so `.link-btn`/`.btn` (0,1,0) cannot win on source
+   order. Das Programmheft, Forest, Ocean and Die Brücke style their own button
+   and repeat the hide at their own specificity. */
+.section-tools .regal-more { justify-content: center; min-width: 44px; min-height: 40px; padding: 0; }
+.section-tools .regal-more .ti { font-size: var(--text-lg); }
+/* Klassisch draws it as the Filter pill beside it rather than as a chunky
+   `.btn` (57px against the pill's 42px). Scoped to Klassisch: every other
+   design's sheet styles the key itself. Pressing compensates by nothing, like
+   `.btn--ghost`, since its bottom border no longer shrinks
+   (.claude/rules/state-rules-clobber-component-values.md). */
+:root[data-design="klassisch"] .section-tools .regal-more {
+  min-width: 42px;
+  min-height: 42px;
+  border-bottom-width: 1.5px;
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
+}
+:root[data-design="klassisch"] .section-tools .regal-more:active { transform: translateY(1px); margin-bottom: var(--press-mb); }
+@media (min-width: 860px) {
+  .section-tools .regal-more { display: none; }
+}
+@media (max-width: 859px) {
+  .section-tools:has(> .regal-more) { flex: 1 1 100%; }
+  .section-tools:has(> .regal-more) > .search-pill { flex: 1 1 100%; }
+  .section-tools:has(> .regal-more) > .search-pill input { flex-grow: 1; }
+  /* Doubled class: (0,4,0), because Ocean's sheet gives every `.link-btn` a
+     display at (0,3,0) and loads after this file. */
+  .section-tools:has(> .regal-more) > .regal-tool--wide.regal-tool--wide { display: none; }
+}
 /* #854, and note the SCOPE: on the setup screen the trigger and the applied chips
    must not be ONE flex item of the bar they sit in. They were — `.fbar` wraps
    both — so a chip with a long label inflated that item's min-content width until
@@ -3356,6 +3406,27 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 }
 .game-card__body { padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
 .game-card__title { font-weight: 700; font-size: var(--text-lg); }
+
+/* Klassisch's shelf (#1580): the two facts a game is picked by — players and
+   playing time — under every title, and a denser grid. Scoped to Klassisch:
+   Die Brücke, Das Programmheft and Forest print the same `.game-card__meta` in
+   cards of their own, and an unscoped rule would restyle it there. It WRAPS
+   rather than ellipsising: at the 160px floor „3–7 · 120–180 Min." needs ~140px
+   of a 131px line (measured in WebKit), and an ellipsis cuts off exactly the
+   playing time (operator decision 2026-10-06 lifts „Klassisch stays unchanged"
+   for this layout). */
+:root[data-design="klassisch"] .game-card__meta {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+/* From 521px up the floor drops from 220px to 160px: six columns where four
+   stood at 1440 (beside the rail). The phone keeps the two-up rule above, so the
+   query starts where that one ends. A card at the floor still requests the
+   330px COVER_CARD, about 2x — inside the DPR headroom (provider-cover-sizing). */
+@media (min-width: 521px) {
+  :root[data-design="klassisch"] .cards { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
 .game-card__row { display: flex; align-items: center; justify-content: space-between; }
 
 .tag {
@@ -4764,10 +4835,12 @@ a.stats-games__name:focus-visible { text-decoration: underline; }
 /* A count beside the width caps the used count at min(count, fit), floored at
    1 — a MAXIMUM, so a phone still resolves to one column with no media query.
    Three rules because three tiles is the zone's ceiling; a fourth tile would
-   need a fourth rule, since an uncapped count falls back to the five that fit. */
+   need a fourth rule, since an uncapped count falls back to the five that fit.
+   The weekly quiz (#743) made it four where the quiz runs — hence the fourth. */
 .home-dash:has(> :only-child)              { columns: 320px 1; }
 .home-dash:has(> :nth-child(2):last-child) { columns: 320px 2; }
 .home-dash:has(> :nth-child(3):last-child) { columns: 320px 3; }
+.home-dash:has(> :nth-child(4):last-child) { columns: 320px 4; }
 .home-dash:empty { display: none; }
 /* Spacing and `break-inside` are the SLOT's (`.card-slot`, declared with
    `.hub-cards`) — see #946: on the tile itself, WebKit carries the margin over
@@ -5594,6 +5667,24 @@ a.k-tile:focus-visible,
 .wish-pick__row .ds-row__meta,
 .off-shelf__row .ds-row__meta { color: var(--ink-soft); }
 
+/* Klassisch's and Der Tisch's two columns (#1581, composeDefaultSettings): the
+   round's set-up — name, marker, „Runde einrichten", saved filters — on the
+   left, „Runde verwalten" and the Gefahrenzone on the right, from 1280px.
+   Below that one column at the reading measure. The wrapper holds
+   .marker-cards, so the shell's cap exempts it (it would otherwise stop the
+   second column short); each column restores the measure itself instead. */
+.rs-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 48px;
+}
+.rs-col { min-width: 0; max-width: var(--w-read); }
+.rs-sec { margin-bottom: 30px; }
+.rs-sec__note { margin: 0 0 14px; }
+@media (min-width: 1280px) {
+  .rs-cols { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+
 /* Account menu header (username + e-mail) above the logout item in the shared
    popover. The username (#320) leads: it is the account's public identity, the
    one a report or an invitation names, so it must be readable off this menu. */
@@ -6374,6 +6465,9 @@ a.k-tile:focus-visible,
 }
 .cancel-area { text-align: center; }
 .cancel-area:empty { display: none; }
+/* „Datum ändern" (#1616) beside it — empty until the session is finished, and
+   collapsed then for the same reason as the cancel area. */
+.date-area:empty { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .trow.is-chosen {
   border-color: var(--brand);
@@ -7346,6 +7440,36 @@ a.k-tile:focus-visible,
 /* The weight pill reuses the info sheet's own markup, so its block-level
    margins have to be unwound to sit on one pill line. */
 .fact--weight .game-info__weight { margin: 0; gap: 8px; }
+/* The playing-time pill opens its editor (#1627), so it is a <button>: reset
+   only what the UA sets and the pill does not own — never the `font` shorthand,
+   which would beat the pill's own font-size
+   (.claude/rules/native-button-vs-focusable-span.md). The border reset is
+   scoped `:not(.fact--empty)` so it cannot tie with the empty pill's dash. */
+.fact--edit {
+  font-family: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: filter var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+.fact--edit:not(.fact--empty) { border: 0; }
+.fact--edit:hover { filter: brightness(0.96); box-shadow: var(--shadow-1); }
+.fact--edit:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; }
+.fact.fact--empty {
+  background: transparent;
+  border: 1px dashed var(--brand-edge, var(--line));
+}
+.fact--empty .fact__value { font-weight: 400; color: var(--ink-soft); }
+/* „eigene Angabe · BGG: 60–90 Min." — present only on an overridden time, and
+   quiet on purpose: it explains a difference, it is not the figure. Its own line
+   inside the pill, so it stays attached to the number it explains (and in the
+   button's name) without squeezing that number in a narrow design column. */
+.fact:has(> .fact__note) { flex-wrap: wrap; row-gap: 2px; }
+/* `width`, never `flex-basis: 100%`: Das Programmheft lays its pill out as a
+   COLUMN, where a 100% basis sends the note into a second column outside the
+   pill. A full width breaks the line in a row and is inert in a column. */
+.fact__note { width: 100%; color: var(--ink-soft); font-size: var(--text-xs); }
 
 /* „Mehr zum Spiel" — the reference half, collapsed by default. A native
    <details>, so the platform owns the state, the keyboard and the accessible
@@ -7936,8 +8060,18 @@ a.k-tile:focus-visible,
    (max-width/min-width above) stay popover-only; every inner layout rule below
    is shared via :is(), which keeps the (0,2,0) specificity these already had. */
 .editor { display: flex; flex-direction: column; gap: 6px; }
-:is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; }
+/* `flex-wrap` because the popover is capped at 300px and „Übernehmen" plus two
+   fields measured 317px in German — the button hung 26px past the card's edge.
+   Wrapping drops it to its own line only where it does not fit. */
+:is(.popover--players, .editor--players) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 :is(.popover--players, .editor--players) .pp-row .input { width: 68px; }
+/* The playing-time editor (#1627) is the players editor's shape with wider
+   fields — minutes run to four digits where seats run to two. The row wraps:
+   two 80px fields and „Übernehmen" measure 341px in a 300px popover. */
+:is(.popover--playtime, .editor--playtime) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:is(.popover--playtime, .editor--playtime) .pp-row .input { width: 80px; }
+.pp-hint { font-size: var(--text-sm); }
+.pp-reset { align-self: flex-start; }
 /* Capped because a popover cannot be scrolled into view, and hit the same way
    (#722): a round's tag list grows without bound — ~34 in the report — the
    chips are appended BEFORE the create row, and a popover cannot be scrolled
@@ -9935,7 +10069,47 @@ kbd {
 /* On the results screen the team is a read-only fact, so there is no delete
    button to leave room for. */
 .team-card--flat { padding-right: 12px; }
-.team-card__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-card__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+/* Own seats or one shared seat (#1610): a two-option segment inside the pill.
+   The pressed state is carried by aria-pressed as well as by the fill (#145). */
+.team-card__mode {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  margin-left: 6px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.team-card__opt {
+  min-height: 24px;
+  padding: 2px 10px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--ink-soft);
+  font-family: inherit;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.team-card__opt:hover { color: var(--ink); }
+/* The picker's card carries the segment on a line of its own, under the name:
+   beside it, in the setup screen's narrow column, it left „Max und A…" of the
+   name — and the name is the only thing saying who the team is. Compounded so
+   it outranks `.team-card` rather than tying with it on source order. */
+.team-card.team-card--seats {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  row-gap: 6px;
+  padding: 6px 5px 8px 12px;
+  border-radius: var(--radius-lg);
+}
+.team-card--seats .team-card__mode { grid-column: 1 / -1; grid-row: 2; justify-self: start; margin-left: 0; }
+.team-card__opt[aria-pressed="true"] { background: var(--brand); color: var(--on-accent); }
 .team-card__name .ti { color: var(--brand-ink, var(--brand)); }
 .team-card__del {
   display: flex;
@@ -10583,6 +10757,7 @@ kbd {
 .live-vote { --live-actions-gap: 12px; }
 .live-person__dots,
 .live-person__progress,
+.live-vote__count,
 .live-vote__guests,
 .live-vote__panel-head,
 .live-vote__waiting { display: none; }
@@ -10599,6 +10774,111 @@ kbd {
    action on the same group. */
 .vote-link__note { margin-top: 28px; font-size: var(--text-md); }
 .vote-link__note a { color: var(--brand-ink, var(--brand)); }
+
+/* Round invite links (#1515). The owner's section sits under the by-username
+   form in the „Einladen" sheet, set off by a rule rather than a card: one sheet,
+   two ways to invite. Each live link is a row that may wrap — a long seat name
+   and two buttons do not fit a 320px sheet on one line. */
+.invite-link { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+/* The body face, not the display face every h3 takes: at 16px a display face is
+   what the designs' small-display-face sweeps forbid (test/design-tokens*.test.js). */
+.invite-link__title { margin: 0 0 4px; font-family: inherit; font-size: var(--text-md); }
+.invite-link__list { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.invite-link__list:empty { display: none; }
+.invite-link__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.invite-link__label { flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+.invite-link__until { display: block; font-size: var(--text-sm); }
+/* The /join/<token> screen: the page head carries the question, the note the
+   role, the toolbar the answer. */
+.join__note { margin: 12px 0 0; }
+.join__actions { margin-top: 20px; }
+
+/* Price watches (#680). The control sits under the price box it watches; the
+   list is ordinary .ds-rows whose actions wrap under the text on a phone. */
+.gd-watch__state { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.gd-watch__actions { flex-wrap: wrap; align-items: center; gap: 8px; }
+.gd-watch__label { display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 6px; }
+.gd-watch__row,
+.price-watches__search-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.gd-watch__input { flex: 0 1 9em; min-width: 0; }
+.price-watches__search-row .input { flex: 1 1 12em; min-width: 0; }
+.price-watches__intro { margin: 0 0 16px; }
+.price-watches__search { margin-bottom: 20px; }
+.price-watches__results:not(:empty) { margin-top: 10px; }
+.price-watch,
+.price-watches__hit { flex-wrap: wrap; row-gap: 8px; }
+.price-watch .ds-row__main { min-width: 0; flex: 1 1 14em; }
+.price-watch__title { font-weight: 600; overflow-wrap: anywhere; }
+.price-watch__meta,
+.price-watch__where { font-size: var(--text-sm); }
+.price-watch__actions,
+.price-watch__form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.price-watch__input { width: 7em; }
+.inbox-row__price { margin-top: 2px; }
+.inbox-row__offers { display: inline-block; margin-top: 4px; }
+.inbox-row__source { font-size: var(--text-sm); margin-top: 2px; }
+
+/* The weekly quiz (#743). Right and wrong are carried by an icon and a sentence
+   as well as the border colour — never by colour alone
+   (.claude/rules/accessibility-contrast-and-modals.md §3). */
+.quiz__intro { margin: 0 0 12px; }
+.quiz__score { font-weight: 600; margin: 0 0 14px; }
+.quiz__next { margin: -10px 0 14px; font-size: var(--text-sm); }
+.quiz__next:empty { display: none; }
+.quiz__empty { margin-top: 12px; }
+.quiz__questions { display: flex; flex-direction: column; gap: 16px; }
+.quiz__source { font-size: var(--text-sm); margin: 16px 0 0; }
+.quiz-q__head { display: flex; align-items: flex-start; gap: 12px; }
+.quiz-q__cover { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); flex: 0 0 auto; }
+.quiz-q__ask { min-width: 0; }
+.quiz-q__n { font-size: var(--text-sm); }
+.quiz-q__text { font-size: var(--text-md); margin: 2px 0 0; overflow-wrap: anywhere; }
+.quiz-q__choices { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 8px; margin-top: 12px; }
+.quiz-choice {
+  display: flex; align-items: center; gap: 8px; text-align: left;
+  padding: 10px 12px; border: 2px solid var(--line); border-radius: var(--radius-md);
+  background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; min-height: 44px;
+}
+.quiz-choice:hover:not(:disabled) { border-color: var(--brand); }
+.quiz-choice:disabled { cursor: default; }
+.quiz-choice__label { min-width: 0; overflow-wrap: anywhere; }
+.quiz-choice__cover { width: 36px; height: 36px; object-fit: cover; border-radius: var(--radius-sm); flex: 0 0 auto; }
+.quiz-choice__mark { flex: 0 0 auto; font-size: 1.1em; }
+.quiz-choice--right { border-color: var(--good); }
+.quiz-choice--wrong { border-color: var(--danger); }
+.quiz-q__result { margin: 10px 0 0; font-weight: 600; }
+.quiz-q__result:empty { margin: 0; } /* stays in the tree: a live region must exist before its text does */
+.quiz-board { margin-top: 28px; }
+.quiz-board__rows { list-style: none; padding: 0; margin: 0; }
+.quiz-board__row--me { font-weight: 600; }
+.quiz-board__rank { display: inline-block; min-width: 2ch; }
+.home-quiz__link { display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit; }
+.home-quiz__label { display: flex; align-items: center; gap: 7px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
+.inbox-row__quiz { display: inline-block; margin-top: 4px; }
+/* The public statistics and archive (/quiz/archiv). */
+.quiz-archive-link { margin: 18px 0 0; }
+.quiz-archive-link a { display: inline-flex; align-items: center; gap: 6px; }
+.quiz-archive__week { margin-top: 14px; }
+.quiz-archive__week > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.quiz-archive__summary { margin: 0 0 10px; }
+.quiz-archive__past-title { margin-top: 28px; }
+.quiz-archive__questions { margin: 10px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 10px; }
+.quiz-archive__q { overflow-wrap: anywhere; }
+.quiz-archive__text { display: block; font-weight: 600; }
+.quiz-archive__rate { font-size: var(--text-sm); }
+.quiz-archive__choices { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 3px; }
+.quiz-archive__choice { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: var(--text-sm); }
+.quiz-archive__choice--right { font-weight: 600; }
+.quiz-archive__next { margin: -6px 0 10px; font-size: var(--text-sm); }
+.quiz-archive__tag { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; font-size: var(--text-sm); font-weight: 600; color: var(--brand-ink, var(--brand-strong)); }
+.landing-quiz .quiz-q { max-width: 640px; margin: 0 auto; }
+/* The teaser (landing page, guest demo): the choices as a plain list — nothing
+   to press — and the way to an account where an answer would go. */
+.quiz-q__choices--teaser { list-style: none; padding: 0; }
+.quiz-choice--teaser { cursor: default; border-style: dashed; color: var(--ink-soft); }
+.quiz-teaser__cta { margin-top: 14px; }
+.quiz-teaser__cta p { margin: 0 0 10px; }
+.quiz-teaser__actions { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .live-vote__hotseat { display: flex; flex-direction: column; gap: 8px; }
 
@@ -10617,6 +10897,75 @@ kbd {
 .live-vote__share-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .live-vote__share { flex: 1 1 14rem; }
 .live-vote__qr { flex: 0 1 auto; }
+
+/* Klassisch's lobby as ONE list (#1574): a row per person — avatar · name ·
+   state · „Für Anna" — headed by the count, with „Am eigenen Gerät
+   mitstimmen" explained in a panel beside it from 860px (below it on a phone).
+   It used to be a grid of name chips plus a second list of „Für …" buttons, so
+   every open person was named twice. Scoped to Klassisch because every other
+   design composes this screen itself; an unscoped row rule would leak into
+   whatever properties they do not restate (operator decision 2026-10-06 lifts
+   „Klassisch stays unchanged" for this layout only). */
+:root[data-design="klassisch"] .live-vote__people { grid-template-columns: minmax(0, 1fr); }
+:root[data-design="klassisch"] .live-vote__count {
+  display: block;
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+/* A row WITH a key wraps, so on a phone a long „Für …" drops to a line of its
+   own at the row's right edge instead of squeezing the name to „Ga…". The
+   name's 8em basis is what decides when: below it, the key wraps. Only those
+   rows — a row without a key keeps the single line it always had, where the name
+   gives way with an ellipsis rather than pushing „✓ abgestimmt" onto a second
+   line at 320px. */
+:root[data-design="klassisch"] .live-person:has(> .live-vote__hotseat-btn) { flex-wrap: wrap; row-gap: 8px; }
+:root[data-design="klassisch"] .live-person:has(> .live-vote__hotseat-btn) > .live-person__name { flex: 1 1 8em; }
+/* Shrinks and wraps its own label rather than overflowing the row: a member name
+   has no length cap, and the Finnish label is twice the German one. */
+:root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: auto;
+  padding: 6px 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+/* The row already shows the person's avatar. */
+:root[data-design="klassisch"] .live-person > .live-vote__hotseat-btn .live-person__avatar { display: none; }
+/* The panel is a card only while it explains something — with every vote in it
+   holds nothing but „Abstimmung beenden", which stays a plain column. */
+:root[data-design="klassisch"] .live-vote__panel-head { display: block; }
+:root[data-design="klassisch"] .live-vote__panel:has(.live-vote__panel-head) {
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+:root[data-design="klassisch"] .live-vote__panel-title { margin: 0 0 4px; font-size: var(--text-lg); }
+:root[data-design="klassisch"] .live-vote__panel-note { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
+@media (min-width: 860px) {
+  /* The list left, the panel right — Der Tisch's T4.3 split. `.live-vote`'s
+     children are a fixed five (head, people, actions, panel, log), so the panel
+     can name row 2 and span the actions' row too without counting anything
+     that changes with who has voted. */
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    column-gap: 24px;
+    align-items: start;
+  }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > :is(.page-head, .session-log) { grid-column: 1 / -1; }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > :is(.live-vote__people, .live-vote__actions) { grid-column: 1; }
+  :root[data-design="klassisch"] .live-vote:has(.live-vote__panel-head) > .live-vote__panel {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    margin-top: 0;
+  }
+}
 
 /* The code itself. Black on white REGARDLESS of the design: a dark design
    would otherwise hand a scanner an inverted code, which many phone cameras

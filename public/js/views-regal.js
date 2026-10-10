@@ -65,6 +65,12 @@ function renderRegalTab(round, activeGames) {
   // owner on the card below it (forestShelfCard, forest-shelf.js).
   const forest = designIs('forest');
   const composed = tisch || ocean || ph || bruecke || forest;
+  // The phone toolbar (#1577): search, then ONE row — sort · ⓘ · Filter · „…" —
+  // with „Auswählen" and the BGG import folded into the „…" below 860px, which
+  // is Das Programmheft's P6.2 adopted by every design but Der Tisch. Der Tisch
+  // already fits one row (T6.2 draws „Auswählen" as a glyph chip and moved the
+  // import into the add sheet), so a „…" there would hold a single item.
+  const phoneMore = !tisch;
   // h1, not h3: on the Regal/Chronik/Pokale tabs this is the top-level heading of
   // the view — only the Start tab renders the round-name hero (#145). The
   // section-label look is unchanged; `.section-head :is(h1,h2,h3)` styles it.
@@ -135,10 +141,10 @@ function renderRegalTab(round, activeGames) {
       // already exist for the empty-Regal tile, so this needs no new i18n key.
       const importBtn = h(`<button class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> <span class="tools-label tools-label--long">${esc(t('bggImport.link'))}</span><span class="tools-label tools-label--short">${esc(t('bggImport.tile'))}</span></button>`);
       importBtn.addEventListener('click', () => showBggImport(round));
-      // P6.2 folds it into the phone's „…" (phMoreButton below), and so does
-      // F6.2. F3.3 sets it at the END of the row, after „Auswählen", so under
+      // P6.2 folds it into the phone's „…" (phMoreButton below), and since
+      // #1577 every design but Der Tisch does. F3.3 sets it at the END of the row, after „Auswählen", so under
       // Forest it is appended there (below) — DOM order is the reading order.
-      if (ph || forest) importBtn.classList.add('regal-tool--wide');
+      if (phoneMore) importBtn.classList.add('regal-tool--wide');
       if (forest) forestImport = importBtn;
       else gamesTools.appendChild(importBtn);
     }
@@ -151,7 +157,7 @@ function renderRegalTab(round, activeGames) {
 
     // Search pill + sort next to the heading. Sort, search and filter chips are
     // all kept for the session (scoped to this round) — see regalFilters.
-    const search = h(`<label class="search-pill"><i class="ti ti-search" aria-hidden="true"></i><input type="search" placeholder="${esc(t('games.search'))}" aria-label="${esc(t('games.search'))}" /></label>`);
+    const search = h(`<label class="search-pill"><i class="ti ti-search" aria-hidden="true"></i><input type="search" placeholder="${esc(t('games.search'))}" aria-label="${esc(t('games.search'))}" autocorrect="off" spellcheck="false" /></label>`);
     const searchInput = search.querySelector('input');
     searchInput.value = regalFilters.query;
     const sortSel = h(`<select class="sort-select" aria-label="${esc(t('games.sortLabel'))}">
@@ -191,10 +197,10 @@ function renderRegalTab(round, activeGames) {
     // A hook for Der Tisch's phone row, which draws this toggle as a glyph chip
     // while it is off (T6.2 has no room for a fourth worded chip).
     if (tisch) bulk.button.classList.add('regal-select');
-    if (ph || forest) bulk.button.classList.add('regal-tool--wide');
+    if (phoneMore) bulk.button.classList.add('regal-tool--wide');
     gamesTools.appendChild(bulk.button);
     if (forestImport) gamesTools.appendChild(forestImport);
-    if (ph || forest) gamesTools.appendChild(phMoreButton(round, bulk.button));
+    if (phoneMore) gamesTools.appendChild(phMoreButton(round, bulk.button));
 
 
     let query = regalFilters.query;
@@ -314,6 +320,21 @@ function renderRegalTab(round, activeGames) {
         if (toolTrigger) toolTrigger.remove();
         toolTrigger = filterPanel ? filterPanel.el.querySelector('.fbar__trigger') : null;
         if (toolTrigger) gamesTools.insertBefore(toolTrigger, bulk.button);
+      } else if (filterPanel) {
+        // Klassisch lifts it on a PHONE only (#1577): its desktop keeps the
+        // trigger beside the applied chips, and its toolbar has no room for it
+        // there (.claude/rules/regal-header-has-no-spare-room.md). So the node
+        // moves at the 860px crossing; without matchMedia (jsdom) the phone
+        // arrangement stands. The panel root is what reflowAt checks for
+        // connection, so a remount drops the previous listener.
+        // A remount must take a previously lifted trigger out of the row.
+        if (toolTrigger) toolTrigger.remove();
+        const panel = filterPanel.el;
+        const trigger = toolTrigger = panel.querySelector('.fbar__trigger');
+        reflowAt('(min-width: 860px)', panel, (wide) => {
+          if (wide) panel.prepend(trigger);
+          else gamesTools.insertBefore(trigger, bulk.button);
+        });
       }
     };
     mountFilterPanel();
@@ -325,6 +346,9 @@ function renderRegalTab(round, activeGames) {
     // the sort the user just chose.
     refreshShelfGameInfo(rid, activeGames, () => {
       mountFilterPanel();
+      // renderGames() only reorders the cards built below, so the playing time
+      // the fill just brought would not reach a tile until the next visit.
+      activeGames.forEach((g) => refreshCardMeta(cardById[g.id], g));
       renderGames();
       swrStore.set('round:' + rid, round);
     });
@@ -365,7 +389,7 @@ function renderRegalTab(round, activeGames) {
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>${ocean ? cardMeta(g) : ''}
+             <div class="game-card__title">${esc(g.title)}</div>${cardMeta(g)}
            </div>
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
@@ -513,8 +537,10 @@ function renderRegalTab(round, activeGames) {
   // game grid, so they moved to the round's Einstellungen screen (#561).
 }
 
-// The meta line under an Ocean card's title (O3.3: „2–5 · 90 Min") — the
-// player range and the playing time the game already carries, nothing new.
+// The meta line under a card's title (O3.3: „2–5 · 90 Min") — the player range
+// and the playing time the game already carries, nothing new. Every design's
+// shelf card prints it since #1580: the default card (Klassisch, Der Tisch,
+// Ocean) under the title, Die Brücke, Das Programmheft and Forest in their own.
 // The range is bare digits behind the people glyph, as the sheet prints it:
 // „3–7 Personen · 20–60 Min." wraps to two lines in a 170px box. The full
 // wording is what a screen reader hears (`.sr-only`), so the bare digits never
@@ -529,6 +555,21 @@ function cardMeta(g) {
     ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
     : '';
   return `<div class="game-card__meta">${[players, time ? esc(time) : ''].filter(Boolean).join(' · ')}</div>`;
+}
+
+// Re-render a built card's meta line in place after the backfill fills its game
+// (#736). Each design seats the line somewhere else; Forest drops its row
+// entirely when there is nothing to put in it, so that one is recreated.
+function refreshCardMeta(gc, g) {
+  if (!gc) return;
+  const html = cardMeta(g);
+  const old = gc.querySelector('.game-card__meta');
+  if (old) { if (html) old.replaceWith(h(html)); else old.remove(); return; }
+  if (!html) return;
+  const host = gc.querySelector('.ph-card__kicker, .bruecke-card__meta, .forest-card__meta');
+  if (host) host.prepend(h(html));
+  else if (gc.querySelector('.forest-card__head')) gc.querySelector('.forest-card__head').after(h(`<div class="forest-card__meta">${html}</div>`));
+  else gc.querySelector('.game-card__title').after(h(html));
 }
 
 // A Programmheft card (#1373, P3.3/P6.2): the meta line ABOVE the cover, the
@@ -556,14 +597,18 @@ function phCard(round, g, fallback, score, evidence, expBadge) {
      </a>`);
 }
 
-// The phone's „…" (P6.2): the two toolbar actions that do not fit a 390px row,
-// „Auswählen" and the BGG import. The toolbar keeps both as buttons, and CSS
-// shows either them or this — one per width.
+// The phone's „…" (P6.2, every design but Der Tisch since #1577): the two
+// toolbar actions that do not fit a 390px row, „Auswählen" and the BGG import.
+// The toolbar keeps both as buttons, and CSS shows either them or this — one
+// per width.
 function phMoreButton(round, selectBtn) {
   const btn = h(`<button type="button" class="btn regal-more" aria-label="${esc(t('detail.moreActions'))}" aria-expanded="false"><i class="ti ti-dots" aria-hidden="true"></i></button>`);
-  const items = [{ icon: 'ti-checkbox', label: t('bulk.select'), kind: 'undoable', run: () => selectBtn.click() }];
-  if (canImportBgg()) items.push({ icon: 'ti-download', label: t('bggImport.tile'), kind: 'undoable', run: () => showBggImport(round) });
   btn.addEventListener('click', () => {
+    // Built per open: the toggle reads „Fertig" while selecting (regal-bulk.js),
+    // and the hidden toolbar copy is the only other place that says so — the
+    // item is how a phone leaves selection mode, so it must say the same.
+    const items = [{ icon: 'ti-checkbox', label: selectBtn.querySelector('.tools-label').textContent, kind: 'undoable', run: () => selectBtn.click() }];
+    if (canImportBgg()) items.push({ icon: 'ti-download', label: t('bggImport.tile'), kind: 'undoable', run: () => showBggImport(round) });
     openPopover(btn, (el, close) => fillMenu(el, items, close), () => btn.setAttribute('aria-expanded', 'false'));
     btn.setAttribute('aria-expanded', 'true');
   });

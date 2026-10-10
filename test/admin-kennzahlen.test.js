@@ -49,7 +49,7 @@ const STATUS = (over = {}) => ({
          instance-wide figure would still produce a plausible „n / total", so
          only a fixture where the two disagree can tell them apart. */
       accountsTotal: 40, roundsTotal: 10, gamesTotal: 80, sessionsTotal: 30,
-      accountsWithAvatar: 7, accountsWithoutRound: 13, accountsWithBgStats: 4,
+      accountsWithAvatar: 7, accountsWithoutRound: 13, accountsWithBgStats: 4, accountsPlayedQuiz: 6,
       // The Konten twins (#1480), below their instance-wide 30 / 3 on purpose.
       accountsVerified: 28, accountsDisabled: 2,
       funnel: {
@@ -281,6 +281,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Passkey', '11', '28 %', 0],
         ['Konto-Bild', '7', '18 %', 0],
         ['BG-Stats-Weitergabe', '4', '10 %', 0],
+        ['Wochenquiz diese Woche', '6', '15 %', 0],
         ['ohne Runde (nach Tenant)', '13', '33 %', 0],
       ],
     },

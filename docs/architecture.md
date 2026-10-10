@@ -233,6 +233,10 @@ lib/
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)
+  session-order.js   the order a round's sessions are read in — by createdAt,
+                     insertion order as the tiebreak — applied where both repo
+                     backends assemble a round, so a session logged after the
+                     fact sits at its own date for every reader (issue #1616)
   demo.js            guest demo mode: mints, seeds and purges throwaway demo
                      accounts (issue #427; off unless DEMO_ENABLED)
   demo-seed.js       the content a demo tenant is seeded with — three rounds,
@@ -253,6 +257,16 @@ lib/
   demo-tenant.js     the one definition of the `demo-` tenant-id prefix that
                      classifies a tenant as a demo, dependency-free so the repo
                      backends and the logger can require it without a cycle
+  invite-link.js     the round invite link's 7-day TTL (issue #1515): the age
+                     half of the join gate plus the sweep, split like
+                     vote-link.js below
+  price-watches.js   the daily price-alert check (issue #680): the dip rule,
+                     the per-watch claim that keeps two processes from
+                     notifying twice, batched upstream requests
+  quiz.js            the weekly quiz's round lifecycle (issue #743): build once
+                     per week, announce once, the public sample, the purge
+  quiz-generate.js   the quiz generator — a pure, week-seeded function from
+                     corpus rows to questions whose distractors are provably wrong
   vote-link.js       the vote link's TTL (issue #652): the age half of the
                      public route's gate, plus the sweep that deletes rows past
                      it. Exists because an ABANDONED session — never closed,
@@ -385,6 +399,10 @@ lib/
                                              decline; the inviter fixes the
                                              member-seat take-over (#207) —
                                              404 unless ACCOUNTS_ENABLED)
+    join.js          /api/account/join      (join a round through an invite
+                                             link (#1515): preview + join, the
+                                             token in the body; 404 unless
+                                             ACCOUNTS_ENABLED)
     friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
                                              list, feed paged by ?before= (#325, #1357) —
@@ -470,6 +488,14 @@ lib/
                                              claimed participant's votes — the
                                              account-free half of #209/#612)
     activities.js    …/activities           (list the feed [GET], delete an entry)
+    price-watches.js /api/price-watches     (an account's price alerts (#680):
+                                             list, set, change, remove, and the
+                                             game-name search; global per account)
+    quiz.js          /api/quiz              (the weekly quiz (#743): this week's
+                                             round, one answer at a time, the
+                                             friends leaderboard; global per account)
+    invite-links.js  …/invite-links         (the owner's round invite links (#1515):
+                                             mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
@@ -729,6 +755,9 @@ public/
     session-log.js   the session activity log's event types and their phrasing —
                      one list, written by lib/session-events.js and rendered by
                      the lobby and the results screen (issue #209)
+    played-on.js     the day a session was played when it is not today: a picked
+                     day becomes 20:00 local time on the client, and the server
+                     validates the instant with the same file (issue #1616)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -916,12 +945,16 @@ public/
                      views-round-detail.js, whose remaining seam ran INSIDE
                      showGameDetail; each takes one explicit context instead of
                      closing over that function's scope
+    game-editor-playtime.js  the game page's playing-time editor (#1627):
+                     a round's own min–max minutes, stored beside BGG's pair
+                     as `playtimeOverride` and read everywhere through
+                     `gamePlaytime` (draw-pool.js)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     views-round-settings.js round Einstellungen screen: the round-level actions
                           (invite, move games, delete/leave) in one place (#561),
-                          plus the two sub-screens it links to — the colour
-                          marker picker and the tag manager (#956, #1187)
+                          the round's name and colour marker on the page
+                          (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-lookup.js the two lookup sheets: add a game, link an existing
                           game to a provider
@@ -931,7 +964,11 @@ public/
                      account gate, the owned/wish picker, the error
                      phrasing (#481, moved out in #956)
     direct-session.js „Jetzt spielen" — start a session for one game with
-                     no vote and no draw, straight to the results screen
+                     no vote and no draw, straight to the results screen;
+                     its „Wann?" field logs a past day instead (#1616)
+    session-date.js  a session's day when it is not today: the „Wann?" field,
+                     „Datum ändern" on a played session and the Chronik's
+                     „Session nachtragen" game picker (issue #1616)
     member-stats.js  one member's statistics, derived on demand from the
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather
@@ -977,6 +1014,8 @@ public/
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
                      yourself or for anyone still open on this device, and end
                      the voting (issue #209)
+    views-session-sheets.js the lobby's sheets: the share-URL fallback, the vote
+                     link as a QR code (#1170), and taking someone out (#1538)
     views-session-setup-tisch.js Der Tisch's setup as two panels („Wer spielt mit?",
                      „Der Topf"), the step line, the rail kept (#1267)
     views-session-ocean.js Ocean's session loop (#1213): the setup in three columns
@@ -998,6 +1037,12 @@ public/
     views-vote-link.js the PUBLIC /vote/:token screen (#652): claim your name
                      from the participant list and rate the drawn games without
                      an account — the only view that runs logged out
+    views-price-watches.js the /preisalarme list, the alert control under a
+                     wished game's price, and the price-drop inbox row (#680)
+    views-quiz.js    the /quiz screen, its home tile and inbox row, and the
+                     landing page's playable sample question (#743)
+    views-join.js    the /join/:token screen (#1515): „join this round?" for an
+                     account, the way to sign in for everyone else
     views-inbox.js   per-user notification inbox (#207; accounts mode only)
     views-news.js    the pulled „Was ist neu" screen at /neu, reached from the
                      account menu; opening it marks the entries seen (#741)

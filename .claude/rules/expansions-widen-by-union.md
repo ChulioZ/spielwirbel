@@ -211,6 +211,6 @@ would make the lookup ambiguous across games.
 **Related:** `.claude/rules/active-games-filter-sites.md` (the other filters this
 predicate sits among), `.claude/rules/shared-constants-across-the-stack.md` (why
 the predicate is one file both sides require),
-`.claude/rules/session-teams.md` §2 (the party count it is applied to — bodies
+`.claude/rules/session-teams.md` §2 (the seat count it is applied to — bodies
 are not the number), `.claude/rules/admin-moderation-surface.md` §3 (the
 redaction contract).

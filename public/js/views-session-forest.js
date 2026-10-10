@@ -326,9 +326,9 @@ function forestBlind(round, person, canBack) {
    - The people card opens with the count („2 von 4 gewertet", `lobby.progress`)
      and the line naming who is missing (`lobby.waitingFor*`) — information,
      moved out of the panel. Each row keeps its state word („abgestimmt" /
-     „offen") and gets its „Für {name}" key, as both sheets draw it; `hereBtns`
-     maps person id → the hot-seat button showSessionLobby() built and wired.
-     The rows are people[] in order, so row i is person i.
+     „offen") and gets its „Für {name}" key, as both sheets draw it —
+     showSessionLobby() puts it there for every design since #1574, and
+     `hereBtns` says whether there are any.
    - This device: the leading key, then „An diesem Gerät abstimmen" as the
      caption that points at those row keys.
    - The panel: its title, the QR control WHERE THE CODE WOULD BE, the link,
@@ -358,18 +358,9 @@ function composeForestLobby(root, people, voted, hereBtns, gameCount) {
   if (waiting) top.appendChild(waiting);
   peopleEl.prepend(top);
 
-  const rows = [...peopleEl.querySelectorAll('.live-person')];
-  rows.forEach((row, i) => {
-    const btn = hereBtns.get(people[i] && people[i].id);
-    if (btn) row.appendChild(btn);
-  });
-  const hotseat = actions.querySelector('.live-vote__hotseat');
-  if (hotseat) {
-    const label = hotseat.querySelector('.field__label');
-    label.className = 'forest-lobby__here';
-    actions.appendChild(label);
-    hotseat.remove();
-  }
+  // The „Für …" keys are already in their rows (showSessionLobby, #1574); the
+  // caption pointing at them closes the this-device block while there are any.
+  if (hereBtns.size) actions.appendChild(h(`<div class="forest-lobby__here">${esc(t('lobby.hereLabel'))}</div>`));
 
   const close = panel.querySelector('.live-vote__close');
   const qr = panel.querySelector('.live-vote__qr');

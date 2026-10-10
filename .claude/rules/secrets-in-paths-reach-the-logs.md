@@ -52,6 +52,18 @@ an API call's. So every opened link still logged its token once. When you
 enumerate "what logs this secret", enumerate the **requests that carry it**, not
 the routes you wrote: the shell fallback serves paths no router names.
 
+**The round invite link (#1515) took the other way out for its API**: the token
+rides in the request BODY (`POST /api/account/join {token}`), and the owner's
+revoke is addressed by seat slot, not by token — so only the page `/join/<t>` is
+a path, and `VOTE_TOKEN_IN_PATH` names it beside `/vote/`. Prefer that shape for
+the next capability: a body cannot leak through a log that records paths.
+
+**The feedback form is a third sink, and it is not a log**: the top bar's
+Feedback button passes the current path, and the operator panel stores it.
+`redactCapabilityPath` (`public/js/error-report.js`) folds both tokens there,
+in `core.js` and again in `lib/routes/contact.js` (found reviewing #1515 — the
+vote link had leaked through it since #652).
+
 **`errorHandler` must use `reqPath()` too, not `req.path`.** That value is
 forwarded to `ERROR_WEBHOOK_URL` — i.e. to a *third party* — which makes it the
 last place a live token may appear. `ERROR_WEBHOOK_URL` is unset in production

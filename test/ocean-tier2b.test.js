@@ -122,19 +122,11 @@ test('every section becomes a card, and the danger zone gets a column of its own
   assert.deepEqual(loose, []);
 });
 
-test('Klassisch keeps its settings list, its marker row and no cards', async (t) => {
+test('Klassisch takes none of Ocean\'s cards', async (t) => {
   const { dom } = bootRound(t, 'klassisch');
   await dom.call('showRoundSettings', RID);
-  assert.equal(dom.app.querySelector('.rs-ocean, .rs-card, .marker-cards'), null);
-  const hrefs = [...dom.app.querySelectorAll('.rs-row[href]')].map((a) => a.getAttribute('href'));
-  assert.deepEqual(hrefs, [`/round/${RID}/tags`, `/round/${RID}/design`]);
-});
-
-test('the /design screen still renders the same picker', async (t) => {
-  const { dom } = bootRound(t, 'ocean');
-  await dom.call('showMarker', RID);
-  const swatches = [...dom.app.querySelectorAll('.marker-cards .marker-card')];
-  assert.deepEqual(swatches.map((b) => b.style.getPropertyValue('--marker')), MEMBER_COLORS);
+  assert.equal(dom.app.querySelector('.rs-ocean, .rs-card'), null);
+  assert.ok(dom.app.querySelector('.rs-cols .marker-cards'), 'the control: Klassisch\'s own composition rendered');
 });
 
 // --- O14.2 the Freundeskreis, the inbox -----------------------------------

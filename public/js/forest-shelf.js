@@ -92,9 +92,8 @@ function forestShortDate(iso) {
    resolved through sessionPeople, so a guest who won is named as a guest
    (.claude/rules/session-guests-are-not-members.md). */
 function forestPassFacts(round, gameId, st) {
-  const played = round.sessions
-    .filter((s) => !s.cancelled && s.chosenGameId === gameId)
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const played = newestSessionsFirst(round.sessions
+    .filter((s) => !s.cancelled && s.chosenGameId === gameId));
   const wins = new Map();
   played.forEach((s) => {
     if (!s.finished) return;

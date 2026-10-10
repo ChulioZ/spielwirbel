@@ -168,8 +168,10 @@ filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
 bounds the hub's quick-start chip row rather than abuse. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
-friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50) and passkeys
-(`MAX_PASSKEYS_PER_USER`, default 20, issue #418). Two more are trims rather
+friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys
+(`MAX_PASSKEYS_PER_USER`, default 20, issue #418) and price alerts
+(`MAX_PRICE_WATCHES_PER_USER`, default 50, issue #680 — it also bounds the daily
+price job's upstream requests, which it batches 20 games at a time). Two more are trims rather
 than refusals — the oldest rows are dropped instead of the write being rejected:
 the friends feed (`MAX_FEED_EVENTS`, default 5000, issue #325) and the in-app
 inbox (`MAX_INBOX_ITEMS`, default 100, issue #207). With accounts off (the
@@ -615,6 +617,31 @@ That is why `/readyz` exists; point external alerting at it. The readiness resul
 is cached for a few seconds, so polling it cannot drive database load. Don't make
 `/readyz` the *deploy* health check: a transient database blip would then
 restart-loop the container.
+
+### The weekly quiz (issue #743)
+
+Five questions a week about board games, generated from the corpus above, with a
+friends-only leaderboard and a teaser question (no answering — the way to an
+account instead) on the logged-out landing page and for guest demos, which
+cannot play. **Off by default**: set `QUIZ_ENABLED=true` (it also needs accounts
+mode — scores are kept per account). An instance with an empty or not yet
+enriched corpus simply shows no quiz anywhere, flag or not.
+
+A round is built once per ISO week (Berlin time) — on the first scheduler tick of
+the week or the first visit, whichever comes first — and stored, so a corpus
+upload mid-week never changes questions someone has already answered. Players of
+an earlier round get an in-app inbox item when a new one opens; **no e-mail is
+ever sent** for it (`lib/notify.js` does not mail this type). When a week
+closes, its anonymous totals are stored on the round for the public archive at
+`/quiz/archiv`; rounds are kept 52 weeks, answers only `QUIZ_RETENTION_WEEKS`.
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `QUIZ_ENABLED` | off | `true` turns the quiz on |
+| `QUIZ_POOL_SIZE` | 500 | the best-ranked corpus games questions are drawn from |
+| `QUIZ_QUESTIONS_PER_ROUND` | 5 | questions per week (3–8), each of a different type |
+| `QUIZ_GAME_COOLDOWN_WEEKS` | 4 | how many past rounds' games a new round avoids (0–52, the rounds' own 52-week life) |
+| `QUIZ_RETENTION_WEEKS` | 8 | how long **answers** are kept (1–8 — the privacy policy promises eight weeks at most, so a larger value is ignored); rounds with their anonymous totals are kept 52 weeks regardless. The purge runs even with the quiz off |
 
 ### A filled local dev instance
 

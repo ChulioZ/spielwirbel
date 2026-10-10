@@ -45,7 +45,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
         <div class="field">
           <label for="title">${esc(t('addGame.titleLabel'))}</label>
           <div class="lookup" id="lookup">
-            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" aria-describedby="dupHint" />
+            <input id="title" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" aria-describedby="dupHint" autocorrect="off" spellcheck="false" />
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
@@ -76,7 +76,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
           <div class="filter-chips" id="tagSeg" hidden></div>
           <div class="toolbar" style="margin-top:6px">
             <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}"
-                   aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" />
+                   aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" autocorrect="off" spellcheck="false" />
             <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>
         </div>
@@ -248,14 +248,23 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
   const preview = form.querySelector('.paste-zone__preview');
   const clearBtn = form.querySelector('#clearImg');
 
+  // Bumped by every change of the cover, so a FileReader still in flight for an
+  // older paste cannot repaint over a clear, a newer paste or an edition pick.
+  let previewSeq = 0;
+
   function setImage(blob) {
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    const seq = ++previewSeq;
     chosenImageUrl = null; // a pasted/cleared image overrides a provider cover
     chosenEdition = null; // …and so is not any BGG printing (#742)
     if (coverPicker) coverPicker.setCurrent(null);
     pastedBlob = blob;
     if (blob) {
-      preview.src = URL.createObjectURL(blob);
+      // A data: URL, not URL.createObjectURL: the CSP's img-src (lib/app.js)
+      // allows data: and deliberately not blob:, so a blob preview is refused
+      // by the browser while the upload (which sends pastedBlob) works (#1612).
+      const reader = new FileReader();
+      reader.onload = () => { if (seq === previewSeq) preview.src = reader.result; };
+      reader.readAsDataURL(blob);
       preview.hidden = false;
       pasteZone.classList.add('has-image');
       clearBtn.hidden = false;
@@ -301,7 +310,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
   // through the one function that changes the cover is what keeps the two from
   // ever describing different boxes.
   function showProviderImage(url, cover) {
-    if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+    previewSeq++;
     pastedBlob = null;
     chosenImageUrl = url;
     chosenEdition = cover ? editionFromCover(cover) : null;
@@ -502,7 +511,7 @@ function showLinkProvider(round, game) {
         <div class="field">
           <label for="linkTitle">${esc(t('linkProvider.searchLabel'))}</label>
           <div class="lookup" id="lookup">
-            <input id="linkTitle" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" />
+            <input id="linkTitle" class="input" placeholder="${esc(t('addGame.titlePlaceholder'))}" autocomplete="off" autocorrect="off" spellcheck="false" />
             <div class="lookup__menu" id="lookupMenu" hidden></div>
           </div>
           <div class="muted field__hint">${esc(t('linkProvider.searchHint'))}</div>

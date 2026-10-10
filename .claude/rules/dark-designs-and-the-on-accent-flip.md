@@ -57,7 +57,7 @@ on a committed change (#1266), and the Konto picker re-renders its own screen
 (`public/js/design-picker.js`). The marker picker has the sibling trap one
 layer over: `fetchRound()` serves the cached round, which still holds the OLD
 marker, so it seeds the SWR cache before re-rendering
-(`public/js/views-round-settings.js` `showMarker`).
+(`public/js/views-round-settings.js` `renderMarkerGrid`).
 
 The general rule: **anything that resolves a theme value in JS turns a design
 change into a re-render.** Prefer a token; when a token cannot do it (an HSL ramp

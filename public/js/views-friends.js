@@ -265,7 +265,7 @@ function buildFriendAddForm(cls) {
        <input class="input" id="friendHandle" type="text" autocomplete="off" spellcheck="false"
               autocapitalize="none" maxlength="30" aria-label="${esc(t('friends.addLabel'))}"
               data-1p-ignore data-lpignore="true" data-bwignore
-              placeholder="${esc(t('friends.addPlaceholder'))}" />
+              placeholder="${esc(t('friends.addPlaceholder'))}" autocorrect="off" />
        <button class="btn btn--primary btn--sm" type="submit">${esc(t('friends.addSubmit'))}</button>
      </form>`);
   const input = form.querySelector('#friendHandle');

@@ -178,10 +178,10 @@ function programmheftBlind(round, person, canBack, n, total) {
      words under it — the numeral is aria-hidden, the words are what is read.
    - WHO: „Deine Stimme ist da" first (P4.5's banner), the people as rows, and
      each person who can still rate on this device gets their „Für {name}" key
-     IN their row, as both sheets draw it — `hereBtns` maps person id → the
-     hot-seat button showSessionLobby() built and wired. The rows are people[]
-     in order, so row i is person i. The waiting line and the guest note follow,
-     then the „An diesem Gerät abstimmen" label as a closing line (P4.5).
+     IN their row, as both sheets draw it — showSessionLobby() puts it there for
+     every design since #1574, and `hereBtns` says whether there are any. The
+     waiting line and the guest note follow, then the „An diesem Gerät
+     abstimmen" label as a closing line (P4.5).
    - SHARE: the panel — the link and the code. The code stays a control that
      opens the server-drawn code rather than the inline code the sheets print:
      the link is minted on demand, because a token that exists is a token that
@@ -210,21 +210,13 @@ function composeProgrammheftLobby(round, root, people, voted, hereBtns) {
     </p>`));
   head.prepend(h('<span class="ph-rule" aria-hidden="true"></span>'));
 
-  const rows = [...peopleEl.querySelectorAll('.live-person')];
-  rows.forEach((row, i) => {
-    const btn = hereBtns.get(people[i] && people[i].id);
-    if (btn) row.appendChild(btn);
-  });
+  // The „Für …" keys are already in their rows (showSessionLobby, #1574).
   const done = actions.querySelector('.live-vote__done');
   if (done) peopleEl.prepend(done);
   const waiting = panel.querySelector('.live-vote__waiting');
   if (waiting) peopleEl.insertBefore(waiting, peopleEl.querySelector('.live-vote__guests'));
-  const hotseat = actions.querySelector('.live-vote__hotseat');
-  if (hotseat) {
-    hotseat.querySelector('.field__label').className = 'ph-kicker ph-lobby__here';
-    peopleEl.appendChild(hotseat.firstElementChild);
-    hotseat.remove();
-  }
+  // P4.5's closing line over those keys, while there are any.
+  if (hereBtns.size) peopleEl.appendChild(h(`<div class="ph-kicker ph-lobby__here">${esc(t('lobby.hereLabel'))}</div>`));
 
   const qr = panel.querySelector('.live-vote__qr');
   if (qr) {

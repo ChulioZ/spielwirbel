@@ -36,7 +36,7 @@ const BEST_GAME_MIN_PLAYS = 3;
 function memberStats(round, mid, deps) {
   const d = deps || {
     sessionEnding,
-    sessionPartyCount,
+    isContestSession,
     sessionPartyGroups,
     isNameableGame,
   };
@@ -49,21 +49,17 @@ function memberStats(round, mid, deps) {
   );
   const wins = finished.filter((s) => (s.winnerIds || []).includes(mid)).length;
 
-  // The RATE is over contested evenings only (#895). A solo night is not a
-  // contest, and counting it showed a member who logs their solo plays at
-  // 100 % — the naive "measure against opportunity" fix, which makes the solo
-  // case worse than the plain count it replaced rather than better. `wins`
-  // above stays over every finished night: it is a factual record of nights
-  // won, not a claim about skill.
-  // …and a night that was not ABOUT winning is not a contest either (#1038):
-  // „Kein Sieger" and „Fortsetzung folgt" leave the rate untouched rather than
-  // counting as a loss. „Verloren" stays contested and unwon — the table played
-  // to win and did not — so it lowers the rate, which is the honest reading.
-  const notAContest = (s) => {
-    const e = d.sessionEnding(s);
-    return e === 'noWinner' || e === 'ongoing';
-  };
-  const contested = joined.filter((s) => d.sessionPartyCount(round, s) > 1 && !notAContest(s));
+  // The RATE is over contested evenings only (#895) — `isContestSession`
+  // (session-people.js) says which. A solo night is not a contest, and counting
+  // it showed a member who logs their solo plays at 100 % — the naive "measure
+  // against opportunity" fix, which makes the solo case worse than the plain
+  // count it replaced rather than better. `wins` above stays over every
+  // finished night: it is a factual record of nights won, not a claim about
+  // skill. „Kein Sieger"/„Fortsetzung folgt" (#1038) leave the rate untouched;
+  // „Verloren" stays contested and unwon — the table played to win and did not
+  // — and so does a whole-table team's (#1624): four people beating the game
+  // together is a win for each of them, and losing to it a loss.
+  const contested = joined.filter((s) => d.isContestSession(round, s, d.sessionEnding));
   const contestedWins = contested.filter((s) => (s.winnerIds || []).includes(mid)).length;
   const winRate = contested.length ? contestedWins / contested.length : null;
   // The two COUNTS ride out alongside the rate (#1089), because a rate cannot be
@@ -148,9 +144,10 @@ function memberStats(round, mid, deps) {
      read, and in most rounds all but one person carried a negative number. A
      rate says the same thing in a form nobody has to have explained.
 
-     THE DENOMINATOR IS `contested`, the same one `winRate` uses — a solo night
-     is not a contest, and „Kein Sieger"/„Fortsetzung folgt" are not either, so
-     counting them would make a member who logs solo plays unbeatable. That is
+     THE DENOMINATOR IS `contested`, the same one `winRate` uses — a one-person
+     night is not a contest, and „Kein Sieger"/„Fortsetzung folgt" are not
+     either, so counting them would make a member who logs solo plays
+     unbeatable. A whole-table team's plays DO count (#1624). That is
      the trap #895 was originally written to close, and a per-game rate walks
      straight into it unless it borrows the same denominator.
 

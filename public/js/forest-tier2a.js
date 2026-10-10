@@ -215,9 +215,8 @@ function forestMemberPage(card, round, member, st, nameEl) {
 const FOREST_RECENT_SESSIONS = 4;
 
 function forestRecentSessions(round, mid) {
-  const rows = round.sessions
-    .filter((s) => s.finished && (!Array.isArray(s.memberIds) || s.memberIds.includes(mid)))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const rows = newestSessionsFirst(round.sessions
+    .filter((s) => s.finished && (!Array.isArray(s.memberIds) || s.memberIds.includes(mid))))
     .slice(0, FOREST_RECENT_SESSIONS);
   if (!rows.length) return null;
   const panel = h(`<div class="forest-recent">

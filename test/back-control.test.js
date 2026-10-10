@@ -87,6 +87,7 @@ function bootApp(t, { loggedIn = true, profile = null } = {}) {
     if (/\/activities$/.test(url)) return [];
     if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
     if (url === '/api/rounds') return [SUMMARY];
+    if (url === '/api/price-watches') return { watches: [], limit: 50 };
     return {};
   });
   dom.set('accountsActive', () => true);
@@ -132,7 +133,6 @@ function assertRendered(app, name) {
 
 /** Every screen that must offer exactly one way back, and how to render it. */
 const NON_MAIN = [
-  ['design', (dom) => dom.call('showMarker', RID)],
   ['tags', (dom) => dom.call('showTags', RID)],
   ['game detail', (dom) => dom.call('showGameDetail', RID, 'g1')],
   ['member', (dom) => dom.call('showMember', RID, 'm1')],
@@ -143,6 +143,7 @@ const NON_MAIN = [
   ['session results', (dom, round) => dom.call('showResults', round, SESSION)],
   ['profile', (dom) => dom.call('showProfile', 'ada')],
   ['new round', (dom) => dom.call('showNewRound')],
+  ['quiz archive', (dom) => dom.call('showQuizArchive')],
 ];
 
 /** Every screen persistent chrome reaches, which must therefore offer none. */
@@ -161,6 +162,10 @@ const MAIN = [
   // bootApp's `fetch`, so it renders its empty state here — which still has to
   // satisfy assertRendered, i.e. the screen is genuinely there.
   ['entdecken', (dom) => dom.call('showEntdecken')],
+  // Preisalarme (#680), the account menu's watch list — only where prices
+  // exist, so the cached config says they do.
+  ['preisalarme', (dom) => { dom.run('accountCfg = { prices: true }'); return dom.call('showPriceWatches'); }],
+  ['quiz', (dom) => { dom.run('accountCfg = { quiz: true }'); return dom.call('showQuiz'); }],
 ];
 
 for (const [name, render] of NON_MAIN) {

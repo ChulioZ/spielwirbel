@@ -113,11 +113,16 @@ pushes its log entry **inside** the claim rather than through `withSession`'s
 
 ## Smaller things
 
-- **The seating atom is a PARTY, not a person** (#575): three parties is three
-  hands whatever the headcount behind them, so `MIN_TABLE_PARTIES` and every range
-  check counts parties while every rating counts people. The two are never
-  conflated, and `sessionPartyGroups` is the name-free resolver the server needs
-  (`partyName` reads `t()`, which does not exist in Node).
+- **The seating atom is a PARTY, not a person** (#575), so a team never spans two
+  tables — but since #1610 a party WEIGHS its seats (`seats` on
+  `sessionPartyGroups`): a team sharing one hand takes one, an own-seat team its
+  headcount. `MIN_TABLE_PARTIES` (the name predates this) and every range check
+  count seats while every rating counts people, and the two are never conflated.
+  The search places the heaviest parties first and checks a move or swap against
+  both tables' admitted seat counts; with every party one seat it is
+  byte-identical to before (`test/team-seats-split.test.js`). `sessionPartyGroups`
+  is the name-free resolver the server needs (`partyName` reads `t()`, which does
+  not exist in Node).
 - **An admitted table size may have HOLES.** A 3-4 base with a 6-8 expansion
   admits {3,4,6,7,8} and nothing at 5, so the search enumerates admitted sizes
   rather than reducing them to a min/max pair

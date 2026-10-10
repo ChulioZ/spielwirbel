@@ -112,7 +112,7 @@ function programmheftEdition(round, session, winnerIds) {
   const at = String(session.createdAt);
   const before = (round.sessions || []).filter((s) => s.id !== session.id && s.finished && String(s.createdAt) <= at);
   const here = { ...session, finished: true, winnerIds: (winnerIds || []).slice() };
-  const run = winStreak(round, [...before, here], { sessionEnding, sessionPartyCount });
+  const run = winStreak(round, [...before, here], { sessionEnding, isContestSession });
   const young = youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM;
   // This session's winners hold the run whenever it ends here — a tie included
   // (#1421), since the walk starts from their night.

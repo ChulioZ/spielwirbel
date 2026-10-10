@@ -48,7 +48,10 @@ function renderTeamPicker(round, joining, guestList, note, onChange) {
       <div class="muted field__hint">${esc(note)}</div>
     </div>`);
 
-  // Formed teams, each an array of tokens. Order is the order they were formed.
+  // Formed teams, each `{ tokens, sharedSeat }`. Order is the order they were
+  // formed. `sharedSeat` (#1610) says whether its people share one hand (one
+  // player) or each have a seat (their headcount); a new team starts on own
+  // seats, which is what a cooperative table or a pair in Tichu is.
   const teams = [];
   // Tokens ticked in the pool, waiting to become a team.
   const selected = new Set();
@@ -90,21 +93,40 @@ function renderTeamPicker(round, joining, guestList, note, onChange) {
     const all = people();
     const live = new Set(all.map((p) => p.token));
     for (let i = teams.length - 1; i >= 0; i--) {
-      teams[i] = teams[i].filter((tk) => live.has(tk));
-      if (teams[i].length < MIN_TEAM_SIZE) teams.splice(i, 1);
+      teams[i].tokens = teams[i].tokens.filter((tk) => live.has(tk));
+      if (teams[i].tokens.length < MIN_TEAM_SIZE) teams.splice(i, 1);
     }
     [...selected].forEach((tk) => { if (!live.has(tk)) selected.delete(tk); });
 
     const teamed = new Set();
-    teams.forEach((tokens) => tokens.forEach((tk) => teamed.add(tk)));
+    teams.forEach((team) => team.tokens.forEach((tk) => teamed.add(tk)));
 
     list.innerHTML = '';
-    teams.forEach((tokens, i) => {
-      const name = nameOf(all, tokens);
-      const card = h(`<div class="team-card">
+    teams.forEach((team, i) => {
+      const name = nameOf(all, team.tokens);
+      // Own seats or one shared seat (#1610), as two pressed-state buttons
+      // rather than one toggle: both states are named on screen, so nobody has
+      // to work out what the switch's other position means.
+      const opt = (sharedSeat, key) =>
+        `<button type="button" class="team-card__opt" data-shared="${sharedSeat}" aria-pressed="${team.sharedSeat === sharedSeat}">${esc(t(key))}</button>`;
+      const card = h(`<div class="team-card team-card--seats">
            <span class="team-card__name">${iconText('ti-users', name)}</span>
+           <span class="team-card__mode" role="group" aria-label="${esc(t('startSession.teamSeatsLabel', { name }))}">${opt(false, 'startSession.teamOwnSeats')}${opt(true, 'startSession.teamSharedSeat')}</span>
            <button type="button" class="team-card__del" aria-label="${esc(t('startSession.teamDissolve', { name }))}"><i class="ti ti-x" aria-hidden="true"></i></button>
          </div>`);
+      card.querySelectorAll('.team-card__opt').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const sharedSeat = btn.dataset.shared === 'true';
+          if (team.sharedSeat === sharedSeat) return;
+          team.sharedSeat = sharedSeat;
+          render();
+          // The re-render replaced the button that had focus; hand it to its
+          // successor, or a keyboard user is dropped back to the page's start.
+          const next = list.children[i] && list.children[i].querySelector(`.team-card__opt[data-shared="${sharedSeat}"]`);
+          if (next) next.focus();
+          if (onChange) onChange();
+        });
+      });
       card.querySelector('.team-card__del').addEventListener('click', () => {
         teams.splice(i, 1);
         render();
@@ -140,7 +162,7 @@ function renderTeamPicker(round, joining, guestList, note, onChange) {
     // Keep the table's own order inside a team, so the derived name reads the
     // same as it will once the session is stored.
     const order = people().map((p) => p.token);
-    teams.push(order.filter((tk) => selected.has(tk)));
+    teams.push({ tokens: order.filter((tk) => selected.has(tk)), sharedSeat: false });
     selected.clear();
     render();
     if (onChange) onChange();
@@ -150,14 +172,19 @@ function renderTeamPicker(round, joining, guestList, note, onChange) {
 
   field.refreshTeams = render;
   field.teamCount = () => teams.length;
-  // How many people are in a team at all — the caller subtracts this and adds
-  // teamCount() to turn a headcount into the number of playing parties.
-  field.teamedPeopleCount = () => teams.reduce((n, tokens) => n + tokens.length, 0);
+  // The caller turns a headcount into SEATS (#1610) with these two: subtract the
+  // people in teams that share one seat, add one per such team. An own-seat
+  // team changes nothing, its people already being counted one each. The same
+  // count `sessionSeatCount` makes of the stored session, from live pickers.
+  const shared = () => teams.filter((team) => team.sharedSeat);
+  field.sharedTeamedPeopleCount = () => shared().reduce((n, team) => n + team.tokens.length, 0);
+  field.sharedTeamCount = () => shared().length;
   // Wire format (#575): member ids plus guest POSITIONS, resolved from the keys
   // only now, because the server mints guest ids from the very same list in the
   // same request.
   field.teamPayload = () =>
-    teams.map((tokens) => ({
+    teams.map(({ tokens, sharedSeat }) => ({
+      sharedSeat,
       memberIds: tokens
         .filter((tk) => tk.startsWith(TEAM_TOKEN_MEMBER))
         .map((tk) => tk.slice(TEAM_TOKEN_MEMBER.length)),

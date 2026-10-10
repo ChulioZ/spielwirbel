@@ -518,6 +518,67 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(s.openSessions.map((o) => o.id), [made[4].id, made[3].id, made[2].id]);
   });
 
+  /* Two sessions at ONE stamp (#1622) — every session logged for the same past
+     day is stored at 20:00 local, so this is the ordinary case, not an edge.
+     On a tie the later-inserted session is the newer one (the round read's own
+     order, public/js/session-order.js), so both newest-first summaries must
+     pick it. The JSON side gets that from newestSessionsFirst; the SQL restates
+     it as `seq DESC`, and a descending sort whose tiebreak stayed ascending
+     picks the FIRST-entered session on both. */
+  test('listRoundSummaries: a createdAt tie goes to the later-inserted session', async () => {
+    const day = '2026-03-14T19:00:00.000Z';
+    const round = await freshRound({ name: 'Tie' });
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Entered first' }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Entered second' }));
+    for (const game of [a, b]) {
+      await repo.createSession(T, round.id, {
+        createdAt: day, gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: day,
+        finished: true, finishedAt: day, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      });
+    }
+    const open = [];
+    for (let i = 0; i < 2; i++) {
+      open.push(await repo.createSession(T, round.id, {
+        createdAt: day, gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+        finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      }));
+    }
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.lastPlayed.gameTitle, 'Entered second');
+    assert.deepEqual(s.openSessions.map((o) => o.id), [open[1].id, open[0].id]);
+    const one = await repo.getRoundSummary(T, round.id);
+    assert.equal(one.lastPlayed.gameTitle, 'Entered second');
+    assert.deepEqual(one.openSessions.map((o) => o.id), [open[1].id, open[0].id]);
+  });
+
+  /* A session with no `createdAt` (it predates the field) sorts LAST in both
+     summaries — newestSessionsFirst's rule. Postgres' DESC puts a NULL first
+     unless told otherwise, so without NULLS LAST an undated row inserted last
+     becomes the home screen's „zuletzt gespielt" on one backend only. */
+  test('listRoundSummaries: an undated session sorts behind every dated one', async () => {
+    const round = await freshRound({ name: 'Undated' });
+    const dated = await repo.createGame(T, round.id, gameFields({ title: 'Dated' }));
+    const bare = await repo.createGame(T, round.id, gameFields({ title: 'Undated' }));
+    const at = '2026-03-14T19:00:00.000Z';
+    const finished = (game, over) => ({
+      gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: at,
+      finished: true, finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true, ...over,
+    });
+    const openRow = (over) => ({
+      gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false, ...over,
+    });
+    await repo.createSession(T, round.id, finished(dated, { createdAt: at }));
+    await repo.createSession(T, round.id, finished(bare, {}));
+    const datedOpen = await repo.createSession(T, round.id, openRow({ createdAt: at }));
+    const bareOpen = await repo.createSession(T, round.id, openRow({}));
+    assert.equal('createdAt' in bareOpen, false, 'the fixture grew the key it is meant to lack');
+
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.lastPlayed.gameTitle, 'Dated');
+    assert.deepEqual(s.openSessions.map((o) => o.id), [datedOpen.id, bareOpen.id]);
+  });
+
   test('listRoundSummaries is tenant-scoped and returns snapshots', async () => {
     const round = await freshRound();
     await repo.setBackground(T, round.id, { type: 'theme', page: '#eee', accent: '#111111' });
@@ -1841,6 +1902,45 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteSession(T, round.id, session.id), false);
   });
 
+  // A session logged after the fact (#1616) is inserted LAST while belonging
+  // earlier, so both backends must read a round's sessions back by createdAt —
+  // Postgres from its `seq`-ordered rows, JSON from its insertion-ordered array.
+  // Equal stamps keep insertion order, which is what lets the tables of one
+  // split stay in the order they were written.
+  test('a round reads its sessions by createdAt; setSessionDate moves all three stamps', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const blob = (createdAt, finished) => ({
+      createdAt, gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: createdAt,
+      finished, finishedAt: finished ? createdAt : null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const march = await repo.createSession(T, round.id, blob('2026-03-10T20:00:00.000Z', true));
+    const tieA = await repo.createSession(T, round.id, blob('2026-02-01T20:00:00.000Z', true));
+    const tieB = await repo.createSession(T, round.id, blob('2026-02-01T20:00:00.000Z', false));
+    const order = async () => (await repo.getRound(T, round.id)).sessions.map((s) => s.id);
+    assert.deepEqual(await order(), [tieA.id, tieB.id, march.id], 'by date, ties in insertion order');
+    assert.deepEqual((await repo.listRounds(T)).find((r) => r.id === round.id).sessions.map((s) => s.id),
+      [tieA.id, tieB.id, march.id], 'the list read agrees with the single read');
+
+    const at = '2026-01-15T20:00:00.000Z';
+    const moved = await repo.setSessionDate(T, round.id, march.id, at,
+      { at: 'now', type: 'redated' });
+    assert.equal(moved.createdAt, at);
+    assert.equal(moved.chosenAt, at);
+    assert.equal(moved.finishedAt, at);
+    assert.deepEqual(moved.events.map((e) => e.type), ['redated']);
+    assert.deepEqual(await order(), [march.id, tieA.id, tieB.id]);
+
+    // An unfinished session keeps a null finishedAt rather than gaining one.
+    const open = await repo.setSessionDate(T, round.id, tieB.id, at);
+    assert.equal(open.finishedAt, null);
+    assert.equal(await repo.setSessionDate(T, round.id, 'missing', at), null);
+
+    // And a finish with an explicit stamp keeps it, where an absent one is now.
+    const kept = await repo.finishSession(T, round.id, tieA.id, { finished: true, winnerIds: [], at });
+    assert.equal(kept.finishedAt, at);
+  });
+
   // How a played session ended when nobody won (#1038). Like `guests` below it
   // lives inside the blob, so the absent-key parity is the thing that can break
   // silently — and here there is a second half the guests case does not have:
@@ -2461,6 +2561,32 @@ module.exports = function repoContract(repo) {
       await repo.renameRound(T, round.id, `${round.name} II`, null),
     ]) assert.equal('providers' in shape, false);
     assert.equal(typeof repo.setProviders, 'undefined', 'the writer is gone with the setting');
+  });
+
+  /* -------------------- Playing-time override (#1627) --------------------- */
+
+  test('updateGame stores a playing-time override and a cleared one leaves NO key', async () => {
+    const round = await freshRound({ name: 'Playtime' });
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Massive Darkness' }));
+    // The provider pair is what a BGG fill writes; the override sits beside it.
+    await repo.setGameProviderInfo(T, round.id, game.id, { minPlaytime: 60, maxPlaytime: 90 });
+
+    const set = await repo.updateGame(T, round.id, game.id, { playtimeOverride: { min: 120, max: 180 } });
+    assert.deepEqual(set.playtimeOverride, { min: 120, max: 180 });
+
+    // A later fill with DIFFERENT numbers must not touch it — the whole reason it
+    // is a separate key (assignProviderInfo overwrites the provider pair).
+    await repo.setGameProviderInfo(T, round.id, game.id, { minPlaytime: 45, maxPlaytime: 75 });
+    let read = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.deepEqual(read.playtimeOverride, { min: 120, max: 180 });
+    assert.equal(read.maxPlaytime, 75, 'the provider pair stays the provider\'s');
+
+    // Cleared alongside another field in the same patch: the other field lands,
+    // the key goes — absent, never a stored null, identically in both backends.
+    await repo.updateGame(T, round.id, game.id, { title: 'Massive Darkness 2', playtimeOverride: null });
+    read = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
+    assert.equal('playtimeOverride' in read, false);
+    assert.equal(read.title, 'Massive Darkness 2');
   });
 
   /* -------------------------- Game owners (#971) --------------------------- */
@@ -3801,6 +3927,287 @@ module.exports = function repoContract(repo) {
     // Idempotent: a second sweep over the same window finds nothing left of ours.
     await repo.deleteExpiredSessionVoteLinks('2999-01-01T00:00:00.000Z');
     assert.equal(await repo.findSessionVoteLink(fresh.id), null);
+  });
+
+  test('joinRound (#1604): claim, seat and grant land together — and a refusal writes nothing', async () => {
+    const t = `jr-${uniq()}`;
+    const round = await repo.createRound(t, { name: 'Joinbar', members: ['Ann', 'Bo', 'Cy'] });
+    const [ann, bo, cy] = round.members;
+    const u = (k) => `jr-user-${k}-${uniq()}`;
+    const grantOf = async (uid) => (await repo.listGrantsForUser(uid)).find((g) => g.roundId === round.id);
+    const membersNow = async () => (await repo.getRoundMeta(t, round.id)).members;
+
+    // A seat link: the link is consumed, the seat taken, the grant written.
+    const link = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: ann.id });
+    const u1 = u(1);
+    const ok = await repo.joinRound(t, round.id, { userId: u1, memberId: ann.id, memberName: 'x', role: 'editor', claim: { link: link.id } });
+    assert.equal(ok.memberId, ann.id);
+    assert.equal((await grantOf(u1)).memberId, ann.id);
+    assert.equal((await membersNow()).find((m) => m.id === ann.id).userId, u1);
+    assert.equal(await repo.findRoundInviteLink(link.id), null, 'the link is consumed');
+
+    // An invitation into a fresh seat: accepted, seat created, grant with the role.
+    const u2 = u(2);
+    const inv = await repo.createInvitation({ roundId: round.id, ownerTenantId: t, inviterUserId: 'owner', inviteeUserId: u2, memberId: null, role: 'coowner' });
+    const fresh = await repo.joinRound(t, round.id, { userId: u2, memberName: 'Dee', role: 'coowner', claim: { invitation: inv.id } });
+    assert.equal((await membersNow()).find((m) => m.id === fresh.memberId).name, 'Dee');
+    assert.equal((await grantOf(u2)).role, 'coowner');
+    assert.equal((await repo.getInvitation(inv.id)).status, 'accepted');
+
+    // Refusals, each leaving everything exactly as it was.
+    const seats = async () => (await membersNow()).map((m) => ({ id: m.id, name: m.name, userId: m.userId || null }));
+    const before = await seats();
+    const u3 = u(3);
+    const inv3 = await repo.createInvitation({ roundId: round.id, ownerTenantId: t, inviterUserId: 'owner', inviteeUserId: u3, memberId: bo.id, role: 'editor' });
+    const link3 = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: bo.id });
+    // The seat is taken in between (here: by u1's own seat, the one already claimed).
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: ann.id, memberName: 'x', claim: { invitation: inv3.id } }), 'seat_unavailable');
+    assert.equal((await repo.getInvitation(inv3.id)).status, 'pending', 'the claim rolled back with the refusal');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: 'gone', memberName: 'x', claim: { link: link3.id } }), 'seat_unavailable');
+    assert.ok(await repo.findRoundInviteLink(link3.id), 'the link survives a refused join');
+    await repo.retireMember(t, round.id, cy.id, true);
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberId: cy.id, memberName: 'x' }), 'seat_unavailable', 'a retired seat');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u1, memberName: 'again' }), 'already_member');
+    // An account linked to a seat by the owner, with NO grant: only the seat
+    // check can see it (the grant index cannot), so it is pinned on its own.
+    const linkedOnly = u('linked');
+    await repo.updateMember(t, round.id, bo.id, { userId: linkedOnly });
+    assert.equal(await repo.joinRound(t, round.id, { userId: linkedOnly, memberName: 'twice' }), 'already_member');
+    await repo.updateMember(t, round.id, bo.id, { userId: null });
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', claim: { link: 'no-such-link' } }), 'claim_lost');
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', claim: { invitation: inv.id } }), 'claim_lost', 'no longer pending');
+    const count = (await membersNow()).length;
+    assert.equal(await repo.joinRound(t, round.id, { userId: u3, memberName: 'x', memberLimit: count }), 'quota_members');
+    assert.equal(await repo.joinRound(`${t}-other`, round.id, { userId: u3, memberName: 'x' }), 'round_gone', 'another tenant cannot reach the round');
+    assert.deepEqual(await seats(), before, 'no refusal added, claimed or changed a seat');
+    assert.equal(await grantOf(u3), undefined, 'and no refusal wrote a grant');
+
+    // A grant WITHOUT a seat, joining a full round: both backends say
+    // already_member — the state, not the quota, is the answer.
+    const grantOnly = u('grant-only');
+    await repo.createGrant({ roundId: round.id, ownerTenantId: t, userId: grantOnly, memberId: null, role: 'editor' });
+    assert.equal(await repo.joinRound(t, round.id, { userId: grantOnly, memberName: 'x', memberLimit: 0 }), 'already_member');
+
+    // A fresh-seat link is checked, not consumed; a gone one refuses the join.
+    const freshLink = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    const u4 = u(4);
+    assert.ok((await repo.joinRound(t, round.id, { userId: u4, memberName: 'Ed', claim: { link: freshLink.id, consume: false } })).memberId);
+    assert.ok(await repo.findRoundInviteLink(freshLink.id), 'a reusable link survives a join');
+    await repo.deleteRoundInviteLink(freshLink.id);
+    assert.equal(await repo.joinRound(t, round.id, { userId: u(5), memberName: 'x', claim: { link: freshLink.id, consume: false } }), 'claim_lost',
+      'a fresh link revoked before the write refuses the join');
+
+    // claimMemberSeat: the conditional claim an owner's self-claim goes through.
+    const free = (await membersNow()).find((m) => !m.userId && !m.retired);
+    const owner = u('owner');
+    assert.equal((await repo.claimMemberSeat(t, round.id, free.id, owner)).userId, owner);
+    assert.equal((await repo.claimMemberSeat(t, round.id, free.id, owner)).userId, owner, 'their own seat again is fine');
+    assert.equal(await repo.claimMemberSeat(t, round.id, ann.id, owner), 'seat_taken', 'never overwrites another account');
+    assert.equal((await membersNow()).find((m) => m.id === ann.id).userId, u1);
+    assert.equal(await repo.claimMemberSeat(t, round.id, 'nope', owner), null);
+    await repo.updateMember(t, round.id, free.id, { userId: null });
+
+    // Two accounts racing for one seat link: exactly one gets it.
+    const race = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: bo.id });
+    const [ra, rb] = [u('ra'), u('rb')];
+    const results = await Promise.all([ra, rb].map((uid) =>
+      repo.joinRound(t, round.id, { userId: uid, memberId: bo.id, memberName: 'x', claim: { link: race.id } })));
+    assert.equal(results.filter((r) => r && r.memberId === bo.id).length, 1, `one winner: ${JSON.stringify(results)}`);
+    assert.equal([await grantOf(ra), await grantOf(rb)].filter(Boolean).length, 1);
+
+    // Five accounts racing for the LAST fresh seat under the quota: exactly one
+    // gets it. The count and the insert share the round's lock — without it,
+    // several read the same count and all insert.
+    const limit = (await membersNow()).length + 1;
+    const racers = [1, 2, 3, 4, 5].map((k) => u(`q${k}`));
+    const outcomes = await Promise.all(racers.map((uid) =>
+      repo.joinRound(t, round.id, { userId: uid, memberName: 'racer', memberLimit: limit })));
+    assert.equal(outcomes.filter((r) => r && r.memberId).length, 1, `one seat under the quota: ${JSON.stringify(outcomes)}`);
+    assert.equal((await membersNow()).length, limit);
+  });
+
+  test('weekly quiz (#743): one round per week, announced once, one final answer per question, purged by week', async () => {
+    const tag = uniq();
+    // Week keys far from any real week, so other cases' rounds never collide.
+    const wk = (n) => `19${String(10 + (parseInt(tag.slice(1, 3), 16) % 80)).padStart(2, '0')}-W${String(n).padStart(2, '0')}`;
+    const round = { week: wk(10), generatedAt: '2026-10-09T00:00:00.000Z', dumpDate: '2026-10-01', questions: [{ type: 'year', answer: 1 }], sample: null };
+    const created = await repo.createQuizRound(round);
+    assert.equal(created.week, wk(10));
+    assert.equal(created.announcedAt, null);
+    assert.equal(await repo.createQuizRound({ ...round, questions: [] }), 'exists');
+    assert.deepEqual((await repo.getQuizRound(wk(10))).questions, round.questions, 'the first round stands');
+    assert.equal(await repo.getQuizRound(wk(11)), null);
+    await repo.createQuizRound({ ...round, week: wk(9) });
+    assert.deepEqual((await repo.listQuizRounds(1000)).filter((r) => r.week.startsWith(wk(1).slice(0, 4))).map((r) => r.week), [wk(10), wk(9)], 'newest first');
+
+    // Announced exactly once.
+    assert.equal(await repo.claimQuizAnnouncement(wk(10), '2026-10-09T01:00:00.000Z'), true);
+    assert.equal(await repo.claimQuizAnnouncement(wk(10), '2026-10-09T01:00:01.000Z'), false);
+    assert.equal(await repo.claimQuizAnnouncement(wk(11), '2026-10-09T01:00:00.000Z'), false, 'no round, nothing to claim');
+
+    // Answers: created on the first, each question final.
+    const uid = `qz-${tag}`;
+    const other = `qz-other-${tag}`;
+    const first = await repo.recordQuizAnswer(uid, wk(10), 1, 3, { choice: 2, correct: true });
+    assert.equal(first.userId, uid);
+    assert.equal(first.week, wk(10));
+    assert.equal(first.score, 1);
+    assert.equal(first.answers.length, 3);
+    assert.equal(first.answers[0], null, 'an unanswered slot stays null, not absent');
+    assert.equal(await repo.recordQuizAnswer(uid, wk(10), 1, 3, { choice: 0, correct: false }), 'answered');
+    const second = await repo.recordQuizAnswer(uid, wk(10), 0, 3, { choice: 0, correct: false });
+    assert.equal(second.score, 1);
+    assert.deepEqual(second.answers.map((a) => a && a.choice), [0, 2, null]);
+    assert.equal((await repo.getQuizSubmission(uid, wk(10))).id, first.id, 'one submission per account and week');
+    assert.equal(await repo.getQuizSubmission(other, wk(10)), null);
+    // Racing answers to ONE question of an EXISTING submission: exactly one is
+    // recorded. The submission must exist first — a first answer is already
+    // serialised by the insert's unique index, so racing that would stay green
+    // with the row lock deleted (measured on Postgres).
+    await repo.recordQuizAnswer(other, wk(10), 0, 3, { choice: 0, correct: false });
+    const raced = await Promise.all([0, 1, 2].map((c) => repo.recordQuizAnswer(other, wk(10), 2, 3, { choice: c, correct: c === 1 })));
+    assert.equal(raced.filter((r) => r === 'answered').length, 2, 'a raced question took more than one answer');
+    await repo.recordQuizAnswer(other, wk(9), 0, 3, { choice: 0, correct: true });
+
+    assert.deepEqual((await repo.listQuizSubmissions(wk(10), [uid, other, 'nobody'])).map((x) => x.userId).sort(), [other, uid].sort());
+    assert.deepEqual(await repo.listQuizSubmissions(wk(10), []), []);
+    const players = await repo.listQuizPlayers(wk(10));
+    assert.ok(players.includes(other), 'played an earlier week');
+    assert.ok(!players.includes(uid), 'played only the current week');
+
+    // The round item replaces the account's previous one and leaves the rest —
+    // and is refused for an account that does not exist (erased since the
+    // fan-out read its list).
+    assert.equal(await repo.putQuizRoundItem(`qz-gone-${tag}`, { week: wk(10), questions: 5 }), null);
+    const owner = (await repo.createUser({ email: `${uid}@example.test`, username: uid, tenantId: uid })).id;
+    await repo.addInboxItem(owner, { type: 'friend_request', payload: {} });
+    await repo.putQuizRoundItem(owner, { week: wk(9), questions: 5 });
+    await repo.putQuizRoundItem(owner, { week: wk(10), questions: 5 });
+    const inbox = await repo.listInbox(owner);
+    assert.deepEqual(inbox.filter((it) => it.type === 'quiz_round').map((it) => it.payload.week), [wk(10)]);
+    assert.equal(inbox.filter((it) => it.type === 'friend_request').length, 1);
+    assert.equal(inbox.find((it) => it.type === 'quiz_round').read, false);
+
+    // The anonymous read for the statistics: answers only, no account ids.
+    const weekAnswers = await repo.listQuizWeekAnswers(wk(10));
+    assert.equal(weekAnswers.length, 2);
+    assert.ok(weekAnswers.every((a) => Array.isArray(a) && a.length === 3));
+    assert.ok(!JSON.stringify(weekAnswers).includes(uid), 'the anonymous read carries an account id');
+    // A closed week's totals are written once and kept.
+    assert.equal(await repo.setQuizRoundStats(wk(10), { players: 2, scoreSum: 1, questions: [] }), true);
+    assert.equal(await repo.setQuizRoundStats(wk(10), { players: 9, scoreSum: 9, questions: [] }), false);
+    assert.equal((await repo.getQuizRound(wk(10))).stats.players, 2);
+    assert.equal(await repo.setQuizRoundStats(wk(11), { players: 1 }), false, 'no round, no totals');
+
+    // Purge, two horizons: answers before one week, rounds before another.
+    const kept = await repo.purgeQuizBefore({ roundsBefore: wk(1), submissionsBefore: wk(10) });
+    assert.equal(kept.rounds, 0, 'a round older than the answers horizon but inside its own stays');
+    assert.ok(await repo.getQuizRound(wk(9)));
+    assert.equal(await repo.getQuizSubmission(other, wk(9)), null);
+    const removed = await repo.purgeQuizBefore({ roundsBefore: wk(10), submissionsBefore: wk(10) });
+    assert.ok(removed.rounds >= 1);
+    assert.equal(await repo.getQuizRound(wk(9)), null);
+    assert.ok(await repo.getQuizRound(wk(10)));
+    assert.equal(await repo.getQuizSubmission(other, wk(9)), null);
+    assert.ok(await repo.getQuizSubmission(other, wk(10)));
+    await repo.purgeQuizBefore({ roundsBefore: wk(99), submissionsBefore: wk(99) });
+  });
+
+  test('price watches (#680): one per account and game, owner-scoped, claimed once, recorded with one inbox item', async () => {
+    const tag = uniq();
+    const uid = `pw-${tag}`;
+    const other = `pw-other-${tag}`;
+    const fields = (externalId) => ({ externalId, title: `Spiel ${externalId}`, thresholdCents: 3000, destination: 'DE', currency: 'EUR', editionLang: 'DE' });
+    const a = await repo.createPriceWatch(uid, fields(String(parseInt(tag.slice(1, 9), 16))));
+    assert.equal(a.userId, uid);
+    assert.equal(a.armed, true);
+    assert.equal(a.lastCheckedAt, null);
+    assert.equal(await repo.createPriceWatch(uid, fields(a.externalId)), 'exists');
+    const theirs = await repo.createPriceWatch(other, fields(a.externalId));
+    assert.notEqual(theirs, 'exists', 'another account may watch the same game');
+
+    assert.deepEqual((await repo.listPriceWatches(uid)).map((w) => w.id), [a.id]);
+    assert.equal(await repo.getPriceWatch(other, a.id), null, 'scoped to the owner');
+    assert.equal(await repo.updatePriceWatch(other, a.id, { thresholdCents: 1 }), null);
+    assert.equal((await repo.updatePriceWatch(uid, a.id, { thresholdCents: 2500 })).thresholdCents, 2500);
+
+    // Due, then claimed exactly once.
+    const due = await repo.listDuePriceWatches('2999-01-01T00:00:00.000Z', '2999-01-01T00:00:00.000Z', 10000);
+    assert.ok(due.some((w) => w.id === a.id));
+    const at = new Date().toISOString();
+    assert.equal(await repo.claimPriceWatch(a.id, null, at), true);
+    assert.equal(await repo.claimPriceWatch(a.id, null, at), false, 'the second claimer saw a stale attempt');
+    const notDue = await repo.listDuePriceWatches('2999-01-01T00:00:00.000Z', '2000-01-01T00:00:00.000Z', 10000);
+    assert.ok(!notDue.some((w) => w.id === a.id), 'an attempt pauses the watch');
+
+    // Recording: state + one inbox item, replacing this watch's previous one and
+    // leaving every other item alone.
+    await repo.addInboxItem(uid, { type: 'friend_request', payload: { x: 1 } });
+    await repo.recordPriceWatchCheck(a.id, { lastCheckedAt: at, armed: false }, { watchId: a.id, amountCents: 2400 });
+    await repo.recordPriceWatchCheck(a.id, { lastCheckedAt: at }, { watchId: a.id, amountCents: 2300 });
+    const inbox = await repo.listInbox(uid);
+    const priceDrops = inbox.filter((it) => it.type === 'price_drop');
+    assert.equal(priceDrops.length, 1);
+    assert.equal(priceDrops[0].payload.amountCents, 2300);
+    assert.ok(inbox.some((it) => it.type === 'friend_request'));
+    assert.equal((await repo.getPriceWatch(uid, a.id)).armed, false);
+    assert.equal((await repo.recordPriceWatchCheck(a.id, {}, null)).id, a.id, 'no item without a payload');
+    assert.equal((await repo.listInbox(uid)).filter((it) => it.type === 'price_drop').length, 1);
+
+    // A record decided against a threshold that has since changed is dropped.
+    await repo.updatePriceWatch(uid, a.id, { thresholdCents: 2000, armed: true });
+    assert.equal(await repo.recordPriceWatchCheck(a.id, { armed: false }, null, 2500), null);
+    assert.equal((await repo.getPriceWatch(uid, a.id)).armed, true, 'the edit stands');
+
+    // Ending the watch takes its price message with it, and nothing else.
+    assert.equal((await repo.deletePriceWatch(uid, a.id)).id, a.id);
+    assert.equal(await repo.deletePriceWatch(uid, a.id), null);
+    const after = await repo.listInbox(uid);
+    assert.equal(after.filter((it) => it.type === 'price_drop').length, 0);
+    assert.ok(after.some((it) => it.type === 'friend_request'));
+  });
+
+  test('round invite links (#1515): one per slot, replaced on re-mint, consumed once, swept by age', async () => {
+    const t = `ril-${Math.random().toString(16).slice(2)}`;
+    const round = await repo.createRound(t, { name: 'Invited', members: ['Ann', 'Bo'] });
+    const [ann] = round.members;
+
+    const first = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    assert.ok(/^[A-Za-z0-9_-]{32,}$/.test(first.id), `an unguessable base64url token (got ${first.id})`);
+    assert.equal(first.memberId, null);
+    assert.equal(first.ownerTenantId, t);
+    const seat = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: ann.id });
+    assert.equal(seat.memberId, ann.id);
+
+    // Re-minting the fresh slot REPLACES its link; the seat slot is untouched.
+    const second = await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: t, memberId: null });
+    assert.notEqual(second.id, first.id);
+    assert.equal(await repo.findRoundInviteLink(first.id), null, 'the replaced token no longer resolves');
+    const listed = await repo.listRoundInviteLinks(round.id);
+    assert.deepEqual(listed.map((l) => l.id).sort(), [second.id, seat.id].sort());
+    assert.equal((await repo.findRoundInviteLink(seat.id)).roundId, round.id);
+    assert.equal(await repo.findRoundInviteLink(seat.id.slice(0, -1)), null, 'a truncated token resolves nothing');
+
+    // Consumed exactly once — the join route's claim relies on it.
+    assert.equal((await repo.deleteRoundInviteLink(seat.id)).id, seat.id);
+    assert.equal(await repo.deleteRoundInviteLink(seat.id), null);
+
+    // The sweep: a past cutoff spares the live row, a future one takes it.
+    assert.equal(await repo.deleteExpiredRoundInviteLinks('2000-01-01T00:00:00.000Z'), 0);
+    assert.ok(await repo.findRoundInviteLink(second.id));
+    assert.ok((await repo.deleteExpiredRoundInviteLinks('2999-01-01T00:00:00.000Z')) >= 1);
+    assert.equal(await repo.findRoundInviteLink(second.id), null);
+  });
+
+  test('deleting a round takes its invite links with it, and only its own', async () => {
+    const t = `rid-${Math.random().toString(16).slice(2)}`;
+    const doomedRound = await repo.createRound(t, { name: 'Gone', members: ['Ann'] });
+    const kept = await repo.createRound(t, { name: 'Kept', members: ['Bo'] });
+    const doomed = await repo.createRoundInviteLink({ roundId: doomedRound.id, ownerTenantId: t, memberId: null });
+    const survivor = await repo.createRoundInviteLink({ roundId: kept.id, ownerTenantId: t, memberId: null });
+    assert.ok(await repo.deleteRound(t, doomedRound.id));
+    assert.equal(await repo.findRoundInviteLink(doomed.id), null);
+    assert.ok(await repo.findRoundInviteLink(survivor.id), 'another round\'s link survives');
   });
 
   test('deleting a round takes its vote links with it, and only its own', async () => {
@@ -6010,7 +6417,7 @@ module.exports = function repoContract(repo) {
     // Exactly the five named keys — this is the export/erasure symmetry guard: it
     // must stay in step with the stores eraseAccount deletes (the erase tests below
     // pin the delete side), so a sixth store added to one shows up as a shape drift.
-    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations']);
+    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions']);
     assert.equal(mine.grants.length, 1);
     assert.equal(mine.grants[0].roundId, round.id);
     assert.equal(mine.grants[0].userId, me.id);
@@ -6035,7 +6442,7 @@ module.exports = function repoContract(repo) {
     const bTenant = `expg-b-${rand()}`;
     const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
     assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
-      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [],
+      grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [], quizSubmissions: [],
     });
   });
 

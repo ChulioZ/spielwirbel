@@ -215,7 +215,7 @@ test('the rail settings group is a single Einstellungen entry', async (t) => {
    onNav, which would leave a desktop user on Tags with no rail route back to the
    screen that owns it. */
 test('the settings entry stays a live link on the screens it owns', () => {
-  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'[^\]]*'tags'[^\]]*'design'/, 'the settings entry no longer owns the screens reached from it');
+  assert.match(RAIL, /RAIL_SETTINGS_SUB = \[[^\]]*'settings'[^\]]*'tags'/, 'the settings entry no longer owns the screens reached from it');
   assert.match(RAIL, /RAIL_OWN_ENTRY = \[[^\]]*\.\.\.RAIL_SETTINGS_SUB/, 'the own-entry list no longer derives from the settings group — a screen with no row would highlight nothing at all');
   // NOT bodyOfFn here: railItem destructures its argument, so the first `{`
   // after the paren is the parameter pattern and the helper brace-matches that

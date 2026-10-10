@@ -112,7 +112,7 @@ function openSaveFilterSheet(round, body, onSaved) {
         <div class="field">
           <label for="savedFilterName">${esc(t('savedFilters.nameLabel'))}</label>
           <input id="savedFilterName" class="input" type="text" autocomplete="off"${max ? ` maxlength="${max}"` : ''}
-                 placeholder="${esc(t('savedFilters.namePlaceholder'))}">
+                 placeholder="${esc(t('savedFilters.namePlaceholder'))}" autocorrect="off" spellcheck="false">
           <p class="muted field__hint">${esc(t('savedFilters.hint'))}</p>
         </div>
         <div class="toolbar sheet__actions">
@@ -236,7 +236,7 @@ function renderSavedFiltersSection(round) {
       const editor = h(`<div class="tag-edit">
           <div class="toolbar">
             <input class="input" style="flex:1" value="${esc(sf.name)}"${max ? ` maxlength="${max}"` : ''}
-                   aria-label="${esc(t('savedFilters.nameLabel'))}" />
+                   aria-label="${esc(t('savedFilters.nameLabel'))}" autocorrect="off" spellcheck="false" />
             <button type="button" class="btn btn--primary">${esc(t('savedFilters.submit'))}</button>
           </div>
         </div>`);

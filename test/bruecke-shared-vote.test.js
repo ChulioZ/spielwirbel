@@ -178,7 +178,9 @@ test('closing and the waiting line end the „this device" column', async (t) =>
   const kids = [...actions.children];
   assert.ok(kids.at(-2).classList.contains('live-vote__close'));
   assert.ok(kids.at(-1).classList.contains('live-vote__waiting'));
-  assert.equal(text(actions.querySelector('.live-vote__hotseat .field__label')), 'An diesem Gerät abstimmen');
+  // The „Für …" keys are on the people's rows since #1574, not a list here.
+  assert.equal(actions.querySelector('.live-vote__hotseat'), null);
+  assert.ok(q(dom, '.live-vote__people .live-person > .live-vote__hotseat-btn'));
 });
 
 test('„Deine Stimme ist da" sits with the people once your own vote is in', async (t) => {

@@ -59,7 +59,8 @@ const shelfList = (v) => Array.isArray(v) && v.length > 0;
 
 // Whether a game carries provider data this profile reads. The player range is
 // deliberately NOT one of them: it is also typed by hand on every free-text
-// game, so it says nothing about whether the shelf was linked.
+// game, so it says nothing about whether the shelf was linked — and for the same
+// reason this reads the PROVIDER's playing time, never a hand-set one (#1627).
 function shelfHasData(game) {
   const g = game || {};
   return shelfNum(g.maxPlaytime) || shelfNum(g.weight) || shelfList(g.categories) || shelfList(g.mechanics);
@@ -170,8 +171,13 @@ function shelfProfile(games, deps) {
 
   const seats = shelfDimension(shelf, SHELF_SEAT_BANDS.map(String), (g) =>
     (shelfSeatKnown(g) ? shelfSeatBands(g, fits).map(String) : null));
+  // The round's own playing time where it set one (#1627). Injected like
+  // fitsPlayerCount, since a public/js file cannot require a sibling; a caller
+  // passing none reads the provider pair, which is what every game without an
+  // override carries anyway.
+  const maxTime = (g) => (deps.gamePlaytime ? deps.gamePlaytime(g).maxPlaytime : g.maxPlaytime);
   const time = shelfDimension(shelf, SHELF_TIME_BANDS.map((b) => b.key), (g) =>
-    (shelfNum(g.maxPlaytime) ? [SHELF_TIME_BANDS.find((b) => g.maxPlaytime <= b.max).key] : null));
+    (shelfNum(maxTime(g)) ? [SHELF_TIME_BANDS.find((b) => maxTime(g) <= b.max).key] : null));
   const weight = shelfDimension(shelf, SHELF_WEIGHT_BANDS.map((b) => b.key), (g) =>
     (shelfNum(g.weight) ? [SHELF_WEIGHT_BANDS.find((b) => g.weight < b.max).key] : null));
 

@@ -221,9 +221,9 @@ function open(t, extra) {
   return { dom, sent };
 }
 
-test('the marker screen shows the active design’s eight swatches, with the round’s one pressed', async (t) => {
+test('the settings screen shows the active design’s eight swatches, with the round’s one pressed', async (t) => {
   const { dom } = open(t);
-  await dom.call('showMarker', 'r1');
+  await dom.call('showRoundSettings', 'r1');
   const cards = [...dom.app.querySelectorAll('.marker-card')];
   assert.equal(cards.length, MARKER_COUNT);
   const markers = designMarkers('klassisch');
@@ -240,7 +240,7 @@ test('the marker screen shows the active design’s eight swatches, with the rou
 
 test('picking a swatch PATCHes the index and re-renders with it pressed', async (t) => {
   const { dom, sent } = open(t);
-  await dom.call('showMarker', 'r1');
+  await dom.call('showRoundSettings', 'r1');
   dom.app.querySelectorAll('.marker-card')[5].click();
   await flush();
   // Spread out of the vm realm before comparing — an object the VIEW built
@@ -262,7 +262,7 @@ test('a pick reaches the lobby tile at once, not after the list goes stale', asy
   await dom.call('showHome');
   const tile = () => dom.document.querySelector('.round-card:not(.round-card--new)');
   assert.match(tile().getAttribute('style'), new RegExp(`--marker:${designMarkers('klassisch')[2].color}`));
-  await dom.call('showMarker', 'r1');
+  await dom.call('showRoundSettings', 'r1');
   dom.app.querySelectorAll('.marker-card')[5].click();
   await flush();
   await dom.call('showHome');
@@ -273,7 +273,7 @@ test('a pick reaches the lobby tile at once, not after the list goes stale', asy
 test('the marker reaches the document root inside a round and is cleared outside it', async (t) => {
   const { dom } = open(t);
   const root = dom.document.documentElement;
-  await dom.call('showMarker', 'r1');
+  await dom.call('showRoundSettings', 'r1');
   assert.equal(root.style.getPropertyValue('--marker'), designMarkers('klassisch')[2].color);
   assert.equal(root.hasAttribute('data-marked'), true, 'the CSS hook the four surfaces key off');
   await dom.call('showHome');

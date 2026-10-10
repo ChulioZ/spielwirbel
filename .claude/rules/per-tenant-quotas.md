@@ -16,15 +16,16 @@ comment is the authoritative list. The table mirrors it, in two groups:
 | rounds per tenant | `lib/routes/rounds.js` | `quota_rounds` | #139 |
 | games per round | `lib/routes/games.js`, `lib/routes/lookup.js` | `quota_games` | #139 |
 | tags per round | `lib/routes/tags.js`, `lib/routes/games.js` | `quota_tags` | #238 |
-| members per round | `lib/routes/members.js` | `quota_members` | #563 |
+| members per round | `lib/routes/members.js`, `lib/routes/join.js` + `lib/routes/invite-links.js` (a fresh-seat invite link, #1515), `lib/routes/invitations.js` (sending a fresh-seat invitation, and accepting one, #1604) — the two joins count inside `joinRound`'s lock | `quota_members` | #563 |
 | expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
 | dismissed recommendations per round | `lib/routes/recommendations.js` | `quota_dismissed` | #782 |
 | saved session filters per round | `lib/routes/saved-filters.js` | `quota_filters` | #1328 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 | passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |
+| price alerts per user | `lib/routes/price-watches.js` | `quota_price_watches` | #680 |
 
-The last three are per **account**, not per tenant — a friendship is a
+The last four are per **account**, not per tenant — a friendship is a
 cross-account social surface and a passkey is a credential, neither of which is
 tenant data — but they take the same shape (env-tunable, read per call, distinct
 403 → localized toast). They need no `enforced()` gate of their own: the friend

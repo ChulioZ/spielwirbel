@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v483';
+const CACHE = 'spielwirbel-shell-v496';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -139,6 +139,8 @@ const SHELL = [
   '/js/session-tally.js',
   '/js/table-split.js',
   '/js/session-log.js',
+  '/js/played-on.js',
+  '/js/session-order.js',
   '/js/avatar-policy.js',
   '/js/cover-policy.js',
   '/js/member-avatar.js',
@@ -221,12 +223,14 @@ const SHELL = [
   '/js/views-archive.js',
   '/js/views-recommend.js',
   '/js/game-editors.js',
+  '/js/game-editor-playtime.js',
   '/js/views-round-detail.js',
   '/js/views-round-settings.js',
   '/js/views-round-actions.js',
   '/js/views-round-lookup.js',
   '/js/add-game-search.js',
   '/js/bgg-import.js',
+  '/js/session-date.js',
   '/js/direct-session.js',
   '/js/member-stats.js',
   '/js/achievements.js',
@@ -245,12 +249,16 @@ const SHELL = [
   '/js/result-tafel-composed.js',
   '/js/views-session-tables.js',
   '/js/views-session-live.js',
+  '/js/views-session-sheets.js',
   '/js/views-session-setup-tisch.js',
   '/js/views-session-ocean.js',
   '/js/views-session-bruecke.js',
   '/js/views-session-programmheft.js',
   '/js/views-session-forest.js',
   '/js/views-vote-link.js',
+  '/js/views-join.js',
+  '/js/views-price-watches.js',
+  '/js/views-quiz.js',
   '/js/views-inbox.js',
   '/js/views-news.js',
   '/js/views-stats.js',

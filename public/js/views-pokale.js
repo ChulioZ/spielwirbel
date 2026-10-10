@@ -534,7 +534,7 @@ function renderPokaleTab(round) {
   // guest-won, solo and no-contest nights skipped — lives in session-tally.js
   // (#1381), which Das Programmheft's share card reads too, so the two cannot
   // disagree about what a streak is.
-  const { memberIds: streakIds, n: streak } = winStreak(round, finished, { sessionEnding, sessionPartyCount });
+  const { memberIds: streakIds, n: streak } = winStreak(round, finished, { sessionEnding, isContestSession });
   // In the round's own member order, so a joint holding reads the same whatever
   // order the night's winners were ticked in.
   const streakMs = round.members.filter((m) => streakIds.includes(m.id));

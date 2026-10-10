@@ -51,16 +51,43 @@ name without its key reddens it.
 Nothing about this is visible in a test that never removes a guest, and the
 failure is a silently mis-paired team, not an error.
 
-## 2. A team counts as ONE player, and the arithmetic lives in two places
+## 2. A team counts its SEATS — one if it shares a hand, its headcount if not (#1610)
 
 The draw's pool filter (`drawPool`, `lib/draw.js` since #486) matches a game's
-`minPlayers`/`maxPlayers` against the
-number of **parties**, not bodies — six people in three pairs are looking for a
-three-player game, which is often exactly why teams were formed:
+`minPlayers`/`maxPlayers` against the number of **seats**. Until #1610 every team
+counted as one player — right for #575's case (six people in three pairs, each
+sharing a hand, want a three-player game) and wrong for any game whose own rules
+have teams: a whole cooperative table counted as a **solo** session, and two
+Tichu pairs as two players, which dropped Tichu (4–4) from the pool. So a stored
+team carries `sharedSeat: boolean`, chosen per team on its card in the picker
+(own seats is the default):
 
 ```js
-playerCount = memberIds.length + guests.length - teamedPeople + teams.length
+seats = people - (people in shared-seat teams) + (shared-seat teams)
 ```
+
+**An absent key is inferred from the team's SHAPE** (`teamSharesSeat`,
+`session-people.js`): a legacy team holding everyone at the table reads as own
+seats — nobody forms one whole-table team to mean "solo" — and any other as a
+shared seat, #575's meaning. "Everyone" is the RESOLVED people, so a member
+removed since (#1538) shrinks the table and the team alike. A boolean always
+wins. Two consequences worth knowing:
+
+- **The route stores the key only when the client sent a boolean**, so a request
+  from a pre-#1610 bundle gets the inference rather than an invented answer.
+- **A multi-table child always gets it EXPLICITLY** (`buildChildSessions`): a
+  partial team in the parent can be the whole of its child's table, where an
+  absent key would flip its meaning.
+
+**Contest semantics count PEOPLE, not sides or seats (#1624).** The win rate
+(`member-stats.js` `contested`), the streak and the contest badges all ask
+`isContestSession` (`session-people.js`): more than one person, and not „Kein
+Sieger"/„Fortsetzung folgt". So a whole-table team IS a contest — counting sides
+made the same lost evening a loss for four people recorded individually and no
+result at all recorded as one team. `sessionPartyCount` no longer decides it.
+`sessionSeatCount` sits beside them for the size readers — the route's pool and the recommender's
+`partyDistribution`. A spec over a fixture with only ONE kind of team cannot tell
+the two counts or the two flags apart (`test/team-seats*.test.js` all mix them).
 
 **Since #634 the two places are the COUNT only.** The comparison it feeds is
 `fitsPlayerCount` in `public/js/draw-pool.js`, which both sides require — so the
@@ -68,10 +95,14 @@ half that used to be two hand-synced expressions is now one, and what remains
 duplicated is the arithmetic above, which genuinely differs per caller (a stored
 session versus three live pickers).
 
-`lib/routes/sessions.js` computes it for the real pool and `showStartSession()` for
-the live preview, and **the two must move together**. The count stays in the
-route on purpose — `drawPool` takes it as a parameter rather than re-deriving it
-from `round.members`, which would silently drop the guests and flatten the teams.
+`lib/routes/sessions.js` computes it for the real pool — through
+`sessionSeatCount` over the very blob it is about to store, since #1610 — and
+`showStartSession()` for the live preview (via the picker's
+`sharedTeamedPeopleCount()`/`sharedTeamCount()`), and **the two must move
+together**; `test/team-seats-setup.test.js` pins the preview against the server's
+count of the payload the screen sends. The count stays out of `drawPool` on
+purpose — it takes it as a parameter rather than re-deriving it from
+`round.members`, which would silently drop the guests and flatten the teams.
 It is the standing constraint in
 `.claude/rules/active-games-filter-sites.md`, now with a second term in it.
 
@@ -84,9 +115,9 @@ apply.
 **The seat picker's centre count stays a HEADCOUNT** ("5 playing"), deliberately:
 it is a table with people around it, and `startSession.tableCount` says so — it
 counts the seated members plus the guests now sitting on the ring beside them
-(#1016), and a team still does not fold into one. The party count is explained by
-the team field's own note instead of being shown as a second number nobody asked
-for.
+(#1016), and a team still does not fold into one. The seat count is explained by
+the team field's own note and each team card's two-option control instead of
+being shown as a second number nobody asked for.
 
 ## 3. `winnerIds` stays a flat list of PERSON ids — that is the whole design
 
@@ -139,8 +170,9 @@ the one thing a hand-crafted request can shape freely.
 to COUNT a stored session's parties from the server (`sessionPartyCount`, for the
 recommender's party-size distribution). The naming half could not come along:
 `teamsForPeople` builds each team's label through `partyName` → `t()`, which does
-not exist in Node. So the file now has one resolver and THREE consumers —
-`teamsForPeople` (adds names), `sessionPartyCount` (counts) and, since #796,
+not exist in Node. So the file now has one resolver and FOUR consumers —
+`teamsForPeople` (adds names), `sessionPartyCount` (counts sides),
+`sessionSeatCount` (counts seats, #1610) and, since #796,
 `sessionPartyGroups` (the name-free party partition the multi-table search seats,
 which `sessionParties` then decorates with names) — rather than a second copy of
 the ordering above, which is the whole point of the split. Note

@@ -30,7 +30,7 @@ const { memberStats } = require('../public/js/member-stats');
 const { winStreak } = require('../public/js/session-tally');
 const { computePlaces } = require('../public/js/ranking');
 const { sessionEnding } = require('../public/js/session-outcome');
-const { sessionPartyCount, sessionPartyGroups } = require('../public/js/session-people');
+const { isContestSession, sessionPartyGroups } = require('../public/js/session-people');
 const { loadApp } = require('./support/dom');
 
 const MEMBERS = ['aylin', 'nils', 'mia'];
@@ -52,7 +52,7 @@ const roundWith = (sessions) => ({
 test('1 — every tied winner counts a full win on the member page', () => {
   const round = roundWith([night(['aylin', 'nils'])]);
   // The one non-module dependency, as recap.js defines it.
-  const deps = { sessionEnding, sessionPartyCount, sessionPartyGroups, isNameableGame: (g) => !g.retired };
+  const deps = { sessionEnding, isContestSession, sessionPartyGroups, isNameableGame: (g) => !g.retired };
   const [a, n, m] = MEMBERS.map((id) => memberStats(round, id, deps));
   assert.equal(a.wins, 1, 'a whole win, not a half');
   assert.equal(n.wins, 1);
@@ -73,7 +73,7 @@ test('1 — every tied winner counts a full win in the Pokale standings', (t) =>
 });
 
 test('2 — a shared win continues the Serie for each winner', () => {
-  const deps = { sessionEnding, sessionPartyCount };
+  const deps = { sessionEnding, isContestSession };
   const round = roundWith([]);
   const through = winStreak(round, [night(['aylin']), night(['aylin']), night(['aylin', 'nils'])], deps);
   assert.deepEqual([...through.memberIds], ['aylin'], 'Aylin runs on through the tie; Nils is only on 1');
@@ -121,7 +121,7 @@ test('2 — on the Pokale tab, a run through a tie shows its one holder, linked'
 });
 
 test('2 — a win shared with a GUEST continues the member’s Serie; a guest-only win is skipped', () => {
-  const deps = { sessionEnding, sessionPartyCount };
+  const deps = { sessionEnding, isContestSession };
   const round = roundWith([]);
   const withGuest = (winnerIds) => night(winnerIds, { guests: [{ id: 'g1', name: 'Gast' }] });
   const mixed = winStreak(round, [night(['aylin']), withGuest(['aylin', 'g1']), night(['aylin'])], deps);

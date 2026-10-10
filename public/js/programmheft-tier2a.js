@@ -75,9 +75,8 @@ function openProgrammheftRecapSheet(round, activities) {
 const PH_RECENT_WINS = 4;
 
 function programmheftRecentWins(round, mid) {
-  const wins = round.sessions
-    .filter((s) => s.finished && (s.winnerIds || []).includes(mid))
-    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+  const wins = newestSessionsFirst(round.sessions
+    .filter((s) => s.finished && (s.winnerIds || []).includes(mid)))
     .slice(0, PH_RECENT_WINS);
   if (!wins.length) return null;
   const panel = h(`<div class="ph-wins">
