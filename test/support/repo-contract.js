@@ -551,6 +551,34 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(one.openSessions.map((o) => o.id), [open[1].id, open[0].id]);
   });
 
+  /* A session with no `createdAt` (it predates the field) sorts LAST in both
+     summaries — newestSessionsFirst's rule. Postgres' DESC puts a NULL first
+     unless told otherwise, so without NULLS LAST an undated row inserted last
+     becomes the home screen's „zuletzt gespielt" on one backend only. */
+  test('listRoundSummaries: an undated session sorts behind every dated one', async () => {
+    const round = await freshRound({ name: 'Undated' });
+    const dated = await repo.createGame(T, round.id, gameFields({ title: 'Dated' }));
+    const bare = await repo.createGame(T, round.id, gameFields({ title: 'Undated' }));
+    const at = '2026-03-14T19:00:00.000Z';
+    const finished = (game, over) => ({
+      gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: at,
+      finished: true, finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true, ...over,
+    });
+    const openRow = (over) => ({
+      gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false, ...over,
+    });
+    await repo.createSession(T, round.id, finished(dated, { createdAt: at }));
+    await repo.createSession(T, round.id, finished(bare, {}));
+    const datedOpen = await repo.createSession(T, round.id, openRow({ createdAt: at }));
+    const bareOpen = await repo.createSession(T, round.id, openRow({}));
+    assert.equal('createdAt' in bareOpen, false, 'the fixture grew the key it is meant to lack');
+
+    const s = (await repo.listRoundSummaries(T)).find((x) => x.id === round.id);
+    assert.equal(s.lastPlayed.gameTitle, 'Dated');
+    assert.deepEqual(s.openSessions.map((o) => o.id), [datedOpen.id, bareOpen.id]);
+  });
+
   test('listRoundSummaries is tenant-scoped and returns snapshots', async () => {
     const round = await freshRound();
     await repo.setBackground(T, round.id, { type: 'theme', page: '#eee', accent: '#111111' });

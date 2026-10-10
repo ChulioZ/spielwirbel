@@ -676,8 +676,9 @@ because the failure is a plausible wrong ORDER: a descending comparator written
 inline keeps tied stamps in their ascending insertion order, so two sessions
 logged for one past day (both 20:00 local) listed the first-entered one on top,
 with nothing red anywhere. Postgres cannot require it and restates the tiebreak
-as `ORDER BY createdAt DESC, seq DESC`; the repo contract pins both backends
-against one tied fixture. `hub-insights.js` takes it injected as
+as `ORDER BY createdAt DESC NULLS LAST, seq DESC` (a bare DESC puts an undated
+row first); the repo contract pins both backends against a tied and an undated
+fixture. `hub-insights.js` takes it injected as
 `deps.newestFirst`, the shape that file's header explains.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`

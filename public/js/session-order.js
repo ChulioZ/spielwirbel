@@ -36,7 +36,8 @@
    subset — the usual input — keeps working. A row with no stamp sorts last.
    `stamp` reads something other than `createdAt` (the Chronik's mixed entries
    carry `at`). Postgres restates the same rule in SQL as
-   `ORDER BY createdAt DESC, seq DESC`. */
+   `ORDER BY createdAt DESC NULLS LAST, seq DESC` — NULLS LAST because a bare
+   DESC puts an undated row FIRST. */
 
 'use strict';
 
