@@ -455,7 +455,7 @@ would let the member page and the profile state different numbers for one person
 
 It carries the trap that this direction of sharing creates, and it is worth
 stating because the obvious fix is forbidden here: `memberStats` reads four
-siblings off the shared global scope (`sessionEnding`, `sessionPartyCount`,
+siblings off the shared global scope (`sessionEnding`, `isContestSession`,
 `sessionPartyGroups`, `isNameableGame`),
 and **a public/js file cannot require() a sibling**. So they are **injected** as a
 `deps` object, the shape recap.js and period-recap.js already use,

@@ -79,11 +79,13 @@ wins. Two consequences worth knowing:
   partial team in the parent can be the whole of its child's table, where an
   absent key would flip its meaning.
 
-**Contest semantics stay on SIDES.** `sessionPartyCount` is unchanged and still
-feeds the win rate (`member-stats.js` `contested`), the streak and the contest
-badges: a table that won or lost together against the game is still not a
-contest between players, however many seats it took. `sessionSeatCount` sits
-beside it for the size readers — the route's pool and the recommender's
+**Contest semantics count PEOPLE, not sides or seats (#1624).** The win rate
+(`member-stats.js` `contested`), the streak and the contest badges all ask
+`isContestSession` (`session-people.js`): more than one person, and not „Kein
+Sieger"/„Fortsetzung folgt". So a whole-table team IS a contest — counting sides
+made the same lost evening a loss for four people recorded individually and no
+result at all recorded as one team. `sessionPartyCount` no longer decides it.
+`sessionSeatCount` sits beside them for the size readers — the route's pool and the recommender's
 `partyDistribution`. A spec over a fixture with only ONE kind of team cannot tell
 the two counts or the two flags apart (`test/team-seats*.test.js` all mix them).
 

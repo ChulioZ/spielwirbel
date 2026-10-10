@@ -16,6 +16,7 @@ global.t = (key, params) => `${key}:${JSON.stringify(params || {})}`;
 const {
   sessionPartyCount,
   sessionPartyGroups,
+  isContestSession,
   sessionSeatCount,
   teamSharesSeat,
 } = require('../public/js/session-people');
@@ -105,9 +106,9 @@ test('the recommender counts a whole-table own-seat team at its headcount', () =
   ]);
 });
 
-// Contest semantics stay on SIDES (#1610 scope): a table that won together
-// against the game is still not a contest between players, however many seats.
-test('a whole-table own-seat team is still not a contest', () => {
+// A table that won together against the game IS a contest (#1624): the rate
+// counts people, not sides, so seats and parties play no part in it.
+test('a whole-table own-seat team is a contest, won by every member', () => {
   const s = {
     id: 's1', gameIds: ['g'], chosenGameId: 'g', votes: {}, finished: true,
     memberIds: ['m1', 'm2', 'm3', 'm4'],
@@ -117,9 +118,9 @@ test('a whole-table own-seat team is still not a contest', () => {
   assert.equal(sessionSeatCount(round, s), 4);
   assert.equal(sessionPartyCount(round, s), 1);
   const stats = memberStats({ ...round, games: [{ id: 'g', title: 'Coop' }], sessions: [s] }, 'm1', {
-    sessionEnding, sessionPartyCount, sessionPartyGroups, isNameableGame,
+    sessionEnding, isContestSession, sessionPartyGroups, isNameableGame,
   });
-  assert.equal(stats.winRate, null);
+  assert.equal(stats.winRate, 1);
 });
 
 /* ------------------------------ the draw route ------------------------------ */

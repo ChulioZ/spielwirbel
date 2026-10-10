@@ -188,7 +188,7 @@ const frontendGlobals = {
   sessionPartyGroups: 'readonly',
   // Pre-existing omissions from the same file, folded in while adding the line
   // above: both are top-level names in the shared scope and neither was listed.
-  resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly',
+  resolveTeamMembers: 'readonly', sessionPartyCount: 'readonly', isContestSession: 'readonly',
   sessionSeatCount: 'readonly', teamSharesSeat: 'readonly',
   // bulk-tidy.js (issue #832)
   selectionTouchesHistory: 'readonly',
