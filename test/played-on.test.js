@@ -111,6 +111,15 @@ test('a time that is not a time is refused, like an impossible day', () => {
   }
 });
 
+test('a time that does not exist on a DST change day is refused, not moved', () => {
+  // Spring forward in this zone: 2026-03-08 02:00 -> 03:00. `new Date` would
+  // quietly store 02:30 as 03:30, i.e. a time nobody entered.
+  const now = new Date(2026, 9, 9, 12);
+  assert.equal(playedOnInstant('2026-03-08', now, '02:30'), null);
+  assert.equal(localTimeKey(new Date(playedOnInstant('2026-03-08', now, '03:30'))), '03:30');
+  assert.equal(localTimeKey(new Date(playedOnInstant('2026-03-08', now, '01:59'))), '01:59');
+});
+
 test('only a TYPED time can lie in the future — and it is reported, not capped', () => {
   const now = new Date(2026, 9, 9, 15, 30);
   assert.equal(isFuturePlayedOn('2026-10-09', '16:00', now), true, 'later today');

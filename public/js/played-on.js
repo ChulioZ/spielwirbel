@@ -92,6 +92,10 @@ function playedOnDate(dayKey, time) {
   }
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), hour, minute, 0, 0);
   if (Number.isNaN(d.getTime()) || localDayKey(d) !== dayKey) return null;
+  // A local time that does not exist — the hour skipped when the clocks go
+  // forward — is rolled on by `new Date` (02:30 becomes 03:30). Refuse it
+  // rather than store a time nobody entered.
+  if (d.getHours() !== hour || d.getMinutes() !== minute) return null;
   return d;
 }
 

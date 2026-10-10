@@ -211,12 +211,10 @@ const setTime = (sheet, value) => {
   input.value = value;
   input.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 };
-// 'HH:MM' some minutes away from now, on today's clock. Null when that crosses
-// midnight, so a spec run at 00:05 skips rather than testing yesterday.
-const timeFromNow = (minutes) => dom.run(`(() => {
-  const d = new Date(Date.now() + ${minutes} * 60000);
-  return localDayKey(d) === localDayKey(new Date()) ? localTimeKey(d) : null;
-})()`);
+// The two ends of today's clock: 00:00 is earlier than now and 23:59 later in
+// every minute but those two, so the specs below skip only then — never by a
+// spec run landing near midnight.
+const nowKey = () => dom.run('localTimeKey(new Date())');
 
 test('the time starts empty, and its ✕ appears only while there is a time to empty', async () => {
   const round = roundFixture();
@@ -238,8 +236,8 @@ test('the time starts empty, and its ✕ appears only while there is a time to e
 });
 
 test('today with an EARLIER time logs the evening at that time, born finished', async (t) => {
-  const earlier = timeFromNow(-90);
-  if (!earlier) return t.skip('too close to midnight');
+  const earlier = '00:00';
+  if (nowKey() === earlier) return t.skip('it is 00:00 right now');
   const round = roundFixture();
   const opened = [];
   dom.set('showResults', (r, s) => opened.push(s.id));
@@ -274,8 +272,8 @@ test('a past day without a time is sent as date-only; emptying the time puts „
 });
 
 test('a time still ahead today is refused before anything is sent', async (t) => {
-  const later = timeFromNow(90);
-  if (!later) return t.skip('too close to midnight');
+  const later = '23:59';
+  if (nowKey() === later) return t.skip('it is 23:59 right now');
   const round = roundFixture();
   const sheet = await openDirect(round);
   setTime(sheet, later);
