@@ -60,6 +60,9 @@ function playedOnField(dayKey, note, timeKey = '') {
   const KEYED_MS = 1000;
   let keyedAt = -Infinity;
   input.addEventListener('keydown', () => { keyedAt = Date.now(); });
+  // A click on the field (which opens the calendar) ends the typing, so a day
+  // picked right after it still closes the popover.
+  input.addEventListener('pointerdown', () => { keyedAt = -Infinity; });
   input.addEventListener('change', () => {
     if (Date.now() - keyedAt > KEYED_MS) input.blur();
   });

@@ -254,6 +254,13 @@ test('picking a day lets go of the field; typing one keeps it', async () => {
   input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: '3', bubbles: true }));
   setDay(input, day(-3));
   assert.equal(dom.document.activeElement, input, 'a typed day keeps focus');
+
+  // Typed, then clicked the field to open the calendar and picked at once:
+  // the click is what says the next change is the picker's.
+  input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: '4', bubbles: true }));
+  input.dispatchEvent(new dom.window.Event('pointerdown', { bubbles: true }));
+  setDay(input, day(-4));
+  assert.notEqual(dom.document.activeElement, input, 'a pick right after a click blurs');
   dom.run('closeSheet()');
 });
 
