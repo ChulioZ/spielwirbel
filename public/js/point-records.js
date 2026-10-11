@@ -133,7 +133,8 @@ function sessionPointLines(round, session, deps) {
               in round.games order (members only — a team score is never one)
      held:    [gameId] — games whose CURRENT group record is the member's: their
               own line or a team's they played in (operator, #1631: a team record
-              counts for every member of the team)
+              counts for every member of the team), including a tie at the record
+              in the session that set it
      records: [{ session, gameId }]  every line where the member (or their team)
               broke the round's record, oldest first
      bettered:[{ session, gameId }]  every „neuer Rekord" of theirs, oldest first
@@ -160,7 +161,11 @@ function memberPointRecords(round, mid, deps) {
     const r = gamePointRecords({ ...round, sessions }, game, d);
     const best = r.bests.get(mid);
     if (best) bests.push({ game, points: best.points, session: best.session });
-    if (r.record && mine(r.record.party)) held.push(game.id);
+    // Every party that reached the record IN the session that set it holds it —
+    // a tie there is shared, as `groupRecord` marks both lines; `record.party`
+    // names only the first, for display. A later tie beats nothing, so it does not.
+    const setting = r.record && r.plays.find((p) => p.session === r.record.session);
+    if (setting && setting.lines.some((l) => l.points === r.record.points && mine(l.party))) held.push(game.id);
     r.plays.forEach((p) => p.lines.forEach((l) => {
       if (!mine(l.party)) return;
       if (l.groupRecord) records.push({ session: p.session, gameId: game.id });

@@ -177,3 +177,10 @@ test('memberPointRecords lists records oldest first across games, by session dat
   };
   assert.deepEqual(memberPointRecords(round, 'a', deps).records.map((e) => e.gameId), ['h', 'g']);
 });
+
+test('memberPointRecords: a tie at the record within the session that set it is held by both', () => {
+  const round = roundOf([play(1, { a: 10 }), play(2, { b: 20, c: 20, a: 5 }), play(3, { a: 20 })]);
+  assert.deepEqual(memberPointRecords(round, 'b', deps).held, ['g']);
+  assert.deepEqual(memberPointRecords(round, 'c', deps).held, ['g'], 'the second party tied in the record session holds it too');
+  assert.deepEqual(memberPointRecords(round, 'a', deps).held, [], 'a later tie is not a record — the earliest reach holds it');
+});
