@@ -3801,6 +3801,15 @@
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill,
 :root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .score-pill * { color: var(--sc-ink, var(--on-accent)); }
 
+/* The coverless thumbnail on the GOLD row keeps its own ink too (#1641): its
+   whirl sits on the cover's own walnut ground, not on the gold, and --gold-ink
+   there is dark on dark. The sweep only sets `color`, so the placeholder's own
+   --cover-ink (styles.css `.cover-ph`) is still there to hand back — on the box
+   and on the glyph, both of which the `*` reaches. More specific than the
+   sweep, which is how it survives it. */
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .cover-ph,
+:root[data-design="tisch"][data-scheme="dark"] .tafel .tafel-top .trow .cover-ph .ti { color: var(--cover-ink); }
+
 /* --- Motion ritual 4a: the reveal — the race, then the gold sweep (#1200, T10.4)
    „Auflösen" already marks the reveal (views-session-result-tafel.js: `.is-race` on every row
    with `--dur` inline, `.is-reveal` on the gold group), so this is CSS alone
