@@ -21,9 +21,15 @@ own colour:
 ```
 
 ```css
-.cover-ph { color: oklch(from var(--brand) 0.99 calc(c * 0.18) …); }  /* wins */
-.game-card__img { color: var(--placeholder); }                        /* inherited, overridden */
+.cover-ph { --cover-ink: oklch(from var(--brand) 0.99 …); color: var(--cover-ink); }  /* wins */
+.game-card__img { color: var(--placeholder); }                                     /* inherited, overridden */
 ```
+
+The ink is a named property (#1641) so a design rule that sweeps `color` over the
+placeholder's ancestors can hand it back with `var(--cover-ink)` — Der Tisch's
+gold Tafel row does (`test/tisch-gold-row-placeholder.test.js`). A design sheet
+may not restate the formula: `test/design-layer.test.js` bans colour functions
+outside its root block.
 
 So wherever a coverless **game** renders, the box's `--placeholder` is inherited
 and then immediately overridden. Measured in a browser on #938 — the `.cover-ph`

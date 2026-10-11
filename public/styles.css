@@ -3253,7 +3253,11 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
   display: flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in oklab, var(--brand-strong) 55%, var(--surface));
+  /* The ink is a NAMED property so a design rule that paints `color` over the
+     placeholder's ancestors (Der Tisch's gold-row sweep, #1641) can hand it
+     back with var(--cover-ink) instead of restating the formula. */
+  --cover-ink: color-mix(in oklab, var(--brand-strong) 55%, var(--surface));
+  color: var(--cover-ink);
   background-image: linear-gradient(
     135deg,
     color-mix(in oklab, var(--brand) 26%, var(--page-bg)),
@@ -3272,7 +3276,7 @@ a.btn { display: inline-block; text-decoration: none; text-align: center; box-si
 @supports (color: oklch(from red l c h)) {
   .cover-ph {
     --cover-shift: calc((var(--cover-h, 180) - 180) * 0.45);
-    color: oklch(from var(--brand) 0.99 calc(c * 0.18) calc(h + var(--cover-shift)));
+    --cover-ink: oklch(from var(--brand) 0.99 calc(c * 0.18) calc(h + var(--cover-shift)));
     background-image: linear-gradient(
       135deg,
       oklch(from var(--brand) 0.82 calc(c * 0.55) calc(h + var(--cover-shift))),
