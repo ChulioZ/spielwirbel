@@ -266,7 +266,10 @@ What the app does, in detail. For a short overview see the
   were — a selection of fifty games carries fifty different tag sets, and there
   is no single right value to replace them with. Because nothing is lost that
   the same picker cannot restore, „Übernehmen" applies the tags at once, with no
-  second dialog; the result counts only the games that actually changed.
+  second dialog; the result counts only the games that actually changed. A tag
+  that does not exist yet can be created right in that picker, and it arrives
+  set to add, so a freshly imported shelf can be organised without leaving the
+  selection; a round with no tags yet gets the action too.
   Retiring, setting owners and deleting each ask first — retiring as a plain
   question, since it can be undone, and deleting in red. The same selection sits
   on the two archives and the Wunschliste, for delete only. It exists because the

@@ -8225,6 +8225,10 @@ a.k-tile:focus-visible,
 /* The 120px basis is what makes the wrap above trigger: without a floor the
    input just shrinks to a few characters instead of the buttons moving down. */
 :is(.popover--tags, .editor--tags) .pp-row .input { min-width: 0; flex: 1 1 120px; }
+/* The bulk Tags sheet's create row (#1619): the same controls and the same
+   wrap as the popover's row above. */
+.bulk-tags__create { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.bulk-tags__create .input { min-width: 0; flex: 1 1 120px; }
 /* Owners (#971). The same shape and the same two reasons as the tags editor
    above: a round may hold up to 50 member seats (MAX_MEMBERS_PER_ROUND), a
    popover cannot be scrolled into view — a page scroll closes it outright

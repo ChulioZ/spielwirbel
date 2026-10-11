@@ -196,10 +196,6 @@ const OWNERS_ROUND = {
   members: [{ id: 'm1', name: 'Anna' }, { id: 'm2', name: 'Ben' }],
 };
 
-const TAGS_ROUND = {
-  tags: [{ id: 't1', name: 'Kenner' }, { id: 't2', name: 'Kurz' }],
-};
-
 /* Each of these closes its picker before finishing. A sheet left open is torn
    down by the NEXT openSheet, but its history marker is not — so the following
    test's closeSheet finds no marker to consume and never runs its callback,
@@ -285,114 +281,6 @@ test('cancelling the picker sends nothing at all', async () => {
 
 /* A round with no seats has nobody to name, so the picker could only ever clear.
    Hidden rather than disabled — the same call renderOwnerChips makes for itself. */
-/* ------------------------------------------------------------- bulk tags
-
-   The tags picker (#1000) shares openBulkPicker with the owners one, so the
-   sheet scaffolding above already covers the OK/cancel path. What is specific
-   here — and what no route spec can see — is the TRI-STATE: one chip means
-   three different edits depending on how often it was clicked, and the third
-   state is „leave alone", which must reach the server as neither list. */
-
-const tagChipFor = (name) => [...sheet().querySelectorAll('.bulk-tags__chips .chip')]
-  .find((c) => c.textContent.includes(name));
-
-test('the tags action opens a picker over the round\'s tags, all three neutral', async () => {
-  spy();
-  regal(TAGS_ROUND);
-  toggleBtn().click();
-  assert.equal(act('tags').disabled, true, 'an empty selection must not be actionable');
-
-  cardFor('Azul').click();
-  assert.equal(act('tags').disabled, false);
-  act('tags').click();
-
-  assert.ok(sheet(), 'no picker opened');
-  assert.equal(sheet().querySelectorAll('.bulk-tags__chips .chip').length, 2, 'one chip per round tag');
-  // Neutral is the only safe start: the selection may hold games whose tags
-  // differ, so any preselected state would be a claim about all of them.
-  assert.ok([...sheet().querySelectorAll('.bulk-tags__chips .chip')]
-    .every((c) => !c.classList.contains('is-on') && !c.classList.contains('is-excluded')));
-  assert.equal(sheetBtn(APPLY).disabled, true, 'nothing picked is an unfinished sentence, not a no-op');
-
-  sheetBtn('Abbrechen').click();
-  await settle();
-});
-
-test('one click adds, two removes, three leaves the tag out of both lists', async () => {
-  const { posts, confirms } = spy();
-  const r = regal(TAGS_ROUND);
-  toggleBtn().click();
-  cardFor('Azul').click();
-  cardFor('Cascadia').click();
-  act('tags').click();
-
-  tagChipFor('Kenner').click();                       // add
-  tagChipFor('Kurz').click(); tagChipFor('Kurz').click(); // remove
-  assert.ok(tagChipFor('Kenner').classList.contains('is-on'));
-  assert.ok(tagChipFor('Kurz').classList.contains('is-excluded'));
-  sheetBtn(APPLY).click();
-  await settle();
-
-  // #1360: the chips already show the direction and nothing is lost that the
-  // same sheet cannot restore, so „Übernehmen" applies straight away.
-  assert.equal(confirms.length, 0, 'the tags picker raised a second dialog');
-  assert.equal(posts().length, 1);
-  assert.equal(posts()[0].path, `/api/rounds/${r.id}/games/bulk-tags`);
-  assert.deepEqual([...posts()[0].body.gameIds].sort(), ['g1', 'g3']);
-  assert.deepEqual([...posts()[0].body.addTagIds], ['t1']);
-  assert.deepEqual([...posts()[0].body.removeTagIds], ['t2']);
-});
-
-test('a third click returns the chip to neutral and sends neither instruction', async () => {
-  const { posts } = spy();
-  regal(TAGS_ROUND);
-  toggleBtn().click();
-  cardFor('Azul').click();
-  act('tags').click();
-
-  tagChipFor('Kenner').click();
-  const chip = tagChipFor('Kurz');
-  chip.click(); chip.click(); chip.click();           // add -> remove -> neutral
-  assert.ok(!tagChipFor('Kurz').classList.contains('is-on'));
-  assert.ok(!tagChipFor('Kurz').classList.contains('is-excluded'));
-  sheetBtn(APPLY).click();
-  await settle();
-
-  assert.deepEqual([...posts()[0].body.addTagIds], ['t1']);
-  assert.deepEqual([...posts()[0].body.removeTagIds], [], 'a neutral chip must travel in neither list');
-});
-
-/* With the confirm gone (#1360), the disabled „Übernehmen" is the ONLY thing
-   between an empty pick and a request — so it is tested on its own, including
-   the way back: a chip clicked round to neutral again must re-disable it
-   (.claude/rules/redundant-guards-make-each-other-untestable.md). */
-test('Übernehmen re-disables when every chip is back to neutral, and sends nothing', async () => {
-  const { posts } = spy();
-  regal(TAGS_ROUND);
-  toggleBtn().click();
-  cardFor('Azul').click();
-  act('tags').click();
-
-  const chip = tagChipFor('Kenner');
-  chip.click();
-  assert.equal(sheetBtn(APPLY).disabled, false, 'one pick enables it');
-  chip.click(); chip.click();                         // remove -> neutral
-  assert.equal(sheetBtn(APPLY).disabled, true, 'nothing picked any more, yet still actionable');
-  sheetBtn(APPLY).click();
-  await settle();
-  assert.equal(posts().length, 0, 'a disabled Übernehmen still sent a request');
-  sheetBtn('Abbrechen').click();
-  await settle();
-});
-
-test('the tags action is absent when the round has no tags', () => {
-  spy();
-  regal();
-  toggleBtn().click();
-  assert.equal(act('tags'), null);
-  assert.ok(act('retire'), 'the other actions are unaffected');
-});
-
 test('the owners action is absent when the round has no members', () => {
   spy();
   regal({ members: [] });

@@ -488,6 +488,8 @@
   "      button.btn [disabled= type=button]",
   "        i.ti.ti-users [aria-hidden=true]",
   "      button.btn [disabled= type=button]",
+  "        i.ti.ti-tags [aria-hidden=true]",
+  "      button.btn [disabled= type=button]",
   "        i.ti.ti-archive [aria-hidden=true]",
   "      button.btn.btn--danger [disabled= type=button]",
   "        i.ti.ti-trash-x [aria-hidden=true]",
