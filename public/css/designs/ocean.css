@@ -2081,7 +2081,11 @@
   box-shadow: var(--shadow-1);
   color: var(--ink);
 }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-felt__who { flex: 1; min-width: 0; text-align: center; }
+/* A real basis, not `flex: 1`'s 0 (#1637): with a 0 basis the bubbles never
+   wrapped and squeezed the name to a word per line. At 11rem they take their
+   own centred line when they do not fit beside it — 13rem keeps
+   „Spiel 2 von 10 · Person 1 von 4" on one line. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote-felt__who { flex: 1 1 13rem; min-width: 0; text-align: center; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__name {
   margin: 0;
   font-family: var(--font-display);
@@ -2097,7 +2101,7 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__round { display: none; }
 /* One bubble per card, the current one ringed. aria-hidden: the count says it. */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__dots { display: flex; gap: 4px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__dots { display: flex; gap: 4px; margin-inline: auto; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__dot {
   width: 12px;
   height: 12px;
@@ -2109,6 +2113,33 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__dot.is-current {
   border: 2px solid var(--brand-strong);
   box-shadow: 0 0 0 2px var(--control-fill);
+}
+/* Past ten games one water level instead (voteFeltMarks), filled to the
+   current card, which keeps its ringed bubble. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__dots--band { width: 140px; }
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__band {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 8px;
+  box-sizing: border-box;
+  border: 1px solid var(--bubble-rim);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bubble-3) var(--at), var(--bubble-2) var(--at));
+}
+:root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote-felt__band::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--at) - 7px), calc(100% - 14px));
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid var(--brand-strong);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, var(--bubble-hi), var(--bubble-2));
+  box-shadow: 0 0 0 2px var(--control-fill);
+  transform: translateY(-50%);
 }
 /* „Die anderen schauen kurz weg." — the secrecy line, on its own row under the
    header (the last thing in the header's DOM, so wrapping keeps order). */

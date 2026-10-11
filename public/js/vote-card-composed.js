@@ -153,12 +153,30 @@ function voteMetaLine(game, round) {
 
    DOM order is reading order at every width: header (back, who, count, dots,
    pill), then the card (cover, title, meta, question, faces), then the line. */
-function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
+/* The header's progress marks: one per game while they fit, ONE band past
+   VOTE_MARKS_MAX (#1637). A mark is 11–28px wide depending on the design, so
+   a long session ran the marks off a phone's edge — or, in a header whose name
+   column was the flexible one, squeezed „Julian wertet" to a word per line. Ten
+   is the most every composed design fits beside its back key at 320px
+   (measured, see forest.css). The band is filled to the current game: `--at`
+   is data the design paints from, and the count line above it carries the exact
+   numbers, so both forms stay aria-hidden. */
+const VOTE_MARKS_MAX = 10;
+
+function voteFeltMarks(gameN, gameTotal) {
+  if (gameTotal > VOTE_MARKS_MAX) {
+    const at = `${(gameN / gameTotal * 100).toFixed(2)}%`;
+    return `<span class="vote-felt__dots vote-felt__dots--band" aria-hidden="true"><span class="vote-felt__band" style="--at:${at}"></span></span>`;
+  }
   const dots = [];
   for (let i = 1; i <= gameTotal; i++) {
     const state = i < gameN ? ' is-done' : i === gameN ? ' is-current' : '';
     dots.push(`<span class="vote-felt__dot${state}"></span>`);
   }
+  return `<span class="vote-felt__dots" aria-hidden="true">${dots.join('')}</span>`;
+}
+
+function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
   return h(`<div class="vote vote--split vote--composed">
       <div class="vote-felt">
@@ -167,7 +185,7 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
           <p class="vote-felt__name">${esc(t('vote.rates', { name: personLabel(person) }))}</p>
           <p class="vote-felt__count">${esc(count)}${roundName ? `<span class="vote-felt__round"> · ${esc(roundName)}</span>` : ''}</p>
         </div>
-        <span class="vote-felt__dots" aria-hidden="true">${dots.join('')}</span>
+        ${voteFeltMarks(gameN, gameTotal)}
         ${secret ? `<div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>` : ''}
       </div>
       <div class="vote__card">

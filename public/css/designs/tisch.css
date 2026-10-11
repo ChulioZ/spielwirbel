@@ -3207,7 +3207,11 @@
   border: none;
   color: var(--felt-ink);
 }
-:root[data-design="tisch"][data-scheme="dark"] .vote-felt__who { flex: 1; min-width: 0; }
+/* A real basis, not `flex: 1`'s 0 (#1637): with a 0 basis the line never
+   wrapped, so ten dots squeezed „Julian wertet" to a word per line at 320px.
+   At 11rem the dots drop to their own line, at the right, when they do not fit
+   beside the name. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__who { flex: 1 1 11rem; min-width: 0; }
 :root[data-design="tisch"][data-scheme="dark"] .vote-felt__name {
   margin: 0;
   font-family: var(--font-display);
@@ -3221,7 +3225,7 @@
 }
 /* T4.2 names the round after the counters; T2.4 has no room for it. */
 :root[data-design="tisch"][data-scheme="dark"] .vote-felt__round { display: none; }
-:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dots { display: flex; gap: 5px; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dots { display: flex; gap: 5px; margin-left: auto; }
 :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot {
   width: 11px;
   height: 11px;
@@ -3232,6 +3236,31 @@
 :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current { background: var(--gold); }
 :root[data-design="tisch"][data-scheme="dark"] .vote-felt__dot.is-current {
   box-shadow: 0 0 0 3px var(--gold-edge);
+}
+/* Past ten games one gold rail instead (voteFeltMarks), filled to the current
+   card, which keeps its ringed dot. */
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__dots--band { width: 140px; }
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__band {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 7px;
+  box-sizing: border-box;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold) var(--at), transparent var(--at));
+}
+:root[data-design="tisch"][data-scheme="dark"] .vote-felt__band::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--at) - 6px), calc(100% - 12px));
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-edge);
+  transform: translateY(-50%);
 }
 /* The secrecy line moves out of the card and onto the felt as T4.2's pill. On
    a phone it takes its own line under the header row — the last thing in the
