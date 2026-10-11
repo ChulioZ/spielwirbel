@@ -429,8 +429,10 @@ function createRegalBulk(ctx) {
         input.addEventListener('input', syncOk);
         input.addEventListener('keydown', (e) => {
           // Not while an IME composition is open: that Enter confirms a
-          // candidate (Korean ships), and would post a half-typed name.
-          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); createTag(); }
+          // candidate (Korean ships), and would post a half-typed name. WebKit
+          // can deliver that Enter after compositionend, with isComposing
+          // false and only the IME's keyCode 229 left to tell it apart.
+          if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); createTag(); }
         });
         return picks;
       },

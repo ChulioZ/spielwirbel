@@ -441,6 +441,15 @@ test('Enter during IME composition does not create', async () => {
     { key: 'Enter', isComposing: true, bubbles: true, cancelable: true }));
   await flush();
   assert.equal(tagPosts().length, 0, 'a composing Enter created the tag');
+  // WebKit can deliver the confirming Enter AFTER compositionend, with
+  // isComposing false but the IME's keyCode 229 still on it.
+  nameInput().dispatchEvent(new dom.window.KeyboardEvent('keydown',
+    { key: 'Enter', keyCode: 229, bubbles: true, cancelable: true }));
+  await flush();
+  assert.equal(tagPosts().length, 0, 'a keyCode-229 Enter created the tag');
+  // Control: a plain Enter still creates, so the two above are not vacuous.
+  nameInput().dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  await waitFor(() => tagPosts().length, { label: 'the plain-Enter create' });
 
   sheetBtn('Abbrechen').click();
   await settle();
