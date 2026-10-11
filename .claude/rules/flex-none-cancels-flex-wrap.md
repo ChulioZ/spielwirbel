@@ -130,4 +130,6 @@ lesson in the ≥1280px block, and why the column has one width),
 `.claude/rules/responsive-hub-tabs.md` (where 520/860 come from),
 `.claude/rules/css-text-assertions-strip-comments.md` (how the guarding test
 parses the sheet), `.claude/rules/break-the-code-on-purpose.md` (each of the five
-assertions was seen red against a deliberate break).
+assertions was seen red against a deliberate break),
+`.claude/rules/flex-1-zero-basis-never-wraps.md` (the opposite declaration,
+`flex: 1`, cancels `flex-wrap` too: its 0 basis always fits).

@@ -2896,12 +2896,22 @@
   overflow: visible;
   color: var(--ink);
 }
+/* The header STACKS below 1100px (#1637): back key and leaves on row 1, the
+   name across the whole width under them, the secret line last — Das
+   Programmheft's phone shape. As one row („back who dots") the leaves' `auto`
+   track grew with the game count and the back key's word took ~107px, so at
+   390px with ten games the `minmax(0, 1fr)` name column was ~0 and „Julian
+   wertet · Spiel 2 von 10 …" broke one word per line. Measured stacked
+   (Chromium, 320–430px, „Alexandra-Maria wertet", 3/10/15/20 games): the
+   name and the count each hold one line in de, the longest locale (pt „…
+   está avaliando") wraps the name once between words at 320, and nothing
+   overflows. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "back who dots" "secret secret secret";
+  grid-template-areas: "back . dots" "who who who" "secret secret secret";
   align-items: center;
-  gap: 8px 14px;
+  gap: 12px 14px;
 }
 /* „← Zurück": a white leaf key, 44px, with the word (T7). Restated because
    styles.css sizes it from --undo-size, which only the Klassisch row declares. */
@@ -2928,12 +2938,13 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__name {
   margin: 0;
   font-family: var(--font);
-  font-size: var(--text-lg);
+  font-size: var(--text-2xl);
+  line-height: 1.15;
   font-weight: 800;
   color: var(--ink);
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__count {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--ink-soft);
@@ -2944,19 +2955,52 @@
    it. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dots { grid-area: dots; display: flex; align-items: center; gap: 2px; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dot {
-  width: 22px;
-  height: 13px;
+  width: 18px;
+  height: 11px;
   box-sizing: border-box;
   border: 1.5px solid var(--control-edge);
   border-radius: 0 100% 0 100%;
   background: transparent;
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dot.is-done { border-color: var(--leaf-1); background: var(--leaf-1); }
+/* Leaves at 18px (current 24) on a phone, F4.2's 22/28 from 1100px: ten
+   leaves and the worded back key take 312px, which fits from 360px; below
+   that the key keeps only its arrow (its name stays „Zurück"). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dot.is-current {
-  width: 28px;
-  height: 16px;
+  width: 24px;
+  height: 14px;
   border-color: var(--ink);
   background: var(--brand);
+}
+@media (max-width: 359px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__undo { padding: 0; justify-content: center; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__undo-word { display: none; }
+}
+/* Past ten games one band instead (voteFeltMarks): a leaf-green vine filled
+   to the current card, the current card a Laubgrün leaf with the ink edge. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dots--band { width: 150px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__band {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--control-edge);
+  border-radius: 0 999px 0 999px;
+  background: linear-gradient(90deg, var(--leaf-1) var(--at), transparent var(--at));
+}
+:root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__band::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--at) - 14px), calc(100% - 28px));
+  width: 28px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--ink);
+  border-radius: 0 100% 0 100%;
+  background: var(--brand);
+  transform: translateY(-50%);
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__secret {
   grid-area: secret;
@@ -3187,6 +3231,8 @@
   }
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt {
     grid-area: head;
+    grid-template-areas: "back who dots" "secret secret secret";
+    gap: 8px 14px;
     padding: 28px 32px 16px;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     background: var(--surface);
@@ -3203,6 +3249,12 @@
     box-shadow: var(--shadow-2);
   }
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt { box-shadow: var(--shadow-2); clip-path: inset(-50px -50px 0 -50px); }
+  /* The phone's headline and the gap under it are the stacked header's; the
+     wide row keeps the size it was drawn at (F4.2). */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__name { font-size: var(--text-lg); line-height: inherit; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__count { margin-top: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dot { width: 22px; height: 13px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote-felt__dot.is-current { width: 28px; height: 16px; }
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__img { max-height: none; aspect-ratio: 1; border-width: 14px; }
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__title { align-self: end; margin-top: 40px; font-size: var(--text-4xl); }
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__q { margin-top: 28px; font-size: var(--text-xl); }

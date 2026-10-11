@@ -1402,7 +1402,10 @@
   color: var(--ink);
 }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__undo:hover:not(:disabled) { border-color: var(--brand); }
-:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__who { flex: 1; min-width: 0; }
+/* A real basis, not `flex: 1`'s 0 (#1637): with a 0 basis the squares never
+   wrapped and squeezed the name to a word per line. At 11rem they take their
+   own line, at the right, when they do not fit beside it. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__who { flex: 1 1 11rem; min-width: 0; }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__name {
   margin: 0;
   font-family: var(--font-display);
@@ -1424,7 +1427,7 @@
 }
 /* One square per game: done filled, current filled and lit, the rest a wire.
    aria-hidden — the count says it. */
-:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dots { display: flex; gap: 6px; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dots { display: flex; gap: 6px; margin-left: auto; }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot {
   width: 12px;
   height: 12px;
@@ -1433,6 +1436,29 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot.is-done { background: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dot.is-current { background: var(--brand); box-shadow: 0 0 10px var(--glow-accent); }
+/* Past ten games one wire gauge instead (voteFeltMarks), filled to the current
+   card, which stays a lit square. */
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__dots--band { width: 140px; }
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__band {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 6px;
+  box-sizing: border-box;
+  border: 1px solid var(--brand);
+  background: linear-gradient(90deg, var(--brand) var(--at), transparent var(--at));
+}
+:root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__band::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--at) - 6px), calc(100% - 12px));
+  width: 12px;
+  height: 12px;
+  background: var(--brand);
+  box-shadow: 0 0 10px var(--glow-accent);
+  transform: translateY(-50%);
+}
 /* „Geheim · die anderen schauen weg" — the app's line, on its own row. */
 :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__secret {
   display: flex;
@@ -1555,6 +1581,14 @@
    it room, each still clearing the 44px target), and the word is set in the
    app's body face in its own case. The notation voice stays from 520px up.
    No hyphenation: the words break only at their spaces. */
+/* Below 860px the name takes its own row under the back key and the squares
+   (#1637): at 26px uppercase „JULIAN WERTET" did not fit beside them on a
+   phone and broke a word per line. The squares are aria-hidden and hold no
+   control, so moving them ahead of the name changes no reading or focus order. */
+@media (max-width: 859px) {
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote-felt__who { order: 1; flex-basis: 100%; }
+  :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__secret { order: 2; }
+}
 @media (max-width: 519px) {
   :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating { gap: 4px; }
   :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .rating .mood { min-width: min-content; padding-inline: 2px; }

@@ -5088,6 +5088,13 @@
   text-transform: uppercase;
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote__undo { background: var(--surface); border: var(--rule-strong) solid var(--ink); color: var(--ink); }
+/* Below 360px the key keeps only its arrow (#1637): ten squares and „Zurück"
+   took 299px of a 280px row, and the key's word was squeezed past its edge.
+   Its name stays „Zurück" (aria-label). */
+@media (max-width: 359px) {
+  :root[data-design="programmheft"] .vote--ph .vote__undo { padding: 0; justify-content: center; }
+  :root[data-design="programmheft"] .vote--ph .vote__undo-word { display: none; }
+}
 :root[data-design="programmheft"] .vote--ph .vote-felt__who { grid-area: who; min-width: 0; }
 :root[data-design="programmheft"] .vote--ph .vote-felt__name {
   margin: 0;
@@ -5112,6 +5119,25 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot { border: 1.5px solid var(--ink); background: var(--surface); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot.is-done { background: var(--ink); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__dot.is-current { background: var(--vermilion); }
+/* Past ten games one printed bar instead (voteFeltMarks): an ink frame filled
+   in ink to the current card, which keeps its vermilion square. */
+:root[data-design="programmheft"] .vote--ph .vote-felt__dots--band { width: 140px; }
+:root[data-design="programmheft"] .vote--ph .vote-felt__band { position: relative; display: block; width: 100%; height: 10px; box-sizing: border-box; }
+:root[data-design="programmheft"] .vote--ph .vote-felt__band::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: clamp(0px, calc(var(--at) - 7px), calc(100% - 14px));
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  transform: translateY(-50%);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__band {
+  border: 1.5px solid var(--ink);
+  background: linear-gradient(90deg, var(--ink) var(--at), var(--surface) var(--at));
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .vote--ph .vote-felt__band::after { border: 1.5px solid var(--ink); background: var(--vermilion); }
 :root[data-design="programmheft"] .vote--ph .vote__secret {
   grid-area: secret;
   display: flex;
