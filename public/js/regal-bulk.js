@@ -37,7 +37,9 @@
    callback rather than on the line after it — the close queues a history pop
    that would otherwise dismiss the confirm dialog the action opens a moment
    later (.claude/rules/sheet-history-back-dismissal.md). */
-function openBulkPicker({ title, hint, okDisabled = false }, build, onOk) {
+// `beforeOk`, when given, runs first and keeps the sheet open by resolving
+// false — the tags sheet uses it to create a typed-but-unsubmitted tag (#1619).
+function openBulkPicker({ title, hint, okDisabled = false, beforeOk = null }, build, onOk) {
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="sheet__head">
@@ -61,7 +63,16 @@ function openBulkPicker({ title, hint, okDisabled = false }, build, onOk) {
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
-  okBtn.addEventListener('click', () => closeSheet(() => onOk(result)));
+  okBtn.addEventListener('click', async () => {
+    if (beforeOk) {
+      // Disabled while it runs, or a second tap would apply twice.
+      okBtn.disabled = true;
+      const ok = await beforeOk();
+      okBtn.disabled = false;
+      if (!ok) return;
+    }
+    closeSheet(() => onOk(result));
+  });
   const cancelBtn = h(`<button type="button" class="btn">${esc(t('common.cancel'))}</button>`);
   cancelBtn.addEventListener('click', () => closeSheet());
   const actions = sheet.querySelector('.sheet__actions');
@@ -95,12 +106,6 @@ function createRegalBulk(ctx) {
   // only ever clear. Hidden rather than disabled, the same call renderOwnerChips
   // makes for its own empty row (#971).
   const canSetOwners = activeMembers(round).length > 0;
-  // A round with no tags has nothing to offer, so the picker could only ever
-  // be empty. Hidden rather than disabled, the same call `canSetOwners` makes
-  // for a seatless round — and creating a tag inline is deliberately out of
-  // scope here: that is the Tags screen's job, and it carries the per-round
-  // quota check this route does not.
-  const canSetTags = (round.tags || []).length > 0;
 
   const bulkBar = h(`<div class="bulk-bar" hidden>
        <div class="bulk-bar__info">
@@ -110,7 +115,7 @@ function createRegalBulk(ctx) {
        <div class="bulk-bar__actions">
          <button type="button" class="link-btn" data-act="all"></button>
          ${canSetOwners ? `<button type="button" class="btn" data-act="owners"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('bulk.owners'))}</button>` : ''}
-         ${canSetTags ? `<button type="button" class="btn" data-act="tags"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('bulk.tags'))}</button>` : ''}
+         <button type="button" class="btn" data-act="tags"><i class="ti ti-tags" aria-hidden="true"></i> ${esc(t('bulk.tags'))}</button>
          <button type="button" class="btn" data-act="retire"><i class="ti ti-archive" aria-hidden="true"></i> ${esc(t('bulk.retire'))}</button>
          ${canBulkDelete ? `<button type="button" class="btn btn--danger" data-act="delete"><i class="ti ti-trash-x" aria-hidden="true"></i> ${esc(t('bulk.delete'))}</button>` : ''}
        </div>
@@ -303,14 +308,37 @@ function createRegalBulk(ctx) {
 
      That also removes the owners sheet's reason for starting empty: there is
      no pre-state to misrepresent, because „untouched" is a real third answer
-     rather than a stand-in for „mixed". */
+     rather than a stand-in for „mixed".
+
+     A tag can also be CREATED here (#1619): the action exists for a freshly
+     imported shelf, which is exactly when the right tag does not exist yet. It
+     goes through the tags route — the per-round quota and the case-insensitive
+     dedupe live there, not in bulk-tags — and arrives pre-set to „add". As in
+     the game-detail popover, a tag created with „Hinzufügen" stays on the
+     round even if the sheet is then cancelled. */
   function openTagsSheet() {
     if (!selection.size) return;
     // Map<tagId, 'add' | 'remove'>; a tag absent from it is left alone.
     const picks = new Map();
+    const tags = (round.tags || []).slice(); // local copy; never mutate the cached round
+    let okButton = null;
+    let input = null;
+    // Nothing picked AND nothing typed is not a no-op to confirm — it is an
+    // unfinished sentence, so the action stays unavailable rather than
+    // reporting a successful zero. With no confirm after it (#1360) this IS the
+    // guard against an empty submit.
+    const syncOk = () => { okButton.disabled = picks.size === 0 && !input.value.trim(); };
+    let createTag = async () => true;
     openBulkPicker(
-      { title: t('bulk.tags'), hint: tn(selection.size, 'bulk.tagsHintOne', 'bulk.tagsHint'), okDisabled: true },
+      {
+        title: t('bulk.tags'), hint: tn(selection.size, 'bulk.tagsHintOne', 'bulk.tagsHint'), okDisabled: true,
+        // „Übernehmen" commits a typed-but-unsubmitted name first (#249's
+        // behaviour from the game-detail popover); a failed creation keeps the
+        // sheet open with the name still in it.
+        beforeOk: () => createTag(),
+      },
       (sheet, okBtn) => {
+        okButton = okBtn;
         const chipRow = h(`<div class="filter-chips bulk-tags__chips" role="group" aria-label="${esc(t('bulk.tags'))}"></div>`);
         sheet.querySelector('.bulk-owners__hint').after(chipRow);
         /* Its OWN three labels rather than paintTagChip's: those say "only games
@@ -318,7 +346,8 @@ function createRegalBulk(ctx) {
            the same three visual states mean an edit, and a chip that looks
            identical while meaning something else is exactly the confusion worth
            one more key per state. */
-        (round.tags || []).forEach((tg) => {
+        const painters = new Map();
+        const addChip = (tg) => {
           const chip = h('<button type="button" class="chip"></button>');
           const paint = () => {
             const st = picks.get(tg.id);
@@ -336,14 +365,50 @@ function createRegalBulk(ctx) {
             else if (st === 'add') picks.set(tg.id, 'remove');
             else picks.delete(tg.id);
             paint();
-            // Nothing picked is not a no-op to confirm — it is an unfinished
-            // sentence, so the action stays unavailable rather than reporting a
-            // successful zero. With no confirm after it (#1360) this IS the
-            // guard against an empty submit.
-            okBtn.disabled = picks.size === 0;
+            syncOk();
           });
           paint();
+          painters.set(tg.id, paint);
           chipRow.appendChild(chip);
+        };
+        tags.forEach(addChip);
+        chipRow.hidden = tags.length === 0;
+
+        // The game-detail popover's create row (game-editors.js openTagsPopover).
+        // aria-label as well as placeholder: a placeholder is not a label.
+        input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+                aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
+        const picker = tagIconPicker(null);
+        const addBtn = h(`<button type="button" class="btn" data-act="create-tag">${esc(t('tags.add'))}</button>`);
+        const createRow = h('<div class="bulk-tags__create"></div>');
+        createRow.append(input, picker.trigger, addBtn);
+        chipRow.after(createRow, picker.grid);
+
+        // Resolves false only when a real creation attempt failed (an empty
+        // input is a no-op, not a failure).
+        createTag = async () => {
+          const name = input.value.trim();
+          if (!name) return true;
+          try {
+            const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
+            // An existing name (any case) comes back as that tag: set its chip
+            // rather than adding a duplicate.
+            if (!tags.some((x) => x.id === tag.id)) { tags.push(tag); addChip(tag); }
+            picks.set(tag.id, 'add');
+            painters.get(tag.id)();
+            chipRow.hidden = false;
+            input.value = '';
+            syncOk();
+            return true;
+          } catch (e) {
+            toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message, { tone: 'error' });
+            return false;
+          }
+        };
+        addBtn.addEventListener('click', () => createTag());
+        input.addEventListener('input', syncOk);
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); createTag(); }
         });
         return picks;
       },
@@ -378,8 +443,7 @@ function createRegalBulk(ctx) {
       toast(e.message, { tone: 'error' });
     }
   }
-  const bulkTagsBtn = bulkBar.querySelector('[data-act="tags"]');
-  if (bulkTagsBtn) bulkTagsBtn.addEventListener('click', openTagsSheet);
+  bulkBar.querySelector('[data-act="tags"]').addEventListener('click', openTagsSheet);
 
   const bulkOwnersBtn = bulkBar.querySelector('[data-act="owners"]');
   if (bulkOwnersBtn) bulkOwnersBtn.addEventListener('click', openOwnersSheet);
