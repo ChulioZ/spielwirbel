@@ -69,6 +69,9 @@ function openBulkPicker({ title, hint, okDisabled = false, beforeOk = null }, bu
   // (.claude/rules/redundant-guards-make-each-other-untestable.md).
   okBtn.addEventListener('click', async () => {
     if (beforeOk && !await beforeOk()) return;
+    // Dismissed while beforeOk ran: the user said no, and closeSheet with no
+    // sheet open would run onOk at once (or close whichever sheet is up now).
+    if (!backdrop.isConnected) return;
     closeSheet(() => onOk(result));
   });
   const cancelBtn = h(`<button type="button" class="btn">${esc(t('common.cancel'))}</button>`);

@@ -380,6 +380,27 @@ test('Übernehmen stays disabled while its creation is pending, whatever else is
   assert.equal(bulkPosts().length, 1);
 });
 
+/* „Abbrechen" while the create behind Übernehmen is pending is the user saying
+   no. The tag itself stays (as with „Hinzufügen"), but nothing is applied. */
+test('cancelling while Übernehmen\'s creation is pending applies nothing', async () => {
+  let release;
+  const hold = new Promise((r) => { release = r; });
+  const r = openTagsFor(TAGS_ROUND);
+  const { bulkPosts } = tagSpy(r, { hold });
+  showAndOpen(r);
+
+  nameInput().value = 'Koop';
+  nameInput().dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  sheetBtn(APPLY).click();
+  await flush();
+  sheetBtn('Abbrechen').click();
+  await settle();
+  release();
+  await settle();
+
+  assert.equal(bulkPosts().length, 0, 'a cancelled sheet still applied the tags');
+});
+
 test('the quota error toasts and keeps the sheet open, applying nothing', async () => {
   const r = openTagsFor(TAGS_ROUND);
   const { toasts, bulkPosts } = tagSpy(r, { quota: true });
