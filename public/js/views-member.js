@@ -244,9 +244,9 @@ async function showMember(rid, mid) {
   figures.appendChild(figure(t('member.winRate'), st.winRate === null ? '–' : esc(Math.round(st.winRate * 100) + '%')));
   figures.appendChild(figure(t('member.sessions'), esc(String(st.joined))));
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : ratingMark(st.avgGiven)));
-  // The member's earned Abzeichen under the figures (#1388) — never the open ones.
-  const badgeRow = memberCardBadges(round, member);
-  if (badgeRow) figures.after(badgeRow);
+  // Under the figures: the earned Abzeichen (#1388, never the open ones), then the
+  // personal bests (#1631, views-member-points.js). Each is null when empty.
+  [memberPointsPanel(round, member), memberCardBadges(round, member)].forEach((el) => el && figures.after(el));
 
   const cards = card.querySelector('.member-card__games');
 

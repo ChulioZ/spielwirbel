@@ -706,9 +706,13 @@ finished session. The plain offer/validate shape — the points sheet accepts wh
 `PUT …/sessions/:sid/scores` accepts, so a drifted server copy would 400 a value
 the sheet let through. Named "points" rather than "score" on purpose:
 `vote-score.js` already owns `SCORE_MIN` in the same global scope, and a second
-meaning under one word is how a reader picks up the wrong one. The derivation in
-the same file (bests, records) has no server reader — it rides along because it
-is the same feature's pure half, not because it is shared.
+meaning under one word is how a reader picks up the wrong one. **#1631 gave the
+derivation a server reader**: `memberPointRecords` is what `lib/user-stats.js`
+folds into the profile's account-wide Bestleistungen, what the member page lists,
+and what the two record Abzeichen count (injected into `achievements.js` like its
+other siblings) — so a page, a profile and a badge cannot disagree about which
+records a member holds. A hand-written server copy would let the profile name a
+best the member page does not.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

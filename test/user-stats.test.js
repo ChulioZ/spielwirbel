@@ -329,3 +329,52 @@ test('an account with no seat gets a real zero record; an unknown one gets null'
 
   assert.equal(await accountStats('nobody-at-all'), null);
 });
+
+// --- personal bests across rounds (#1631) ------------------------------------
+
+const scored = (id, gid, day, scores, over = {}) => ({
+  ...played(id, gid), createdAt: `2026-02-${String(day).padStart(2, '0')}T20:00:00.000Z`, scores, ...over,
+});
+
+test('points: one best per game across rounds, records held summed, bettered summed', async () => {
+  reset();
+  seatUser();
+  const src = { provider: 'bgg', externalId: '230802' };
+  // Round 1: Azul 40 then 55 (a bettered best, and the group record).
+  round({ games: [game('g1', 'Azul', { source: src })], sessions: [
+    scored('s1', 'g1', 1, { 'm-me': 40, 'm-other': 50 }),
+    scored('s2', 'g1', 2, { 'm-me': 55, 'm-other': 10 }),
+  ] });
+  // Round 2: the same Azul, best 61 — but Bo holds that round's record.
+  round({ games: [game('g2', 'Azul', { source: src })], sessions: [
+    scored('s3', 'g2', 3, { 'm-me': 61, 'm-other': 70 }),
+  ] });
+  const st = await accountStats(UID);
+  assert.deepEqual(st.points, {
+    bests: [{ title: 'Azul', image: null, points: 61, record: true }],
+    held: 1,
+    bettered: 1,
+  });
+});
+
+test('points: a team record counts as held with no row; lower-wins merges downward', async () => {
+  reset();
+  seatUser();
+  round({ games: [game('g1', 'Codenames')], sessions: [
+    scored('s1', 'g1', 1, { 'm-other': 3 }),
+    scored('s2', 'g1', 2, { t1: 9 }, { teams: [{ id: 't1', personIds: ['m-me', 'm-other'] }] }),
+  ] });
+  round({ games: [game('g2', 'Golf', { lowScoreWins: true })], sessions: [scored('s3', 'g2', 3, { 'm-me': 40 })] });
+  round({ games: [game('g3', 'golf', { lowScoreWins: true })], sessions: [scored('s4', 'g3', 4, { 'm-me': 36 })] });
+  const st = await accountStats(UID);
+  assert.equal(st.points.held, 3, 'the Codenames team record plus both Golf rounds');
+  assert.deepEqual(st.points.bests.map((b) => [b.title, b.points]), [['Golf', 36]]);
+});
+
+test('points: absent — not empty — when the account has none', async () => {
+  reset();
+  seatUser();
+  round({ games: [game('g1', 'Azul')], sessions: [played('s1', 'g1')] });
+  const st = await accountStats(UID);
+  assert.equal('points' in st, false);
+});

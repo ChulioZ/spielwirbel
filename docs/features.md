@@ -446,7 +446,10 @@ What the app does, in detail. For a short overview see the
     round, then one row per member in standings order — the first win, ten
     sessions, a game that keeps coming back, a full year of monthly play, and
     ten secret ones that show only a padlock until earned (41 entries since
-    issue #1464). Where order or a time window matters, the tables of one split
+    issue #1464, 43 since issue #1631 added the two record ladders: **Rekordhalter**
+    1 · 3 · 10 — games in which the member broke the round's points record, a
+    team's record counting for each of its members — and **Bestleistung**
+    3 · 10 · 25, every „Neuer Rekord" of their own). Where order or a time window matters, the tables of one split
     session count as one evening. A mark that can no longer be earned is not
     shown at all — Gründungsmitglied for anyone who missed the round's first
     evening. Each is a button that opens a card (a popover
@@ -708,6 +711,12 @@ What the app does, in detail. For a short overview see the
   records and the order for golf-style games. Points never decide the winner,
   which is still tapped as before. Bests and records are derived from the
   sessions, never stored, so deleting or re-dating a session corrects them.
+  A member's page lists their **Bestleistungen** (issue #1631): their best score
+  per game with its date, a medal on the games whose round record they hold,
+  and how many records they hold and bests they have beaten — a record their
+  team set counts for every member of it. The account profile shows the same
+  across every round the account sits in (titles and scores only, no dates).
+  Both are hidden while a member has no points.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is
@@ -968,8 +977,9 @@ What the app does, in detail. For a short overview see the
   own activity feed, with no cutoff. Accepted friends see the same record unless
   you switch it off (Konto → Profil; on by default); strangers and pending
   requests never do, and you always see your own. The record names **no round,
-  no other member and no individual session or rating** — only figures and at
-  most two game titles. Since #1132 it is the four figures of the card's strip —
+  no other member and no individual session or rating** — only figures and game
+  titles (the favourite and strongest game, and the titles behind the
+  Bestleistungen panel, issue #1631). Since #1132 it is the four figures of the card's strip —
   wins, win rate, sessions and how you usually rate — while the two that
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
