@@ -333,6 +333,53 @@ test('a second tap on Übernehmen while the tag is being created applies once', 
   assert.equal(bulkPosts().length, 1, 'the selection was tagged twice');
 });
 
+test('a second „Hinzufügen" while the first is in flight creates the tag once', async () => {
+  let release;
+  const hold = new Promise((r) => { release = r; });
+  const r = openTagsFor(TAGS_ROUND);
+  const { tagPosts } = tagSpy(r, { hold });
+  showAndOpen(r);
+
+  nameInput().value = 'Neu';
+  addTagBtn().click();
+  addTagBtn().click();
+  nameInput().dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+  nameInput().value = 'Weiter';                     // typed while the request ran
+  release();
+  await waitFor(() => tagChipFor('Neu'), { label: 'the new chip' });
+  await flush();
+
+  assert.equal(tagPosts().length, 1, 'the same name was posted more than once');
+  assert.equal(nameInput().value, 'Weiter', 'the create wiped a name typed meanwhile');
+  assert.equal(sheet().querySelectorAll('.bulk-tags__chips .chip').length, 3);
+  sheetBtn('Abbrechen').click();
+  await settle();
+});
+
+/* Editing while the create behind Übernehmen is pending runs syncOk, which must
+   not hand the button back before the submission settles. */
+test('Übernehmen stays disabled while its creation is pending, whatever else is edited', async () => {
+  let release;
+  const hold = new Promise((r) => { release = r; });
+  const r = openTagsFor(TAGS_ROUND);
+  const { bulkPosts } = tagSpy(r, { hold });
+  showAndOpen(r);
+
+  nameInput().value = 'Koop';
+  nameInput().dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  sheetBtn(APPLY).click();
+  await flush();
+  nameInput().value = 'Koop2';
+  nameInput().dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+  tagChipFor('Kenner').click();
+  assert.equal(sheetBtn(APPLY).disabled, true, 'an edit re-enabled Übernehmen mid-submission');
+
+  release();
+  await waitFor(() => bulkPosts().length, { label: 'the bulk-tags request' });
+  await settle();
+  assert.equal(bulkPosts().length, 1);
+});
+
 test('the quota error toasts and keeps the sheet open, applying nothing', async () => {
   const r = openTagsFor(TAGS_ROUND);
   const { toasts, bulkPosts } = tagSpy(r, { quota: true });

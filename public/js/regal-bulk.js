@@ -63,14 +63,12 @@ function openBulkPicker({ title, hint, okDisabled = false, beforeOk = null }, bu
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
+  // No disable-while-pending here on purpose: the tags sheet's syncOk already
+  // holds the button disabled while its creation runs, and a second copy of
+  // that guard would leave neither one testable
+  // (.claude/rules/redundant-guards-make-each-other-untestable.md).
   okBtn.addEventListener('click', async () => {
-    if (beforeOk) {
-      // Disabled while it runs, or a second tap would apply twice.
-      okBtn.disabled = true;
-      const ok = await beforeOk();
-      okBtn.disabled = false;
-      if (!ok) return;
-    }
+    if (beforeOk && !await beforeOk()) return;
     closeSheet(() => onOk(result));
   });
   const cancelBtn = h(`<button type="button" class="btn">${esc(t('common.cancel'))}</button>`);
@@ -326,8 +324,11 @@ function createRegalBulk(ctx) {
     // Nothing picked AND nothing typed is not a no-op to confirm — it is an
     // unfinished sentence, so the action stays unavailable rather than
     // reporting a successful zero. With no confirm after it (#1360) this IS the
-    // guard against an empty submit.
-    const syncOk = () => { okButton.disabled = picks.size === 0 && !input.value.trim(); };
+    // guard against an empty submit. And never while a creation is in flight:
+    // an edit made meanwhile must not hand back a button whose tap would
+    // apply a second time.
+    let creating = null;
+    const syncOk = () => { okButton.disabled = !!creating || (picks.size === 0 && !input.value.trim()); };
     let createTag = async () => true;
     openBulkPicker(
       {
@@ -386,7 +387,7 @@ function createRegalBulk(ctx) {
 
         // Resolves false only when a real creation attempt failed (an empty
         // input is a no-op, not a failure).
-        createTag = async () => {
+        const submitName = async () => {
           const name = input.value.trim();
           if (!name) return true;
           try {
@@ -397,13 +398,22 @@ function createRegalBulk(ctx) {
             picks.set(tag.id, 'add');
             painters.get(tag.id)();
             chipRow.hidden = false;
-            input.value = '';
-            syncOk();
+            // Only clear what was submitted, not a name typed while it ran.
+            if (input.value.trim() === name) input.value = '';
             return true;
           } catch (e) {
             toast(e.message === 'quota_tags' ? t('tags.toast.quota') : e.message, { tone: 'error' });
             return false;
           }
+        };
+        // One creation at a time: „Hinzufügen", Enter and „Übernehmen" all
+        // share the request in flight, so a double tap posts the name once.
+        createTag = () => {
+          if (!creating) {
+            creating = submitName().finally(() => { creating = null; syncOk(); });
+            syncOk();
+          }
+          return creating;
         };
         addBtn.addEventListener('click', () => createTag());
         input.addEventListener('input', syncOk);
