@@ -235,6 +235,28 @@ test('the time starts empty, and its ✕ appears only while there is a time to e
   dom.run('closeSheet()');
 });
 
+// Safari on macOS leaves its calendar popover open after a day is clicked
+// (#1621); blurring the input is what closes it. A day TYPED segment by segment
+// fires `change` too, once the value is whole — so a change right after a key
+// must leave focus where it is, or the user is thrown out mid-date.
+test('picking a day lets go of the field; typing one keeps it', async () => {
+  const round = roundFixture();
+  const sheet = await openDirect(round);
+  const input = sheet.querySelector('.played-on__input');
+
+  input.focus();
+  assert.equal(dom.document.activeElement, input);
+  setDay(input, day(-2));
+  assert.notEqual(dom.document.activeElement, input, 'a picked day blurs the input');
+  assert.equal(input.value, day(-2), 'and keeps the picked value');
+
+  input.focus();
+  input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: '3', bubbles: true }));
+  setDay(input, day(-3));
+  assert.equal(dom.document.activeElement, input, 'a typed day keeps focus');
+  dom.run('closeSheet()');
+});
+
 test('today with an EARLIER time logs the evening at that time, born finished', async (t) => {
   const earlier = '00:00';
   if (nowKey() === earlier) return t.skip('it is 00:00 right now');
