@@ -102,6 +102,10 @@ function createRegalBulk(ctx) {
   let selecting = false;
   let shownCards = [];
   const selection = new Set();
+  // Tags created from the bulk sheet during this render (#1619). The cached
+  // round is never mutated, so without this a tag created and then cancelled
+  // would be missing when the sheet reopens, until the next round fetch.
+  const createdTags = [];
   const canBulkDelete = roundCan(round, 'game.delete');
   // A round with no seats has nobody to name as an owner, so the picker could
   // only ever clear. Hidden rather than disabled, the same call renderOwnerChips
@@ -321,7 +325,9 @@ function createRegalBulk(ctx) {
     if (!selection.size) return;
     // Map<tagId, 'add' | 'remove'>; a tag absent from it is left alone.
     const picks = new Map();
-    const tags = (round.tags || []).slice(); // local copy; never mutate the cached round
+    // A local copy plus this render's created tags; never mutate the cached round.
+    const tags = (round.tags || []).slice();
+    createdTags.forEach((tg) => { if (!tags.some((x) => x.id === tg.id)) tags.push(tg); });
     let okButton = null;
     let input = null;
     // Nothing picked AND nothing typed is not a no-op to confirm — it is an
@@ -338,8 +344,9 @@ function createRegalBulk(ctx) {
         title: t('bulk.tags'), hint: tn(selection.size, 'bulk.tagsHintOne', 'bulk.tagsHint'), okDisabled: true,
         // „Übernehmen" commits a typed-but-unsubmitted name first (#249's
         // behaviour from the game-detail popover); a failed creation keeps the
-        // sheet open with the name still in it.
-        beforeOk: () => createTag(),
+        // sheet open with the name still in it. So does a NEW name typed while
+        // that creation ran — closing would drop it unsubmitted.
+        beforeOk: async () => await createTag() && !input.value.trim(),
       },
       (sheet, okBtn) => {
         okButton = okBtn;
@@ -397,7 +404,7 @@ function createRegalBulk(ctx) {
             const tag = await api('POST', `/api/rounds/${rid}/tags`, { name, icon: picker.get() });
             // An existing name (any case) comes back as that tag: set its chip
             // rather than adding a duplicate.
-            if (!tags.some((x) => x.id === tag.id)) { tags.push(tag); addChip(tag); }
+            if (!tags.some((x) => x.id === tag.id)) { tags.push(tag); createdTags.push(tag); addChip(tag); }
             picks.set(tag.id, 'add');
             painters.get(tag.id)();
             chipRow.hidden = false;
@@ -421,7 +428,9 @@ function createRegalBulk(ctx) {
         addBtn.addEventListener('click', () => createTag());
         input.addEventListener('input', syncOk);
         input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { e.preventDefault(); createTag(); }
+          // Not while an IME composition is open: that Enter confirms a
+          // candidate (Korean ships), and would post a half-typed name.
+          if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); createTag(); }
         });
         return picks;
       },

@@ -375,9 +375,18 @@ test('Übernehmen stays disabled while its creation is pending, whatever else is
   assert.equal(sheetBtn(APPLY).disabled, true, 'an edit re-enabled Übernehmen mid-submission');
 
   release();
+  await waitFor(() => tagChipFor('Koop'), { label: 'the created chip' });
+  await settle();
+  // The name typed meanwhile is unsubmitted, so the sheet must not close over it.
+  assert.ok(sheet(), 'Übernehmen closed over a name typed while it ran');
+  assert.equal(nameInput().value, 'Koop2');
+  assert.equal(bulkPosts().length, 0, 'applied before the second name was submitted');
+
+  sheetBtn(APPLY).click();
   await waitFor(() => bulkPosts().length, { label: 'the bulk-tags request' });
   await settle();
   assert.equal(bulkPosts().length, 1);
+  assert.deepEqual([...bulkPosts()[0].body.addTagIds].sort(), ['new-1', 'new-2', 't1']);
 });
 
 /* „Abbrechen" while the create behind Übernehmen is pending is the user saying
@@ -399,6 +408,42 @@ test('cancelling while Übernehmen\'s creation is pending applies nothing', asyn
   await settle();
 
   assert.equal(bulkPosts().length, 0, 'a cancelled sheet still applied the tags');
+});
+
+test('a tag created and then cancelled is offered when the sheet reopens', async () => {
+  const r = openTagsFor(TAGS_ROUND);
+  tagSpy(r);
+  showAndOpen(r);
+
+  nameInput().value = 'Neu';
+  addTagBtn().click();
+  await waitFor(() => tagChipFor('Neu'), { label: 'the new chip' });
+  sheetBtn('Abbrechen').click();
+  await settle();
+
+  act('tags').click();
+  assert.ok(tagChipFor('Neu'), 'the created tag vanished from the reopened sheet');
+  assert.ok(!tagChipFor('Neu').classList.contains('is-on'), 'a reopened sheet starts neutral');
+  assert.equal(r.tags.length, 2, 'the cached round must not be mutated');
+  sheetBtn('Abbrechen').click();
+  await settle();
+});
+
+/* Enter also confirms an IME candidate (Korean ships), so a composing Enter is
+   not a request to create — it would post a half-typed name. */
+test('Enter during IME composition does not create', async () => {
+  const r = openTagsFor(TAGS_ROUND);
+  const { tagPosts } = tagSpy(r);
+  showAndOpen(r);
+
+  nameInput().value = '협력';
+  nameInput().dispatchEvent(new dom.window.KeyboardEvent('keydown',
+    { key: 'Enter', isComposing: true, bubbles: true, cancelable: true }));
+  await flush();
+  assert.equal(tagPosts().length, 0, 'a composing Enter created the tag');
+
+  sheetBtn('Abbrechen').click();
+  await settle();
 });
 
 test('the quota error toasts and keeps the sheet open, applying nothing', async () => {
