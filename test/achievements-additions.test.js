@@ -17,7 +17,7 @@ const voteScore = require('../public/js/vote-score');
 const { computePlaces } = require('../public/js/ranking');
 const { isActiveGame } = require('../public/js/draw-pool');
 const {
-  roundBadges, newSince, accountBadges,
+  roundBadges, newSince, accountBadges, BADGE_CATALOGUE,
   BADGE_WINDOW_HOURS, BADGE_VINTAGE_MONTHS, BADGE_REDISCOVERED_DAYS, BADGE_TIDE_MIN_GAMES,
 } = require('../public/js/achievements');
 
@@ -32,6 +32,8 @@ const DEPS = {
   SCORE_MIN: voteScore.SCORE_MIN,
   computePlaces,
   isActiveGame,
+  memberPointRecords: require('../public/js/point-records').memberPointRecords,
+  sortSessionsByDate: require('../public/js/session-order').sortSessionsByDate,
 };
 const TOP = voteScore.TILE_VALUE.length - 1;
 
@@ -80,7 +82,8 @@ test('Gründungsmitglied: at the round\'s first evening; a later joiner is not, 
   assert.equal(mine(mkRound({ members, sessions: ss }), 'founder').earnedAt.sessionId, ss[0].id);
   // Cleo missed the first evening: she can never earn it, so it is not shown at all.
   assert.equal(mine(mkRound({ members, sessions: ss }), 'founder', 'c'), undefined);
-  assert.equal(all(mkRound({ members, sessions: ss })).members.c.length, 17, 'her row simply has one entry fewer');
+  assert.equal(all(mkRound({ members, sessions: ss })).members.c.length, BADGE_CATALOGUE.filter((d) => d.holder === 'member').length - 1,
+    'her row simply has one entry fewer');
   // Before any evening it is open to everyone.
   assert.equal(mine(mkRound({ members }), 'founder', 'c').state, 'locked');
   // Deleting the first session replays from the next: Cleo was at that one.
@@ -279,4 +282,38 @@ test('account Spiele 10 · 25 · 50 · 100: distinct games played, both sides of
     assert.deepEqual([at(n).tier, at(n).of], [tier, of], `${n} games`);
   }
   assert.equal(accountBadges({}, null, T0).find((e) => e.key === 'accountGames').state, 'locked');
+});
+
+// --- #1631: the two record ladders -------------------------------------------------
+
+test('Rekordhalter 1 · 3 · 10: one step per GAME whose round record the member broke; a team record counts for its members', () => {
+  const p = (at, gid, scores, over = {}) => sess(at, { chosenGameId: gid, gameIds: [gid], scores, ...over });
+  const ss = [
+    p(0, 'g1', { a: 10, b: 20 }),
+    p(24, 'g1', { a: 30 }),                                              // a breaks g1's record
+    p(48, 'g1', { a: 40 }),                                              // and again: still ONE game
+    p(72, 'g2', { b: 5 }),
+    p(96, 'g2', { t1: 9 }, { teams: [{ id: 't1', personIds: ['a', 'b'] }] }), // the team breaks g2's
+    p(120, 'g3', { a: 1 }),                                              // a first play breaks nothing
+  ];
+  const e = mine(mkRound({ sessions: ss }), 'recordHolder');
+  assert.equal(e.state, 'earned');
+  assert.equal(e.tier, 1);
+  assert.deepEqual([e.count, e.of], [2, 3], 'two games toward the next tier');
+  assert.equal(e.earnedAt.sessionId, ss[1].id, 'earned where the first record fell');
+  const b = mine(mkRound({ sessions: ss }), 'recordHolder', 'b');
+  assert.equal(b.earnedAt.sessionId, ss[4].id, 'Bo earns it through the team');
+  // Derived: deleting the session that broke it takes it away.
+  const without = ss.filter((s) => s !== ss[4]);
+  assert.equal(mine(mkRound({ sessions: without }), 'recordHolder', 'b').state, 'locked');
+});
+
+test('Bestleistung 3 · 10 · 25: every „neuer Rekord" of the member; a team score never one', () => {
+  const ss = [0, 1, 2, 3].map((i) => sess(i * 24, { scores: { a: 10 + i } }))
+    .concat(sess(200, { scores: { t1: 99 }, teams: [{ id: 't1', personIds: ['a', 'b'] }] }));
+  const e = mine(mkRound({ sessions: ss }), 'personalBest');
+  assert.equal(e.tier, 3);
+  assert.equal(e.earnedAt.sessionId, ss[3].id, 'the third bettered best, the first score not counted');
+  assert.deepEqual([e.count, e.of], [3, 10]);
+  assert.equal(mine(mkRound({ sessions: ss.slice(0, 3) }), 'personalBest').state, 'progress');
 });

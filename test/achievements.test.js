@@ -36,6 +36,8 @@ const DEPS = {
   SCORE_MIN: voteScore.SCORE_MIN,
   computePlaces,
   isActiveGame,
+  memberPointRecords: require('../public/js/point-records').memberPointRecords,
+  sortSessionsByDate: require('../public/js/session-order').sortSessionsByDate,
 };
 
 // --- fixtures ------------------------------------------------------------------
@@ -80,14 +82,15 @@ const ours = (round, key, opts) => all(round, opts).round.find((e) => e.key === 
 
 // --- the catalogue -------------------------------------------------------------
 
-test('the catalogue is the 41 decided entries: 18 member · 18 round · 5 account', () => {
+test('the catalogue is the 43 decided entries: 20 member · 18 round · 5 account', () => {
   const by = (h) => BADGE_CATALOGUE.filter((d) => d.holder === h).map((d) => d.key);
   assert.deepEqual(by('member'), ['firstWin', 'regular', 'streak', 'versatile', 'allPlayed', 'teamPlayer', 'host', 'comeback', 'explorer',
-    'founder', 'firstChoice', 'specialist', 'present', 'variety', 'defender', 'beginnersLuck', 'rematch', 'double']);
+    'founder', 'firstChoice', 'specialist', 'present', 'variety', 'defender', 'beginnersLuck', 'rematch', 'double',
+    'recordHolder', 'personalBest']);
   assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen',
     'openHouse', 'twoTables', 'campaign', 'allWin', 'vintage', 'anniversary', 'marathon', 'rediscovered', 'againstTheTide', 'complete']);
   assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
-  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 41, 'keys are unique');
+  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 43, 'keys are unique');
   // Vollzählig was dropped (operator, 2026-10-02): its first evening was full by construction.
   assert.equal(BADGE_CATALOGUE.some((d) => d.key === 'fullHouse'), false);
 });
@@ -124,6 +127,9 @@ test('exactly ten secrets, and the tier ladders the review decided', () => {
     accountRounds: [2, 3, 5],
     accountYears: [1, 2, 3],
     accountGames: [10, 25, 50, 100],
+    // The two record ladders of #1631 (operator, 2026-10-11).
+    recordHolder: [1, 3, 10],
+    personalBest: [3, 10, 25],
   });
   // Every count is a ladder now; what stays single is a yes/no mark, which a
   // tier „1" would only make read „Teamgeist 1".
@@ -467,7 +473,7 @@ test('guests never hold marks; a retired member keeps theirs', () => {
 test('an empty round: every member entry locked or secret, nothing earned, nothing new', () => {
   const res = all(mkRound({ games: [] }));
   const every = [...res.round, ...res.members.a];
-  assert.equal(every.length, 36);
+  assert.equal(every.length, BADGE_CATALOGUE.filter((d) => d.holder !== 'account').length);
   assert.ok(every.every((e) => e.state === 'locked' || e.state === 'secret'));
   assert.ok(every.every((e) => !e.isNew && e.earnedAt === null));
 });

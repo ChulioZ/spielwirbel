@@ -264,6 +264,9 @@ function renderProfileCard(p, reload) {
      its absence is the whole gate here. */
   const badgeRow = profileCardBadges(st.badges, p.createdAt, name);
   if (badgeRow) card.appendChild(badgeRow);
+  // Personal bests across every round (#1631) — `stats.points` rides the same gate.
+  const pointsPanel = profilePointsPanel(st.points);
+  if (pointsPanel) card.appendChild(pointsPanel);
 
   /* The two game tiles as the Tischkarte's ribboned boxes. What is NOT reused is
      the wiring: `wireGameCardHead` makes each tile a link into a round, and a

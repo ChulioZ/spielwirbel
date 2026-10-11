@@ -12,7 +12,8 @@
    sharing a recap stores nothing, so it could never be earned) and three
    secrets (Comeback · Einstimmig · Unentschieden). #1464 added 20 more on
    2026-10-01 (9 member · 10 round · 1 account), seven of them secret, lifting
-   the three-secret cap: 41 entries and ten secrets. Vollzählig was planned with
+   the three-secret cap: 41 entries and ten secrets. #1631 added the two record
+   ladders (Rekordhalter, Bestleistung) on 2026-10-11: 43. Vollzählig was planned with
    them and DROPPED (operator, 2026-10-02): members store no createdAt, so
    „everyone who had joined by then" could only mean everyone seen at a table so
    far — which every round's first evening satisfies by construction, whoever
@@ -29,7 +30,7 @@
      roundBadges(round, opts)   -> { round: [entry], members: { [mid]: [entry] } }
      newSince(round, sid, opts) -> [{ key, holder, memberId, tier, sessionId, at, gameId? }]
      accountBadges(stats, createdAt, now) -> [entry]
-     BADGE_CATALOGUE            -> the 41 definitions, in display order
+     BADGE_CATALOGUE            -> the 43 definitions, in display order
 
    One entry:
      { key, holder, glyph, secret,
@@ -133,6 +134,9 @@ const BADGE_CATALOGUE = [
   { key: 'beginnersLuck', holder: 'member', glyph: 'ti-clover', secret: true, measure: badgeMeasureBeginnersLuck },
   { key: 'rematch', holder: 'member', glyph: 'ti-swords', secret: true, measure: badgeMeasureRematch },
   { key: 'double', holder: 'member', glyph: 'ti-stopwatch', n: BADGE_WINDOW_HOURS, secret: true, measure: badgeMeasureDouble },
+  // The two record ladders of #1631, read off the stored points (point-records.js).
+  { key: 'recordHolder', holder: 'member', glyph: 'ti-medal', tiers: [1, 3, 10], counted: true, lineOne: true, measure: badgeMeasureRecordHolder },
+  { key: 'personalBest', holder: 'member', glyph: 'ti-trending-up', tiers: [3, 10, 25], counted: true, measure: (c, mid) => badgeRunning(c.points(mid).bettered.map((e) => e.session)) },
   // --- B. the round ---------------------------------------------------------
   { key: 'founded', holder: 'round', glyph: 'ti-flag', measure: (c) => badgeFirst(c.sessions) },
   { key: 'sessions', holder: 'round', glyph: 'ti-calendar', tiers: [10, 25, 50, 100, 250, 500], counted: true, measure: (c) => badgeRunning(c.sessions) },
@@ -563,6 +567,24 @@ function badgeAgainstTheTide(c, s) {
   return last > 1 && !!own && own.place === last;
 }
 
+/* Rekordhalter (#1631): the GAMES in which the member broke the round's points
+   record — one step per game, at the first time they broke it. A team's record
+   counts for every member of that team (operator decision), a guest holds no
+   seat to count it for. Like every mark it is derived, so deleting the session
+   that broke a record takes the step away. */
+function badgeMeasureRecordHolder(c, mid) {
+  const seen = new Set();
+  const steps = [];
+  // No `seen.has` early return: a repeat record re-states an unchanged count, and
+  // badgeEvaluate dates a tier by the FIRST step reaching it, so the guard would
+  // be unreachable by any test (.claude/rules/redundant-guards-make-each-other-untestable.md).
+  c.points(mid).records.forEach((e) => {
+    seen.add(e.gameId);
+    steps.push(badgeStep(e.session, seen.size));
+  });
+  return { steps, count: seen.size };
+}
+
 // --- evaluation ------------------------------------------------------------------
 
 // The thresholds an entry is earned at: its tiers, or 1 for a yes/no mark.
@@ -619,6 +641,7 @@ function badgeDeps(deps) {
   return deps || {
     sessionPeople, sessionPartyGroups, isContestSession, sessionEnding, sessionHasVotes,
     scoreRatings, TILE_VALUE, SCORE_MIN, computePlaces, isActiveGame,
+    memberPointRecords, sortSessionsByDate,
   };
 }
 
@@ -632,6 +655,7 @@ function badgeRoundContext(round, opts) {
     .sort((a, b) => String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
   const byId = new Map((round.games || []).map((g) => [g.id, g]));
   const joinedCache = new Map();
+  const pointsCache = new Map();
   const eveningKey = (s) => s.parentSessionId || s.id;
   // Legacy sessions without `memberIds` count everyone as joined — the
   // memberStats convention, so Stammgast and the member page agree.
@@ -653,6 +677,15 @@ function badgeRoundContext(round, opts) {
     deps: badgeDeps(o.deps),
     game: (gid) => (gid ? byId.get(gid) || null : null),
     isJoined,
+    // One member's record book (#1631), shared by the two record ladders.
+    points: (mid) => {
+      if (!pointsCache.has(mid)) {
+        const d = badgeDeps(o.deps);
+        pointsCache.set(mid, d.memberPointRecords(round, mid,
+          { sessionPartyGroups: d.sessionPartyGroups, sortSessionsByDate: d.sortSessionsByDate }));
+      }
+      return pointsCache.get(mid);
+    },
     joined: (mid) => {
       if (!joinedCache.has(mid)) {
         joinedCache.set(mid, sessions.filter((s) => isJoined(mid, s)));

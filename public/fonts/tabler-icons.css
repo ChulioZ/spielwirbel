@@ -119,6 +119,7 @@
 .ti-arrows-split::before { content: "\edb5"; }
 .ti-archive::before { content: "\ea0b"; }
 .ti-medal::before { content: "\ec78"; }
+.ti-trending-up::before { content: "\eb43"; }
 .ti-star::before { content: "\eb2e"; }
 .ti-player-play::before { content: "\ed46"; }
 .ti-external-link::before { content: "\ea99"; }

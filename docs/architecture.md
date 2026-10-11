@@ -993,6 +993,9 @@ public/
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and
                      the two game boxes; name/colour editing)
+    views-member-points.js „Bestleistungen" (#1631): a player's best points per
+                     game, on the member card and the profile card, read off
+                     memberPointRecords (point-records.js)
     programmheft-tier2a.js Das Programmheft's extras with no Klassisch counterpart
                      (#1379): the Chronik's „Rückblick" sheet and „Teilen",
                      „Letzte Siege" on the member page

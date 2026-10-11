@@ -67,9 +67,16 @@ function pointsBeat(a, b, lowWins) {
    decides who is named first.
 
    Returns
-     plays:  [{ session, lines: [{ party, points, newRecord }] }]  oldest first
+     plays:  [{ session, lines: [{ party, points, newRecord, groupRecord }] }]  oldest first
      bests:  Map memberId -> { points, session }   (members only)
-     record: { points, party, session } | null    (the earliest to reach it) */
+     record: { points, party, session } | null    (the earliest to reach it)
+
+   `groupRecord` (#1631) marks the line that broke the ROUND's record: strictly
+   better than the record standing before this session, and the session's own
+   best. Like `newRecord`, the first scored play breaks nothing — there was no
+   record to beat. A team's line can carry it (a shared result can hold the group
+   record, and the operator decided it counts for every member of that team), a
+   guest's too; two parties tied on a record-breaking score both carry it. */
 function gamePointRecords(round, game, deps) {
   const d = deps || { sessionPartyGroups, sortSessionsByDate };
   const lowWins = !!(game && game.lowScoreWins);
@@ -82,6 +89,7 @@ function gamePointRecords(round, game, deps) {
     const scores = s.scores && typeof s.scores === 'object' ? s.scores : null;
     if (!scores) return;
     const lines = [];
+    const before = record;
     d.sessionPartyGroups(round, s).forEach((party) => {
       const points = scores[party.id];
       if (!isValidPoints(points)) return;
@@ -93,9 +101,12 @@ function gamePointRecords(round, game, deps) {
         if (!prev || newRecord) bests.set(party.id, { points, session: s });
       }
       if (!record || pointsBeat(points, record.points, lowWins)) record = { points, party, session: s };
-      lines.push({ party, points, newRecord });
+      lines.push({ party, points, newRecord, groupRecord: false });
     });
     if (!lines.length) return;
+    if (before && pointsBeat(record.points, before.points, lowWins)) {
+      lines.forEach((l) => { l.groupRecord = l.points === record.points; });
+    }
     // Stable, so equal points keep the party order.
     lines.sort((a, b) => (pointsBeat(a.points, b.points, lowWins) ? -1 : pointsBeat(b.points, a.points, lowWins) ? 1 : 0));
     plays.push({ session: s, lines });
@@ -113,6 +124,63 @@ function sessionPointLines(round, session, deps) {
   return play ? play.lines : [];
 }
 
+/* One member's record book in one round (#1631): the member page's „Bestleistungen",
+   the account-wide merge in lib/user-stats.js, and the two record Abzeichen all
+   read THIS, so the page, the profile and the badges cannot count differently.
+
+   Returns
+     bests:   [{ game, points, session }]  the member's personal best per game,
+              in round.games order (members only — a team score is never one)
+     held:    [gameId] — games whose CURRENT group record is the member's: their
+              own line or a team's they played in (operator, #1631: a team record
+              counts for every member of the team), including a tie at the record
+              in the session that set it
+     records: [{ session, gameId }]  every line where the member (or their team)
+              broke the round's record, oldest first
+     bettered:[{ session, gameId }]  every „neuer Rekord" of theirs, oldest first
+
+   The sessions are grouped by game before the per-game pass, so each game's
+   history is sorted alone rather than the whole round once per game — the
+   badges call this once per member per page. */
+function memberPointRecords(round, mid, deps) {
+  const d = deps || { sessionPartyGroups, sortSessionsByDate };
+  const byGame = new Map();
+  ((round && round.sessions) || []).forEach((s) => {
+    if (!s || !s.finished || s.cancelled || !s.chosenGameId || !s.scores) return;
+    if (!byGame.has(s.chosenGameId)) byGame.set(s.chosenGameId, []);
+    byGame.get(s.chosenGameId).push(s);
+  });
+  const mine = (party) => party.personIds.includes(mid);
+  const bests = [];
+  const records = [];
+  const bettered = [];
+  const held = [];
+  ((round && round.games) || []).forEach((game) => {
+    const sessions = byGame.get(game.id);
+    if (!sessions) return;
+    const r = gamePointRecords({ ...round, sessions }, game, d);
+    const best = r.bests.get(mid);
+    if (best) bests.push({ game, points: best.points, session: best.session });
+    // Every party that reached the record IN the session that set it holds it —
+    // a tie there is shared, as `groupRecord` marks both lines; `record.party`
+    // names only the first, for display. A later tie beats nothing, so it does not.
+    const setting = r.record && r.plays.find((p) => p.session === r.record.session);
+    if (setting && setting.lines.some((l) => l.points === r.record.points && mine(l.party))) held.push(game.id);
+    r.plays.forEach((p) => p.lines.forEach((l) => {
+      if (!mine(l.party)) return;
+      if (l.groupRecord) records.push({ session: p.session, gameId: game.id });
+      if (l.newRecord) bettered.push({ session: p.session, gameId: game.id });
+    }));
+  });
+  // A member sits in one party per session and a session plays one game, so a
+  // session appears at most once in each list — safe to key the entries by it.
+  const byDate = (list) => {
+    const of = new Map(list.map((e) => [e.session, e]));
+    return d.sortSessionsByDate([...of.keys()]).map((s) => of.get(s));
+  };
+  return { bests, held, records: byDate(records), bettered: byDate(bettered) };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { POINTS_MIN, POINTS_MAX, isValidPoints, pointsBeat, gamePointRecords, sessionPointLines };
+  module.exports = { POINTS_MIN, POINTS_MAX, isValidPoints, pointsBeat, gamePointRecords, sessionPointLines, memberPointRecords };
 }

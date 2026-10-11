@@ -11911,6 +11911,35 @@ kbd {
 .member-card__badges-go:hover { background: var(--sunken-soft); }
 .member-card__badges-go:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
 
+/* „Bestleistungen" (#1631, views-member-points.js): the player's best points per
+   game, on the member card and the profile card. Built from tokens only, so every
+   design paints it in its own colours without a per-design block; the rows are a
+   plain ruled list because the order (by title) carries no ranking to tile. */
+.member-points { margin-top: 14px; }
+/* --font, not the display face the global h2 rule hands it: every design caps its
+   display face at a floor this 14px label sits below. */
+.member-points__title { margin: 0; font-family: var(--font); font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); }
+.member-points__title .ti { color: var(--brand-ink, var(--brand)); }
+.member-points__meta { margin: 2px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+/* A row-major tile grid, not a stretched list: at 1280px a full-width row put the
+   score ~1000px from its game (.claude/rules/tiles-vs-lists.md — the order is by
+   title, no ranking, so wrapping keeps the reading order). */
+.member-points__list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); column-gap: 24px; }
+.member-points__list > li { border-top: 1px solid var(--line); }
+.member-points__row { display: flex; align-items: baseline; gap: 10px; min-height: 36px; padding: 6px 0; color: inherit; }
+a.member-points__row:hover .member-points__game { text-decoration: underline; }
+a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
+/* Title over date, so a long name takes the tile's width rather than sharing a
+   line with the date (a 260px tile wrapped „Die Legenden von Andor…" to five lines). */
+.member-points__name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.member-points__game { overflow-wrap: anywhere; font-weight: 600; }
+.member-points__when { font-size: var(--text-sm); color: var(--ink-soft); }
+.member-points__value { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* The medal sits in a fixed slot every row carries, so the scores line up whether
+   or not a row holds the record. */
+.member-points__mark { flex: none; display: inline-flex; justify-content: center; width: 1.1em; }
+.member-points__record { color: var(--brand-ink, var(--brand)); }
+
 /* The Spielerkarte's account tier (#1389): the same label and tiles, all four
    always, under the figures — two a row on a phone, four across from there. */
 .profile-card__badges { display: flex; flex-direction: column; gap: 6px; margin-top: 16px; }
