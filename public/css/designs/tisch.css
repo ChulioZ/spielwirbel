@@ -463,6 +463,9 @@
   min-height: 24px;
   display: inline-flex;
   align-items: center;
+  /* Flex drops the whitespace between a glyph and its label, so the gap has
+     to be stated — the app's one icon gap (#1640), not a value of our own. */
+  gap: var(--icon-gap);
 }
 
 /* The footer's rows are 32 px, per the same finding. */
@@ -945,6 +948,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  gap: var(--icon-gap);   /* the template writes `</i>${label}` — no space (#1640) */
   min-height: 56px;
   padding: 14px;
   background: none;
@@ -2103,7 +2107,6 @@
     flex: 1 1 auto;
     white-space: nowrap;
     min-height: 40px;
-    gap: 6px; /* flex drops the space between icon and label */
     justify-content: center;
     border-radius: 999px;
     font-size: var(--text-xs);

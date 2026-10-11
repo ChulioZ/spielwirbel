@@ -294,6 +294,10 @@
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-pill: 999px;
+  /* Glyph-to-label gap inside an icon-led button or link (#1640). In em, so it
+     tracks each control's own text size: ~7px on an 18px .btn, ~6px on a 16px
+     link, ~5px on a 13px chip. */
+  --icon-gap: 0.4em;
   /* Room the floating hub dock needs at the page bottom. It is used by BOTH
      things that end up under it — .app's own padding and the site footer that
      follows .app (#324) — so the two can't drift apart if the dock is ever
@@ -1081,7 +1085,7 @@ h1, h2, h3 { font-family: var(--font-display); }
      action should read a step above the 16px section links beside it).
      Anything that must beat `.btn` needs a compounded `.btn.rail__cta` — see
      `.claude/rules/state-rules-clobber-component-values.md`. */
-  .rail__cta { width: 100%; gap: 8px; }
+  .rail__cta { width: 100%; }   /* its glyph gap is the shared --icon-gap (#1640) */
   .rail__group { display: flex; flex-direction: column; gap: 2px; }
   .rail__label {
     font-size: var(--text-xs);
@@ -2549,6 +2553,34 @@ a.hub-row:hover { background: var(--sunken-soft); }
    default, an anchor is inline — without this the padding overflows the sheet
    and the label renders underlined. */
 a.btn { display: inline-block; text-decoration: none; text-align: center; box-sizing: border-box; }
+/* An icon-led button or link: one gap between glyph and label, in every design
+   (#1640). Before this the gap was whatever the markup happened to say — a
+   space (a few px, ~2px in Forest's face) or nothing at all, since many
+   templates write `</i>${label}` — and a design that makes the control a flex
+   box (Der Tisch's `.link-btn`) drops even the space. A flex row with a `gap`
+   is the only shape that gives the same answer for both spellings.
+
+   Zero specificity on purpose. A component that sets its own `display` (a hub
+   hide, `.rail-owned`, a flex CTA) or its own `gap` (`.hub-cta`'s 10px — the
+   app's one deliberate exception, a 26px glyph beside the primary label) must
+   keep winning, exactly as it did against the UA's inline-block. The design
+   sheets' own control gaps (game-detail actions, hub CTAs, Der Tisch's
+   `.regal-add`/`.friends-search`) are drawn values from each package and stay. The `a.btn`
+   spelling below repeats that rule's own weight, so it outranks only `a.btn`'s
+   inline-block, which it follows. `:not([hidden])` because the `hidden`
+   attribute hides only through the UA sheet, which any author rule beats
+   (.claude/rules/hidden-attribute-vs-display-rule.md). `:not([aria-label])`
+   because CSS cannot see a text node: an icon-ONLY control (the „…" menus)
+   also matches `:has(> .ti:first-child)`, and as a flex box it loses the line
+   box its height came from — measured 8px shorter. Every icon-only control
+   names itself with aria-label, and a labelled one has no reason to. */
+:where(.btn, .link-btn):where(:has(> .ti:first-child):not([hidden], [aria-label])),
+a.btn:where(:has(> .ti:first-child):not([hidden], [aria-label])) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--icon-gap);
+}
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ---- Cards / grids ---- */
