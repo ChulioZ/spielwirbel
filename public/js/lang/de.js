@@ -2412,9 +2412,8 @@ I18N.de = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} wurde aus der Session entfernt',
   'log.removedBy': '{actor} hat {name} aus der Session entfernt',
-  'session.removeEntry': 'Person entfernen',
-  'session.removeTitle': 'Jemanden aus der Session entfernen',
-  'session.removeIntro': 'Für jemanden, der aus Versehen angehakt wurde oder früher gegangen ist. Die Person zählt nicht mehr als dabei gewesen, ihre schon abgegebenen Wertungen zählen aber weiter für die Spiele.',
+  'session.removeTitle': 'Personen in dieser Session',
+  'session.removeIntro': 'Entferne jemanden, der aus Versehen angehakt wurde oder früher gegangen ist: Die Person zählt nicht mehr als dabei gewesen, ihre schon abgegebenen Wertungen zählen aber weiter für die Spiele. Wer wieder hinzugefügt wird, zählt samt Wertungen wieder mit – Gewinner, Teams und Punkte, die beim Entfernen weggefallen sind, müssen neu gesetzt werden.',
   'session.removeAction': 'Entfernen',
   'session.removeActionFor': '{name} entfernen',
   'session.removeConfirmTitle': '{name} entfernen?',
@@ -2423,4 +2422,13 @@ I18N.de = {
   'session.removed': '{name} wurde entfernt',
   'session.removeLast': 'Eine Session braucht mindestens eine Person.',
   'session.removeSplit': 'Diese Session ist auf Tische aufgeteilt. Entferne die Person an ihrem Tisch.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Personen verwalten',
+  'session.removedHeading': 'Entfernt',
+  'session.restoreAction': 'Wieder hinzufügen',
+  'session.restoreActionFor': '{name} wieder hinzufügen',
+  'session.restored': '{name} ist wieder dabei',
+  'session.restoreSplit': 'Diese Session ist auf Tische aufgeteilt. Füge die Person an ihrem Tisch wieder hinzu.',
+  'log.restored': '{name} wurde wieder zur Session hinzugefügt',
+  'log.restoredBy': '{actor} hat {name} wieder zur Session hinzugefügt',
 };

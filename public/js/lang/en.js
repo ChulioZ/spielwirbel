@@ -2413,9 +2413,8 @@ I18N.en = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} was removed from the session',
   'log.removedBy': '{actor} removed {name} from the session',
-  'session.removeEntry': 'Remove a person',
-  'session.removeTitle': 'Remove someone from the session',
-  'session.removeIntro': 'For someone ticked by mistake or who left early. They no longer count as having played, but any ratings they already gave still count toward the games’ scores.',
+  'session.removeTitle': 'People in this session',
+  'session.removeIntro': 'Remove someone ticked by mistake or who left early: they no longer count as having played, but any ratings they already gave still count toward the games’ scores. Someone added back counts again, ratings included — winners, teams and points cleared when they were removed have to be set again.',
   'session.removeAction': 'Remove',
   'session.removeActionFor': 'Remove {name}',
   'session.removeConfirmTitle': 'Remove {name}?',
@@ -2424,4 +2423,13 @@ I18N.en = {
   'session.removed': '{name} was removed',
   'session.removeLast': 'A session needs at least one person.',
   'session.removeSplit': 'This session is split into tables. Remove the person from their table instead.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Manage people',
+  'session.removedHeading': 'Removed',
+  'session.restoreAction': 'Add back',
+  'session.restoreActionFor': 'Add {name} back',
+  'session.restored': '{name} was added back',
+  'session.restoreSplit': 'This session is split into tables. Add the person back at their table instead.',
+  'log.restored': '{name} was added back to the session',
+  'log.restoredBy': '{actor} added {name} back to the session',
 };

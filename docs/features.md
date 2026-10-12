@@ -642,11 +642,15 @@ What the app does, in detail. For a short overview see the
   „Verloren" lowers it, exactly as the same evening recorded without a team.
 - **Removing a person** – someone ticked by mistake, or who left before the
   game, can be taken out of a session from the voting lobby or the results
-  screen, even after the game is finished („Person entfernen"). They stop
+  screen, even after the game is finished („Personen verwalten"). They stop
   counting as having played: they leave the session's people, tally, teams and
   winners, the Chronik and their stats. Anything they had already rated still
   counts toward each game's score on the shelf. A session keeps at least one
   person, and a session already split into tables takes removals per table.
+  The same sheet lists everyone removed and can **add them back** (issue
+  #1655): they count as having played again, and their kept ratings count for
+  that session's result again. Winners, teams and points that the removal
+  cleared are not restored; the group sets them again if needed.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page or a
   Pokale tile: pick who joins and skip the vote entirely, landing directly on

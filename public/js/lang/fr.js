@@ -2301,9 +2301,8 @@ I18N.fr = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} a été retiré·e de la session',
   'log.removedBy': '{actor} a retiré {name} de la session',
-  'session.removeEntry': 'Retirer quelqu’un',
-  'session.removeTitle': 'Retirer quelqu’un de la session',
-  'session.removeIntro': 'Pour quelqu’un coché par erreur ou parti plus tôt. Cette personne ne compte plus comme participante, mais les notes déjà données comptent toujours pour le score des jeux.',
+  'session.removeTitle': 'Personnes de cette session',
+  'session.removeIntro': 'Retirez quelqu’un coché par erreur ou parti plus tôt : cette personne ne compte plus comme participante, mais les notes déjà données comptent toujours pour le score des jeux. Une personne réintégrée compte à nouveau, notes comprises ; les gagnants, équipes et points effacés lors du retrait sont à redéfinir.',
   'session.removeAction': 'Retirer',
   'session.removeActionFor': 'Retirer {name}',
   'session.removeConfirmTitle': 'Retirer {name} ?',
@@ -2312,4 +2311,13 @@ I18N.fr = {
   'session.removed': '{name} a été retiré·e',
   'session.removeLast': 'Une session a besoin d’au moins une personne.',
   'session.removeSplit': 'Cette session est répartie en tables. Retire la personne à sa table.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Gérer les personnes',
+  'session.removedHeading': 'Retirées',
+  'session.restoreAction': 'Réintégrer',
+  'session.restoreActionFor': 'Réintégrer {name}',
+  'session.restored': '{name} est de retour',
+  'session.restoreSplit': 'Cette session est répartie en tables. Réintégrez la personne à sa table.',
+  'log.restored': '{name} a été réintégré·e à la session',
+  'log.restoredBy': '{actor} a réintégré {name} à la session',
 };

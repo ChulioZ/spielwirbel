@@ -60,6 +60,8 @@ const SESSION_EVENTS = {
   // removedBy/removed below; the name resolver must still know a removed guest,
   // which is why the session keeps them in `removedPeople`.
   person_removed: 'log.removed',
+  // …and put back (#1655), phrased the same two ways.
+  person_restored: 'log.restored',
 };
 
 // Cap on a single session's log. Choosing and un-choosing a game is one tap
@@ -97,11 +99,12 @@ function sessionLogLines(session, { name, title, t }) {
         text = !e.actor || e.actor === e.personId
           ? t('log.votedSelf', { name: person })
           : t('log.votedFor', { actor, name: person });
-      } else if (e.type === 'person_removed') {
+      } else if (e.type === 'person_removed' || e.type === 'person_restored') {
         const person = (e.personId && name(e.personId)) || t('log.someone');
+        const key = SESSION_EVENTS[e.type];
         text = e.actor
-          ? t('log.removedBy', { actor, name: person })
-          : t('log.removed', { name: person });
+          ? t(`${key}By`, { actor, name: person })
+          : t(key, { name: person });
       } else if (e.type === 'split') {
         text = t('log.split', { actor, n: e.count || 0 });
       } else if (e.type === 'game_chosen' || e.type === 'game_removed') {

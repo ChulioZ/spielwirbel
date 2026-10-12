@@ -2295,9 +2295,8 @@ I18N.pt = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} foi tirado da sessão',
   'log.removedBy': '{actor} tirou {name} da sessão',
-  'session.removeEntry': 'Tirar alguém',
-  'session.removeTitle': 'Tirar alguém da sessão',
-  'session.removeIntro': 'Para quem foi marcado por engano ou saiu mais cedo. A pessoa deixa de contar como participante, mas as avaliações que já deu continuam contando para a pontuação dos jogos.',
+  'session.removeTitle': 'Pessoas nesta sessão',
+  'session.removeIntro': 'Tire quem foi marcado por engano ou saiu mais cedo: a pessoa deixa de contar como participante, mas as avaliações que já deu continuam contando para a pontuação dos jogos. Quem volta a ser adicionado conta de novo, avaliações incluídas; vencedores, equipes e pontos apagados ao tirá-lo precisam ser definidos de novo.',
   'session.removeAction': 'Tirar',
   'session.removeActionFor': 'Tirar {name}',
   'session.removeConfirmTitle': 'Tirar {name}?',
@@ -2306,4 +2305,13 @@ I18N.pt = {
   'session.removed': '{name} foi tirado',
   'session.removeLast': 'Uma sessão precisa de pelo menos uma pessoa.',
   'session.removeSplit': 'Esta sessão está dividida em mesas. Tire a pessoa na mesa dela.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Gerenciar pessoas',
+  'session.removedHeading': 'Tirados',
+  'session.restoreAction': 'Adicionar de volta',
+  'session.restoreActionFor': 'Adicionar {name} de volta',
+  'session.restored': '{name} voltou',
+  'session.restoreSplit': 'Esta sessão está dividida em mesas. Adicione a pessoa de volta na mesa dela.',
+  'log.restored': '{name} voltou para a sessão',
+  'log.restoredBy': '{actor} adicionou {name} de volta à sessão',
 };

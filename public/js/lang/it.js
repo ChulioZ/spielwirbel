@@ -2300,9 +2300,8 @@ I18N.it = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} è stato rimosso dalla sessione',
   'log.removedBy': '{actor} ha rimosso {name} dalla sessione',
-  'session.removeEntry': 'Rimuovi una persona',
-  'session.removeTitle': 'Rimuovi qualcuno dalla sessione',
-  'session.removeIntro': 'Per chi è stato spuntato per errore o se n’è andato prima. Non conta più come partecipante, ma i voti che ha già dato continuano a contare per il punteggio dei giochi.',
+  'session.removeTitle': 'Persone in questa sessione',
+  'session.removeIntro': 'Rimuovi chi è stato spuntato per errore o se n’è andato prima: non conta più come partecipante, ma i voti che ha già dato continuano a contare per il punteggio dei giochi. Chi viene riaggiunto conta di nuovo, voti compresi; vincitori, squadre e punti cancellati con la rimozione vanno reimpostati.',
   'session.removeAction': 'Rimuovi',
   'session.removeActionFor': 'Rimuovi {name}',
   'session.removeConfirmTitle': 'Rimuovere {name}?',
@@ -2311,4 +2310,13 @@ I18N.it = {
   'session.removed': '{name} è stato rimosso',
   'session.removeLast': 'Una sessione ha bisogno di almeno una persona.',
   'session.removeSplit': 'Questa sessione è divisa in tavoli. Rimuovi la persona dal suo tavolo.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Gestisci persone',
+  'session.removedHeading': 'Rimossi',
+  'session.restoreAction': 'Riaggiungi',
+  'session.restoreActionFor': 'Riaggiungi {name}',
+  'session.restored': '{name} è di nuovo presente',
+  'session.restoreSplit': 'Questa sessione è divisa in tavoli. Riaggiungi la persona al suo tavolo.',
+  'log.restored': '{name} è stato riaggiunto alla sessione',
+  'log.restoredBy': '{actor} ha riaggiunto {name} alla sessione',
 };

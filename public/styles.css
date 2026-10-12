@@ -10997,6 +10997,9 @@ kbd {
 .remove-person__list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .remove-person__row { display: flex; align-items: center; gap: 10px; }
 .remove-person__name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+/* The removed people (#1655), under their own heading: same rows, set apart. */
+.remove-person__heading { margin: 20px 0 0; font-size: var(--text-md); }
+.remove-person__list--removed .remove-person__name { color: var(--ink-soft); }
 .live-vote__hotseat-btn { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
 
 /* Sharing the session: the link and the code as one row of two (#652, #1170).
