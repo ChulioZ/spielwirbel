@@ -186,16 +186,17 @@ function statsTitle(entry, cls) {
 
 /* An entry's value line. For a favourite whose payload lists its games
    (#1560), the line is the button that opens them — the count is the obvious
-   handle, and the list explains the average. It names the card and the rank
-   rather than carrying the list, so the click handler reads the games from the
-   payload it was rendered from (wireStatsGames). Without a list it stays the
+   handle, and the list explains the average. It names the card and the entry's
+   INDEX in that card's list rather than carrying the list, so the click handler
+   reads the games from the payload it was rendered from (wireStatsGames). An
+   index, never the place: tied entries share a place (#1648). Without a list it stays the
    plain text it always was, which is also every podium's markup, unchanged. */
-function statsValue(podium, e, cls, rank) {
+function statsValue(podium, e, cls, index) {
   const text = esc(podium.line(e));
   if (!podium.games || !Array.isArray(e.list) || !e.list.length) {
     return `<span class="${cls} muted">${text}</span>`;
   }
-  return `<button type="button" class="${cls} stats-card__games muted" data-stats-fav="${esc(podium.key)}" data-stats-rank="${rank}" aria-haspopup="dialog" aria-expanded="false">${text}</button>`;
+  return `<button type="button" class="${cls} stats-card__games muted" data-stats-fav="${esc(podium.key)}" data-stats-index="${index}" aria-haspopup="dialog" aria-expanded="false">${text}</button>`;
 }
 
 /* The games behind one favourite name (#1560). Through openEditor, so it is an
@@ -242,7 +243,7 @@ function wireStatsGames(root, stats) {
     const btn = ev.target.closest('[data-stats-fav]');
     if (!btn || !root.contains(btn)) return;
     const fav = STATS_FAVOURITES.find((f) => f.key === btn.dataset.statsFav);
-    const entry = fav && statsList(stats.names && stats.names[fav.key])[Number(btn.dataset.statsRank)];
+    const entry = fav && statsList(stats.names && stats.names[fav.key])[Number(btn.dataset.statsIndex)];
     if (entry && Array.isArray(entry.list) && entry.list.length) openStatsGames(btn, fav, entry);
   });
 }
@@ -253,11 +254,21 @@ function wireStatsGames(root, stats) {
    rows in an <ol> carrying a visible rank. The leader's own rank is implied by
    its place, as it was before the list existed.
 
+   The rank is the PAYLOAD's (#1648): tied entries share a place, so a row's
+   number is not its index — a shared first place reads leader, then a row
+   numbered 1. Each <li> carries it as `value` too, so the list's own numbering
+   (what a screen reader announces) agrees with the visible one. A payload
+   built before ranks existed numbers by position (`placeOf`).
+
    The cover is sized at render time — a provider master can be several
    thousand pixels wide (.claude/rules/provider-cover-sizing.md) — and is
    decorative here: the title beside it is the accessible name, so alt is empty
    rather than a duplicate. Places 2–3 draw no cover: three thumbnails per card
    would make the grid a wall of art. */
+// An entry's place on its card: the payload's shared rank (#1648), or — for a
+// payload from before ranks existed — its position in the list.
+const placeOf = (e, index) => (Number.isInteger(e.rank) ? e.rank : index + 1);
+
 function statsCard(podium, list, withInfo = !!podium.info) {
   const [entry, ...rest] = list;
   const label = `<span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${withInfo ? ` ${infoButton(podium.info)}` : ''}</span>`;
@@ -268,9 +279,9 @@ function statsCard(podium, list, withInfo = !!podium.info) {
     ? `<img class="stats-card__cover" src="${esc(coverUrl(entry.image, COVER_THUMB))}" alt="" loading="lazy" />`
     : '<span class="stats-card__cover stats-card__cover--none" aria-hidden="true"></span>';
   const more = rest.length
-    ? `<ol class="stats-card__more" start="2">${rest.map((e, i) => `
-        <li class="stats-card__row">
-          <span class="stats-card__rank">${i + 2}</span>
+    ? `<ol class="stats-card__more">${rest.map((e, i) => `
+        <li class="stats-card__row" value="${placeOf(e, i + 1)}">
+          <span class="stats-card__rank">${placeOf(e, i + 1)}</span>
           <span class="stats-card__row-body">
             ${statsTitle(e, 'stats-card__row-title')}
             ${statsValue(podium, e, 'stats-card__row-value', i + 1)}
@@ -299,8 +310,8 @@ function statsBarCard(podium, list, label) {
   const rows = list.map((e, i) => {
     const share = Math.round((e[podium.bar] / top) * 1000) / 1000;
     return `
-      <li class="stats-card__bar-row" style="--stats-share: ${share}">
-        <span class="stats-card__rank">${i + 1}</span>
+      <li class="stats-card__bar-row" value="${placeOf(e, i)}" style="--stats-share: ${share}">
+        <span class="stats-card__rank">${placeOf(e, i)}</span>
         ${statsTitle(e, i === 0 ? 'stats-card__title stats-card__row-title' : 'stats-card__row-title')}
         <span class="stats-card__bar" aria-hidden="true"></span>
         <span class="stats-card__row-value">${esc(podium.line(e))}</span>

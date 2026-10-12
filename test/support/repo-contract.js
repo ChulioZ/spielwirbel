@@ -6189,6 +6189,44 @@ module.exports = function repoContract(repo) {
          Postgres while its plays read filtered `finished` in the WHERE. */
       assert.equal(row.plays.lift.count, 8, 'the open evening is a play on the shelf; the cancelled one is not');
       assert.equal(row.plays.lift.tenants, 1);
+      /* The LATEST counted play per window (#1648), which orders a tie on the
+         Discover play cards: equal counts, the game that got there first wins.
+         It is the newest `createdAt` among the SAME finished plays the count
+         admits, so three wrong readings each move it off Wednesday 09:00:
+         `finishedAt` (Thursday 11:00), the unfinished evening (Wednesday
+         10:00) and the cancelled one (also Wednesday 10:00). */
+      for (const w of ['week', 'month', 'year', 'all']) {
+        assert.equal(row.plays[w].lastAt, '2026-08-12T09:00:00.000Z', `${w}: the newest counted evening, by createdAt`);
+      }
+      assert.equal('lastAt' in row.plays.lift, false, 'the lift is a score input, not a card — it carries no date');
+    });
+
+    await t.test('the latest counted play is per WINDOW, and absent plays read null', async () => {
+      /* One play last year and one last month: the year window's newest is the
+         July evening, the week window counted nothing — so its date is null,
+         not the year's. A single shared max would answer July for all four. */
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'L', members: ['Ann'] });
+      const game = await repo.createGame(tenant, round.id, bgg(id));
+      const play = (createdAt) => repo.createSession(tenant, round.id, {
+        gameIds: [game.id], votes: {}, createdAt,
+        finished: true, finishedAt: createdAt, chosenGameId: game.id,
+      });
+      await play('2025-06-01T10:00:00.000Z');
+      await play('2026-07-10T18:00:00.000Z');
+      const row = await rowFor(id);
+      assert.equal(row.plays.week.lastAt, null);
+      assert.equal(row.plays.month.lastAt, null);
+      assert.equal(row.plays.year.lastAt, '2026-07-10T18:00:00.000Z');
+      assert.equal(row.plays.all.lastAt, '2026-07-10T18:00:00.000Z');
+
+      // A game that is only OWNED has no play read at all on Postgres; it must
+      // still carry the key, as null, like the JSON backend's fresh row.
+      const owned = uniq();
+      await repo.createGame(tenant, round.id, bgg(owned));
+      const bare = await rowFor(owned);
+      for (const w of ['week', 'month', 'year', 'all']) assert.equal(bare.plays[w].lastAt, null, w);
     });
 
     await t.test('the lift count spreads over tenants and never needs a finished play', async () => {
