@@ -615,3 +615,21 @@ test('#1557 favourites alone are content, and then the first of them carries the
   assert.equal(infos[0].closest('.stats-card').querySelector('.stats-card__title').textContent, 'Uwe Rosenberg');
   assert.ok(dom.document.querySelector('.stats-note'), 'the provenance note travels with the cards');
 });
+
+test('#1613 /entdecken carries no quiz archive link, even where the quiz runs', async (t) => {
+  // The link's label („Statistik & Archiv") only reads right next to the quiz;
+  // on Discover it looked like a second, unrelated statistics page. The archive
+  // stays reachable from /quiz and the teaser (test/quiz-view.test.js).
+  for (const loggedIn of [false, true]) {
+    const dom = bootWith(t, ok(FULL));
+    dom.set('isLoggedIn', () => loggedIn);
+    dom.run('accountCfg = { quiz: true }');
+    await dom.call('showEntdecken');
+    await settle();
+
+    // Control: the screen really rendered, so an empty lookup below means absent.
+    assert.ok(dom.document.querySelectorAll('.stats-counter__num').length > 0);
+    assert.equal(dom.document.querySelector('.quiz-archive-link'), null, `loggedIn=${loggedIn}`);
+    assert.equal(dom.document.querySelector('a[href="/quiz/archiv"]'), null, `loggedIn=${loggedIn}`);
+  }
+});
