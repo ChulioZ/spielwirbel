@@ -10854,14 +10854,22 @@ kbd {
 .vote-link__note { margin-top: 28px; font-size: var(--text-md); }
 .vote-link__note a { color: var(--brand-ink, var(--brand)); }
 
-/* Round invite links (#1515). The owner's section sits under the by-username
-   form in the „Einladen" sheet, set off by a rule rather than a card: one sheet,
-   two ways to invite. Each live link is a row that may wrap — a long seat name
-   and two buttons do not fit a 320px sheet on one line. */
-.invite-link { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
-/* The body face, not the display face every h3 takes: at 16px a display face is
-   what the designs' small-display-face sweeps forbid (test/design-tokens*.test.js). */
-.invite-link__title { margin: 0 0 4px; font-family: inherit; font-size: var(--text-md); }
+/* The „Einladen" sheet (#1618, #1515): one seat at the top, a mode switch under
+   it, and one pane per mode — the pinned footer holds only the visible mode's
+   action. The switch reuses the transfer sheet's chip pair (`.transfer-modes`),
+   so every design paints it as it paints chips. A pane is hidden with the
+   attribute, and `[hidden]` is restated because a design that gives a pane a
+   `display` would otherwise put both on screen at once
+   (.claude/rules/hidden-attribute-vs-display-rule.md). Each live link is a row
+   that may wrap — a long seat name and two buttons do not fit a 320px sheet on
+   one line. */
+.invite-modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+/* The switch must hold ONE line in every locale: at 320px the sheet's content box
+   is 250px and fr/nl ran 4–8px over with the icons (measured, #1618). The icons
+   are decoration — the labels carry the meaning — so they go first. */
+@media (max-width: 359px) { .invite-modes .chip .ti { display: none; } }
+.invite-pane[hidden] { display: none; }
+.invite-seat__fixed { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .invite-link__list { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .invite-link__list:empty { display: none; }
 .invite-link__row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

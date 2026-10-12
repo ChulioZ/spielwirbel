@@ -96,15 +96,17 @@ test('the owner\'s sheet lists live links and mints one for the chosen seat', as
   const section = dom.document.querySelector('.invite-link');
   assert.ok(section, 'the link section is in the invite sheet');
   assert.ok(section.nextElementSibling.classList.contains('sheet__actions'), 'above the pinned footer, which stays last');
+  dom.document.querySelector('.invite-modes [data-mode="link"]').click();
   const rows = section.querySelectorAll('.invite-link__row');
   assert.equal(rows.length, 1);
   assert.match(text(rows[0]), /Eigener neuer Platz/);
-  // Only Anna's seat is free — Bob's is an account's already.
-  const seats = [...section.querySelectorAll('#inviteLinkSeat option')].map((o) => o.value);
+  // Only Anna's seat is free — Bob's is an account's already. The seat is the
+  // sheet's one shared picker (#1618), above the mode switch.
+  const seats = [...dom.document.querySelectorAll('#inviteSeat option')].map((o) => o.value);
   assert.deepEqual(seats, ['', 'm1']);
 
-  section.querySelector('#inviteLinkSeat').value = 'm1';
-  section.querySelector('#inviteLinkGo').click();
+  dom.document.querySelector('#inviteSeat').value = 'm1';
+  dom.document.querySelector('.sheet__actions #inviteGo').click();
   await flush(); await flush();
   assert.deepEqual(calls.find((c) => c[0] === 'POST'), ['POST', '/api/rounds/r1/invite-links', { memberId: 'm1' }]);
   assert.match(dom.run('window.__copied'), /\/join\/tok-b$/, 'the new link is copied for the owner');
@@ -134,7 +136,8 @@ test('a refused clipboard falls back to the URL, and the new link is still liste
   dom.call('showInvite', round);
   await flush(); await flush();
   const before = gets;
-  dom.document.querySelector('#inviteLinkGo').click();
+  dom.document.querySelector('.invite-modes [data-mode="link"]').click();
+  dom.document.querySelector('#inviteGo').click();
   await flush(); await flush(); await flush();
   assert.equal(gets, before + 1, 'the list is reloaded with the new link');
   assert.equal(dom.document.querySelectorAll('.invite-link__row').length, 1, 'and the new link is on it');

@@ -997,7 +997,10 @@ public/
                      Tischkarte row and the tap-open card
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and
-                     the two game boxes; name/colour editing)
+                     the two game boxes; name/colour editing; the
+                     „Einladen" button on an unclaimed seat, #1618)
+    member-add.js    the „+" seat in a round's member strips — the Start hero
+                     and the desktop rail (#563; split out by #1618)
     views-member-points.js „Bestleistungen" (#1631): a player's best points per
                      game, on the member card and the profile card, read off
                      memberPointRecords (point-records.js)

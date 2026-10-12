@@ -866,7 +866,12 @@ What the app does, in detail. For a short overview see the
 - **Sharing a round, with roles** – *accounts mode only* (issues #207, #137).
   The owner invites another account by its **username** from Einstellungen →
   „Mitspielende einladen", fixing both the **seat** they take (an existing
-  user-less member, or a fresh one) and their **role**. Two roles are on offer:
+  user-less member, or a fresh one) and their **role**. On the member page of
+  an unclaimed seat the owner also finds an **„Einladen"** button, which opens
+  the same sheet with that seat already fixed (#1618). The sheet asks the seat
+  once at the top, then switches between inviting by **„Nutzername"** and by
+  **„Link"** (below), and its footer always carries just that mode's action.
+  Two roles are on offer:
   - **Mitspielen** (player) – the default, and everything a round is normally
     for: start sessions and vote in them, add and edit games, retire or complete
     them, manage seats, tags and the round's colour marker.
@@ -883,7 +888,7 @@ What the app does, in detail. For a short overview see the
   Whatever the UI offers, the server decides: an action a role may not perform
   is refused even if the request is made by hand.
 - **Invite links** – *accounts mode only* (issue #1515). In the same
-  „Einladen" sheet the owner can also create a **link** and share it anywhere
+  „Einladen" sheet, under „Link", the owner can also create a **link** and share it anywhere
   (the group chat, a message). Whoever opens it and is signed in sees „Runde X
   beitreten?" and joins with one tap as **Mitspielen** (player) — any account
   but a guest demo, which cannot join a real round; a logged-out
