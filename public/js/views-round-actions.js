@@ -258,9 +258,31 @@ async function showTransferGames(round) {
 // can't pick the wrong person. Accounts mode only (the entry points gate on
 // accountsActive(); the route 404s otherwise). A grantee who somehow reaches this
 // fails safely: the send route 404s a round they don't own.
-async function showInvite(round) {
+//
+// One seat, two modes, one action (#1618): the seat sits at the top and both
+// modes submit it, a „Nutzername | Link" switch picks the mode, and the
+// pinned footer always holds exactly the visible mode's action. It used to ask
+// the seat twice and pin „Einladung senden" under the link section, which read as
+// if the footer acted on everything above it.
+//
+// `seat` (a member) fixes the seat — the member page's „Einladen" (#1618): no
+// picker at all, a statement in its place, and the link list narrowed to that
+// seat's link so the owner isn't revoking other seats' links from Anna's page.
+async function showInvite(round, { seat = null } = {}) {
   const rid = round.id;
   const freeSeats = activeMembers(round).filter((m) => !m.userId);
+  const seatField = seat
+    ? `<div class="field invite-seat">
+         <span class="field__label">${esc(t('invite.seat'))}</span>
+         <p class="invite-seat__fixed">${esc(t('invite.takeOver', { name: seat.name }))}</p>
+       </div>`
+    : `<div class="field invite-seat">
+         <label for="inviteSeat">${esc(t('invite.seat'))}</label>
+         <select id="inviteSeat" class="input">
+           <option value="">${esc(t('invite.newMember'))}</option>
+           ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
+         </select>
+       </div>`;
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('invite.title'))}">
@@ -269,29 +291,29 @@ async function showInvite(round) {
           <button class="sheet__close" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>
         <p class="muted">${esc(t('invite.intro', { round: round.name }))}</p>
-        <div class="field">
-          <label for="inviteHandle">${esc(t('invite.username'))}</label>
-          <input id="inviteHandle" class="input" type="text" autocomplete="off" spellcheck="false"
-                 data-1p-ignore data-lpignore="true" data-bwignore
-                 placeholder="${esc(t('invite.usernamePlaceholder'))}" autocorrect="off">
+        ${seatField}
+        <div class="invite-modes" role="group" aria-label="${esc(t('invite.mode'))}">
+          <button type="button" class="chip is-on" data-mode="user" aria-pressed="true"><i class="ti ti-user" aria-hidden="true"></i> ${esc(t('invite.modeUser'))}</button>
+          <button type="button" class="chip" data-mode="link" aria-pressed="false"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('invite.modeLink'))}</button>
         </div>
-        <div class="field">
-          <label for="inviteSeat">${esc(t('invite.seat'))}</label>
-          <select id="inviteSeat" class="input">
-            <option value="">${esc(t('invite.newMember'))}</option>
-            ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field">
-          <label for="inviteRole">${esc(t('share.role'))}</label>
-          <select id="inviteRole" class="input">
-            ${ROUND_ROLES.filter((r) => r !== 'owner').map((r) =>
+        <div class="invite-pane" data-pane="user">
+          <div class="field">
+            <label for="inviteHandle">${esc(t('invite.username'))}</label>
+            <input id="inviteHandle" class="input" type="text" autocomplete="off" spellcheck="false"
+                   data-1p-ignore data-lpignore="true" data-bwignore
+                   placeholder="${esc(t('invite.usernamePlaceholder'))}" autocorrect="off">
+          </div>
+          <div class="field">
+            <label for="inviteRole">${esc(t('share.role'))}</label>
+            <select id="inviteRole" class="input">
+              ${ROUND_ROLES.filter((r) => r !== 'owner').map((r) =>
     `<option value="${esc(r)}"${r === 'editor' ? ' selected' : ''}>${esc(t('share.role.' + r))}</option>`).join('')}
-          </select>
-          <p class="muted field__hint" id="inviteRoleHint">${esc(t('share.role.editor.hint'))}</p>
+            </select>
+            <p class="muted field__hint" id="inviteRoleHint">${esc(t('share.role.editor.hint'))}</p>
+          </div>
         </div>
         <div class="toolbar sheet__actions">
-          <button id="inviteGo" class="btn btn--primary btn--lg"><i class="ti ti-mail" aria-hidden="true"></i> ${esc(t('invite.submit'))}</button>
+          <button id="inviteGo" class="btn btn--primary btn--lg"><i class="ti ti-mail" aria-hidden="true"></i> <span class="invite-go__label">${esc(t('invite.submit'))}</span></button>
         </div>
       </div>
     </div>`);
@@ -304,7 +326,8 @@ async function showInvite(round) {
   // Synchronous, and after openSheet: iOS only raises the soft keyboard for a
   // focus() inside the opening gesture, and trapFocus captures the pre-open
   // activeElement as its restore target. Don't defer this into a timeout.
-  form.querySelector('#inviteHandle').focus();
+  const handle = form.querySelector('#inviteHandle');
+  handle.focus();
   backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
   form.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
 
@@ -315,32 +338,57 @@ async function showInvite(round) {
     form.querySelector('#inviteRoleHint').textContent = t('share.role.' + roleSel.value + '.hint');
   });
 
+  // Both modes read the seat from here — never from a control inside a pane.
+  const seatId = () => (seat ? seat.id : form.querySelector('#inviteSeat').value || null);
+  const links = insertInviteLinkSection(form, round, backdrop, seat);
+
   const go = form.querySelector('#inviteGo');
-  go.addEventListener('click', async () => {
-    const username = form.querySelector('#inviteHandle').value.trim();
-    const memberId = form.querySelector('#inviteSeat').value || null;
+  let mode = 'user';
+  const sendInvite = async () => {
+    const username = handle.value.trim();
     const role = roleSel.value;
-    if (!username) { form.querySelector('#inviteHandle').focus(); return; }
+    if (!username) { handle.focus(); return; }
     go.disabled = true;
     try {
-      await accountApi('POST', '/invitations', { roundId: rid, username, memberId, role });
+      await accountApi('POST', '/invitations', { roundId: rid, username, memberId: seatId(), role });
       toast(t('invite.toast.sent', { user: username }));
       closeSheet();
     } catch (e) {
       go.disabled = false;
       toast(inviteError(e.message), { tone: 'error' });
     }
-  });
-  form.querySelector('#inviteHandle').addEventListener('keydown', (e) => {
+  };
+  go.addEventListener('click', () => (mode === 'link' ? links.create(go, seatId()) : sendInvite()));
+  handle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       go.click();
     }
   });
 
-  // Invite by link (#1515), below the by-username form. Its list loads in the
-  // background like the picker below, so the sheet opens without waiting.
-  insertInviteLinkSection(form, round, backdrop);
+  // Switching only hides a pane, so whatever was typed or picked survives the
+  // round trip. Focus follows the mode into its first actionable control —
+  // the username field, or the first live link's share button, else the
+  // footer's „Link erstellen".
+  const chips = form.querySelectorAll('.invite-modes .chip');
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      if (chip.dataset.mode === mode) return;
+      mode = chip.dataset.mode;
+      const isLink = mode === 'link';
+      chips.forEach((c) => {
+        const on = c.dataset.mode === mode;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      form.querySelector('.invite-pane[data-pane="user"]').hidden = isLink;
+      links.section.hidden = !isLink;
+      go.querySelector('.ti').className = `ti ${isLink ? 'ti-link' : 'ti-mail'}`;
+      go.querySelector('.invite-go__label').textContent = t(isLink ? 'inviteLink.create' : 'invite.submit');
+      if (isLink) (links.section.querySelector('.invite-link__share') || go).focus();
+      else handle.focus();
+    });
+  });
 
   // The Freundeskreis picker (#466) is fetched only AFTER the sheet is up:
   // typing a username must never wait on a network call. A failed fetch simply
@@ -384,38 +432,33 @@ function insertFriendPicker(form, round, friends) {
 }
 
 /* Invite by link (#1515): a token whose holder — signed in — may join this round
-   as an editor. The owner fixes the seat here, exactly as for an invitation: a
-   fresh seat (the link stays usable for its 7 days) or one unclaimed seat (the
-   link dies once that seat is taken). One link per seat choice; making a new one
+   as an editor. The owner fixes the seat, exactly as for an invitation: a fresh
+   seat (the link stays usable for its 7 days) or one unclaimed seat (the link
+   dies once that seat is taken). One link per seat choice; making a new one
    replaces the old, which is also how a link that went astray is retired.
+
+   Since #1618 this is the sheet's „Link" pane: it has no seat picker and no
+   button of its own — the sheet's shared seat and its footer drive `create` —
+   and it says that a link grants the editor role, since links carry no role
+   choice. With a fixed `seat` the list shows only that seat's link.
 
    The list shows what is live and lets the owner share each link again or
    revoke it. Owner-only by the same gate as the sheet itself. */
-function insertInviteLinkSection(form, round, backdrop) {
+function insertInviteLinkSection(form, round, backdrop, seat) {
   const rid = round.id;
-  const freeSeats = activeMembers(round).filter((m) => !m.userId);
-  const section = h(`<section class="invite-link" aria-labelledby="inviteLinkTitle">
-      <h3 id="inviteLinkTitle" class="invite-link__title">${esc(t('inviteLink.title'))}</h3>
+  const section = h(`<section class="invite-pane invite-link" data-pane="link" aria-label="${esc(t('inviteLink.title'))}" hidden>
       <p class="muted field__hint">${esc(t('inviteLink.intro'))}</p>
+      <p class="muted field__hint">${esc(t('inviteLink.roleNote', { role: t('share.role.editor') }))}</p>
       <ul class="invite-link__list"></ul>
-      <div class="field">
-        <label for="inviteLinkSeat">${esc(t('invite.seat'))}</label>
-        <select id="inviteLinkSeat" class="input">
-          <option value="">${esc(t('inviteLink.fresh'))}</option>
-          ${freeSeats.map((m) => `<option value="${esc(m.id)}">${esc(t('invite.takeOver', { name: m.name }))}</option>`).join('')}
-        </select>
-      </div>
-      <div class="toolbar">
-        <button type="button" id="inviteLinkGo" class="btn"><i class="ti ti-link" aria-hidden="true"></i> ${esc(t('inviteLink.create'))}</button>
-      </div>
     </section>`);
-  // Above the pinned „Einladung senden" bar, never after it: that bar is the
-  // sheet's sticky footer (.sheet__actions) and must stay its last child.
+  // Above the pinned footer, never after it: that bar is the sheet's sticky
+  // footer (.sheet__actions) and must stay its last child.
   form.querySelector('.sheet__actions').before(section);
   const list = section.querySelector('.invite-link__list');
 
-  const render = (links) => {
-    list.replaceChildren(...links.map((link) => {
+  const render = (all) => {
+    const shown = seat ? all.filter((link) => link.memberId === seat.id) : all;
+    list.replaceChildren(...shown.map((link) => {
       const label = link.seatName ? t('invite.takeOver', { name: link.seatName }) : t('inviteLink.fresh');
       const row = h(`<li class="invite-link__row">
           <span class="invite-link__label">${esc(label)}<span class="muted invite-link__until">${esc(t('inviteLink.until', { date: fmtDate(link.expiresAt) }))}</span></span>
@@ -440,12 +483,11 @@ function insertInviteLinkSection(form, round, backdrop) {
     if (backdrop.isConnected) render(links || []);
   };
 
-  const go = section.querySelector('#inviteLinkGo');
-  go.addEventListener('click', async () => {
+  // `go` is the sheet's footer button, disabled while the request is in flight.
+  const create = async (go, memberId) => {
     go.disabled = true;
     let link;
     try {
-      const memberId = section.querySelector('#inviteLinkSeat').value || null;
       ({ link } = await api('POST', `/api/rounds/${rid}/invite-links`, { memberId }));
     } catch (e) {
       toast(inviteLinkError(e.message), { tone: 'error' });
@@ -457,9 +499,10 @@ function insertInviteLinkSection(form, round, backdrop) {
     // a share that fails cannot hide a link that was in fact created.
     await load().catch(() => {});
     await shareInviteLink(link, round);
-  });
+  };
 
   load().catch(() => { /* no list; making a link still works */ });
+  return { section, create };
 }
 
 // The vote link's share ladder (views-session-live.js): the phone's share sheet,
