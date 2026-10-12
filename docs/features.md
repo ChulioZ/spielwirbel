@@ -376,7 +376,8 @@ What the app does, in detail. For a short overview see the
     screen with every band — players, playing time, weight — the mechanics,
     categories and designers the round rates best, ranked by the mean
     Spielwirbel-Score of their games (a name counts once two of its games have a
-    score; unscored games are left out), and a „Teilen" that draws the profile as an image
+    score; unscored games are left out; each name links to its BoardGameGeek
+    page once the instance knows its BGG id, issue #1638), and a „Teilen" that draws the profile as an image
     on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other
@@ -400,7 +401,10 @@ What the app does, in detail. For a short overview see the
     ("Spielepass"), a two-page spread: the game on the left (cover with its
     Spielwirbel-Score, editable title, chips for players / tags / owners /
     expansions, the glance facts, and a „Mehr zum Spiel" disclosure for the rest
-    of the BGG metadata), and the group's own verdict on the right: first
+    of the BGG metadata, whose categories, mechanics and designers each link to
+    their BoardGameGeek page — issue #1638; a name the instance has no BGG id for
+    yet stays plain text, and the vote cards' ⓘ sheet stays unlinked so a vote
+    never leads out of the app), and the group's own verdict on the right: first
     **„Wer wie gewertet hat"** — one tile per person who has rated it, warmest
     first, carrying the mood their average across every session rounds to
     (the face, not the number; the vote count is in its tooltip), so the score on the left page can be read back to the people who made
@@ -1079,7 +1083,9 @@ What the app does, in detail. For a short overview see the
   designer, category and mechanic — the name whose games score highest on
   average, counting only games that already clear the best-rated card's
   evidence bar, and only once at least three such games across two accounts
-  carry it. The names are BoardGameGeek's own, so they stay in English.
+  carry it. The names are BoardGameGeek's own, so they stay in English, and
+  each links to its BoardGameGeek page when the instance knows its BGG id
+  (issue #1638).
   Each name's game count („Score 4,3 — aus 4 Spielen") opens the games behind
   it — cover, title linking to BoardGameGeek and each game's own score, best
   first (issue #1560) — as a popover on a wide screen and a sheet on a phone.

@@ -106,9 +106,9 @@ const STATS_PODIUMS = [
    The names are BGG's own (in English, like the shelf profile shows them), so
    nothing here is translated or user-authored. */
 const STATS_FAVOURITES = [
-  { key: 'favDesigner', icon: 'ti-pencil' },
-  { key: 'favCategory', icon: 'ti-tags' },
-  { key: 'favMechanic', icon: 'ti-puzzle' },
+  { key: 'favDesigner', icon: 'ti-pencil', type: 'designer' },
+  { key: 'favCategory', icon: 'ti-tags', type: 'category' },
+  { key: 'favMechanic', icon: 'ti-puzzle', type: 'mechanic' },
 ].map((f) => ({
   ...f,
   info: 'score',
@@ -129,10 +129,13 @@ const statsList = (v) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean);
 function statsEntries(stats) {
   const games = stats.games || {};
   const names = stats.names || {};
-  const asTitle = (n) => ({ title: n.name, image: null, url: null, ...n });
+  // A favourite links its name to the BGG page when the payload carries the
+  // entry's id (#1638) — bggLinkUrl answers null otherwise, which statsTitle
+  // renders as the plain text it always was.
+  const asTitle = (f) => (n) => ({ title: n.name, image: null, ...n, url: bggLinkUrl(f.type, n.bggId) });
   return [
     ...STATS_PODIUMS.map((p) => [p, statsList(games[p.key])]),
-    ...STATS_FAVOURITES.map((f) => [f, statsList(names[f.key]).map(asTitle)]),
+    ...STATS_FAVOURITES.map((f) => [f, statsList(names[f.key]).map(asTitle(f))]),
   ].filter(([, list]) => list.length);
 }
 

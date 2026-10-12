@@ -728,6 +728,19 @@ from this list. A hand-copied server list would silently drop the new id from
 `except` (the route drops unknown ids on purpose, for a client a release ahead),
 so a "keep everything except the new thing" account would lose its exception.
 
+**The thirtieth is `public/js/bgg-links.js`** (#1638): `BGG_LINK_TYPES`
+(our `category`/`mechanic`/`designer` keys mapped to BGG's own `<link type>` and
+URL segment), the two request bounds, `bggLinkUrl` and the client's resolve
+cache. Three backend readers: `lib/providers/bgg.js` maps a parsed link onto
+our key through the table, `POST /api/bgg-links` (`lib/routes/bgg-links.js`)
+validates its body against the bounds, and both repo backends clean their input
+through `lib/repo/bgg-links-rows.js`, which reads the same table. The failure is
+the silent kind: a type the parser stores and the client never asks about is a
+table that fills and links nothing, and a client bound above the route's 400s
+every heavy game's lookup, which the client swallows by design — the names just
+stay plain text, exactly as before the feature, so nothing on screen says it is
+broken.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

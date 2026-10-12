@@ -149,7 +149,11 @@ function shelfPanel(title) {
 
    The names are BGG's own and stay untranslated — its terms allow choosing
    which of its names to show, never rewriting one. */
-function shelfTopPanel(title, items) {
+// `type` is the BGG link type the names are (#1638): each name becomes a link
+// to its BGG page once POST /api/bgg-links answers, and stays plain text until
+// then — or for good, when the instance has no id for it. The share image is
+// built from the profile data, not from this panel, so it is unaffected.
+function shelfTopPanel(title, items, type) {
   const { panel, body } = shelfPanel(title);
   panel.querySelector('.hub-card__title').insertAdjacentHTML('beforeend', ` ${infoButton('score')}`);
   body.appendChild(h(`<div class="shelf-card__sub">${esc(t('shelfProfile.byScore'))}</div>`));
@@ -164,8 +168,23 @@ function shelfTopPanel(title, items) {
        </li>`));
   });
   body.appendChild(list);
+  linkShelfTopNames(list, items, type);
   wireInfoButtons(panel);
   return panel;
+}
+
+// Upgrade each row's name to a BGG link in place. Returns the promise for the
+// specs; the panel never waits on it.
+function linkShelfTopNames(list, items, type, ask) {
+  const names = items.map((it) => it.name);
+  if (!type || !names.length) return Promise.resolve();
+  return resolveBggLinks({ [type]: names }, ask).then((ids) => {
+    const known = ids[type] || {};
+    list.querySelectorAll('.shelf-top__name').forEach((el, i) => {
+      const name = names[i];
+      if (Object.prototype.hasOwnProperty.call(known, name)) el.replaceChildren(bggLinkedNames(type, [name], known));
+    });
+  });
 }
 
 // The share image's content, built at CLICK time in the active locale — the
@@ -265,8 +284,8 @@ async function showShelfProfile(rid) {
     ? shelfGapList(p.gaps, p.gaps.length)
     : h(`<p class="hub-card__facts">${esc(t('shelfProfile.noGaps'))}</p>`));
   grid.appendChild(gaps.panel);
-  if (p.mechanics.length) grid.appendChild(shelfTopPanel(t('metaFilter.mechanics'), p.mechanics));
-  if (p.categories.length) grid.appendChild(shelfTopPanel(t('metaFilter.categories'), p.categories));
-  if (p.designers.length) grid.appendChild(shelfTopPanel(t('gameInfo.designers'), p.designers));
+  if (p.mechanics.length) grid.appendChild(shelfTopPanel(t('metaFilter.mechanics'), p.mechanics, 'mechanic'));
+  if (p.categories.length) grid.appendChild(shelfTopPanel(t('metaFilter.categories'), p.categories, 'category'));
+  if (p.designers.length) grid.appendChild(shelfTopPanel(t('gameInfo.designers'), p.designers, 'designer'));
   app.appendChild(grid);
 }

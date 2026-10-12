@@ -323,17 +323,49 @@ function factPill(label, value, onEdit) {
 //
 // Returns null when the game carries no provider data at all, so a hand-typed
 // game's disclosure holds only its provider link.
+//
+// The category, mechanic and designer rows link each name to its BGG page
+// (#1638). They render as plain text first — the same text as before — and are
+// upgraded in place once POST /api/bgg-links answers, so the disclosure never
+// waits on the lookup and a failed one simply leaves them plain. Detail screen
+// only: the vote sheet (gameInfoBody) keeps its rows unlinked on purpose, so a
+// vote never leads out of the app.
 function gameInfoRest(game) {
   if (!hasGameInfo(game, { rating: true })) return null;
   const box = h('<div class="game-info__body"></div>');
   const facts = h('<div class="game-info__facts"></div>');
-  if ((game.categories || []).length) facts.appendChild(factRow(t('gameInfo.categories'), factList(game.categories, Infinity)));
-  if ((game.mechanics || []).length) facts.appendChild(factRow(t('gameInfo.mechanics'), factList(game.mechanics, Infinity)));
-  designerRow(facts, game, Infinity);
+  const linkable = [
+    ['category', t('gameInfo.categories'), game.categories || []],
+    ['mechanic', t('gameInfo.mechanics'), game.mechanics || []],
+    ['designer', t('gameInfo.designers'), creditedDesigners(game.designers)],
+  ].filter(([, , names]) => names.length)
+    .map(([type, label, names]) => {
+      const row = factRow(label, factList(names, Infinity));
+      facts.appendChild(row);
+      return { type, names, value: row.querySelector('.game-info__fact-value') };
+    });
+  linkGameInfoNames(linkable);
   if (game.rating != null) {
     facts.appendChild(factRow(t('gameInfo.rating'), t('gameInfo.ratingValue', { n: fmtAvg(game.rating) })));
   }
   if (facts.children.length) box.appendChild(facts);
   box.appendChild(h(`<div class="muted game-info__source">${esc(t('gameInfo.source'))}</div>`));
   return box;
+}
+
+// Swap each row's plain list for linked names once the ids are known. A row
+// none of whose names resolved is left untouched, so it stays byte-identical to
+// the pre-#1638 text. Returns the promise for the specs; callers ignore it.
+function linkGameInfoNames(rows, ask) {
+  if (!rows.length) return Promise.resolve();
+  const query = {};
+  for (const r of rows) query[r.type] = r.names;
+  return resolveBggLinks(query, ask).then((ids) => {
+    for (const r of rows) {
+      const known = ids[r.type] || {};
+      if (r.names.some((n) => Object.prototype.hasOwnProperty.call(known, n))) {
+        r.value.replaceChildren(bggLinkedNames(r.type, r.names, known));
+      }
+    }
+  });
 }
