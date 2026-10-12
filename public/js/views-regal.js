@@ -377,7 +377,8 @@ function renderRegalTab(round, activeGames) {
           : `<span class="score-pill score-pill--none">${esc(t('games.scoreNew'))}</span>`;
       // What the round owns for this game (#653) — no badge at zero, so a shelf
       // of plain base boxes looks exactly as it always did.
-      const expCount = (g.expansions || []).length;
+      // „Einfacher Modus" (#1646): the pill rides `gameExtras`.
+      const expCount = simpleHidden('gameExtras') ? 0 : (g.expansions || []).length;
       const expBadge = expCount
         ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
         : '';

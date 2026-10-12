@@ -728,6 +728,17 @@ What the app does, in detail. For a short overview see the
   (a team's to each of its members) and the game's direction. Off by default and enabled per account under
   **Konto → BG Stats**, because a website cannot tell whether the app is
   installed and the push happens on the tapping person's own device.
+- **Einfacher Modus (simple mode)** – under **Konto → Einfacher Modus** an
+  account can hide whole areas of the app from its OWN view: Pokale & Abzeichen,
+  the Start tab's stats cards, game suggestions, the Kümmerliste, the Chronik's
+  period recap, the game pass's rating details and expansions/BGG details, and
+  the account-level extras (Freundeskreis, Entdecken, Wochenquiz, Preisalarme,
+  „Was ist neu", the profile record). Each option stands alone; a parent box
+  hides everything at once, and an account that chose that also gets any area
+  added later hidden. Nothing stops being recorded — badges are still derived,
+  points and Chronik entries still written — and other members of a shared round
+  see everything. Hidden areas leave the navigation, not the URL. The operator
+  panel's Konten card counts uptake per option (`public/js/simple-mode.js`).
 - **Ratings on demand** – a game's rating is always computed live from all
   session votes, so deleting a session automatically corrects every number.
 - **The Spielwirbel-Score** – the figure every screen ranks a game by is not a

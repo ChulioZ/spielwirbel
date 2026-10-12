@@ -110,6 +110,7 @@ const SHELF_CARD_GAPS = 3;
    to the screen. Should a shelf lack seat data but carry the others, the first
    dimension that has enough data stands in. */
 function hubShelfProfileCard(round, activeGames, statsByGame) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   const p = shelfProfile(activeGames, shelfProfileDeps(statsByGame));
   if (!p) return null;
   const card = hubCard('ti-id', t('shelfProfile.title'));

@@ -153,7 +153,7 @@ test('the values are the stored ones, and no credential material survives serial
   // The fields the audit found missing, one by one — by value, so an export
   // that answered `null` for everything would fail rather than pass.
   for (const k of ['bggUsername', 'notifyRoundInvitations', 'notifyFriendRequests', 'notifiedAt',
-    'statsVisible', 'bgStats', 'design', 'designChooserSeen', 'acceptedTermsRevision', 'lastSeenNewsRevision']) {
+    'statsVisible', 'bgStats', 'simpleMode', 'design', 'designChooserSeen', 'acceptedTermsRevision', 'lastSeenNewsRevision']) {
     assert.deepEqual(account[k], stored[k] === undefined ? null : stored[k], k);
   }
   const passkey = account.identities.find((i) => i.type === 'passkey');

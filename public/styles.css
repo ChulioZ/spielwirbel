@@ -5530,6 +5530,13 @@ a.k-tile:focus-visible,
 .konto-notify { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
 .konto-notify__intro { margin: 0 0 2px; }
 .konto-notify__row { flex-wrap: nowrap; }
+/* „Einfacher Modus" (#1646): the parent row, then one group per area. A
+   sub-option's hint stacks under its label, so the row's main half is a column;
+   the groups indent under the parent so the select-all reads as their parent. */
+.konto-simple__row .ds-row__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.konto-simple__hint { margin: 0; }
+.konto-simple__group { display: flex; flex-direction: column; gap: 8px; margin-left: 16px; }
+.konto-simple__group-h { margin: 6px 0 0; font-weight: 700; font-size: var(--text-sm); color: var(--ink-soft); }
 /* The per-user design picker (#1186) — the Konto section and the one-time
    chooser sheet render the same list, so it is styled once here.
 

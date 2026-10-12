@@ -36,6 +36,8 @@ const { fitsPlayerCount } = require('../../public/js/draw-pool');
 const { markerIndexFromId } = require('../../public/js/round-marker');
 // The offered design ids the #1201 tile is keyed by — required, never hand-copied.
 const { selectableDesignIds } = require('../../public/js/designs');
+// The „Einfacher Modus" feature list (#1646) — the per-feature figures are keyed by it.
+const { SIMPLE_MODE_FEATURES } = require('../../public/js/simple-mode');
 
 // A fresh identifier per call, so a suite run against a PERSISTENT database
 // can't collide with an earlier run's rows. Uses crypto rather than
@@ -5909,6 +5911,34 @@ module.exports = function repoContract(repo) {
          every account as roundless with a perfectly plausible number. */
       assert.equal(m.adoption.accountsWithoutRound - mid.adoption.accountsWithoutRound, 1,
         'the account whose tenant holds a round read as roundless');
+    });
+
+    await t.test('„Einfacher Modus" figures count the EFFECTIVE hide per feature (#1646)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = () => `sm-${Math.random().toString(16).slice(2)}`;
+      // komplett: everything hidden, nothing excepted.
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: true, except: [] } });
+      // all, with ONE feature kept — counts toward every line but `trophies`.
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: true, except: ['trophies'] } });
+      // not all, ONE feature hidden.
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: false, except: ['recap'] } });
+      // Off (stored), off (legacy: no key at all) and a demo — none of them count.
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: false, except: [] } });
+      await repo.createUser({ ...userFields(), tenantId: tn() });
+      await repo.createUser({ ...userFields(), tenantId: `demo-${tn()}`, simpleMode: { all: true, except: [] } });
+      // A malformed stored value counts as nothing — and must not error the query (Postgres).
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: false, except: 'stats' } });
+
+      const m = await repo.instanceMetrics();
+      const d = (k) => m.adoption[k] - mid.adoption[k];
+      assert.equal(d('accountsSimpleModeAll'), 1, 'komplett');
+      assert.equal(d('accountsSimpleModeAny'), 3, 'at least one feature hidden');
+      const hidden = (f) => m.adoption.accountsSimpleModeHidden[f] - (mid.adoption.accountsSimpleModeHidden[f] || 0);
+      assert.equal(hidden('trophies'), 1, 'the excepted account does not hide trophies');
+      assert.equal(hidden('recap'), 3, 'both all-accounts and the one that hid it alone');
+      assert.equal(hidden('stats'), 2);
+      // One key per feature in the shared list, every leaf a number.
+      assert.deepEqual(Object.keys(m.adoption.accountsSimpleModeHidden), SIMPLE_MODE_FEATURES);
     });
 
     await t.test('a legacy account with NO tenantId is resolved to the default tenant', async () => {

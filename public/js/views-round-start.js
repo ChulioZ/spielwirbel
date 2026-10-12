@@ -401,7 +401,9 @@ function renderStartTab(round, activeGames) {
   // a screen that recommends and archives the same game in one render reads as
   // the app disagreeing with itself. The banner is appended further down, in
   // the position it has always had.
-  const recs = retireRecommendations(activeGames, statsByGame, activeMembers(round).length * 3);
+  // „Einfacher Modus" (#1646): the gentle retire nudges ride `suggestions`.
+  const recs = simpleHidden('suggestions') ? []
+    : retireRecommendations(activeGames, statsByGame, activeMembers(round).length * 3);
   const nagged = new Set(recs.map((r) => r.game.id));
 
   // The card grid (#923). Built DETACHED and appended below, so the #869

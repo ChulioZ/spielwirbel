@@ -258,10 +258,11 @@ function phLocked(round, { title, state = '', text, tab = null }) {
 function phYoungSide(round, activeGames, { suggest, pulse, care }) {
   const young = roundIsYoung(round);
   return {
-    suggest: suggest || (young && activeGames.length < SUGGEST_MIN_SHELF
+    // „Einfacher Modus" (#1646): a hidden card gets no locked stand-in either.
+    suggest: suggest || (young && !simpleHidden('suggestions') && activeGames.length < SUGGEST_MIN_SHELF
       ? phLocked(round, { title: t('hub.suggest.title'), text: tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest') })
       : null),
-    pulse: pulse || (young
+    pulse: pulse || (young && !simpleHidden('stats')
       ? phLocked(round, { title: t('hub.pulse.title'), text: tn(1, 'hub.young.pulseOne', 'hub.young.pulse') })
       : null),
     /* No locked Kümmerliste: P7.3 promises it „ab dem ersten Spiel", but
@@ -279,13 +280,13 @@ function phYoungSide(round, activeGames, { suggest, pulse, care }) {
 function phStripPreviews(round, activeGames, { regal, pokale, chronik }) {
   const played = round.sessions.some((s) => s.finished);
   return [
-    regal || (!activeGames.length ? phLocked(round, {
+    regal || (!activeGames.length && !simpleHidden('stats') ? phLocked(round, {
       title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
     }) : null),
-    pokale || (!played ? phLocked(round, {
+    pokale || (!played && !simpleHidden('trophies') ? phLocked(round, {
       title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
     }) : null),
-    chronik || (!played ? phLocked(round, {
+    chronik || (!played && !simpleHidden('stats') ? phLocked(round, {
       title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
     }) : null),
   ].filter(Boolean);

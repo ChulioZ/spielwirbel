@@ -103,7 +103,9 @@ function renderHubTabs(round, activeTab, sub) {
     { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
     { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
     { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
-  ];
+    // „Einfacher Modus" (#1646): the tab leaves the navigation, never the URL —
+    // /round/:rid/pokale still renders, it is just no longer offered.
+  ].filter(({ id }) => !(id === 'pokale' && simpleHidden('trophies')));
   const dock = h(`<nav class="dock${sub ? ' dock--sub' : ''}" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
   tabs.forEach(({ id: tabId, icon, label }) => {
     // aria-current marks the tab you are on (#145). It was signalled by the

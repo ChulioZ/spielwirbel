@@ -771,6 +771,9 @@ public/
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
+    simple-mode.js   the „Einfacher Modus" feature ids, the `{ all, except }`
+                     predicate and the two toggles — offered by Konto, validated
+                     by PATCH /me, tallied by both repo backends (issue #1646)
     avatar-policy.js what a profile picture may be — byte cap, stored square,
                      accepted types — offered by the Konto picker and validated
                      by lib/avatar.js + lib/upload.js (issue #841)
@@ -1085,6 +1088,7 @@ public/
     views-account-tisch.js Konto as Der Tisch's dashboard: „Du" card of setting rows, Design card, BGG + danger cards (#1265)
     views-account-programmheft.js Konto as Das Programmheft's page: an index of the sections beside them (#1376)
     views-account-forest.js Konto as Forest's: that index as a card with icons and „Abmelden", every section a card (#1470)
+    views-account-simple.js the „Einfacher Modus" section: a select-all parent over one „… ausblenden" box per feature (#1646)
     router.js        URL ↔ view routing (History API): deep links, reloads
     main.js          bootstrap: route from the current URL              (loads last)
     pwa.js           registers the service worker (installable + offline)

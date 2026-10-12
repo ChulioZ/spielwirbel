@@ -44,7 +44,8 @@ function offShelfEntries(round) {
   });
   return [
     ...counted,
-    { sub: 'recommendations', icon: 'ti-sparkles', count: null, label: t('suggest.link'), name: t('suggest.link'), go: () => showRecommendations(rid) },
+    // „Einfacher Modus" (#1646): „Könnte euch gefallen" rides `suggestions`.
+    ...(simpleHidden('suggestions') ? [] : [{ sub: 'recommendations', icon: 'ti-sparkles', count: null, label: t('suggest.link'), name: t('suggest.link'), go: () => showRecommendations(rid) }]),
   ];
 }
 

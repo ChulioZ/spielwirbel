@@ -157,18 +157,22 @@ function openAccountMenu(btn) {
       el.appendChild(mine);
     }
     // Freundeskreis (#325): the entry point to the dedicated friends view.
-    const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
-    friends.addEventListener('click', () => { close(); showFriends(); });
-    el.appendChild(friends);
+    // „Einfacher Modus" (#1646): friends, price alerts, the quiz and Entdecken
+    // each leave this menu with their option; their URLs keep working.
+    if (!simpleHidden('friends')) {
+      const friends = h(`<button class="popover__opt"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('friends.menu'))}</button>`);
+      friends.addEventListener('click', () => { close(); showFriends(); });
+      el.appendChild(friends);
+    }
     // Preisalarme (#680): only where prices exist — the flag rides the cached
     // /api/config, so the menu stays synchronous.
-    if (priceWatchesAvailable()) {
+    if (priceWatchesAvailable() && !simpleHidden('priceAlerts')) {
       const watches = h(`<button class="popover__opt"><i class="ti ti-bell" aria-hidden="true"></i> ${esc(t('priceWatch.menu'))}</button>`);
       watches.addEventListener('click', () => { close(); showPriceWatches(); });
       el.appendChild(watches);
     }
     // Wochenquiz (#743): only where the quiz runs — the same cached-config gate.
-    if (quizAvailable()) {
+    if (quizAvailable() && !simpleHidden('quiz')) {
       const quizRow = h(`<button class="popover__opt"><i class="ti ti-bulb" aria-hidden="true"></i> ${esc(t('quiz.menu'))}</button>`);
       quizRow.addEventListener('click', () => { close(); showQuiz(); });
       el.appendChild(quizRow);
@@ -183,9 +187,11 @@ function openAccountMenu(btn) {
     // synchronously on every open, and a network round-trip per open to decide
     // whether to show one row would either stall the popover or make it jump.
     // The screen itself renders an honest empty state when the feature is off.
-    const entdecken = h(`<button class="popover__opt"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('stats.menu'))}</button>`);
-    entdecken.addEventListener('click', () => { close(); showEntdecken(); });
-    el.appendChild(entdecken);
+    if (!simpleHidden('discover')) {
+      const entdecken = h(`<button class="popover__opt"><i class="ti ti-world-search" aria-hidden="true"></i> ${esc(t('stats.menu'))}</button>`);
+      entdecken.addEventListener('click', () => { close(); showEntdecken(); });
+      el.appendChild(entdecken);
+    }
     // „Was ist neu" (#741). The only entry point to /neu, which is what makes
     // this a PULLED surface — the dot on the button above merely says there is
     // something here, and costs nothing when there is not.
@@ -322,6 +328,10 @@ async function refreshInboxBadge() {
 // dotting at all.
 function hasUnseenNews() {
   const rev = newsRevision();
+  // „Einfacher Modus" (#1646): `news` silences the dot and the home tile. The
+  // menu row stays — /neu is still pulled on purpose — and since nothing is
+  // stamped while silenced, switching it back on shows what was missed.
+  if (simpleHidden('news')) return false;
   return !!rev && !!accountUser && accountUser.lastSeenNewsRevision !== rev;
 }
 

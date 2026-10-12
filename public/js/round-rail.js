@@ -188,7 +188,7 @@ function buildRoundRail(round, activeTab, sub) {
     { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
     { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
     { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
-  ].forEach(({ id: tabId, icon, label }) => {
+  ].filter(({ id }) => !(id === 'pokale' && simpleHidden('trophies'))).forEach(({ id: tabId, icon, label }) => {
     // On a sub-screen owned by this section (game detail, member, results) the
     // section is where you ARE inside, but not the page you are on — so it is
     // marked, and stays a live link, but never "page". Same distinction the

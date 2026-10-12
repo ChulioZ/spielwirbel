@@ -51,6 +51,12 @@ async function showProfile(username) {
     return;
   }
 
+  /* „Einfacher Modus" (#1646): `profileRecord` takes the cross-round record
+     (the card's figures, its Abzeichen and bests) and „Dein Rückblick" off your
+     OWN profile. Dropped from the payload here, once, so every renderer below
+     takes the branch it already has for a profile with no record — and a
+     friend's profile, which is not a statement about you, is untouched. */
+  if (p.self && simpleHidden('profileRecord')) p = { ...p, stats: undefined, plays: undefined };
   app.innerHTML = '';
   setContext(p.username || t('friends.unknownUser'));
   setDocTitle(p.username || t('friends.unknownUser'), t('profile.title'));
@@ -234,9 +240,10 @@ function renderProfileCard(p, reload) {
     card.appendChild(h(`<p class="muted empty-note">${esc(t(p.self ? 'profile.statsEmptySelf' : 'profile.statsEmpty'))}</p>`));
     // With no play at all the marks are four open tiles, which say nothing the
     // line above does not — unless Jahre is already earned (#1389).
-    if (st.badges && st.badges.some((e) => e.state === 'earned')) {
-      card.appendChild(profileCardBadges(st.badges, p.createdAt, name));
-    }
+    // Null when „Einfacher Modus" hides `trophies` (#1646).
+    const marks = st.badges && st.badges.some((e) => e.state === 'earned')
+      ? profileCardBadges(st.badges, p.createdAt, name) : null;
+    if (marks) card.appendChild(marks);
     return card;
   }
   if (!record) return card;

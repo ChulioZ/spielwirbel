@@ -342,6 +342,24 @@
      share to state. The no-break space keeps „52 %" on one line. */
   const pct = (n, of) => (of > 0 ? `${Math.round((100 * n) / of)}\u00a0%` : '—');
 
+  // The „Einfacher Modus" feature ids (public/js/simple-mode.js) in the panel's
+  // German — this page ships no translation table, like every label above.
+  const SIMPLE_MODE_LABELS = {
+    trophies: 'Pokale & Abzeichen aus',
+    stats: 'Statistik-Karten aus',
+    suggestions: 'Spielvorschläge aus',
+    todo: 'Kümmerliste aus',
+    recap: 'Rückblick aus',
+    ratingDetails: 'Bewertungsdetails aus',
+    gameExtras: 'Erweiterungen & BGG-Details aus',
+    friends: 'Freundeskreis aus',
+    discover: 'Entdecken aus',
+    quiz: 'Wochenquiz aus',
+    priceAlerts: 'Preisalarme aus',
+    news: '„Was ist neu" aus',
+    profileRecord: 'Profil-Bilanz aus',
+  };
+
   function adoptionCards(s) {
     const m = s.metrics;
     const a = m.adoption;
@@ -370,6 +388,16 @@
         line('Passkey', a.accountsWithPasskey, accounts),
         line('Konto-Bild', a.accountsWithAvatar, accounts),
         line('BG-Stats-Weitergabe', a.accountsWithBgStats, accounts),
+        /* „Einfacher Modus" (#1646): accounts hiding at least one feature,
+           then — as shares of THOSE — komplett and the EFFECTIVE hide per
+           feature (an „alles aus" account counts on every line it did not
+           except). The lines are keyed by the payload, which the shared
+           feature list keys, so a new feature gets its line here with no
+           edit; an id this map does not know prints as its id. */
+        line('Einfacher Modus', a.accountsSimpleModeAny, accounts),
+        line('komplett', a.accountsSimpleModeAll, a.accountsSimpleModeAny, 1),
+        ...Object.entries(a.accountsSimpleModeHidden || {}).map(([f, n]) =>
+          line(SIMPLE_MODE_LABELS[f] || f, n, a.accountsSimpleModeAny, 1)),
         // The weekly quiz (#743): accounts that answered at least one question
         // of THIS week's round — a weekly reading, not a running total.
         line('Wochenquiz diese Woche', a.accountsPlayedQuiz, accounts),

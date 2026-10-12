@@ -221,6 +221,9 @@ const frontendGlobals = {
   partyName: 'readonly', teamsForPeople: 'readonly',
   // news.js (issue #741)
   NEWS: 'readonly', newsRevision: 'readonly', newsText: 'readonly',
+  SIMPLE_MODE_GROUPS: 'readonly', SIMPLE_MODE_FEATURES: 'readonly', normalizeSimpleMode: 'readonly',
+  simpleModeHides: 'readonly', simpleModeParentState: 'readonly', simpleModeToggleAll: 'readonly',
+  simpleModeToggle: 'readonly', simpleHidden: 'readonly',
   // avatar-policy.js + member-avatar.js (issue #841)
   AVATAR_MAX_BYTES: 'readonly', AVATAR_SIZE: 'readonly', AVATAR_EXT: 'readonly',
   AVATAR_ACCEPT: 'readonly', AVATAR_MAX_PIXELS: 'readonly',
@@ -312,7 +315,7 @@ const frontendGlobals = {
   buildDeleteSection: 'readonly', openDeleteSheet: 'readonly',
   // inbox-mail opt-outs (issue #618) + the BG Stats opt-in (issue #485), which
   // share one account-preference toggle row
-  buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly',
+  buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly', buildSimpleModeForm: 'readonly',
   // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
   renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',

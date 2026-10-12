@@ -120,7 +120,7 @@ function hubDemoSummary(round, activeGames) {
     { tab: 'regal', icon: 'ti-layout-grid', value: tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games') },
     { tab: 'chronik', icon: 'ti-history', value: tn(played, 'home.chip.sessionsOne', 'home.chip.sessions') },
     { tab: 'pokale', icon: 'ti-trophy', value: lead },
-  ].forEach(({ tab, icon, value }) => {
+  ].filter(({ tab }) => !(tab === 'pokale' && simpleHidden('trophies'))).forEach(({ tab, icon, value }) => {
     const row = h(`<a class="hub-demo__row">
          <i class="ti ${icon}" aria-hidden="true"></i>
          <span class="hub-demo__main">
@@ -160,6 +160,7 @@ function hubDemoInvite() {
    `exclude` is the id set that banner is proposing in this same render, so the
    screen cannot recommend and nag the same game. */
 function hubSuggestCard(round, activeGames, statsByGame, exclude) {
+  if (simpleHidden('suggestions')) return null; // „Einfacher Modus" (#1646)
   const rows = gameSuggestions(
     round, activeGames, { statsByGame, exclude }, hubDeps()
   );
@@ -261,6 +262,7 @@ function hubPresetChips(round, activeGames) {
    percentage, which is also why the whole row degrades to readable text when
    styles fail to load. */
 function hubPulseCard(round, activeGames) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   /* The FACTS come from the first played session in every design (#1586,
      standardised on Der Tisch's T7.5, #1280): the sessions of the last twelve
      months, the days since the last one and the games never played are real
@@ -405,6 +407,7 @@ function hubPulseTiles(round, card, pulse) {
    question — a re-tightening tomorrow then removes the card instead of leaving
    a list of things the reader is not allowed to do. */
 function hubCareCard(round, activeGames) {
+  if (simpleHidden('todo')) return null; // „Einfacher Modus" (#1646)
   if (!roundCan(round, 'game.edit')) return null;
   const list = careList(round, activeGames, hubDeps());
   if (list.empty) return null;
@@ -450,6 +453,7 @@ function hubCareCard(round, activeGames) {
 /* e) „Heute vor einem Jahr" — rare by construction: on 364 days of the year
    this returns null and nothing is rendered at all. */
 function hubAnniversaryCard(round) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   const found = anniversary(round, {}, hubDeps());
   if (!found) return null;
   const { session, game, years } = found;
@@ -490,6 +494,7 @@ function hubAnniversaryCard(round) {
    phrasing of the server's terms. A second opinion here is precisely the drift
    .claude/rules/shared-constants-across-the-stack.md exists for. */
 async function renderRecoTeaser(rid, grid) {
+  if (simpleHidden('suggestions')) return; // „Einfacher Modus" (#1646)
   let data;
   try { data = await api('GET', `/api/rounds/${rid}/recommendations`); }
   catch { return; }

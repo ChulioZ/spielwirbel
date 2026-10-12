@@ -62,6 +62,7 @@ async function renderPriceWatchControl(anchor, game, price) {
   // empty anchor never outlives the render that placed it (a screen without
   // accounts or without prices must look exactly as it did before #680).
   if (!(accountsActive() && isLoggedIn()) || (accountCfg && !accountCfg.prices)) return anchor.remove();
+  if (simpleHidden('priceAlerts')) return anchor.remove(); // „Einfacher Modus" (#1646)
   // Without a live price there is only an existing watch to show, and no reason
   // to hold a placeholder open while /api/config is still on its way.
   if (!price && !accountCfg) return anchor.remove();

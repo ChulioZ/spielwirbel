@@ -1201,7 +1201,7 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
     ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
       'demoExpiresAt', 'design', 'designChooserSeen', 'email', 'emailVerified', 'id',
       'lastSeenNewsRevision', 'notifyFriendRequests', 'notifyRoundInvitations',
-      'pendingEmail', 'statsVisible', 'termsRevision', 'username']);
+      'pendingEmail', 'simpleMode', 'statsVisible', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);
 

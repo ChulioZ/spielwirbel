@@ -87,6 +87,12 @@ function isDemoAccount() { return !!(accountUser && accountUser.demo); }
 // account to hold the preference — the results screen then simply offers no
 // push, which is the same answer as an account that never enabled it.
 function bgStatsEnabled() { return !!(accountUser && accountUser.bgStats); }
+/* „Einfacher Modus" (#1646): does THIS account hide feature `f`? The one
+   predicate every entry point asks (public/js/simple-mode.js has the formula).
+   Logged out, a demo-less accounts-off instance and a cold boot before /me all
+   have no `accountUser`, and all read as false — nothing is hidden for a
+   preference nobody holds. */
+function simpleHidden(f) { return !!accountUser && simpleModeHides(accountUser.simpleMode, f); }
 // Keep the cached record in step with a preference the Konto screen just saved.
 // showResults reads `bgStatsEnabled()` on every render, so without this the
 // button would not appear (or disappear) until the next reload — the Konto

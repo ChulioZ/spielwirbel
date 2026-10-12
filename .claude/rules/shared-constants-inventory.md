@@ -714,6 +714,20 @@ other siblings) — so a page, a profile and a badge cannot disagree about which
 records a member holds. A hand-written server copy would let the profile name a
 best the member page does not.
 
+**The twenty-ninth is `public/js/simple-mode.js`** (#1646): the „Einfacher
+Modus" feature ids (`SIMPLE_MODE_FEATURES`, grouped as Konto renders them), the
+`{ all, except }` predicate `simpleModeHides`, the normaliser and the two
+toggles. Konto offers the ids, `PATCH /me` validates and stores
+`normalizeSimpleMode`'s answer, `lib/me-projection.js` projects through it, and
+both repo backends reduce the operator's per-feature figures with
+`tallySimpleMode`. The plain offer/validate shape, with one property the value
+half alone would not give: the stored value is a FORMULA input, not a list of
+hidden ids, so an account that hid everything also hides an id added later —
+and the admin card grows its line for that id with no edit, since its keys come
+from this list. A hand-copied server list would silently drop the new id from
+`except` (the route drops unknown ids on purpose, for a client a release ahead),
+so a "keep everything except the new thing" account would lose its exception.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

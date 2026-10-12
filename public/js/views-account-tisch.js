@@ -93,6 +93,7 @@ function buildKontoDuCard(me) {
   const rows = h('<div class="konto-rows"></div>');
   rows.appendChild(kontoRow('profile', 'ti-user-circle', t('konto.profile.title'), buildProfileStatsForm(me), kontoToggleValue));
   rows.appendChild(kontoRow('bgstats', 'ti-activity', t('konto.bgstats.title'), buildBgStatsForm(me), kontoToggleValue));
+  rows.appendChild(kontoRow('simple', 'ti-eye-off', t('konto.simple.title'), buildSimpleModeForm(me), kontoToggleValue));
   if (me.demo) {
     card.appendChild(rows);
     card.appendChild(h(`<p class="muted konto-du__demo"><strong>${esc(t('konto.demo.title'))}</strong> — ${esc(t('konto.demo.note'))}</p>`));
