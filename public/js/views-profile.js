@@ -240,9 +240,10 @@ function renderProfileCard(p, reload) {
     card.appendChild(h(`<p class="muted empty-note">${esc(t(p.self ? 'profile.statsEmptySelf' : 'profile.statsEmpty'))}</p>`));
     // With no play at all the marks are four open tiles, which say nothing the
     // line above does not — unless Jahre is already earned (#1389).
-    if (st.badges && st.badges.some((e) => e.state === 'earned')) {
-      card.appendChild(profileCardBadges(st.badges, p.createdAt, name));
-    }
+    // Null when „Einfacher Modus" hides `trophies` (#1646).
+    const marks = st.badges && st.badges.some((e) => e.state === 'earned')
+      ? profileCardBadges(st.badges, p.createdAt, name) : null;
+    if (marks) card.appendChild(marks);
     return card;
   }
   if (!record) return card;

@@ -5926,6 +5926,8 @@ module.exports = function repoContract(repo) {
       await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: false, except: [] } });
       await repo.createUser({ ...userFields(), tenantId: tn() });
       await repo.createUser({ ...userFields(), tenantId: `demo-${tn()}`, simpleMode: { all: true, except: [] } });
+      // A malformed stored value counts as nothing — and must not error the query (Postgres).
+      await repo.createUser({ ...userFields(), tenantId: tn(), simpleMode: { all: false, except: 'stats' } });
 
       const m = await repo.instanceMetrics();
       const d = (k) => m.adoption[k] - mid.adoption[k];

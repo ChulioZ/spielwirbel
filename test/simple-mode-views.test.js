@@ -97,3 +97,16 @@ test('gameExtras: the expansions chip and „Mehr zum Spiel" leave the Spielepas
     assert.equal(!!dom.app.querySelector('.gd-more'), !hidden, '„Mehr zum Spiel"');
   }
 });
+
+test('trophies: a profile with no record but an earned year mark still renders, without the mark', (t) => {
+  /* The no-record branch of renderProfileCard appends the badge row whenever an
+     account-tier mark is earned, so a hidden `trophies` (which makes the
+     builder answer null) must not reach appendChild. Found by CodeRabbit on
+     #1653; the friend profile's card threw instead of rendering. */
+  const { dom } = boot(t, only('trophies'));
+  const badges = [{ key: 'accountYears', tier: 1, state: 'earned', at: '2026-01-01T00:00:00.000Z' }];
+  const card = dom.call('renderProfileCard', { username: 'bob', createdAt: '2025-01-01T00:00:00.000Z',
+    stats: { sessions: 0, badges } }, () => {});
+  assert.ok(card.querySelector('h1'), 'the card rendered');
+  assert.equal(card.querySelector('.profile-card__badges'), null, 'no badge row under a hidden `trophies`');
+});

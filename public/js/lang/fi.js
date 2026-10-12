@@ -1911,7 +1911,7 @@ I18N.fi = {
   'konto.simple.f.stats': 'Piilota tilastokortit',
   'konto.simple.f.stats.hint': 'Porukan pulssi, hyllyn profiili, ”tänään … vuotta sitten” sekä hyllyn ja historian esikatselut Aloituksessa.',
   'konto.simple.f.suggestions': 'Piilota peliehdotukset',
-  'konto.simple.f.suggestions.hint': 'Ehdotuskortit, ”Saattaisit pitää myös näistä” ja vinkit pelien poistamiseen.',
+  'konto.simple.f.suggestions.hint': 'Ehdotuskortit, ”Saattaisit pitää myös näistä” ja karsintaehdotukset.',
   'konto.simple.f.todo': 'Piilota avoimet asiat',
   'konto.simple.f.todo.hint': 'Kortti peleistä, joilta puuttuu vielä jotain.',
   'konto.simple.f.recap': 'Piilota kuukausi- ja vuosiyhteenveto',
