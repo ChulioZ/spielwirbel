@@ -188,6 +188,11 @@ lib/
                      games that could reach a podium from the provider — never
                      from the user-typed title — and caches the payload for
                      the route
+  public-stats-ranking.js
+                     how those lists are numbered (issue #1648): equal shown
+                     values share a place (1, 1, 3), everything tied with the
+                     last place is published up to five entries, and the
+                     favourite names' ranking. Pure — no repo, no provider
   actor-seat.js      which member seat to attribute a round activity to; one
                      definition shared by the games and members routes (#563)
   edition.js         the printing a game's cover was picked from, normalized and

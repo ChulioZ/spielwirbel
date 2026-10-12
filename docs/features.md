@@ -1070,7 +1070,12 @@ What the app does, in detail. For a short overview see the
   Every card is a short ranked list rather than one winner (issue #1424): the
   leader with its cover, then places 2 and 3 as compact rows. Each place clears
   the card's own minimum, so a card may show fewer than three and is never
-  padded. Under Das Programmheft the four „Meistgespielt" cards are drawn as
+  padded. Equal values share a place (1, 1, 3 — issue #1648), judged on the
+  number the card shows, so two games both at „Score 4,2" are tied rather than
+  ranked; everyone tied with third place is shown, up to five entries per card.
+  Inside a tie the order is fixed rather than arbitrary: on the play cards the
+  game that reached the count first leads, on the shelf card the one in more
+  accounts' rounds, on „Bestbewertet" the higher unrounded score. Under Das Programmheft the four „Meistgespielt" cards are drawn as
   bars, each sized as a share of the leader's sessions. From 1280px the
   screen widens past the reading measure, so the cards run five across (three
   in Die Brücke and Das Programmheft) instead of leaving the margins empty.
