@@ -294,3 +294,36 @@ test('a name with a game nobody can name keeps its card but loses its list', asy
   assert.equal(entry.games, 2, 'the average still counts both games');
   assert.equal(entry.list, undefined, 'never a blank row: no list at all');
 });
+
+/* ---------------------------- the BGG links (#1638) ------------------------- */
+
+test('a favourite carries its BGG id from the link table, so the public page can link it', async () => {
+  openFloors();
+  process.env.PUBLIC_STATS_MIN_NAME_GAMES = '1';
+  stubProvider({ l1: { designers: ['Linked Designer'], categories: ['Unlinked Category'], mechanics: ['Linked Mechanic'] } });
+  await seedRated([{ id: 'l1', rating: 4 }]);
+  await repo.upsertBggLinks([
+    { type: 'designer', bggId: 66001, name: 'Linked Designer' },
+    { type: 'mechanic', bggId: 66002, name: 'Linked Mechanic' },
+    // A same-named entry of ANOTHER type must not answer for the category.
+    { type: 'designer', bggId: 66003, name: 'Unlinked Category' },
+  ]);
+
+  const built = await publicStats.rebuild();
+  assert.equal(built.names.favDesigner[0].bggId, 66001);
+  assert.equal(built.names.favMechanic[0].bggId, 66002);
+  assert.equal('bggId' in built.names.favCategory[0], false, 'an unknown name carries no id');
+  assert.equal(typeof built.names.favDesigner[0].bggId, 'number');
+});
+
+test('a failed link lookup costs the ids, never the favourites block', async (t) => {
+  openFloors();
+  process.env.PUBLIC_STATS_MIN_NAME_GAMES = '1';
+  stubProvider({ l2: { designers: ['Lookup Designer'], categories: ['C'], mechanics: ['M'] } });
+  await seedRated([{ id: 'l2', rating: 4 }]);
+  t.mock.method(repo, 'getBggLinks', async () => { throw new Error('table down'); });
+
+  const built = await publicStats.rebuild();
+  assert.equal(built.names.favDesigner[0].name, 'Lookup Designer');
+  assert.equal('bggId' in built.names.favDesigner[0], false);
+});

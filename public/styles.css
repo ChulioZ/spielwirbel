@@ -9009,6 +9009,21 @@ kbd {
 }
 .link-out:hover { text-decoration: underline; }
 
+/* A BGG name inside a run of text (#1638 — game detail facts, the Steckbrief
+   panels). A plain inline link, NOT .link-out: that is a bold inline-flex
+   control, which would set a linked name heavier than its unlinked neighbours
+   in the same comma list and make each an atomic box the run cannot wrap
+   inside. Underlined, because some names in a list are links and some are not,
+   and colour alone must not be what tells them apart (WCAG 1.4.1). Same ink
+   expression as .link-out, so it follows every design the same way. */
+.bgg-link {
+  color: var(--brand-ink, var(--brand-strong));
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+.bgg-link:hover { text-decoration-thickness: 2px; }
+
 /* Button variant: link a still-unlinked game to a provider (issue #74). */
 .link-out--btn {
   background: none;

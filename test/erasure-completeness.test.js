@@ -112,6 +112,7 @@ const GLOBAL_DISPOSITION = {
   },
   bgg_corpus: { erase: false, export: false, why: 'third-party game metadata; holds no personal data' },
   bgg_corpus_meta: { erase: false, export: false, why: 'ingest bookkeeping; holds no personal data' },
+  bgg_links: { erase: false, export: false, why: 'BGG ids for category/mechanic/designer names (#1638); holds no personal data' },
   last_prices: { erase: false, export: false, why: 'cached third-party prices per game; holds no personal data' },
 };
 

@@ -522,9 +522,11 @@ test('parseGameInfo reads a MULTI-item stats body for the backfill', () => {
       <statistics><ratings><averageweight value="0"/></ratings></statistics>
     </item>
   </items>`;
+  // `links` is the #1638 id list beside the name arrays — empty here, since
+  // neither item carries a category, mechanic or designer link.
   const none = {
     minPlaytime: null, maxPlaytime: null, minAge: null, categories: [], mechanics: [], designers: [],
-    bestWith: [], recommendedWith: [],
+    bestWith: [], recommendedWith: [], links: [],
   };
   assert.deepEqual(bgg.parseGameInfo(xml), [
     // The first item's body carries a <description>; the deepEqual is exact, so

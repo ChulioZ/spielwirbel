@@ -154,6 +154,12 @@ const frontendGlobals = {
   PROVIDER_INFO_FIELDS: 'readonly', CHIPPED_PROVIDER_INFO_FIELDS: 'readonly',
   UNCHIPPED_PROVIDER_INFO_FIELDS: 'readonly', hasProviderField: 'readonly', assignProviderInfo: 'readonly',
   BGG_UNCREDITED: 'readonly', creditedDesigners: 'readonly',
+  // bgg-links.js (shared with lib/, #1638)
+  BGG_LINK_TYPES: 'readonly', BGG_LINK_NAMES_MAX: 'readonly', BGG_LINK_NAME_MAX: 'readonly',
+  isBggLinkType: 'readonly', bggLinkUrl: 'readonly', bggLinkedNames: 'readonly',
+  resolveBggLinks: 'readonly', bggLinkCache: 'readonly',
+  // game-info.js / views-shelf-profile.js (#1638)
+  linkGameInfoNames: 'readonly', linkShelfTopNames: 'readonly',
   EXPANSION_TITLE_MAX: 'readonly',
   expansionBaseCandidates: 'readonly', expansionAcquirePlan: 'readonly', acquirableBases: 'readonly',
   expansionParentTitles: 'readonly',

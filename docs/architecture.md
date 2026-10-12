@@ -110,6 +110,10 @@ lib/
     corpus-backfill.js  the one-off window in which both backends re-queue
                      corpus rows enriched before covers were parsed (#779);
                      deletable once the corpus has turned over
+    bgg-links-file.js  the JSON backend's BGG link table (#1638) — its own file
+                     under DATA_DIR for corpus-file.js's reason
+    bgg-links-rows.js  the link table's input cleaning (dedupe by id and by
+                     name, verbatim names), shared by both backends
     migrations/      versioned Knex schema migrations (npm run migrate)
   tenant.js          resolves each request's tenant and scopes the repo to it
   round-access.js    the one place a round-level action's required role is
@@ -175,6 +179,10 @@ lib/
                      bounded, resumable enrichment pass that fills each row's
                      attributes from /thing. A local candidate pool exists
                      because BGG's API has no browse or attribute search at all
+  bgg-links.js       the instance-wide BGG link table's write and server-side
+                     read (#1638): every BGG parse's category/mechanic/designer
+                     ids are recorded best-effort, so a name can link to its
+                     BGG page; games keep their name lists unchanged
   calendar-periods.js
                      the current calendar week / month / year on ONE fixed zone
                      (Europe/Berlin), for the Discover podiums (issue #964).
@@ -499,6 +507,8 @@ lib/
     quiz.js          /api/quiz              (the weekly quiz (#743): this week's
                                              round, one answer at a time, the
                                              friends leaderboard; global per account)
+    bgg-links.js     /api/bgg-links         (category/mechanic/designer names ->
+                                             BGG ids (#1638); instance-wide, POST)
     invite-links.js  …/invite-links         (the owner's round invite links (#1515):
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
@@ -726,6 +736,9 @@ public/
                      the client's wantsGameInfo() — one definition, so no copy
                      decides on its own whether an empty answer erases a
                      stored value or whether a game still needs a fetch
+    bgg-links.js     the BGG link types, the page URL built from an id, the
+                     resolve cache and the linked-name DOM helper (#1638),
+                     required by the parser, the route and lib/public-stats.js
     draw-pool.js     which games a draw may pick from: the active-collection
                      check, the player-range fit and the filters over BGG's
                      imported metadata (issue #725), required by lib/draw.js so

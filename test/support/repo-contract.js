@@ -7017,4 +7017,87 @@ module.exports = function repoContract(repo) {
     const unlinked = await repo.updateMember(T, round.id, mid, { userId: null });
     assert.equal(unlinked.userId, null);
   });
+
+  /* ---------------------------- the BGG link table --------------------------- */
+  /*
+   * Global and un-scoped (#1638), like the corpus. Ids are minted per case:
+   * the suite may run against a persistent database, and the table's two
+   * unique keys would let one case's rows answer another's lookup.
+   */
+  test('upsertBggLinks stores rows, getBggLinks answers names with ids per type', async () => {
+    const out = await repo.upsertBggLinks([
+      { type: 'category', bggId: 880001, name: 'Contract Economic' },
+      { type: 'mechanic', bggId: 880002, name: 'Contract Drafting' },
+      { type: 'designer', bggId: 880003, name: 'Contract Designer' },
+    ]);
+    assert.equal(out.upserted, 3);
+    assert.equal(typeof out.upserted, 'number');
+    const ids = await repo.getBggLinks({
+      category: ['Contract Economic', 'Contract Unknown'],
+      mechanic: ['Contract Drafting'],
+      designer: ['Contract Designer'],
+    });
+    assert.deepEqual(ids, {
+      category: { 'Contract Economic': 880001 },
+      mechanic: { 'Contract Drafting': 880002 },
+      designer: { 'Contract Designer': 880003 },
+    });
+    // A name is resolved within its OWN type only.
+    assert.deepEqual((await repo.getBggLinks({ mechanic: ['Contract Economic'] })).mechanic, {});
+    // Every type is present even when nothing was asked.
+    assert.deepEqual(await repo.getBggLinks({}), { category: {}, mechanic: {}, designer: {} });
+  });
+
+  test('upsertBggLinks renames an id, and a reused name moves to the id that now holds it', async () => {
+    await repo.upsertBggLinks([{ type: 'category', bggId: 880011, name: 'Contract Old Name' }]);
+    // BGG renamed the entry: same id, new name — the old name stops resolving.
+    await repo.upsertBggLinks([{ type: 'category', bggId: 880011, name: 'Contract New Name' }]);
+    let ids = await repo.getBggLinks({ category: ['Contract Old Name', 'Contract New Name'] });
+    assert.deepEqual(ids.category, { 'Contract New Name': 880011 });
+    // A DIFFERENT id now carries that name: the stale row gives way, so the
+    // name stays unique and answers with the current id.
+    await repo.upsertBggLinks([{ type: 'category', bggId: 880012, name: 'Contract New Name' }]);
+    ids = await repo.getBggLinks({ category: ['Contract New Name'] });
+    assert.deepEqual(ids.category, { 'Contract New Name': 880012 });
+    // …and the stale row really is GONE, not merely outranked: once the new
+    // holder is renamed too, nothing may answer for the name. (Checked this
+    // way because a stale row left behind answers correctly above purely by
+    // sitting earlier in the table.)
+    await repo.upsertBggLinks([{ type: 'category', bggId: 880012, name: 'Contract Third Name' }]);
+    ids = await repo.getBggLinks({ category: ['Contract New Name', 'Contract Third Name'] });
+    assert.deepEqual(ids.category, { 'Contract Third Name': 880012 });
+  });
+
+  test('upsertBggLinks drops malformed rows, (Uncredited) and in-batch duplicates', async () => {
+    const out = await repo.upsertBggLinks([
+      { type: 'family', bggId: 880021, name: 'Contract Family' },
+      { type: 'category', bggId: 0, name: 'Contract Zero' },
+      { type: 'category', bggId: '880022', name: 'Contract String Id' },
+      { type: 'category', bggId: 880023, name: '   ' },
+      { type: 'designer', bggId: 880024, name: '(Uncredited)' },
+      // The same id twice and the same name twice in one batch: last one wins,
+      // and neither makes the write fail (on Postgres it would touch one row twice).
+      { type: 'mechanic', bggId: 880025, name: 'Contract First' },
+      { type: 'mechanic', bggId: 880025, name: 'Contract Second' },
+      { type: 'mechanic', bggId: 880026, name: 'Contract Second' },
+    ]);
+    assert.equal(out.upserted, 1);
+    const ids = await repo.getBggLinks({
+      category: ['Contract Zero', 'Contract String Id'],
+      designer: ['(Uncredited)'],
+      mechanic: ['Contract First', 'Contract Second'],
+    });
+    assert.deepEqual(ids, { category: {}, mechanic: { 'Contract Second': 880026 }, designer: {} });
+    assert.deepEqual(await repo.upsertBggLinks([]), { upserted: 0 });
+    assert.deepEqual(await repo.upsertBggLinks(null), { upserted: 0 });
+  });
+
+  test('names are stored VERBATIM — never trimmed or re-cased, so the game row string still matches', async () => {
+    // The surrounding spaces are the point: a store that "tidied" the name would
+    // stop matching the untouched string a game row holds, and the name would
+    // silently render unlinked.
+    await repo.upsertBggLinks([{ type: 'designer', bggId: 880031, name: ' Contract Name (I) ' }]);
+    const ids = await repo.getBggLinks({ designer: [' Contract Name (I) ', 'Contract Name (I)'] });
+    assert.deepEqual(ids.designer, { ' Contract Name (I) ': 880031 });
+  });
 };
