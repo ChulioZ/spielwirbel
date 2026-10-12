@@ -52,6 +52,20 @@ function playedOnField(dayKey, note, timeKey = '') {
   const input = wrap.querySelector('.played-on__input');
   const timeInput = wrap.querySelector('.played-on__time');
   const clear = wrap.querySelector('.played-on__clear');
+  // Safari on macOS keeps its calendar popover open after a day is clicked
+  // (#1621); letting go of the input is what closes it. A day TYPED segment by
+  // segment fires `change` too, as soon as the value is whole — with a
+  // prefilled day that is the first digit — so a change that follows a key
+  // within KEYED_MS is the keyboard's, and keeps focus where the user is typing.
+  const KEYED_MS = 1000;
+  let keyedAt = -Infinity;
+  input.addEventListener('keydown', () => { keyedAt = Date.now(); });
+  // A click on the field (which opens the calendar) ends the typing, so a day
+  // picked right after it still closes the popover.
+  input.addEventListener('pointerdown', () => { keyedAt = -Infinity; });
+  input.addEventListener('change', () => {
+    if (Date.now() - keyedAt > KEYED_MS) input.blur();
+  });
   const syncClear = () => { clear.hidden = !timeInput.value; };
   timeInput.addEventListener('input', syncClear);
   timeInput.addEventListener('change', syncClear);
