@@ -2224,9 +2224,8 @@ I18N.ko = {
   // Removing a person from a session (#1538).
   'log.removed': '{name}이(가) 세션에서 빠졌어요',
   'log.removedBy': '{actor}이(가) 세션에서 {name}을(를) 뺐어요',
-  'session.removeEntry': '사람 빼기',
-  'session.removeTitle': '세션에서 사람 빼기',
-  'session.removeIntro': '실수로 선택했거나 먼저 떠난 사람을 뺄 수 있어요. 참여한 것으로 치지 않지만, 이미 남긴 평가는 게임 점수에 계속 반영돼요.',
+  'session.removeTitle': '이 세션의 사람들',
+  'session.removeIntro': '실수로 선택했거나 먼저 떠난 사람을 뺄 수 있어요. 참여한 것으로 치지 않지만, 이미 남긴 평가는 게임 점수에 계속 반영돼요. 다시 추가한 사람은 평가와 함께 다시 참여한 것으로 쳐요. 뺄 때 지워진 승자, 팀, 점수는 다시 정해야 해요.',
   'session.removeAction': '빼기',
   'session.removeActionFor': '{name} 빼기',
   'session.removeConfirmTitle': '{name}을(를) 뺄까요?',
@@ -2235,4 +2234,13 @@ I18N.ko = {
   'session.removed': '{name}을(를) 뺐어요',
   'session.removeLast': '세션에는 최소 한 명이 있어야 해요.',
   'session.removeSplit': '이 세션은 여러 테이블로 나뉘었어요. 해당 테이블에서 빼 주세요.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': '사람 관리',
+  'session.removedHeading': '뺀 사람',
+  'session.restoreAction': '다시 추가',
+  'session.restoreActionFor': '{name} 다시 추가',
+  'session.restored': '{name}을(를) 다시 추가했어요',
+  'session.restoreSplit': '이 세션은 테이블로 나뉘어 있어요. 해당 테이블에서 다시 추가하세요.',
+  'log.restored': '{name}이(가) 세션에 다시 추가됐어요',
+  'log.restoredBy': '{actor}이(가) {name}을(를) 세션에 다시 추가했어요',
 };

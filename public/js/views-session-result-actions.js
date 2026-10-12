@@ -257,11 +257,11 @@ function resultRenderFoot(rs) {
       ? { icon: 'ti-arrow-back-up', label: t('result.cancelUndo'), kind: 'undoable', run: () => resultSetCancelled(rs, false) }
       : { icon: 'ti-x', label: t('result.cancel'), kind: 'destructive', run: () => resultConfirmCancel(rs) });
   }
-  // Taking someone out (#1538). `destructive` because its confirm is a danger
-  // one (popover.js's kind rule); first among them, since it corrects the
-  // evening where the other two throw it away.
-  if (people.length > 1) {
-    more.unshift({ icon: 'ti-user-minus', label: t('session.removeEntry'), kind: 'destructive', run: () => showRemovePersonSheet(round, session, rs.reopen) });
+  // Taking someone out (#1538) or putting them back (#1655). `edit` since the
+  // sheet goes both ways: it corrects the evening, and the removal inside it
+  // carries its own danger confirm.
+  if (canManageSessionPeople(round, session)) {
+    more.unshift({ icon: 'ti-users', label: t('session.manageEntry'), kind: 'edit', run: () => showRemovePersonSheet(round, session, rs.reopen) });
   }
   // A correction, not a loss — so `edit`, which sorts first (#1616, #1630).
   if (rs.finished && rs.chosenId) {

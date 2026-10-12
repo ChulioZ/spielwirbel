@@ -2293,9 +2293,8 @@ I18N.nl = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} is uit de sessie gehaald',
   'log.removedBy': '{actor} haalde {name} uit de sessie',
-  'session.removeEntry': 'Iemand verwijderen',
-  'session.removeTitle': 'Iemand uit de sessie halen',
-  'session.removeIntro': 'Voor iemand die per ongeluk is aangevinkt of eerder is vertrokken. Die persoon telt niet meer als deelnemer, maar de beoordelingen die al gegeven zijn tellen nog mee voor de score van de spellen.',
+  'session.removeTitle': 'Mensen in deze sessie',
+  'session.removeIntro': 'Haal iemand eruit die per ongeluk is aangevinkt of eerder is vertrokken: die persoon telt niet meer als deelnemer, maar de beoordelingen die al gegeven zijn tellen nog mee voor de score van de spellen. Wie weer wordt toegevoegd, telt weer mee, beoordelingen inbegrepen; winnaars, teams en punten die bij het verwijderen zijn gewist, moeten opnieuw worden ingesteld.',
   'session.removeAction': 'Verwijderen',
   'session.removeActionFor': '{name} verwijderen',
   'session.removeConfirmTitle': '{name} verwijderen?',
@@ -2304,4 +2303,13 @@ I18N.nl = {
   'session.removed': '{name} is verwijderd',
   'session.removeLast': 'Een sessie heeft minstens één persoon nodig.',
   'session.removeSplit': 'Deze sessie is over tafels verdeeld. Haal de persoon aan diens tafel weg.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Mensen beheren',
+  'session.removedHeading': 'Verwijderd',
+  'session.restoreAction': 'Weer toevoegen',
+  'session.restoreActionFor': '{name} weer toevoegen',
+  'session.restored': '{name} is weer van de partij',
+  'session.restoreSplit': 'Deze sessie is verdeeld over tafels. Voeg de persoon weer toe aan hun tafel.',
+  'log.restored': '{name} is weer aan de sessie toegevoegd',
+  'log.restoredBy': '{actor} voegde {name} weer aan de sessie toe',
 };

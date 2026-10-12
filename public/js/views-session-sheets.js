@@ -83,13 +83,15 @@ function showVoteQrSheet(round, session) {
   });
 }
 
-/* Take someone out of a session (#1538): one sheet listing the session's people,
-   opened from the lobby and from the results screen in every design. A sheet
-   rather than a control on each person's row, because every design composes
-   those rows differently, and this is a correction the group makes rarely:
-   one quiet entry per screen keeps it out of the way of the people list's
-   real job. Each name opens a confirm, which replaces this sheet (openSheet's
-   replace path) instead of stacking on it.
+/* Take someone out of a session (#1538), or put them back (#1655): one sheet
+   listing the session's people, then — when anyone was removed — the removed
+   ones under their own heading, each with „Wieder hinzufügen". Opened from the
+   lobby and from the results screen in every design. A sheet rather than a
+   control on each person's row, because every design composes those rows
+   differently, and this is a correction the group makes rarely: one quiet entry
+   per screen keeps it out of the way of the people list's real job. Each removal
+   opens a confirm, which replaces this sheet (openSheet's replace path) instead
+   of stacking on it; a restore needs none, being reversible itself.
 
    `onDone(fresh, session)` re-renders the calling screen from the server's view,
    so the tally, teams and winners follow from the new people set. */
@@ -114,17 +116,36 @@ function showRemovePersonSheet(round, session, onDone) {
   Object.entries(session.votes || {}).forEach(([pid, byGame]) => {
     if (byGame && Object.keys(byGame).length) voted.add(pid);
   });
-  people.forEach((p) => {
+  const personRow = (p, icon, label, ariaKey, run) => {
     const row = h(`<li class="remove-person__row">
         <span class="live-person__avatar live-person__avatar--sm" style="background:${personColor(round, p)}">${avatarFace(initials(p.name), { userId: p.userId })}</span>
         <span class="remove-person__name">${esc(personLabel(p))}</span>
-        <button type="button" class="btn btn--sm remove-person__btn">${iconText('ti-user-minus', t('session.removeAction'))}</button>
       </li>`);
-    const btn = row.querySelector('button');
-    btn.setAttribute('aria-label', t('session.removeActionFor', { name: personLabel(p) }));
-    btn.addEventListener('click', () => removePerson(p));
-    list.appendChild(row);
+    if (run) {
+      const btn = h(`<button type="button" class="btn btn--sm remove-person__btn">${iconText(icon, label)}</button>`);
+      btn.setAttribute('aria-label', t(ariaKey, { name: personLabel(p) }));
+      btn.addEventListener('click', run);
+      row.appendChild(btn);
+    }
+    return row;
+  };
+  // A session keeps at least one person, so the last one stays listed but
+  // offers no „Entfernen" — the sheet can still be open for the removed below.
+  const removable = people.length > 1;
+  people.forEach((p) => {
+    list.appendChild(personRow(p, 'ti-user-minus', t('session.removeAction'), 'session.removeActionFor',
+      removable ? () => removePerson(p) : null));
   });
+  const back = removedPeopleBack(round, session);
+  if (back.length) {
+    sheet.appendChild(h(`<h3 class="remove-person__heading">${esc(t('session.removedHeading'))}</h3>`));
+    const removedList = h('<ul class="remove-person__list remove-person__list--removed"></ul>');
+    back.forEach((p) => {
+      removedList.appendChild(personRow(p, 'ti-user-plus', t('session.restoreAction'), 'session.restoreActionFor',
+        () => restorePerson(p)));
+    });
+    sheet.appendChild(removedList);
+  }
   document.body.appendChild(backdrop);
 
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
@@ -154,13 +175,44 @@ function showRemovePersonSheet(round, session, onDone) {
       toast(known[e.message] ? t(known[e.message]) : e.message, { tone: 'error' });
     }
   }
+
+  async function restorePerson(p) {
+    const name = personLabel(p);
+    try {
+      await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/people/${p.id}/restore`, {});
+      closeSheet();
+      toast(t('session.restored', { name }));
+      const fresh = await fetchRoundFresh(round.id);
+      const s = fresh.sessions.find((x) => x.id === session.id);
+      if (!s) return showRound(round.id, 'start');
+      onDone(fresh, s);
+    } catch (e) {
+      toast(e.message === 'already_split' ? t('session.restoreSplit') : e.message, { tone: 'error' });
+    }
+  }
 }
 
-// The quiet entry to the sheet above, or null when there is nobody to take out
-// (a session must keep at least one person, so one person means no action).
+// The removed people who can come back (#1655): everyone in `removedPeople`
+// that still resolves — sessionRaters() is exactly the session's people plus
+// those, skipping a removed member deleted from the round since (the route 404s
+// them too), so the difference is the list.
+function removedPeopleBack(round, session) {
+  const people = sessionPeople(round, session);
+  return sessionRaters(round, session).filter((r) => !people.some((p) => p.id === r.id));
+}
+
+// Whether the sheet above has anything to offer: someone to take out (a session
+// keeps at least one person) or someone to put back. Shared by every entry —
+// the lobby and Klassisch footer below, and the composed designs' „Mehr" menu.
+function canManageSessionPeople(round, session) {
+  return sessionPeople(round, session).length > 1 || removedPeopleBack(round, session).length > 0;
+}
+
+// The quiet entry to the sheet above, or null when it would offer nothing. Named
+// neutrally („Personen verwalten") since #1655: the sheet goes both ways.
 function removePersonEntry(round, session, onDone) {
-  if (sessionPeople(round, session).length < 2) return null;
-  const btn = h(`<button type="button" class="link-btn remove-person__entry">${iconText('ti-user-minus', t('session.removeEntry'))}</button>`);
+  if (!canManageSessionPeople(round, session)) return null;
+  const btn = h(`<button type="button" class="link-btn remove-person__entry">${iconText('ti-users', t('session.manageEntry'))}</button>`);
   btn.addEventListener('click', () => showRemovePersonSheet(round, session, onDone));
   return btn;
 }

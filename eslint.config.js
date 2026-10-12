@@ -673,6 +673,7 @@ const frontendGlobals = {
   // views-session-sheets.js (issue #1574): the lobby's share, QR and remove-person sheets
   showShareUrlSheet: 'readonly', showVoteQrSheet: 'readonly',
   showRemovePersonSheet: 'readonly', removePersonEntry: 'readonly', // #1538
+  removedPeopleBack: 'readonly', canManageSessionPeople: 'readonly', // #1655
   // views-vote-link.js
   showVoteLink: 'readonly', renderVoteLinkClaim: 'readonly',
   // views-join.js (#1515)

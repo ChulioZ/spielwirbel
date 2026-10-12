@@ -267,9 +267,9 @@ test('while the evening runs there is no next one yet — and „Mehr" holds the
   assert.deepEqual([...foot.children].map(text), ['Teilen', 'Mehr']);
   foot.querySelector('.result-foot__more').click();
   const menu = dom.document.querySelector('.popover');
-  // „Person entfernen" (#1538) leads the destructive group: it corrects the
+  // „Personen verwalten" (#1538, #1655) leads as an `edit`: it corrects the
   // evening, where the other two throw it away.
-  assert.deepEqual([...menu.querySelectorAll('.popover__opt')].map(text), ['Person entfernen', 'Session abbrechen', 'Session löschen']);
+  assert.deepEqual([...menu.querySelectorAll('.popover__opt')].map(text), ['Personen verwalten', 'Session abbrechen', 'Session löschen']);
 });
 
 test('„Mehr" runs the same delete Klassisch’s footer does', async (t) => {

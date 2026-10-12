@@ -220,6 +220,7 @@
    small display-face rule fails there until it is added here. Font only, so it
    belongs to the voice and is not gated. */
 :root[data-design="programmheft"] :is(
+  .remove-person__heading,
   .topbar__home,
   .rail__name,
   .page-head h2,

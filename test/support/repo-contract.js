@@ -2257,6 +2257,38 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.removeSessionPerson(T, round.id, 'nope', alice.id, []), null);
   });
 
+  // #1655, the way back. Same split as above: the rules are the mutator's own
+  // spec's; the contract pins that BOTH backends persist the restore and log it
+  // inside the same write.
+  test('restoreSessionPerson puts a removed person back and logs it', async () => {
+    const round = await freshRound();
+    const [alice, bob] = round.members;
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+      memberIds: [alice.id, bob.id],
+      guests: [{ id: 'gu1', name: 'Dora' }],
+      votes: { [bob.id]: { [g.id]: { rating: 2 } } },
+    });
+    await repo.removeSessionPerson(T, round.id, session.id, bob.id, [alice.id, bob.id]);
+    await repo.removeSessionPerson(T, round.id, session.id, 'gu1', [alice.id, bob.id]);
+
+    const after = await repo.restoreSessionPerson(T, round.id, session.id, 'gu1',
+      { at: 'x', type: 'person_restored', personId: 'gu1' });
+    assert.deepEqual(after.guests, [{ id: 'gu1', name: 'Dora' }]);
+    assert.deepEqual(after.removedPeople, [{ id: bob.id }]);
+    assert.equal(after.events.at(-1).type, 'person_restored');
+
+    await repo.restoreSessionPerson(T, round.id, session.id, bob.id);
+    const stored = await repo.getSession(T, round.id, session.id);
+    assert.deepEqual(stored.memberIds, [alice.id, bob.id]);
+    assert.equal('removedPeople' in stored, false, 'an emptied list is not stored');
+    assert.deepEqual(stored.votes[bob.id], { [g.id]: { rating: 2 } }, 'the kept column counts again');
+
+    assert.equal(await repo.restoreSessionPerson(T, round.id, 'nope', bob.id), null);
+  });
+
   test('removeSessionPerson materialises memberIds on a legacy "everyone" session', async () => {
     const round = await freshRound();
     const [alice, bob] = round.members;

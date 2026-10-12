@@ -2261,9 +2261,8 @@ I18N.fi = {
   // Removing a person from a session (#1538).
   'log.removed': '{name} poistettiin sessiosta',
   'log.removedBy': '{actor} poisti henkilön {name} sessiosta',
-  'session.removeEntry': 'Poista henkilö',
-  'session.removeTitle': 'Poista joku sessiosta',
-  'session.removeIntro': 'Jos joku valittiin vahingossa tai lähti aiemmin. Häntä ei enää lasketa osallistujaksi, mutta hänen jo antamansa arviot lasketaan yhä pelien pisteisiin.',
+  'session.removeTitle': 'Session henkilöt',
+  'session.removeIntro': 'Poista joku, joka valittiin vahingossa tai lähti aiemmin: häntä ei enää lasketa osallistujaksi, mutta hänen jo antamansa arviot lasketaan yhä pelien pisteisiin. Takaisin lisätty lasketaan taas mukaan arvioineen; poistettaessa pyyhityt voittajat, joukkueet ja pisteet pitää asettaa uudelleen.',
   'session.removeAction': 'Poista',
   'session.removeActionFor': 'Poista {name}',
   'session.removeConfirmTitle': 'Poistetaanko {name}?',
@@ -2272,4 +2271,13 @@ I18N.fi = {
   'session.removed': '{name} poistettiin',
   'session.removeLast': 'Sessiossa on oltava vähintään yksi henkilö.',
   'session.removeSplit': 'Tämä sessio on jaettu pöytiin. Poista henkilö hänen omasta pöydästään.',
+  // Putting a removed person back (#1655); the entry names both directions.
+  'session.manageEntry': 'Hallitse henkilöitä',
+  'session.removedHeading': 'Poistetut',
+  'session.restoreAction': 'Lisää takaisin',
+  'session.restoreActionFor': 'Lisää {name} takaisin',
+  'session.restored': '{name} on taas mukana',
+  'session.restoreSplit': 'Tämä sessio on jaettu pöytiin. Lisää henkilö takaisin hänen pöytäänsä.',
+  'log.restored': '{name} lisättiin takaisin sessioon',
+  'log.restoredBy': '{actor} lisäsi henkilön {name} takaisin sessioon',
 };

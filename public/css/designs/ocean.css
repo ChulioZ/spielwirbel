@@ -305,6 +305,7 @@
    half from styles.css, so a new small display-face rule fails there until it
    is added here. Font only, so it belongs to the voice and is not gated. */
 :root[data-design="ocean"] :is(
+  .remove-person__heading,
   .avatar, .nr-seat__avatar, .handover__avatar,
   .dock__item, .sort-select, .chip, .tag-mode__opt, .fbar__trigger, .mfilter__label,
   .btn, .lobby-cta__action, .round-card--new, .add-tile, .opt-card, .topbar__login,
