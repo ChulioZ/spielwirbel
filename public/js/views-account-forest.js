@@ -47,6 +47,7 @@ function kontoForestIcons() {
     ['konto.design.title', 'ti-palette'],
     ['konto.bgg.title', 'ti-dice-5'],
     ['konto.bgstats.title', 'ti-link'],
+    ['konto.simple.title', 'ti-eye-off'],
     ['konto.demo.title', 'ti-user-circle'],
     ['install.title', 'ti-download'],
     ['konto.notify.title', 'ti-message'],

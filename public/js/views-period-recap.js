@@ -17,6 +17,9 @@
  * a played session nor a shelf change.
  */
 function renderPeriodRecapSection(round, activities) {
+  // „Einfacher Modus" (#1646): `recap` takes the section and, through it, every
+  // design's entry to it (they all key off this section). The timeline stays.
+  if (simpleHidden('recap')) return null;
   // Das Programmheft picks the KIND first — Monat · Quartal · Jahr (#1379,
   // P13.1) — so it asks for quarters. Forest's recap card does the same (#1473,
   // F13.1).

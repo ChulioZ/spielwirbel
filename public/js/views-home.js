@@ -266,7 +266,9 @@ function renderHomeDash() {
   // or removes. Not awaited — it must not delay the (SWR-instant) home render,
   // and it self-guards against a re-render. Since #842 it renders an invite card
   // rather than removing itself when the account simply has no friends yet.
-  if (accountsActive() && isLoggedIn()) {
+  // „Einfacher Modus" (#1646): each tile rides its option — friends, quiz,
+  // discover; the news tile follows hasUnseenNews(), which `news` silences.
+  if (accountsActive() && isLoggedIn() && !simpleHidden('friends')) {
     const friends = h('<section class="home-friends dash-tile" id="homeFriends"></section>');
     dash.appendChild(cardSlot(friends));
     renderHomeFriends(friends);
@@ -283,7 +285,7 @@ function renderHomeDash() {
   // flash an empty slot — and the tile is inserted when the config arrives and
   // says the quiz runs. A config that never answers adds no tile, rather than a
   // timeout guessing "off" for good.
-  if (accountsActive() && isLoggedIn()) {
+  if (accountsActive() && isLoggedIn() && !simpleHidden('quiz')) {
     const quizSlot = () => {
       const quiz = h('<section class="home-quiz dash-tile" id="homeQuiz"></section>');
       mountHomeQuiz(quiz);
@@ -302,9 +304,11 @@ function renderHomeDash() {
     }
   }
 
-  const stats = h('<section class="home-stats dash-tile" id="homeStats"></section>');
-  dash.appendChild(cardSlot(stats));
-  mountHomeStatsPanel(stats);
+  if (!simpleHidden('discover')) {
+    const stats = h('<section class="home-stats dash-tile" id="homeStats"></section>');
+    dash.appendChild(cardSlot(stats));
+    mountHomeStatsPanel(stats);
+  }
 
   const news = renderHomeNewsTile();
   if (news) dash.appendChild(cardSlot(news));

@@ -48,6 +48,54 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1646, „Einfacher Modus". A capability that did not exist: a group that
+   * only wants the draw had no way to make the app quieter. Says where it is,
+   * that each option stands alone, and — the reassurance that matters — that
+   * nothing stops being recorded. Dated a day ahead of #1630's entry, which
+   * shipped the same day: an equal revision would not re-light the dot for an
+   * account that had already read that one.
+   */
+  {
+    revision: '2026-10-13',
+    kind: 'new',
+    de: {
+      title: 'Einfacher Modus',
+      body: 'Unter Konto kannst du jetzt einzeln ausblenden, was du nicht brauchst: Pokale und Abzeichen, Statistik-Karten, Spielvorschläge, den Rückblick, Bewertungsdetails und mehr. Oder alles auf einmal, dann bleiben Auslosen, Abstimmen und Ergebnis. Deine Runden zeichnen weiter alles auf, und die anderen sehen alles wie bisher. Ausblenden betrifft nur dich.',
+    },
+    en: {
+      title: 'Simple mode',
+      body: 'Under Account you can now hide what you don’t need, one option at a time: trophies and badges, stats cards, game suggestions, the recap, rating details and more. Or everything at once, which leaves drawing, voting and the result. Your rounds keep recording everything, and everyone else sees it all as before. Hiding only affects you.',
+    },
+    es: {
+      title: 'Modo sencillo',
+      body: 'En Cuenta ya puedes ocultar, una a una, las partes que no necesitas: trofeos e insignias, tarjetas de estadísticas, sugerencias de juegos, el resumen, los detalles de valoración y más. O todo a la vez, y quedan sortear, votar y el resultado. Tus rondas siguen registrándolo todo y los demás lo ven todo como antes. Ocultar solo te afecta a ti.',
+    },
+    fr: {
+      title: 'Mode simple',
+      body: 'Dans Compte, tu peux maintenant masquer, option par option, ce dont tu n’as pas besoin : trophées et badges, cartes de statistiques, suggestions de jeux, le bilan, le détail des notes et plus. Ou tout d’un coup : il reste le tirage, le vote et le résultat. Tes rondes continuent de tout enregistrer, et les autres voient tout comme avant. Masquer ne concerne que toi.',
+    },
+    it: {
+      title: 'Modalità semplice',
+      body: 'In Account ora puoi nascondere, una voce alla volta, ciò che non ti serve: trofei e distintivi, schede statistiche, suggerimenti di gioco, il riepilogo, i dettagli dei voti e altro. Oppure tutto insieme: restano estrazione, voto e risultato. I tuoi gruppi continuano a registrare tutto e gli altri vedono tutto come prima. Nascondere riguarda solo te.',
+    },
+    nl: {
+      title: 'Eenvoudige modus',
+      body: 'Onder Account kun je nu per onderdeel verbergen wat je niet nodig hebt: trofeeën en badges, statistiekkaarten, spelsuggesties, de terugblik, beoordelingsdetails en meer. Of alles tegelijk, dan blijven loten, stemmen en de uitslag over. Je groepen blijven alles vastleggen en de anderen zien alles zoals altijd. Verbergen geldt alleen voor jou.',
+    },
+    pt: {
+      title: 'Modo simples',
+      body: 'Em Conta você agora pode ocultar, uma opção por vez, o que não precisa: troféus e insígnias, cartões de estatísticas, sugestões de jogos, a retrospectiva, os detalhes das avaliações e mais. Ou tudo de uma vez, e ficam o sorteio, a votação e o resultado. Seus grupos continuam registrando tudo e os outros veem tudo como antes. Ocultar só afeta você.',
+    },
+    fi: {
+      title: 'Yksinkertainen tila',
+      body: 'Tili-kohdassa voit nyt piilottaa yksi kerrallaan sen, mitä et tarvitse: palkinnot ja merkit, tilastokortit, peliehdotukset, yhteenvedon, arvioiden tiedot ja muuta. Tai kaiken kerralla, jolloin jäljelle jäävät arvonta, äänestys ja tulos. Porukkasi tallentavat edelleen kaiken, ja muut näkevät kaiken kuten ennenkin. Piilottaminen koskee vain sinua.',
+    },
+    ko: {
+      title: '간단 모드',
+      body: '이제 계정에서 필요 없는 부분을 하나씩 숨길 수 있어요. 트로피와 배지, 통계 카드, 게임 추천, 요약, 평가 세부 정보 등이에요. 한 번에 모두 숨기면 뽑기, 투표, 결과만 남아요. 모임은 계속 모든 것을 기록하고, 다른 사람에게는 모든 게 예전처럼 보여요. 숨기기는 나에게만 적용돼요.',
+    },
+  },
+  /*
    * #1630, points and records. A capability that did not exist: a session
    * recorded who won and nothing per player, so beating your own best lived on
    * paper. Says where to enter them, the record mark, where the round's record

@@ -103,6 +103,11 @@ async function showAccount() {
   app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.bgstats.title'))}</h2>`));
   app.appendChild(buildBgStatsForm(me));
 
+  // „Einfacher Modus" (#1646, views-account-simple.js): a view preference, so a
+  // demo gets it too — above the demo return, beside the other preferences.
+  app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.simple.title'))}</h2>`));
+  app.appendChild(buildSimpleModeForm(me));
+
   // The password form is STRUCTURALLY unusable for a demo account: it holds no
   // password identity, so change-password answers `invalid_credentials` whatever
   // is typed — i.e. "your current password is wrong" about a password that never

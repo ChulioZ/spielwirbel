@@ -548,7 +548,9 @@ async function showGameDetail(rid, gameId) {
   // own, and anything recorded here would be silently lost on acquire. Presence
   // check, not truthiness — the key is absent on ordinary games and legitimately
   // [] on an orphan expansion (.claude/rules/expansions-widen-by-union.md).
-  if (!Array.isArray(game.expansionOf)) {
+  // „Einfacher Modus" (#1646): `gameExtras` hides the chip, never the data —
+  // an owned expansion still widens the draw's player range while hidden.
+  if (!Array.isArray(game.expansionOf) && !simpleHidden('gameExtras')) {
     chips.append(owned.length
       ? editableTag('tag--custom tag--expansions',
         `<i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(owned.length, 'detail.expansionsBadgeOne', 'detail.expansionsBadge'))}`,
@@ -634,7 +636,8 @@ async function showGameDetail(rid, gameId) {
     // `.gd-more__body` always holds the rest-anchor placeholder, so counting its
     // children would be vacuously true; the query asks for real content instead.
     const ensureMore = () => {
-      if (more.isConnected) return;
+      // „Einfacher Modus" (#1646): `gameExtras` takes the whole disclosure.
+      if (more.isConnected || simpleHidden('gameExtras')) return;
       if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
@@ -878,7 +881,11 @@ async function showGameDetail(rid, gameId) {
   }
   // Under Der Tisch the band of raters leads and the history follows (T3.4,
   // T6.3), so it is appended after the raters block below instead of here.
-  if (!sparse && !game.wish && !listy) rightPage.appendChild(sec);
+  /* „Einfacher Modus" (#1646): `ratingDetails` takes the Stempelkarte and the
+     raters band below; the score itself stays, and every session is still one
+     tap away in the Chronik. */
+  const showRatingDetails = !simpleHidden('ratingDetails');
+  if (!sparse && !game.wish && !listy && showRatingDetails) rightPage.appendChild(sec);
   /* „Wer wie gewertet hat" (#1190, T3.4/T6.3) — who is behind the number the
      left page prints, as one tile per person: their avatar, the mood their
      average rounds to, and their name. The average itself is NOT printed
@@ -902,8 +909,8 @@ async function showGameDetail(rid, gameId) {
      the emptiness this screen was rebuilt to avoid. That is not the same
      condition as `related.length`, which is why it is asked separately: a
      session can draw a game that nobody then rated. */
-  if (bruecke && !sparse && !game.wish) rightPage.append(brueckePassStats(st), brueckePassDist(st));
-  const raters = !sparse && !game.wish ? gameRaters(round, gameId) : [];
+  if (bruecke && !sparse && !game.wish && showRatingDetails) rightPage.append(brueckePassStats(st), brueckePassDist(st));
+  const raters = !sparse && !game.wish && showRatingDetails ? gameRaters(round, gameId) : [];
   if (raters.length) {
     const votesSec = h(`<div class="section gd-raters"><h2>${esc(t('detail.ratersTitle'))}</h2></div>`);
     const strip = h('<div class="raters"></div>');
@@ -933,7 +940,7 @@ async function showGameDetail(rid, gameId) {
     votesSec.appendChild(strip);
     tale.appendChild(votesSec);
   }
-  if (!sparse && !game.wish && listy) tale.appendChild(sec);
+  if (!sparse && !game.wish && listy && showRatingDetails) tale.appendChild(sec);
 
 
   // The one action, alone in a bar at the foot of the right page (#1039). It

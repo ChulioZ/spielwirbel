@@ -477,6 +477,8 @@ function badgeRevealTarget(rid) {
    Absent before the first finished session. A plain line, not a link — the
    preview card's one link is its „öffnen" (hub-previews.js). */
 function hubBadgeLine(round) {
+  // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
+  if (simpleHidden('trophies')) return null;
   if (!round.sessions.some((s) => s.finished)) return null;
   const ctx = badgeContext(round);
   const items = ctx.all.round.map((e) => ({ e, holder: round.name }))
@@ -518,6 +520,8 @@ function badgeChronikIndex(round) {
 // One `.chronik-row--badge` per earning: „Lea · Erster Sieg", linking to that
 // holder's place in Pokale › Abzeichen.
 function chronikBadgeRows(round, marks) {
+  // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
+  if (simpleHidden('trophies')) return [];
   return (marks || []).map((x) => {
     const holder = x.holder === 'round'
       ? round.name
@@ -557,7 +561,8 @@ function fillBadgeMoment(el, round, session) {
   badgeMomentShown.set(el, shown);
   el.replaceChildren();
   el.hidden = true;
-  if (!session.finished) return;
+  // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
+  if (!session.finished || simpleHidden('trophies')) return;
   // The screen's own copy of the session is the current one: winner taps
   // mutate it in place, and the round's list may not hold that object.
   const known = round.sessions.some((s) => s.id === session.id);
@@ -611,6 +616,8 @@ function fillBadgeMoment(el, round, session) {
    own named link. Null when there is nothing earned, so a member with no
    sessions gets no empty label. */
 function memberCardBadges(round, member) {
+  // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
+  if (simpleHidden('trophies')) return null;
   if (!round.sessions.some((s) => s.finished)) return null;
   const ctx = badgeContext(round);
   const earned = (ctx.all.members[member.id] || []).filter((e) => e.state === 'earned');
@@ -642,6 +649,8 @@ function memberCardBadges(round, member) {
    nothing is counted yet or the top tier is reached, and for Jahre the
    registration month, which is what that entry counts from. */
 function profileCardBadges(badges, createdAt, holder) {
+  // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
+  if (simpleHidden('trophies')) return null;
   if (!Array.isArray(badges) || !badges.length) return null;
   const ctx = { round: { games: [] }, gameTitle: () => null };
   const row = h(`<div class="profile-card__badges">

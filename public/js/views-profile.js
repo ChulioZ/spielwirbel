@@ -51,6 +51,12 @@ async function showProfile(username) {
     return;
   }
 
+  /* „Einfacher Modus" (#1646): `profileRecord` takes the cross-round record
+     (the card's figures, its Abzeichen and bests) and „Dein Rückblick" off your
+     OWN profile. Dropped from the payload here, once, so every renderer below
+     takes the branch it already has for a profile with no record — and a
+     friend's profile, which is not a statement about you, is untouched. */
+  if (p.self && simpleHidden('profileRecord')) p = { ...p, stats: undefined, plays: undefined };
   app.innerHTML = '';
   setContext(p.username || t('friends.unknownUser'));
   setDocTitle(p.username || t('friends.unknownUser'), t('profile.title'));

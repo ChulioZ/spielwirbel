@@ -100,6 +100,7 @@ function hubPreviewCard(round, { icon, titleKey, sub, tab }) {
    preview of a different screen. Newest first, so adding a game visibly
    changes the card. */
 function hubRegalPreview(round, activeGames) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   if (!hubShelfWorthPreviewing(activeGames)) return null;
   const card = hubPreviewCard(round, {
     icon: 'ti-cards',
@@ -136,6 +137,7 @@ function hubRegalPreview(round, activeGames) {
    top three ENTRIES rather than the top three PLACES — two members tied for
    first take two of them. That is what the podium shows too. */
 function hubPokalePreview(round) {
+  if (simpleHidden('trophies')) return null; // „Einfacher Modus" (#1646)
   const { winners, rankOf, wins } = roundStandings(round);
   if (!winners.length) return null;
   /* Der Tisch's phone tile shows one line under the title (T2.2 „Jonas führt"),
@@ -193,6 +195,7 @@ function hubPokalePreview(round) {
    by the same field, so anything else makes the preview disagree with the list
    it previews. */
 function hubChronikPreview(round) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   const finished = round.sessions.filter((s) => s.finished);
   if (!finished.length) return null;
   const last = finished

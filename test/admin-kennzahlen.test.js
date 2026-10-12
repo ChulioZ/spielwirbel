@@ -23,6 +23,18 @@ const path = require('path');
 const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
+// The „Einfacher Modus" ids the per-feature lines are keyed by (#1646) —
+// required, so a new feature makes this card's expectation grow on its own.
+const { SIMPLE_MODE_FEATURES } = require('../public/js/simple-mode');
+// The labels are UI copy, so they are pinned here as text; an id with no
+// entry would render as the bare id and fail the line-by-line assertion.
+const SIMPLE_MODE_LABEL = {
+  trophies: 'Pokale & Abzeichen aus', stats: 'Statistik-Karten aus', suggestions: 'Spielvorschläge aus',
+  todo: 'Kümmerliste aus', recap: 'Rückblick aus', ratingDetails: 'Bewertungsdetails aus',
+  gameExtras: 'Erweiterungen & BGG-Details aus', friends: 'Freundeskreis aus', discover: 'Entdecken aus',
+  quiz: 'Wochenquiz aus', priceAlerts: 'Preisalarme aus', news: '„Was ist neu" aus',
+  profileRecord: 'Profil-Bilanz aus',
+};
 
 // Per ACCOUNT since #1201, keyed by the offered designs in registry order. Since
 // #1362 only accounts that ANSWERED the chooser are counted, so the lines sum to
@@ -52,6 +64,10 @@ const STATUS = (over = {}) => ({
       accountsWithAvatar: 7, accountsWithoutRound: 13, accountsWithBgStats: 4, accountsPlayedQuiz: 6,
       // The Konten twins (#1480), below their instance-wide 30 / 3 on purpose.
       accountsVerified: 28, accountsDisabled: 2,
+      // „Einfacher Modus" (#1646): five accounts hide something, one hides it
+      // all; trophies is hidden by four of them, every other feature by two.
+      accountsSimpleModeAll: 1, accountsSimpleModeAny: 5,
+      accountsSimpleModeHidden: Object.fromEntries(SIMPLE_MODE_FEATURES.map((f) => [f, f === 'trophies' ? 4 : 2])),
       funnel: {
         started: 28, rated: 18, closed: 22, chosen: 20, played: 12, result: 9, cancelled: 3,
       },
@@ -281,6 +297,11 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Passkey', '11', '28 %', 0],
         ['Konto-Bild', '7', '18 %', 0],
         ['BG-Stats-Weitergabe', '4', '10 %', 0],
+        ['Einfacher Modus', '5', '13 %', 0],
+        ['komplett', '1', '20 %', 1],
+        // One line per feature, in the shared list's order (#1646).
+        ...SIMPLE_MODE_FEATURES.map((f) => [SIMPLE_MODE_LABEL[f], f === 'trophies' ? '4' : '2',
+          f === 'trophies' ? '80 %' : '40 %', 1]),
         ['Wochenquiz diese Woche', '6', '15 %', 0],
         ['ohne Runde (nach Tenant)', '13', '33 %', 0],
       ],

@@ -306,13 +306,13 @@ function forestLocked(round, { title, state = '', text, tab = null }) {
 function forestAsidePreviews(round, activeGames, { regal, pokale, chronik }) {
   const played = round.sessions.some((s) => s.finished);
   return [
-    regal || (!activeGames.length ? forestLocked(round, {
+    regal || (!activeGames.length && !simpleHidden('stats') ? forestLocked(round, {
       title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
     }) : null),
-    pokale || (!played ? forestLocked(round, {
+    pokale || (!played && !simpleHidden('trophies') ? forestLocked(round, {
       title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
     }) : null),
-    chronik || (!played ? forestLocked(round, {
+    chronik || (!played && !simpleHidden('stats') ? forestLocked(round, {
       title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
     }) : null),
   ].filter(Boolean);
@@ -324,6 +324,7 @@ function forestAsidePreviews(round, activeGames, { regal, pokale, chronik }) {
    design since #1586, so the sheet's „ab der ersten Session" holds here too;
    only the bars wait for YOUNG_ROUND_SERIES_FROM. */
 function forestLockedPulse(round, activeGames) {
+  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   if (!activeGames.length || !roundIsYoung(round)) return null;
   return forestLocked(round, {
     title: t('hub.pulse.title'),

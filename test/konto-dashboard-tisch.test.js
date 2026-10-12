@@ -93,6 +93,8 @@ test('Klassisch renders the same column as before #1265 — no dashboard, same o
     'form.konto-pw',
     h2('konto.bgstats.title'),
     'div.konto-notify',
+    h2('konto.simple.title'), // #1646
+    'div.konto-notify.konto-simple',
     h2('konto.notify.title'),
     'div.konto-notify',
     h2('konto.email.title'),
@@ -141,13 +143,13 @@ test('the setting rows keep the app\'s order — password ABOVE passkey — and 
   const { dom } = await konto(t, { design: 'tisch' });
   const rows = [...dom.app.querySelectorAll('.konto-card--du .konto-row')];
   assert.deepEqual(rows.map((r) => r.querySelector('.konto-row__label').textContent), [
-    T('konto.profile.title'), T('konto.bgstats.title'), T('konto.notify.title'),
+    T('konto.profile.title'), T('konto.bgstats.title'), T('konto.simple.title'), T('konto.notify.title'),
     T('konto.email.title'), T('konto.pw.title'), T('konto.passkey.title'),
   ]);
 
   // What each panel must hold, i.e. the Klassisch builder it reuses.
   const holds = ['.konto-notify input[type=checkbox]', '.konto-notify input[type=checkbox]',
-    '.konto-notify input[type=checkbox]', '#keNew', '#kpCurrent', '.konto-passkeys'];
+    '.konto-simple input[type=checkbox]', '.konto-notify input[type=checkbox]', '#keNew', '#kpCurrent', '.konto-passkeys'];
   rows.forEach((row, i) => {
     const btn = row.querySelector('h3 > button.konto-row__btn');
     assert.ok(btn, 'a row is a button inside a heading (the APG accordion)');
@@ -200,12 +202,12 @@ test('each row states its current value, and a toggle row follows a change', asy
   assert.deepEqual({ ...calls.find((c) => c.method === 'PATCH').body }, { bgStats: true });
 });
 
-test('a demo gets the Du, Design and BoardGameGeek cards, two rows and no danger card', async (t) => {
+test('a demo gets the Du, Design and BoardGameGeek cards, three rows and no danger card', async (t) => {
   const { dom } = await konto(t, { design: 'tisch', me: { demo: true } });
   const cards = [...dom.app.querySelector('.konto-dash').children].map((c) => [...c.classList].find((k) => k.startsWith('konto-card--')));
   assert.deepEqual(cards, ['konto-card--du', 'konto-card--design', 'konto-card--bgg']);
   assert.deepEqual([...dom.app.querySelectorAll('.konto-row__label')].map((l) => l.textContent),
-    [T('konto.profile.title'), T('konto.bgstats.title')]);
+    [T('konto.profile.title'), T('konto.bgstats.title'), T('konto.simple.title')]);
   assert.ok(dom.app.textContent.includes(T('konto.demo.note')));
   assert.ok(!dom.app.querySelector('.konto-du__meta').textContent.includes('@'),
     'a demo\'s synthetic address must not be shown');
