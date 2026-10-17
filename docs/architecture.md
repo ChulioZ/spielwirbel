@@ -786,7 +786,8 @@ public/
                      date only is read here too (issues #1616, #1629)
     point-records.js per-player points on a finished session: the bounds the
                      route also validates with, and the personal bests and group
-                     records derived from the sessions, never stored (issue #1630)
+                     records derived from the sessions, never stored (issue #1630),
+                     and the automa opponent's shape, which no record can see (#1672)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)

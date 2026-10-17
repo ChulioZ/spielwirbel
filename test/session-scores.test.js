@@ -143,3 +143,44 @@ test('a game takes „lower score wins" and clears it back to absence', async ()
   const bad = await request(app).patch(`/api/rounds/${round.id}/games/${game.id}`).send({ lowScoreWins: 'yes' });
   assert.equal(bad.status, 400);
 });
+
+// #1672: an automa/bot opponent's points, on the same route. It is NOT a seat —
+// a session field of its own — so nothing that counts people can see it.
+test('an automa is stored beside the points, kept when absent, cleared by null or by clearing everything', async () => {
+  const { round, session } = await loggedSession();
+  const [alice] = round.members;
+  const set = await scores(round.id, session.id, { scores: { [alice.id]: 70 }, automa: { name: '  Automa (schwer) ', points: 82 } });
+  assert.equal(set.status, 200);
+  assert.deepEqual(set.body.automa, { name: 'Automa (schwer)', points: 82 }, 'the name is trimmed');
+  assert.deepEqual(set.body.scores, { [alice.id]: 70 }, 'the automa is not a seat in the map');
+
+  const kept = await scores(round.id, session.id, { scores: { [alice.id]: 71 } });
+  assert.deepEqual(kept.body.automa, { name: 'Automa (schwer)', points: 82 }, 'absent means unchanged — an older client must not wipe it');
+
+  const dropped = await scores(round.id, session.id, { scores: { [alice.id]: 71 }, automa: null });
+  assert.equal('automa' in dropped.body, false, 'null clears it to absence');
+
+  await scores(round.id, session.id, { scores: { [alice.id]: 71 }, automa: { name: 'Bot' } });
+  const stored = (await roundOf(round.id)).sessions[0];
+  assert.deepEqual(stored.automa, { name: 'Bot' }, 'an automa without points is allowed — some score nothing');
+
+  const cleared = await scores(round.id, session.id, { scores: {} });
+  assert.equal('automa' in cleared.body, false, 'clearing the points clears the automa with them');
+  assert.equal('scores' in cleared.body, false);
+});
+
+test('an automa is validated: a name within bounds, points like any seat', async () => {
+  const { round, session } = await loggedSession();
+  const { AUTOMA_NAME_MAX } = require('../public/js/point-records');
+  for (const bad of [
+    'Automa', [], { points: 3 }, { name: '' }, { name: '   ' }, { name: 7 },
+    { name: 'x'.repeat(AUTOMA_NAME_MAX + 1) }, { name: 'Bot', points: 1.5 }, { name: 'Bot', points: POINTS_MAX + 1 },
+    { name: 'Bot', points: '12' },
+  ]) {
+    const res = await scores(round.id, session.id, { scores: {}, automa: bad });
+    assert.equal(res.status, 400, `refuses ${JSON.stringify(bad)}`);
+  }
+  const ok = await scores(round.id, session.id, { scores: {}, automa: { name: 'x'.repeat(AUTOMA_NAME_MAX), points: POINTS_MIN } });
+  assert.equal(ok.status, 200, 'an automa may stand alone, at the bounds');
+  assert.equal(ok.body.automa.points, POINTS_MIN);
+});

@@ -588,7 +588,7 @@ const frontendGlobals = {
   sortSessionsByDate: 'readonly', newestSessionsFirst: 'readonly',
   // A finished session's points (#1630): point-records.js (pure, shared with the
   // route) and session-points.js (the sheet and the result's block).
-  POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', pointsBeat: 'readonly',
+  POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
   // views-member-points.js (#1631)
   memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',

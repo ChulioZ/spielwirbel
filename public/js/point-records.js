@@ -26,7 +26,12 @@
      - a GUEST's score shows on its session and can hold the group record, but a
        guest has no personal best: guest ids are minted per session, so there is
        no person to carry a best across evenings
-       (.claude/rules/session-guests-are-not-members.md).
+       (.claude/rules/session-guests-are-not-members.md);
+     - an AUTOMA (#1672) holds nothing at all. It is `session.automa`, a field
+       of its own and never a party, so sessionPartyGroups cannot return it and
+       no best or record below can see it — a hard-difficulty bot cannot end up
+       owning a game's record, and a solo evening against one stays solo for
+       every people-counting reader (isContestSession, the win rate, badges).
 
    „Neuer Rekord" means strictly better than that member's best in EARLIER
    sessions of the same game. A first score is not a record (there was nothing
@@ -50,6 +55,25 @@ const POINTS_MAX = 99999;
 
 function isValidPoints(v) {
   return Number.isInteger(v) && v >= POINTS_MIN && v <= POINTS_MAX;
+}
+
+/* The automa/bot opponent of a solo or co-op play (#1672): `{ name, points? }`,
+   absent when unused. ONE per session — a list would be the second party model
+   this file just avoided. Points are optional because several automas score
+   nothing; the outcome (won / „Verloren") stays the user's call either way and
+   is never inferred from comparing points. Shared with the route, which
+   validates against the same bounds. */
+const AUTOMA_NAME_MAX = 40;
+
+// The stored automa normalized ({ name, points? }), or null when the input is
+// not a valid one. The route stores what this returns; a reader passing a
+// session's field gets null for anything malformed.
+function parseAutoma(v) {
+  if (!v || typeof v !== 'object' || Array.isArray(v) || typeof v.name !== 'string') return null;
+  const name = v.name.trim();
+  if (!name || name.length > AUTOMA_NAME_MAX) return null;
+  if (v.points === undefined || v.points === null) return { name };
+  return isValidPoints(v.points) ? { name, points: v.points } : null;
 }
 
 // Is `a` strictly better than `b` for a game played in this direction?
@@ -182,5 +206,5 @@ function memberPointRecords(round, mid, deps) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { POINTS_MIN, POINTS_MAX, isValidPoints, pointsBeat, gamePointRecords, sessionPointLines, memberPointRecords };
+  module.exports = { POINTS_MIN, POINTS_MAX, AUTOMA_NAME_MAX, isValidPoints, parseAutoma, pointsBeat, gamePointRecords, sessionPointLines, memberPointRecords };
 }

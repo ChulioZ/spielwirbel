@@ -90,7 +90,7 @@ test('the sheet has one field per party, flips the sign, and PUTs the seat map',
   ok.click();
   const put = await waitFor(() => sent.find((c) => c.method === 'PUT'), { label: 'the points PUT' });
   assert.equal(put.path, `/api/rounds/${round.id}/sessions/s1/scores`);
-  assert.deepEqual(put.body, { scores: { t1: -12, m3: 0 } });
+  assert.deepEqual(put.body, { scores: { t1: -12, m3: 0 }, automa: null });
   await waitFor(() => reopened.length, { label: 'the screen re-rendering from the server' });
 });
 
@@ -143,4 +143,89 @@ test('a game nobody has scored shows no record and no switch', async () => {
   await dom.call('showGameDetail', round.id, 'g1');
   assert.equal(dom.app.querySelector('.gd-record'), null);
   assert.equal(dom.app.querySelector('.stamp__pts'), null);
+});
+
+// #1672: the automa row — added by „Automa hinzufügen", named „Automa" by
+// default, sent as `automa` BESIDE the seat map and never as a key in it.
+test('the sheet adds an automa beside the parties and PUTs it as its own field', async () => {
+  const session = finished('s1', '2026-03-10T19:00:00.000Z', null, { memberIds: ['m1'] });
+  const round = roundFixture([session]);
+  recordApi(() => ({}));
+  await results(round, session);
+  pointsButton().click();
+  const sheet = dom.document.querySelector('.sheet');
+  const toggle = sheet.querySelector('.points-automa__toggle');
+  assert.match(toggle.textContent, /Automa hinzufügen/);
+  assert.equal(sheet.querySelector('.points-row--automa'), null, 'no automa until asked for');
+  toggle.click();
+  const row = sheet.querySelector('.points-row--automa');
+  assert.ok(row, 'the automa row appears');
+  assert.match(toggle.textContent, /Automa entfernen/);
+  const name = row.querySelector('.points-row__automa-name');
+  const pts = row.querySelector('.points-row__input');
+  assert.equal(name.value, 'Automa', 'named „Automa" by default');
+
+  const ok = sheet.querySelector('.sheet__actions .btn--primary');
+  const type = (input, v) => { input.value = v; input.dispatchEvent(new dom.window.Event('input', { bubbles: true })); };
+  type(name, '  ');
+  assert.equal(ok.disabled, true, 'a blank name is refused');
+  type(name, 'Automa (schwer)');
+  type(pts, '82');
+  type(sheet.querySelector('.points-row:not(.points-row--automa) input'), '70');
+  assert.equal(ok.disabled, false);
+
+  const sent = recordApi(() => ({}));
+  dom.set('showResults', () => {});
+  ok.click();
+  const put = await waitFor(() => sent.find((c) => c.method === 'PUT'), { label: 'the points PUT' });
+  assert.deepEqual(put.body, { scores: { m1: 70 }, automa: { name: 'Automa (schwer)', points: 82 } });
+});
+
+test('a stored automa reopens in the sheet, removing it sends null, and the result lists it last', async () => {
+  const session = finished('s1', '2026-03-10T19:00:00.000Z', { m1: 70 }, {
+    memberIds: ['m1'], automa: { name: 'Automa (schwer)', points: 82 },
+  });
+  const round = roundFixture([session]);
+  await results(round, session);
+  const lines = [...dom.app.querySelectorAll('.result-points__line')].map((li) => li.textContent.replace(/\s+/g, ' ').trim());
+  assert.deepEqual(lines, ['Anna 70', 'Automa (schwer) 82'], 'the automa closes the list, outside the ranking');
+  assert.ok(dom.app.querySelector('.result-points__line--automa'));
+  assert.match(pointsButton().textContent, /Punkte bearbeiten/);
+
+  pointsButton().click();
+  const sheet = dom.document.querySelector('.sheet');
+  assert.equal(sheet.querySelector('.points-row__automa-name').value, 'Automa (schwer)');
+  sheet.querySelector('.points-automa__toggle').click();
+  assert.equal(sheet.querySelector('.points-row--automa'), null);
+  const sent = recordApi(() => ({}));
+  dom.set('showResults', () => {});
+  sheet.querySelector('.sheet__actions .btn--primary').click();
+  const put = await waitFor(() => sent.find((c) => c.method === 'PUT'), { label: 'the points PUT' });
+  assert.deepEqual(put.body, { scores: { m1: 70 }, automa: null });
+});
+
+test('an automa alone still shows the points block, and „Punkte bearbeiten"', async () => {
+  const session = finished('s1', '2026-03-10T19:00:00.000Z', null, { memberIds: ['m1'], automa: { name: 'Bot' } });
+  const round = roundFixture([session]);
+  await results(round, session);
+  const lines = [...dom.app.querySelectorAll('.result-points__line')];
+  assert.equal(lines.length, 1);
+  assert.equal(lines[0].querySelector('.result-points__value'), null, 'an automa without points shows no number');
+  assert.match(pointsButton().textContent, /Punkte bearbeiten/);
+});
+
+// The „±" flip used to dispatch a non-bubbling `input`, so the list's validity
+// check never saw it: „±" on an empty field left a bare "-" with „Übernehmen"
+// still enabled. Found building #1672.
+test('„±" re-runs the validity check', async () => {
+  const session = finished('s1', '2026-03-10T19:00:00.000Z', null);
+  const round = roundFixture([session]);
+  recordApi(() => ({}));
+  await results(round, session);
+  pointsButton().click();
+  const sheet = dom.document.querySelector('.sheet');
+  const row = sheet.querySelector('.points-row');
+  row.querySelector('.points-row__sign').click();
+  assert.equal(row.querySelector('input').value, '-');
+  assert.equal(sheet.querySelector('.sheet__actions .btn--primary').disabled, true, 'a bare minus is not a number');
 });

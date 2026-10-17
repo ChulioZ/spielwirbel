@@ -7329,6 +7329,10 @@ a.k-tile:focus-visible,
 .points-row__name { font-weight: 700; overflow-wrap: anywhere; }
 .points-row__input { text-align: right; font-variant-numeric: tabular-nums; }
 .points-row__input[aria-invalid="true"] { border-color: var(--danger); }
+/* #1672: the automa's row puts an editable name where a party's label sits. */
+.points-row__automa-name { min-width: 0; font-weight: 700; }
+.points-row__automa-name[aria-invalid="true"] { border-color: var(--danger); }
+.points-automa__toggle { justify-self: start; margin-top: 4px; }
 
 /* „Wer wie gewertet hat" (#1190): one tile per person behind the game's score —
    avatar, the mood their average rounds to, the average itself, the name.
@@ -11225,6 +11229,7 @@ kbd {
 .result-points__line { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-sm); }
 .result-points__name { font-weight: 700; }
 .result-points__value { font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-points__line--automa { color: var(--ink-soft); }
 .result-points__record { color: var(--good); font-weight: 800; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* The WINNER SPOTLIGHT (#897). This screen used to open with the podium stage,

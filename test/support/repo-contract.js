@@ -2059,6 +2059,30 @@ module.exports = function repoContract(repo) {
     assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, other.id)), false, 'false is absence');
   });
 
+  // #1672: the automa rides setSessionScores' sixth argument — undefined keeps
+  // it, null deletes the key, an object replaces it — and leaves with the
+  // played game exactly like the points do.
+  test('setSessionScores stores, keeps and clears the automa; removing the played game drops it', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions[0];
+    const saved = await repo.setSessionScores(T, round.id, session.id, { m1: 70 }, null, { name: 'Automa', points: 82 });
+    assert.deepEqual(saved.automa, { name: 'Automa', points: 82 });
+    assert.deepEqual((await read()).automa, { name: 'Automa', points: 82 });
+    await repo.setSessionScores(T, round.id, session.id, { m1: 71 });
+    assert.deepEqual((await read()).automa, { name: 'Automa', points: 82 }, 'undefined keeps it');
+    await repo.setSessionScores(T, round.id, session.id, { m1: 71 }, null, null);
+    assert.equal('automa' in (await read()), false, 'null deletes the key');
+    await repo.setSessionScores(T, round.id, session.id, {}, null, { name: 'Bot' });
+    assert.deepEqual((await read()).automa, { name: 'Bot' }, 'an automa may stand without points');
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('automa' in (await read()), false, 'removing the played game drops the automa');
+  });
+
   // How a played session ended when nobody won (#1038). Like `guests` below it
   // lives inside the blob, so the absent-key parity is the thing that can break
   // silently — and here there is a second half the guests case does not have:
