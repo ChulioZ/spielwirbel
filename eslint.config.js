@@ -147,7 +147,8 @@ const frontendGlobals = {
   normalizeRole: 'readonly', capabilityRole: 'readonly', can: 'readonly',
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
-  isActiveGame: 'readonly', fitsPlayerCount: 'readonly', requiredExpansions: 'readonly',
+  isActiveGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
+  PLAYER_FILTER_CHOICES: 'readonly', PLAYER_FILTER_TOP: 'readonly', requiredExpansions: 'readonly',
   expansionAddedCounts: 'readonly',
   ownedByParty: 'readonly', shelfParty: 'readonly', fitsRecommendedCount: 'readonly',
   // provider-info-fields.js (shared with lib/, #717/#724; client since the 2026-09-08 audit)
@@ -236,6 +237,7 @@ const frontendGlobals = {
   avatarFace: 'readonly', primeAvatars: 'readonly', rememberAvatar: 'readonly',
   ownerPresetFor: 'readonly', ownerNames: 'readonly', renderOwnerChips: 'readonly', boxBringers: 'readonly',
   ownerFilterMembers: 'readonly', matchesOwnerFilter: 'readonly',
+  renderPlayerFilter: 'readonly', playerFilterChips: 'readonly',
   ownerChip: 'readonly', renderOwnerFilter: 'readonly',
   knownAvatar: 'readonly', installAvatarFallback: 'readonly', resetAvatarCache: 'readonly',
   // cover-policy.js (issue #867)
@@ -377,7 +379,7 @@ const frontendGlobals = {
   careList: 'readonly', anniversary: 'readonly',
   // shelf-profile.js (#1173) — the Regal-Steckbrief's builder
   SHELF_PROFILE_MIN_GAMES: 'readonly', SHELF_PROFILE_FEW: 'readonly', SHELF_PROFILE_TOP: 'readonly',
-  SHELF_SEAT_BANDS: 'readonly', SHELF_SEAT_PROBE_MAX: 'readonly', SHELF_TIME_BANDS: 'readonly',
+  SHELF_SEAT_BANDS: 'readonly', SHELF_TIME_BANDS: 'readonly',
   SHELF_WEIGHT_BANDS: 'readonly', shelfNum: 'readonly', shelfList: 'readonly',
   shelfHasData: 'readonly', shelfSeatKnown: 'readonly', shelfSeatBands: 'readonly',
   shelfDimension: 'readonly', shelfTop: 'readonly', shelfProfile: 'readonly',

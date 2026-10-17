@@ -79,6 +79,35 @@ function fitsPlayerCount(game, playerCount) {
   return (game.expansions || []).some((e) => expansionAdmits(e, playerCount));
 }
 
+// Whether the round can seat ANY table of `from` or more at this game — the
+// Regal-Steckbrief's „6+" band and the Regal filter's „8+" (#1667) ask the same
+// question, so they share this rather than each writing one.
+//
+// Each admitted range is an interval, so it reaches `from` or beyond exactly
+// when it admits max(from, its own minimum): the one count worth asking. That
+// asks the two predicates above rather than restating them, so the union rule
+// and the both-bounds rule for an expansion still hold here. It replaced a
+// count-by-count probe up to the widest declared maximum, which missed a box
+// starting above `from` with no maximum and one lying past its cap (#1669).
+function fitsPlayerCountFrom(game, from) {
+  const at = (min) => (typeof min === 'number' ? Math.max(from, min) : from);
+  if (fitsOwnRange(game, at(game.minPlayers))) return true;
+  return (game.expansions || []).some((e) => e && expansionAdmits(e, at(e.minPlayers)));
+}
+
+// The Regal's „Personen" filter (#1667): one count, not a range — "who's
+// coming" is one number. The last choice reads „8 or more".
+const PLAYER_FILTER_CHOICES = [1, 2, 3, 4, 5, 6, 7, 8];
+const PLAYER_FILTER_TOP = 8;
+
+// The Regal's player-count predicate. `count` null means no filter. It is the
+// draw's own seat rule, so a game with no player data stays IN — unknown is not
+// a mismatch, for the reason `fitsOwnRange` gives.
+function matchesPlayerFilter(game, count) {
+  if (!isFiniteNum(count)) return true;
+  return count >= PLAYER_FILTER_TOP ? fitsPlayerCountFrom(game, PLAYER_FILTER_TOP) : fitsPlayerCount(game, count);
+}
+
 // Whether the party at the table can actually put this box on it (#971).
 //
 // TRUE when nobody is recorded as the game's owner, or at least one owner is
@@ -542,6 +571,10 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isActiveGame,
     fitsPlayerCount,
+    fitsPlayerCountFrom,
+    matchesPlayerFilter,
+    PLAYER_FILTER_CHOICES,
+    PLAYER_FILTER_TOP,
     fitsRecommendedCount,
     ownedByParty,
     shelfParty,

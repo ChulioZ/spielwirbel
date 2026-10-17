@@ -4,6 +4,55 @@
    (views-round.js).
    Part of the frontend; all files share one global script scope. */
 
+// --- The Regal's „Personen" section (#1667), mounted by `renderFilterPanel`
+// (filter-panel.js) when the Regal passes `opts.players` — `{ count }`, the
+// screen's own holder, written in place. Single-select: "who's coming" is one number, so a second pick replaces
+// the first and tapping the pressed one clears it. Built with the owner
+// section's classes (`.fpanel__group` > `.field__label` + `.filter-chips`), so
+// every design that seats the panel's groups seats this one too — and lives
+// here, with the screen that owns it, for the reason owner-picker.js holds the
+// owner section: filter-panel.js emits only the BGG half, whose chips must not
+// share that class. The setup screen never passes it: its count comes from the
+// people seated.
+let playerFilterSeq = 0;
+function renderPlayerFilter(players, onChange) {
+  const id = `plf-${++playerFilterSeq}`;
+  const el = h(`<div class="fpanel__group fpanel__group--players">
+      <div class="field__label" id="${id}">${esc(t('playerFilter.title'))}</div>
+      <div class="filter-chips" role="group" aria-labelledby="${id}"></div>
+    </div>`);
+  const chips = PLAYER_FILTER_CHOICES.map((n) => {
+    const chip = h(`<button type="button" class="chip">${n >= PLAYER_FILTER_TOP ? `${n}+` : n}</button>`);
+    const paint = () => {
+      const on = players.count === n;
+      chip.classList.toggle('is-on', on);
+      chip.setAttribute('aria-pressed', String(on));
+    };
+    chip.addEventListener('click', () => {
+      players.count = players.count === n ? null : n;
+      chips.forEach((c) => c.paint());
+      onChange();
+    });
+    paint();
+    return { el: chip, paint };
+  });
+  el.querySelector('.filter-chips').replaceChildren(...chips.map((c) => c.el));
+  return { el, repaint: () => chips.forEach((c) => c.paint()) };
+}
+
+// The count's applied chip — one, since the control holds one value. Solo and
+// the open top get their own words: „1 Personen" is wrong and „8 Personen"
+// would claim exactly eight.
+function playerFilterChips(players) {
+  if (!players || !isFiniteNum(players.count)) return [];
+  const n = players.count;
+  return [{
+    label: n === 1 ? t('playerFilter.chipSolo')
+      : n >= PLAYER_FILTER_TOP ? t('playerFilter.chipFrom', { n }) : t('playerFilter.chip', { n }),
+    remove: () => { players.count = null; },
+  }];
+}
+
 // --- Regal tab: the games library — search, filter chips, cover grid.
 function renderRegalTab(round, activeGames) {
   const rid = round.id;
@@ -11,7 +60,7 @@ function renderRegalTab(round, activeGames) {
   // Filters (and sort) persist for the session but are scoped to one round —
   // opening a different round's Regal resets them to defaults.
   if (regalFiltersRid !== round.id) {
-    regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [] };
+    regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [], players: { count: null } };
     gamesSort = 'avg';
     regalFiltersRid = round.id;
   }
@@ -31,6 +80,15 @@ function renderRegalTab(round, activeGames) {
   [...ownerPicks].forEach((x) => {
     if (!ownerMembers.some((m) => m.id === x)) ownerPicks.splice(ownerPicks.indexOf(x), 1);
   });
+  // The player-count filter (#1667), offered only when some game on the shelf
+  // declares a count — a game with none passes every count, so on such a shelf
+  // the control could never narrow anything. Deliberately NOT pruned like the
+  // owner picks above: for the same reason, a count left over on such a shelf
+  // hides nothing, and it is back as a removable chip the moment a counted game
+  // returns (measured: a prune here turned no test red, #1667).
+  const playerPick = regalFilters.players;
+  const shelfHasPlayerCounts = activeGames.some((g) =>
+    typeof g.minPlayers === 'number' || typeof g.maxPlayers === 'number');
 
   // Stats per active game (for the rating pills and sorting), shelf-scoped:
   // one pass for the play counts, one for the raw scores, then the round's own
@@ -304,11 +362,13 @@ function renderRegalTab(round, activeGames) {
       // handed straight back in, and the tag section node is MOVED into the new
       // panel rather than rebuilt.
       if (filterPanel) filterPanel.el.remove();
-      // `owners` is the Regal's own opt-in (#1433); the setup screen never
-      // passes it. Rebuilt per mount so the backfill's repaint keeps it.
+      // `owners` and `players` are the Regal's own opt-ins (#1433, #1667); the
+      // setup screen passes neither. Rebuilt per mount so the backfill's
+      // repaint keeps it.
       filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection, {
         countBadge: composed,
         owners: { round, members: ownerMembers, picked: ownerPicks },
+        players: shelfHasPlayerCounts ? playerPick : null,
       });
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
@@ -422,6 +482,7 @@ function renderRegalTab(round, activeGames) {
       // be the shelf's and the draw's alike.
       if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
       if (!matchesOwnerFilter(ownerPicks, g.ownerIds)) return false;
+      if (!matchesPlayerFilter(g, playerPick.count)) return false;
       const q = query.trim().toLowerCase();
       if (q && !g.title.toLowerCase().includes(q)) return false;
       return true;

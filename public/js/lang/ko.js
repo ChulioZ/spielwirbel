@@ -464,6 +464,11 @@ I18N.ko = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': '소유자',
   'ownerFilter.chip': '{name}의 게임',
+  // The Regal's player-count filter (#1667): one count, solo and the open top in words.
+  'playerFilter.title': '인원',
+  'playerFilter.chipSolo': '1인',
+  'playerFilter.chip': '{n}인',
+  'playerFilter.chipFrom': '{n}인 이상',
   'transferGames.link': '게임 옮기기 또는 복사하기',
   'transferGames.mode': '작업',
   'transferGames.modeMove': '옮기기',

@@ -486,6 +486,11 @@ I18N.nl = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Eigenaren',
   'ownerFilter.chip': 'Van {name}',
+  // The Regal's player-count filter (#1667): one count, solo and the open top in words.
+  'playerFilter.title': 'Spelers',
+  'playerFilter.chipSolo': 'Solo',
+  'playerFilter.chip': '{n} spelers',
+  'playerFilter.chipFrom': '{n}+ spelers',
 
   'transferGames.link': 'Spellen verplaatsen of kopiëren',
   'transferGames.mode': 'Actie',

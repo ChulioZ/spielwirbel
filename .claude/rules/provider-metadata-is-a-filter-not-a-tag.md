@@ -141,7 +141,8 @@ hypothetical.
 Every control above is available exactly when the shelf carries its field. The
 „nur was BGG hier empfiehlt" toggle is the first that is not: it compares BGG's
 suggested-players poll against the **party count**, and the Regal filters a shelf
-rather than an evening, so there is no count to compare against. Two gates,
+rather than an evening, so there is no count to compare against (its own „Personen"
+count, #1667, deliberately does not open this gate — `filter-panel.js` says why). Two gates,
 therefore — `options.recommended` (some game carries a NON-EMPTY poll) and the
 screen's own `opts.tableSized` — and collapsing them into one either renders a
 dead control in the Regal or hides a live one on the setup screen.

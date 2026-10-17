@@ -90,6 +90,10 @@ function renderMetadataFilter(games, state, onChange, opts) {
   // the shelf must carry a poll (`options.recommended`) AND the screen must be
   // about a table (`opts.tableSized`). Collapsing them into one would either
   // render a dead control in the Regal or hide a live one on the setup screen.
+  // The Regal's own „Personen" count (#1667) deliberately does NOT open the
+  // first gate: it is a shelf question with an „8+" that names no one table
+  // size to ask BGG's poll about, and the section would have to grow and shrink
+  // a row under the open panel as the count moves.
   const tableSized = !!(opts && opts.tableSized);
   // A THUNK, read at render time. The body is rebuilt on every open (see above),
   // and `mountFilterPanel` refuses to rebuild under an open overlay — so the
@@ -380,11 +384,13 @@ function ownerFilterChips(owners) {
 // source, so the label can never disagree with what is on screen.
 // `countMetadataFilters` is untouched: the SERVER uses it (lib/routes/sessions.js)
 // to decide whether a draw carried filters at all, which is a different question.
-function activeFilterChips(state, tagSection, partyCount, owners) {
+function activeFilterChips(state, tagSection, partyCount, owners, players) {
   const f = state || {};
   const out = tagSection && tagSection.chips ? tagSection.chips() : [];
   // Owners next, the panel's own section order (#1433).
   out.push(...ownerFilterChips(owners));
+  // Then the count (#1667), the panel's order again.
+  out.push(...playerFilterChips(players));
 
   // One chip for the playtime ROW, in the same three phrasings the complexity
   // range uses and for the same reason: it is one control, so a × that cleared
@@ -457,8 +463,8 @@ function activeFilterChips(state, tagSection, partyCount, owners) {
 // =================== The one filter control ===================
 
 // The trigger plus the applied-filter chips. Returns NULL when there is nothing
-// to filter by at all (no round tags, no metadata on the shelf AND no owner
-// section), so a round of hand-typed games without tags sees no filter
+// to filter by at all (no round tags, no metadata on the shelf, no owner and no
+// player-count section), so a round of hand-typed games without tags sees no filter
 // affordance rather than an empty one.
 //
 //  - `tagSection` is `{ el, chips, reset }` built by the calling screen, or null
@@ -474,7 +480,10 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   // The setup screen never does — its pool is already owner-aware through the
   // table, so a second owner control there would ask the same question twice.
   const owners = opts && opts.owners && opts.owners.members.length ? opts.owners : null;
-  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection && !owners) return null;
+  // The „Personen" section (#1667) is the Regal's opt-in too, passed only on a
+  // shelf where some game declares a player count.
+  const players = opts && opts.players ? opts.players : null;
+  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection && !owners && !players) return null;
   // Same thunk the body reads, because the applied chip states the count too and
   // the two must never name different numbers.
   const partyCount = (opts && opts.partyCount) || (() => 0);
@@ -517,7 +526,7 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   }
 
   function sync() {
-    const chips = activeFilterChips(state, tagSection, partyCount(), owners);
+    const chips = activeFilterChips(state, tagSection, partyCount(), owners, players);
     trigger.setAttribute('aria-label', t('games.filterLabel', { n: chips.length }));
     if (countBadge) {
       countBadge.textContent = String(chips.length);
@@ -557,10 +566,14 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
       // sit on the round's side of the hairline before the BGG facts.
       const own = owners ? renderOwnerFilter(owners.round, owners, () => { sync(); onChange(); }) : null;
       if (own) body.appendChild(own.el);
+      // The count next — like owners it is not a BGG fact (a range is typed by
+      // hand on every free-text game), so it sits before the hairline.
+      const ppl = players ? renderPlayerFilter(players, () => { sync(); onChange(); }) : null;
+      if (ppl) body.appendChild(ppl.el);
       const meta = renderMetadataFilter(games, state, () => { sync(); onChange(); }, opts);
       if (meta) body.appendChild(meta.el);
       container.appendChild(body);
-      live = { repaint: () => { if (own) own.repaint(); if (meta) meta.repaint(); }, close };
+      live = { repaint: () => { if (own) own.repaint(); if (ppl) ppl.repaint(); if (meta) meta.repaint(); }, close };
       // Returned, not called here: `build` runs on a DETACHED node in the popover
       // path, so a focus() in it is a silent no-op — both presentations invoke
       // this once the container is live (.claude/rules/popover-vs-sheet-editors.md
