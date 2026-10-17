@@ -53,10 +53,10 @@ async function enroll(auth, { uv = true, name = 'YubiKey' } = {}) {
   });
 }
 
-const passwordStep = () => request(app).post('/api/admin/login').send({ password: PW });
+const startLogin = () => request(app).post('/api/admin/login').send({ password: PW });
 
 async function login(auth, assertOpts) {
-  const step = await passwordStep();
+  const step = await startLogin();
   assert.equal(step.status, 200, JSON.stringify(step.body));
   return request(app).post('/api/admin/login/passkey')
     .send({ step: step.body.step, response: auth.assert(step.body.options, assertOpts) });
@@ -65,7 +65,7 @@ async function login(auth, assertOpts) {
 /* --------------------------- before any key exists ------------------------- */
 
 test('with no passkey enrolled and enrollment closed, the panel cannot be entered', async () => {
-  const res = await passwordStep();
+  const res = await startLogin();
   // Fail closed, and indistinguishable from a wrong password.
   assert.equal(res.status, 401);
   assert.equal(res.body.error, 'invalid_password');
@@ -85,7 +85,7 @@ test('enrollment 404s while ADMIN_ENROLL_TOKEN is unset — for a signed-in oper
 
 test('with enrollment open and no key, the password step says so', async () => {
   await withEnroll(async () => {
-    const res = await passwordStep();
+    const res = await startLogin();
     assert.equal(res.status, 409);
     assert.equal(res.body.error, 'no_admin_passkey');
     assert.equal(res.headers['set-cookie'], undefined);
@@ -147,7 +147,7 @@ test('a passkey enrolls, and the panel never sees its public key', async () => {
 });
 
 test('the correct password ALONE does not mint a session', async () => {
-  const res = await passwordStep();
+  const res = await startLogin();
   assert.equal(res.status, 200);
   assert.equal(res.headers['set-cookie'], undefined, 'no aid cookie after the password step');
   assert.equal(res.body.options.userVerification, 'required');
@@ -201,7 +201,7 @@ test('an unknown credential is refused', async () => {
 });
 
 test('the passkey step needs a valid password-step token', async (t) => {
-  const step = await passwordStep();
+  const step = await startLogin();
   const assertion = key.assert(step.body.options);
   const send = (s) => request(app).post('/api/admin/login/passkey').send({ step: s, response: assertion });
 
