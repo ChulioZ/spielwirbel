@@ -79,6 +79,37 @@ function fitsPlayerCount(game, playerCount) {
   return (game.expansions || []).some((e) => expansionAdmits(e, playerCount));
 }
 
+// Upper bound for an open-topped probe. A box declaring 99 players is a party
+// game that seats "everyone"; probing further buys nothing and bounds the loop.
+const PLAYER_PROBE_MAX = 99;
+
+// Whether the round can seat ANY table of `from` or more at this game — the
+// Regal-Steckbrief's „6+" band and the Regal filter's „8+" (#1667) ask the same
+// question, so they share this probe rather than each writing one. It probes
+// count by count through `fitsPlayerCount` up to the widest declared maximum,
+// so the union-not-hull rule above holds here too; an open top (no maxPlayers
+// on the box) is answered at `from` itself.
+function fitsPlayerCountFrom(game, from) {
+  const tops = [game.maxPlayers, ...(game.expansions || []).map((e) => e && e.maxPlayers)]
+    .filter((v) => typeof v === 'number');
+  const top = Math.min(PLAYER_PROBE_MAX, Math.max(from, ...tops));
+  for (let k = from; k <= top; k++) if (fitsPlayerCount(game, k)) return true;
+  return false;
+}
+
+// The Regal's „Personen" filter (#1667): one count, not a range — "who's
+// coming" is one number. The last choice reads „8 or more".
+const PLAYER_FILTER_CHOICES = [1, 2, 3, 4, 5, 6, 7, 8];
+const PLAYER_FILTER_TOP = 8;
+
+// The Regal's player-count predicate. `count` null means no filter. It is the
+// draw's own seat rule, so a game with no player data stays IN — unknown is not
+// a mismatch, for the reason `fitsOwnRange` gives.
+function matchesPlayerFilter(game, count) {
+  if (!isFiniteNum(count)) return true;
+  return count >= PLAYER_FILTER_TOP ? fitsPlayerCountFrom(game, PLAYER_FILTER_TOP) : fitsPlayerCount(game, count);
+}
+
 // Whether the party at the table can actually put this box on it (#971).
 //
 // TRUE when nobody is recorded as the game's owner, or at least one owner is
@@ -542,6 +573,10 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isActiveGame,
     fitsPlayerCount,
+    fitsPlayerCountFrom,
+    matchesPlayerFilter,
+    PLAYER_FILTER_CHOICES,
+    PLAYER_FILTER_TOP,
     fitsRecommendedCount,
     ownedByParty,
     shelfParty,

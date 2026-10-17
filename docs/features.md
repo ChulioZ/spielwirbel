@@ -394,7 +394,10 @@ What the app does, in detail. For a short overview see the
   - **Regal** (shelf) – the game collection as a card grid with one „Filter"
     control holding the custom-tag chips, an **owner** filter (once anybody on
     the shelf is marked as owning a box: pick one or more members to see the
-    games any of them owns) and the imported-BGG-metadata
+    games any of them owns), a **player-count** filter („Personen": pick one
+    count from 1 to 8+ to see what plays solo, or at six — with the same rule
+    the draw uses, so owned expansions widen a game's range and a game with no
+    player count stays in) and the imported-BGG-metadata
     filters (see Sessions below), a search pill, sorting
     (random / name / rating),
     and the add-game sheet. Each card opens the game's detail page

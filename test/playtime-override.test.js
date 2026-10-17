@@ -162,11 +162,11 @@ test('copying a game into another round carries its playing time along', async (
 
 test('the shelf profile bands a game by the round\'s own playing time', () => {
   const { shelfProfile } = require('../public/js/shelf-profile');
-  const { fitsPlayerCount } = require('../public/js/draw-pool');
+  const { fitsPlayerCount, fitsPlayerCountFrom } = require('../public/js/draw-pool');
   // Eight 45-minute games by BGG's figure; the round says one of them runs 3 h.
   const games = Array.from({ length: 8 }, (_, i) => ({ id: `g${i}`, minPlaytime: 30, maxPlaytime: 45 }));
   games[0].playtimeOverride = { min: 150, max: 180 };
-  const deps = { fitsPlayerCount, gamePlaytime, scoreOf: () => null, creditedDesigners: () => [] };
+  const deps = { fitsPlayerCount, fitsPlayerCountFrom, gamePlaytime, scoreOf: () => null, creditedDesigners: () => [] };
   const n = (key) => shelfProfile(games, deps).time.bands.find((b) => b.key === key).n;
   assert.equal(n('over120'), 1);
   assert.equal(n('to60'), 7);

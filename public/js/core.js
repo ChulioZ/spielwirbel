@@ -471,8 +471,8 @@ let gamesSort = 'avg';
 // `tags` is a tri-state Map<tagId, 'include'|'exclude'> (#241); absence = ignore.
 // `tagMode` is how the INCLUDED tags combine (#726) — 'all' (every one) or
 // 'any' (at least one). It survives while the control that sets it is hidden,
-// which is why it lives here rather than inside renderRegalTab. `owners`: #1433.
-let regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [] };
+// which is why it lives here rather than inside renderRegalTab. owners #1433, players #1667.
+let regalFilters = { tags: new Map(), query: '', tagMode: 'all', owners: [], players: { count: null } };
 let regalFiltersRid = null;
 
 // Chronik filter state (#793) – the timeline's chip choice ('all' | 'sessions' |

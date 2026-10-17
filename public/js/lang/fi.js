@@ -463,6 +463,11 @@ I18N.fi = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Omistajat',
   'ownerFilter.chip': 'Omistaa {name}',
+  // The Regal's player-count filter (#1667): one count, solo and the open top in words.
+  'playerFilter.title': 'Pelaajat',
+  'playerFilter.chipSolo': 'Yksin',
+  'playerFilter.chip': '{n} pelaajaa',
+  'playerFilter.chipFrom': '{n}+ pelaajaa',
 
   'transferGames.link': 'Siirrä tai kopioi pelejä',
   'transferGames.mode': 'Toiminto',

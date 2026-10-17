@@ -485,6 +485,11 @@ I18N.en = {
   // The Regal's owner filter (#1433).
   'ownerFilter.title': 'Owners',
   'ownerFilter.chip': 'Owned by {name}',
+  // The Regal's player-count filter (#1667): one count, solo and the open top in words.
+  'playerFilter.title': 'Players',
+  'playerFilter.chipSolo': 'Solo',
+  'playerFilter.chip': '{n} players',
+  'playerFilter.chipFrom': '{n}+ players',
 
   'transferGames.link': 'Move or copy games',
   'transferGames.mode': 'Action',

@@ -12,7 +12,7 @@ const {
 } = require('../public/js/shelf-profile');
 // The REAL seat predicate, not a paraphrase — the builder is handed it in the
 // browser, so the spec hands it the same function.
-const { fitsPlayerCount, isActiveGame } = require('../public/js/draw-pool');
+const { fitsPlayerCount, fitsPlayerCountFrom, isActiveGame } = require('../public/js/draw-pool');
 const { creditedDesigners } = require('../public/js/provider-info-fields');
 const { DEMO_ROUNDS } = require('../lib/demo-seed');
 
@@ -20,7 +20,7 @@ const { DEMO_ROUNDS } = require('../lib/demo-seed');
 // `scoreOf` stands in for the round's shelf index (roundScoreIndex): a fixture
 // game carries its shelf score as `score`, and a game without one is unscored.
 const scoreOf = (game) => (Number.isFinite(game.score) ? game.score : null);
-const deps = { fitsPlayerCount, creditedDesigners, scoreOf };
+const deps = { fitsPlayerCount, fitsPlayerCountFrom, creditedDesigners, scoreOf };
 const band = (dim, key) => dim.bands.find((b) => b.key === key).n;
 
 // A linked game: some provider data, a 2–4 range, a medium hour.

@@ -35,9 +35,6 @@ const SHELF_PROFILE_TOP = 5;
 // The table sizes the seat bands ask about. The last one is „6+": a game
 // counts there when it seats ANY table of six or more.
 const SHELF_SEAT_BANDS = [2, 3, 4, 5, 6];
-// Upper bound for the 6+ probe. A box declaring 99 players is a party game that
-// seats "everyone"; probing further buys nothing and bounds the loop.
-const SHELF_SEAT_PROBE_MAX = 99;
 // Playing-time bands by the game's OWN MAXIMUM — the containment reading the
 // draw filter uses (#1025, fitsMetadataFilters): a 30–60 game is a "31–60"
 // game, because an evening that has 30 minutes cannot be sure to finish it.
@@ -77,17 +74,12 @@ function shelfSeatKnown(game) {
 }
 
 // The seat bands one game counts in: every band its range (plus its owned
-// expansions) covers. 6+ probes from six up to the widest declared maximum; an
-// open top (no maxPlayers on the box) is answered by fitsPlayerCount at six.
-function shelfSeatBands(game, fits) {
-  const tops = [game.maxPlayers, ...(game.expansions || []).map((e) => e && e.maxPlayers)]
-    .filter((v) => typeof v === 'number');
-  const top = Math.min(SHELF_SEAT_PROBE_MAX, Math.max(6, ...tops));
-  return SHELF_SEAT_BANDS.filter((n) => {
-    if (n < 6) return fits(game, n);
-    for (let k = 6; k <= top; k++) if (fits(game, k)) return true;
-    return false;
-  });
+// expansions) covers. 6+ is `fitsFrom` (draw-pool.js `fitsPlayerCountFrom`),
+// the same probe the Regal's „8+" filter reads (#1667), so the two cannot
+// disagree about "seats any table this big or bigger".
+function shelfSeatBands(game, fits, fitsFrom) {
+  const top = SHELF_SEAT_BANDS[SHELF_SEAT_BANDS.length - 1];
+  return SHELF_SEAT_BANDS.filter((n) => (n < top ? fits(game, n) : fitsFrom(game, n)));
 }
 
 // One dimension's bands. `bandOf` names the band a game falls into, or null
@@ -151,7 +143,7 @@ function shelfTop(games, field, scoreOf, keep = (list) => list) {
 
    `games` is the ACTIVE shelf (isActiveGame) — a wished or archived game reaches
    no draw, so it has no place in "what can this shelf do".
-   `deps` is { fitsPlayerCount } from draw-pool.js, { creditedDesigners } from
+   `deps` is { fitsPlayerCount, fitsPlayerCountFrom } from draw-pool.js, { creditedDesigners } from
    provider-info-fields.js and { scoreOf } — a game's shelf score or null, read
    from the caller's roundScoreIndex (game-stats.js) — all handed in for the
    same reason (see the header): this file cannot require() a sibling.
@@ -168,9 +160,10 @@ function shelfProfile(games, deps) {
   const linked = shelf.filter(shelfHasData).length;
   if (linked < SHELF_PROFILE_MIN_GAMES) return null;
   const fits = deps.fitsPlayerCount;
+  const fitsFrom = deps.fitsPlayerCountFrom;
 
   const seats = shelfDimension(shelf, SHELF_SEAT_BANDS.map(String), (g) =>
-    (shelfSeatKnown(g) ? shelfSeatBands(g, fits).map(String) : null));
+    (shelfSeatKnown(g) ? shelfSeatBands(g, fits, fitsFrom).map(String) : null));
   // The round's own playing time where it set one (#1627). Injected like
   // fitsPlayerCount, since a public/js file cannot require a sibling; a caller
   // passing none reads the provider pair, which is what every game without an
