@@ -140,6 +140,9 @@ lib/
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
+  admin-passkeys.js  the panel's passkey second factor (issue #1670): the
+                     password-step token and enrollment challenge, under their
+                     own scopes and admin.js's signing secret
   admin-exclusions.js  which tenants the panel's „Funktionsnutzung" card leaves
                      out (ADMIN_EXCLUDE_TENANTS), so its shares describe other
                      people's usage rather than the operator's own (issue #1174)
@@ -461,7 +464,8 @@ lib/
                                              in index.js, because they share the
                                              prefix and seven mounts would run
                                              authLimiter seven times — issue #996)
-      index.js       the gate, login/logout/me, and the sub-router mounts
+      index.js       the gate, the two-factor login (password, then passkey —
+                     #1670), passkey enrollment, logout/me, and the mounts
       shared.js      the schemas and the paging shape more than one needs
       status.js      instance status + the recent warn/error ring buffer
       corpus.js      the licensed BGG corpus ingest (issue #681)
@@ -473,6 +477,8 @@ lib/
       users.js       account suspend/restore/rename, GDPR export + erasure
       log.js         the filterable action log and the feedback inbox, + CSV
       notices.js     the DSA notices inbox, decisions and Art. 17 statements
+      passkeys.js    list/remove the operator's own passkeys (#1670); adding
+                     one needs ADMIN_ENROLL_TOKEN and lives in index.js
     recommendations.js …/recommendations    (games the round does not own,
                                             scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for

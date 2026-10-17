@@ -210,6 +210,8 @@ certificate automatically — this completes #156.
 | `AUTH_PASSWORD` / `SESSION_SECRET` | your choice / long random | Shared-password gate (#129); with `ACCOUNTS_ENABLED` also set → layered mode (#266). `SESSION_SECRET` must be its own dedicated secret, not `AUTH_PASSWORD` |
 | `ACCOUNTS_ENABLED` | `true` to layer real accounts behind the gate (#266) | Off = shared-password-only. See *Going live* |
 | `BGG_API_TOKEN` | bearer token from your registered BGG application | BoardGameGeek lookup (#117) — unset means board-game search silently returns nothing |
+| `ADMIN_PASSWORD` | long random, never `AUTH_PASSWORD` | The operator panel (#268); its login also needs a passkey (#1670) |
+| `ADMIN_ENROLL_TOKEN` | long random, **set only while registering a passkey** | Opens admin passkey registration (#1670) — see *Operator passkeys* |
 | `PORT` | *(injected by Railway)* | The app already honours it |
 
 `NODE_ENV=production` is baked into the image (serves the hashed `dist/` build).
@@ -348,6 +350,33 @@ If you do configure one later:
   POST. Don't route it through `lib/mail.js`: an error loop would burn the daily
   send budget that `MAIL_DAILY_MAX` protects for *registration* mail.
 
+## Operator passkeys: enrollment and recovery (#1670)
+
+The panel login is the password **and** a passkey. Registration is gated by a
+one-time env secret, never by a panel session, so a stolen session cannot add a
+key. The same procedure covers the first setup, adding a key, and recovery after
+losing every key:
+
+1. In the app service's Railway variables, set `ADMIN_ENROLL_TOKEN` to a long
+   random value. The redeploy that follows is what turns registration on.
+2. Open `/admin.html`, expand **Passkey registrieren**, and enter the admin
+   password, the token and a name. Confirm on the key (PIN or biometric).
+   Register **two** keys, e.g. a phone and a hardware key, so losing one is not
+   a recovery.
+3. **Remove** `ADMIN_ENROLL_TOKEN` again. While it is set the panel shows a
+   warning banner; leaving it set keeps registration open to anyone who also
+   holds the password.
+
+**The first deploy of #1670 needs step 1 done beforehand.** That deploy turns the
+password-only login off and invalidates every existing panel cookie. With no key
+registered and no token set, the panel cannot be entered at all (fail closed by
+design), so set the token first, merge, register right after the deploy lands,
+then remove it.
+
+Keys are listed in the panel's „Admin-Passkeys" card; any but the last can be
+removed there. On a suspected compromise of the password or a key, see
+`docs/legal/breach-process.md`.
+
 ## What only you can do (checklist)
 
 These need an account or a credential I can't create or hold:
@@ -384,6 +413,8 @@ These need an account or a credential I can't create or hold:
       just set up, so a failed deploy arrives as the same phone push as an outage.
       Lowest-priority item on this list: a failed deploy leaves the previous build
       serving, so production stays up either way.
+- [ ] Register **two operator passkeys** for the panel — see *Operator
+      passkeys* above — and remove `ADMIN_ENROLL_TOKEN` afterwards.
 - [ ] *(Optional)* Set `ERROR_WEBHOOK_URL` — see **Monitoring** above for the
       destination trade-offs and the legal follow-through a third party needs.
 

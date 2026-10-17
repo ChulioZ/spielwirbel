@@ -135,7 +135,11 @@ list; on 2026-10-04 it was:
 - **Auth:** login, register, forgot, verify/reset landings — reachable only with
   `ACCOUNTS_ENABLED` + `SESSION_SECRET` set on your throwaway instance.
 - **Standalone pages** (outside the SPA and its i18n): `login.html`,
-  `kontakt.html` (feedback lands here too), `admin.html` (needs `ADMIN_PASSWORD`),
+  `kontakt.html` (feedback lands here too), `admin.html` (needs `ADMIN_PASSWORD`;
+  its login also needs a passkey since #1670, which the Browser pane cannot
+  provide — on the throwaway instance only, mint the cookie with
+  `node -e "const a=require('./lib/admin');console.log(a.mintToken(a.signingSecret()))"`
+  run under that instance's env, and set it as `document.cookie = 'aid=…'`),
   `/faq`, the guide pages, and the legal pages, which 404 until
   `IMPRESSUM_ADDRESS` + `IMPRESSUM_EMAIL` are set.
 

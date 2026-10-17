@@ -90,6 +90,9 @@
        the flex `.dash__side` and carries no slot. */
     .card-slot:has(> [hidden]) { display: none; }
     .card--login { max-width: 340px; margin: 12vh auto 0; }
+    /* The passkey enrollment card (#1670) sits right under the login card. */
+    .card--enroll { max-width: 340px; margin: 1rem auto 0; }
+    .card--enroll summary { cursor: pointer; font-weight: 600; }
     h1 { font-size: 1.2rem; margin: 0 0 0.35rem; }
     h2 { font-size: 1rem; margin: 0 0 0.9rem; color: var(--ink-2); font-weight: 600; }
     .sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 1.5rem; }
@@ -118,6 +121,7 @@
     .msg[hidden] { display: none; }
     .msg--err { color: var(--off-ink); background: var(--off-bg); }
     .msg--ok { color: var(--ok-ink); background: var(--ok-bg); }
+    .msg--warn { color: var(--warn-ink); background: var(--warn-bg); }
     dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 1rem; margin: 0.5rem 0 0; }
     dt { color: var(--muted); font-size: 0.85rem; }
     dd { margin: 0; font-size: 0.9rem; word-break: break-all; }
@@ -200,14 +204,38 @@
 </head>
 <body>
   <!-- Login -->
+  <!-- Two factors since #1670: the password, then a registered passkey. The
+       password alone never signs in. -->
   <form class="card card--login" id="loginForm">
     <h1>Moderation</h1>
-    <p class="sub">Operator-Zugang</p>
+    <p class="sub">Operator-Zugang: Passwort, dann Passkey</p>
     <label for="password">Admin-Passwort</label>
     <input id="password" type="password" autocomplete="current-password" autofocus required />
-    <button type="submit">Anmelden</button>
+    <button type="submit">Weiter mit Passkey</button>
     <p class="msg msg--err" id="loginError" role="alert" hidden></p>
   </form>
+
+  <!-- Enrollment needs ADMIN_ENROLL_TOKEN from the server environment; while it
+       is unset the server refuses with 404 and this form says so. Always
+       rendered rather than probed, so the page never tells a visitor whether an
+       enrollment window is open. -->
+  <details class="card card--enroll" id="enrollCard">
+    <summary>Passkey registrieren</summary>
+    <form id="enrollForm">
+      <p class="sub" style="margin: 0.6rem 0 0;">
+        Nur möglich, solange <code>ADMIN_ENROLL_TOKEN</code> gesetzt ist. Danach
+        die Variable wieder entfernen.
+      </p>
+      <label for="enrollPassword">Admin-Passwort</label>
+      <input id="enrollPassword" type="password" autocomplete="current-password" required />
+      <label for="enrollToken">Registrierungs-Token</label>
+      <input id="enrollToken" type="password" autocomplete="off" required />
+      <label for="enrollName">Name des Passkeys (optional)</label>
+      <input id="enrollName" type="text" maxlength="60" placeholder="z. B. YubiKey, Handy" autocorrect="off" spellcheck="false" />
+      <button type="submit">Passkey registrieren</button>
+      <p class="msg" id="enrollMsg" role="alert" hidden></p>
+    </form>
+  </details>
 
   <!-- Panel: a status board on top, then a wide table column beside a narrow,
        sticky tools column (lookup + takedown). -->
@@ -216,6 +244,10 @@
       <h1 style="margin: 0;">Moderation</h1>
       <button class="ghost small" id="logout">Abmelden</button>
     </div>
+    <p class="msg msg--warn" id="enrollBanner" role="status" hidden>
+      <code>ADMIN_ENROLL_TOKEN</code> ist gesetzt. Nach dem Registrieren der
+      Passkeys die Variable wieder aus der Umgebung entfernen.
+    </p>
 
     <!-- Two sibling cards, not one „Kennzahlen" heading over both (#1124): the
          left-hand question is „wie nah ist etwas daran, jemanden abzuweisen",
@@ -437,6 +469,20 @@
           <p class="msg" id="corpusMsg" role="alert" hidden></p>
         </section>
 
+        <!-- The operator's own passkeys (#1670): the second login factor.
+             Adding one needs ADMIN_ENROLL_TOKEN (the form on the login screen),
+             never this session; removing the last one is refused. -->
+        <section class="card">
+          <h2>Admin-Passkeys</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Zweiter Faktor für diese Oberfläche. Den letzten Passkey kann man
+            hier nicht entfernen; Wiederherstellung über
+            <code>ADMIN_ENROLL_TOKEN</code>.
+          </p>
+          <div class="scroll"><table id="passkeyTable"><tbody></tbody></table></div>
+          <p class="msg" id="passkeyMsg" role="alert" hidden></p>
+        </section>
+
         <!-- Object storage and the orphan estimate (#941). Behind a button
              because it lists the whole bucket: a bucket-wide listing must not
              run every time somebody opens the panel. Report only — it never
@@ -476,6 +522,9 @@
     <div class="row" id="detailActions" style="margin-top: 1.1rem;" hidden></div>
   </dialog>
 
+  <!-- The WebAuthn glue the SPA's account passkeys use (#418): dependency-free,
+       so the panel shares it instead of a second copy of the conversions. -->
+  <script src="/js/passkey.js"></script>
   <script src="/js/pages/admin.js"></script>
 </body>
 </html>

@@ -59,7 +59,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const repo = require('../lib/repo');
 const demo = require('../lib/demo');
 const { outbox } = require('../lib/mail');
@@ -96,10 +96,8 @@ async function fullAccount() {
 }
 
 async function exportOf(uid) {
-  const login = await request(app).post('/api/admin/login').send({ password: 'operator-secret-pw' });
-  assert.equal(login.status, 200);
   const res = await request(app).post(`/api/admin/users/${uid}/export`)
-    .set('Cookie', login.headers['set-cookie']).send({ reason: 'Art. 15 field coverage' });
+    .set('Cookie', adminSessionCookie()).send({ reason: 'Art. 15 field coverage' });
   assert.equal(res.status, 200, JSON.stringify(res.body));
   return res.body.export.account;
 }

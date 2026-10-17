@@ -3,7 +3,7 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-10-04
+**Stand:** 2026-10-18
 
 ## 1. Erkennen & Eindämmen (sofort)
 
@@ -23,6 +23,13 @@ stress by one person.
     gesetzt, macht das Rotieren der beiden anderen ein gestohlenes, bis zu
     12 Stunden gültiges Betreiber-Cookie **nicht** ungültig — dann dieses
     mitrotieren.
+  - **Admin-Passkeys** (#1670) — der zweite Anmeldefaktor des Panels. Bei
+    Verdacht auf einen verlorenen oder kompromittierten Schlüssel den Passkey in
+    der Karte „Admin-Passkeys" entfernen; ist es der letzte, zuerst über
+    `ADMIN_ENROLL_TOKEN` einen neuen registrieren (`docs/deploy-railway.md`,
+    „Operator passkeys"), dann den alten entfernen und die Variable wieder
+    löschen. Ein gestohlenes Passwort allein öffnet das Panel nicht mehr —
+    trotzdem rotieren.
   - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` — Zugang zum Objektspeicher
     (Cloudflare R2) mit **allen hochgeladenen Bildern**, auch Profilbildern,
     die häufig Personen zeigen. Neuen Schlüssel im Cloudflare-Dashboard

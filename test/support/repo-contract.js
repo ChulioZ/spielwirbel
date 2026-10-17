@@ -7132,4 +7132,31 @@ module.exports = function repoContract(repo) {
     const ids = await repo.getBggLinks({ designer: [' Contract Name (I) ', 'Contract Name (I)'] });
     assert.deepEqual(ids.designer, { ' Contract Name (I) ': 880031 });
   });
+  // The operator's passkeys (#1670): global, keyed by the credential id.
+  test('admin passkeys: add, dedupe, update the counter, list in order, remove', async () => {
+    assert.deepEqual(await repo.listAdminPasskeys(), []);
+    const entry = (credentialId, name) => ({
+      credentialId, publicKey: 'cHVibGlj', counter: 0, transports: ['usb'],
+      name, createdAt: '2026-10-18T10:00:00.000Z', lastUsedAt: null,
+    });
+    assert.deepEqual(await repo.addAdminPasskey(entry('cred-a', 'Key A')), entry('cred-a', 'Key A'));
+    assert.ok(await repo.addAdminPasskey(entry('cred-b', null)));
+    // A second enrollment of the same credential stores nothing.
+    assert.equal(await repo.addAdminPasskey(entry('cred-a', 'Again')), null);
+
+    const updated = await repo.updateAdminPasskey('cred-a', { counter: 7, lastUsedAt: '2026-10-18T11:00:00.000Z' });
+    assert.equal(updated.counter, 7);
+    assert.equal(updated.publicKey, 'cHVibGlj', 'an update touches only counter and lastUsedAt');
+    assert.equal(await repo.updateAdminPasskey('cred-x', { counter: 1, lastUsedAt: null }), null);
+
+    const list = await repo.listAdminPasskeys();
+    assert.deepEqual(list.map((p) => [p.credentialId, p.name, p.counter]),
+      [['cred-a', 'Key A', 7], ['cred-b', null, 0]]);
+    assert.equal(list[0].lastUsedAt, '2026-10-18T11:00:00.000Z');
+
+    assert.equal(await repo.removeAdminPasskey('cred-a'), true);
+    assert.equal(await repo.removeAdminPasskey('cred-a'), false);
+    assert.deepEqual((await repo.listAdminPasskeys()).map((p) => p.credentialId), ['cred-b']);
+    await repo.removeAdminPasskey('cred-b');
+  });
 };

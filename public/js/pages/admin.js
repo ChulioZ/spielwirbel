@@ -67,6 +67,14 @@
     invalid_email: 'Keine gültige E-Mail-Adresse.',
     already_neutral: 'Der Nutzername ist bereits neutralisiert.',
     notice_decided: 'Entschiedene Meldungen sind als Nachweis aufzubewahren (Art. 17 DSA).',
+    // The passkey second factor (#1670).
+    invalid_passkey: 'Der Passkey wurde nicht akzeptiert. Bitte erneut anmelden.',
+    no_admin_passkey: 'Es ist noch kein Admin-Passkey registriert — unten einen registrieren.',
+    admin_enroll_disabled: 'Registrierung ist geschlossen: ADMIN_ENROLL_TOKEN ist nicht gesetzt.',
+    invalid_credentials: 'Passwort oder Registrierungs-Token falsch.',
+    passkey_exists: 'Dieser Passkey ist bereits registriert.',
+    last_admin_passkey: 'Der letzte Passkey kann nicht entfernt werden.',
+    no_passkey_support: 'Dieser Browser unterstützt keine Passkeys.',
   };
   const message = (err) => MESSAGES[err.message] || err.message;
 
@@ -203,17 +211,58 @@
 
   // ---- login ---------------------------------------------------------------
 
+  // Two factors (#1670): the password buys a short-lived step token plus the
+  // WebAuthn options, and only the passkey assertion signs in. A dismissed OS
+  // sheet is a cancel, not an error, so it shows nothing.
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const button = loginForm.querySelector('button');
     hide($('loginError'));
+    if (!passkeysSupported()) {
+      show($('loginError'), message(new Error('no_passkey_support')), 'err');
+      return;
+    }
     button.disabled = true;
     try {
-      await api('/login', { method: 'POST', body: JSON.stringify({ password: $('password').value }) });
+      const step = await api('/login', { method: 'POST', body: JSON.stringify({ password: $('password').value }) });
+      const response = await getPasskey(step.options);
+      await api('/login/passkey', { method: 'POST', body: JSON.stringify({ step: step.step, response }) });
       enterPanel();
     } catch (err) {
-      show($('loginError'), message(err), 'err');
-      $('password').select();
+      if (!isPasskeyCancel(err)) {
+        show($('loginError'), message(err), 'err');
+        if (err.message === 'no_admin_passkey') $('enrollCard').open = true;
+        $('password').select();
+      }
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('enrollForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const button = $('enrollForm').querySelector('button');
+    hide($('enrollMsg'));
+    if (!passkeysSupported()) {
+      show($('enrollMsg'), message(new Error('no_passkey_support')), 'err');
+      return;
+    }
+    const enrollToken = $('enrollToken').value;
+    button.disabled = true;
+    try {
+      const start = await api('/enroll/options', {
+        method: 'POST',
+        body: JSON.stringify({ password: $('enrollPassword').value, enrollToken }),
+      });
+      const response = await createPasskey(start.options);
+      await api('/enroll', {
+        method: 'POST',
+        body: JSON.stringify({ enrollToken, challenge: start.challenge, response, name: $('enrollName').value }),
+      });
+      $('enrollForm').reset();
+      show($('enrollMsg'), 'Passkey registriert. Jetzt oben mit Passwort und Passkey anmelden.', 'ok');
+    } catch (err) {
+      if (!isPasskeyCancel(err)) show($('enrollMsg'), message(err), 'err');
     } finally {
       button.disabled = false;
     }
@@ -236,6 +285,54 @@
     loadFeedback();
     loadCorpus();
     refreshLog();
+    loadPasskeys();
+  }
+
+  // ---- admin passkeys (#1670) ----------------------------------------------
+
+  function renderPasskeys({ passkeys, enrollOpen }) {
+    $('enrollBanner').hidden = !enrollOpen;
+    const body = $('passkeyTable').tBodies[0];
+    body.replaceChildren();
+    // Two cells, not four: the card sits in the narrow tools column, where a
+    // date per column pushed the remove button out of view.
+    for (const p of passkeys) {
+      const row = document.createElement('tr');
+      const name = cell(row, p.name || 'Passkey');
+      const dates = document.createElement('div');
+      dates.className = 'subtext';
+      dates.textContent = `registriert ${fmt(p.createdAt)} · zuletzt benutzt ${fmt(p.lastUsedAt)}`;
+      name.appendChild(dates);
+      const remove = document.createElement('button');
+      remove.className = 'ghost small';
+      remove.textContent = 'Entfernen';
+      // Refused server-side for the last key; disabled here so the refusal is
+      // visible before the click rather than after it.
+      remove.disabled = passkeys.length <= 1;
+      remove.addEventListener('click', () => removePasskey(p));
+      cell(row, '').appendChild(remove);
+      body.appendChild(row);
+    }
+  }
+
+  async function loadPasskeys() {
+    hide($('passkeyMsg'));
+    try {
+      renderPasskeys(await api('/passkeys'));
+    } catch (err) {
+      show($('passkeyMsg'), message(err), 'err');
+    }
+  }
+
+  async function removePasskey(p) {
+    if (!window.confirm(`Passkey „${p.name || 'Passkey'}“ entfernen? Er meldet danach nicht mehr an.`)) return;
+    hide($('passkeyMsg'));
+    try {
+      renderPasskeys(await api(`/passkeys/${encodeURIComponent(p.credentialId)}`, { method: 'DELETE' }));
+      show($('passkeyMsg'), 'Passkey entfernt.', 'ok');
+    } catch (err) {
+      show($('passkeyMsg'), message(err), 'err');
+    }
   }
 
   // ---- instance metrics (#274, reshaped by #404 and split in two by #1124) ---

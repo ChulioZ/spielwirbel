@@ -21,7 +21,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const repo = require('../lib/repo');
 const demo = require('../lib/demo');
 const { outbox } = require('../lib/mail');
@@ -48,11 +48,10 @@ async function makeAccount(email) {
   return { token: login.body.accessToken, refreshToken: login.body.refreshToken, user };
 }
 
-// Sign in as the operator and return the raw Set-Cookie value for later calls.
+// An operator session. Minted directly since #1670 made the login two-factor —
+// the login itself is test/admin-passkeys.test.js's subject.
 async function adminCookie() {
-  const res = await request(app).post('/api/admin/login').send({ password: ADMIN_PW });
-  assert.equal(res.status, 200);
-  return res.headers['set-cookie'];
+  return adminSessionCookie();
 }
 
 test('the admin gate refuses everything without a valid operator session', async (t) => {
@@ -94,7 +93,7 @@ test('the admin gate refuses everything without a valid operator session', async
 
   // The security property the separate secret exists for: an ordinary app
   // session must NOT authenticate the admin surface. lib/auth.js signs "v1.<exp>"
-  // while lib/admin.js signs a domain-separated "admin.a1.<exp>" under a
+  // while lib/admin.js signs a domain-separated "admin.a2.<exp>" under a
   // different cookie name, so neither token can stand in for the other.
   await t.test('an app session cookie is not an admin session', async () => {
     const auth = require('../lib/auth');
@@ -103,16 +102,13 @@ test('the admin gate refuses everything without a valid operator session', async
     assert.equal(res.status, 401);
   });
 
-  await t.test('a correct password mints an httpOnly session', async () => {
+  // #1670: the password is step one of two. The full flow (and the cookie's
+  // flags) is asserted in test/admin-passkeys.test.js against a real key.
+  await t.test('a correct password alone does not mint a session', async () => {
     const res = await request(app).post('/api/admin/login').send({ password: ADMIN_PW });
-    assert.equal(res.status, 200);
-    const cookie = res.headers['set-cookie'][0];
-    assert.match(cookie, /^aid=/);
-    assert.match(cookie, /HttpOnly/i);
-    assert.match(cookie, /SameSite=Strict/i);
-
-    const me = await request(app).get('/api/admin/me').set('Cookie', res.headers['set-cookie']);
-    assert.equal(me.status, 200);
+    assert.equal(res.headers['set-cookie'], undefined);
+    const me = await request(app).get('/api/admin/me');
+    assert.equal(me.status, 401);
   });
 });
 
