@@ -131,8 +131,11 @@ that a generic scanner does not know about.
   `path: '/'`. App session/access cookies are `sameSite=lax`; the admin `aid` cookie is
   `sameSite=strict` **and** its HMAC payload is prefixed `admin.` with its own token
   version — so an app `sid` token can never be replayed as an admin token even when both
-  share `SESSION_SECRET`. `ADMIN_PASSWORD` must never equal `AUTH_PASSWORD`.
-- **Enforced by:** `test/admin.test.js` (app token rejected as admin)
+  share `SESSION_SECRET`. `ADMIN_PASSWORD` must never equal `AUTH_PASSWORD`. Since #1670
+  the password alone mints no `aid`: a passkey assertion (UV required) does, and passkey
+  enrollment needs `ADMIN_ENROLL_TOKEN`, never a session (`admin-two-factor-login.md`).
+- **Enforced by:** `test/admin.test.js` (app token rejected as admin),
+  `test/admin-passkeys.test.js` (password alone, every cross-token pair, enrollment gate)
 
 ### S-011 — Security headers and CSP stay tight; no directive weakened without a documented reason
 - **Status:** adopted · 2026-07-24

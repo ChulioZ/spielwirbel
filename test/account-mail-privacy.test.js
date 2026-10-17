@@ -42,7 +42,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const mail = require('../lib/mail');
 
 /*
@@ -196,9 +196,7 @@ test('the operator panel\'s two sends log a failure without the notifier\'s or r
   // four sites outside lib/routes/admin/ and named these two as still open; both
   // mail an address the operator was given in confidence.
   const repo = require('../lib/repo');
-  const login = await request(app).post('/api/admin/login').send({ password: 'operator-secret-pw' });
-  assert.equal(login.status, 200);
-  const cookie = login.headers['set-cookie'];
+  const cookie = adminSessionCookie();
 
   const notifier = 'decision.canary@example.com';
   const notice = await repo.createContactNotice({

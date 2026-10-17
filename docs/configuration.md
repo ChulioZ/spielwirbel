@@ -381,6 +381,23 @@ boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
 (otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
 unset — the default — and the entire surface `404`s.
 
+**The panel login takes two factors (#1670): the password, then a passkey**
+registered for the operator (user verification required, so a PIN or biometric
+on the key). The password alone never signs in. Passkeys are registered on the
+login screen ("Passkey registrieren"), which needs the password **and**
+`ADMIN_ENROLL_TOKEN`, a one-time secret you set in the environment only for the
+minutes an enrollment takes. While it is unset the enrollment endpoints `404`,
+even for a signed-in operator, so a stolen session can't add a key. Register two
+keys (e.g. phone + hardware key), then **remove the variable**. The panel shows
+a warning while it is set.
+
+This fails closed: with `ADMIN_PASSWORD` set but **no** passkey enrolled and no
+`ADMIN_ENROLL_TOKEN`, the panel can't be entered at all. Recovery after losing
+every key is the same path: set `ADMIN_ENROLL_TOKEN`, register a new key,
+remove the variable. Enrolled keys are listed in the panel's „Admin-Passkeys"
+card, where any but the last can be removed. They bind to the same RP ID as
+account passkeys (`WEBAUTHN_RP_ID`, the canonical host).
+
 Add-game lookup: BoardGameGeek is the only provider, and it needs
 `BGG_API_TOKEN` — a bearer token from a registered application
 ([boardgamegeek.com/applications](https://boardgamegeek.com/applications), see

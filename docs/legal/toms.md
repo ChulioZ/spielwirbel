@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-10-06
+**Stand:** 2026-10-18
 
 ## Verschlüsselung & Transport
 
@@ -21,8 +21,12 @@ list nothing that is not actually in place.
 - Access-Token: kurzlebige (15 min) signierte JWTs; Refresh-Token rotieren.
 - Anti-Enumeration: Registrierung/Passwort-vergessen antworten für bekannte und
   unbekannte Adressen identisch; Login verbrennt konstante Argon2-Arbeit.
-- Betreiber-Panel hinter eigenem `ADMIN_PASSWORD` (nie gleich dem App-Passwort,
-  domain-separierte Token — `lib/admin.js`).
+- Betreiber-Panel hinter **zwei Faktoren** (#1670): eigenes `ADMIN_PASSWORD`
+  (nie gleich dem App-Passwort, domain-separierte Token — `lib/admin.js`) **und**
+  ein für den Betreiber registrierter Passkey mit Nutzerverifikation (PIN/
+  Biometrie). Das Passwort allein meldet nicht an. Neue Passkeys nur mit einem
+  einmaligen `ADMIN_ENROLL_TOKEN` aus der Server-Umgebung, nie aus einer
+  laufenden Panel-Sitzung; ohne Passkey bleibt das Panel geschlossen.
 - Uploads sind zugriffsgeschützt (Cookie/Bearer-Gate auf `/uploads`); kein
   öffentlicher Bucket-Zugriff (Read-through-Proxy, #128). Seit #955 prüft
   `lib/upload-access.js` zusätzlich die **Eigentümerschaft** am angefragten

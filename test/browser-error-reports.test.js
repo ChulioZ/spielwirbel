@@ -19,7 +19,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const { createApp } = require('../lib/app');
 const {
   recentClientErrors, clearClientErrors, recentLogs, clearLogs, uaEngine,
@@ -39,9 +39,7 @@ const VALID = {
 };
 
 async function adminCookie() {
-  const res = await request(app).post('/api/admin/login').send({ password: 'operator-secret-pw' });
-  assert.equal(res.status, 200);
-  return res.headers['set-cookie'];
+  return adminSessionCookie();
 }
 
 /* ----------------------- the client's own pure helpers --------------------- */

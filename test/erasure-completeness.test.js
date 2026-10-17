@@ -89,6 +89,13 @@ const GLOBAL_DISPOSITION = {
     why: 'one week of quiz questions (#743) built from public BGG corpus facts — '
       + 'no account, tenant or personal data in it, so nothing to erase or export',
   },
+  admin_passkeys: {
+    erase: false,
+    export: false,
+    why: 'the OPERATOR\'s own second-factor credentials for the admin panel (#1670): '
+      + 'keyed by credential id, with no user id or tenant — no account\'s data, so '
+      + 'nothing an account erasure or export could reach',
+  },
   moderation_log: {
     erase: false,
     export: false,

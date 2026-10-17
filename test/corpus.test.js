@@ -27,19 +27,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const repo = require('../lib/repo');
 const corpus = require('../lib/corpus');
 const scheduler = require('../lib/scheduler');
 const observability = require('../lib/observability');
 
-const ADMIN_PW = 'operator-secret-pw';
-
-const adminCookie = async () => {
-  const res = await request(app).post('/api/admin/login').send({ password: ADMIN_PW });
-  assert.equal(res.status, 200);
-  return res.headers['set-cookie'];
-};
+const adminCookie = async () => adminSessionCookie();
 
 /* ------------------------------- the CSV shape ------------------------------ */
 

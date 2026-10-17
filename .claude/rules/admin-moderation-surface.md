@@ -8,8 +8,9 @@ paths:
 ---
 # The operator moderation surface (#268/#273/#274/#275) — traps
 
-**Since #996 it is `lib/routes/admin/`, not one file.** Seven sub-routers
-(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`) plus
+**Since #996 it is `lib/routes/admin/`, not one file.** Eight sub-routers
+(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`, and
+`passkeys` since #1670) plus
 `shared.js` (the schemas and paging shape more than one needs) and `index.js`,
 which owns the login pair, the `ADMIN_PASSWORD` gate and the mounts.
 
@@ -59,10 +60,15 @@ file set and changed independently of the rest:
 sharing the value is privilege escalation for every member (same call
 `user-accounts.md` made for `SESSION_SECRET`). And since the *signing* secret
 may legitimately be a shared `SESSION_SECRET`, the admin HMAC payload is
-**domain-separated** (`admin.` prefix, own token version `a1`, own cookie
+**domain-separated** (`admin.` prefix, own token version — `a2` since #1670 —, own cookie
 `aid`, `sameSite=strict`). Drop the prefix and an app `sid` token becomes a
 valid admin token whenever `SESSION_SECRET` is set. `test/admin.test.js`
 asserts an app token is rejected.
+
+**The login is two-factor since #1670** — password, then a passkey with
+user verification — and its traps (own challenge scopes, enrollment never from a
+session, fail-closed with no key) live in
+`.claude/rules/admin-two-factor-login.md`.
 
 ## 2. Moderation methods are global on purpose — keep them out of TENANT_METHODS
 

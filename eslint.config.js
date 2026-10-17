@@ -771,7 +771,17 @@ module.exports = [
       // `FACE_DESIGN` (#1198): login.html and kontakt.html load the
       // dependency-free designs.js so js/pages/face.js can stamp the face design
       // onto <html> before the body paints.
-      globals: { ...globals.browser, FACE_DESIGN: 'readonly' },
+      // `getPasskey` & co. (#1670): admin.html loads the dependency-free
+      // js/passkey.js so the panel's passkey second factor shares the
+      // conversions the account passkeys use rather than copying them.
+      globals: {
+        ...globals.browser,
+        FACE_DESIGN: 'readonly',
+        getPasskey: 'readonly',
+        createPasskey: 'readonly',
+        passkeysSupported: 'readonly',
+        isPasskeyCancel: 'readonly',
+      },
     },
   },
   {

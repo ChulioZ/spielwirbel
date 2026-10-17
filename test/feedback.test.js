@@ -17,16 +17,12 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 
-const { app } = require('./helpers');
+const { app, adminSessionCookie } = require('./helpers');
 const { createApp } = require('../lib/app');
 const repo = require('../lib/repo');
 
-const ADMIN_PW = 'operator-secret-pw';
-
 async function adminCookie() {
-  const res = await request(app).post('/api/admin/login').send({ password: ADMIN_PW });
-  assert.equal(res.status, 200);
-  return res.headers['set-cookie'];
+  return adminSessionCookie();
 }
 
 test('the dedicated POST /api/feedback route is retired (#321)', async () => {

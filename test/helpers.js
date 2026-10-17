@@ -62,4 +62,12 @@ async function createRound(request, over = {}) {
   return res.body;
 }
 
-module.exports = { app, store, DATA_DIR, createRound };
+// An operator session WITHOUT the two-factor login (#1670). Specs about what the
+// panel does mint the `aid` cookie directly; the login itself — password step
+// plus passkey — is test/admin-passkeys.test.js's subject.
+function adminSessionCookie() {
+  const admin = require('../lib/admin');
+  return [`aid=${admin.mintToken(admin.signingSecret())}`];
+}
+
+module.exports = { app, store, DATA_DIR, createRound, adminSessionCookie };
