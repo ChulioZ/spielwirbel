@@ -212,3 +212,10 @@ test('the top designers: ranked like mechanics, with BGG\'s (Uncredited) sentine
   // A shelf with no designer data has an empty list, like the other two.
   assert.deepEqual(shelfProfile(shelfOf(9, { score: 3 }), deps).designers, []);
 });
+
+test('an open-topped box starting above six counts in the 6+ band (#1669)', () => {
+  // The band used to probe count by count up to the widest declared maximum,
+  // so a box with a minimum of seven and no maximum was never asked about.
+  const shelf = [...shelfOf(SHELF_PROFILE_MIN_GAMES), g({ title: 'Party', minPlayers: 7, maxPlayers: undefined })];
+  assert.equal(band(shelfProfile(shelf, deps).seats, '6'), 1);
+});

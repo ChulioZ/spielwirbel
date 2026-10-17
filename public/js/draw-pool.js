@@ -79,22 +79,20 @@ function fitsPlayerCount(game, playerCount) {
   return (game.expansions || []).some((e) => expansionAdmits(e, playerCount));
 }
 
-// Upper bound for an open-topped probe. A box declaring 99 players is a party
-// game that seats "everyone"; probing further buys nothing and bounds the loop.
-const PLAYER_PROBE_MAX = 99;
-
 // Whether the round can seat ANY table of `from` or more at this game — the
 // Regal-Steckbrief's „6+" band and the Regal filter's „8+" (#1667) ask the same
-// question, so they share this probe rather than each writing one. It probes
-// count by count through `fitsPlayerCount` up to the widest declared maximum,
-// so the union-not-hull rule above holds here too; an open top (no maxPlayers
-// on the box) is answered at `from` itself.
+// question, so they share this rather than each writing one.
+//
+// Each admitted range is an interval, so it reaches `from` or beyond exactly
+// when it admits max(from, its own minimum): the one count worth asking. That
+// asks the two predicates above rather than restating them, so the union rule
+// and the both-bounds rule for an expansion still hold here. It replaced a
+// count-by-count probe up to the widest declared maximum, which missed a box
+// starting above `from` with no maximum and one lying past its cap (#1669).
 function fitsPlayerCountFrom(game, from) {
-  const tops = [game.maxPlayers, ...(game.expansions || []).map((e) => e && e.maxPlayers)]
-    .filter((v) => typeof v === 'number');
-  const top = Math.min(PLAYER_PROBE_MAX, Math.max(from, ...tops));
-  for (let k = from; k <= top; k++) if (fitsPlayerCount(game, k)) return true;
-  return false;
+  const at = (min) => (typeof min === 'number' ? Math.max(from, min) : from);
+  if (fitsOwnRange(game, at(game.minPlayers))) return true;
+  return (game.expansions || []).some((e) => e && expansionAdmits(e, at(e.minPlayers)));
 }
 
 // The Regal's „Personen" filter (#1667): one count, not a range — "who's

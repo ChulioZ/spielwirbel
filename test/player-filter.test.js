@@ -66,3 +66,22 @@ test('the choices are 1…8, the last one meaning „8 or more"', () => {
   assert.deepEqual(PLAYER_FILTER_CHOICES, [1, 2, 3, 4, 5, 6, 7, 8]);
   assert.equal(PLAYER_FILTER_CHOICES[PLAYER_FILTER_CHOICES.length - 1], PLAYER_FILTER_TOP);
 });
+
+// CodeRabbit on #1669: a probe that walks counts from `from` up to a cap missed
+// both a box whose range starts above `from` with no maximum and one that lies
+// entirely past the cap — and a box that fits 9 but not 8 is the case that
+// separates "8 or more" from "exactly 8".
+test('8+ keeps a box that starts above eight, open-topped or bounded', () => {
+  assert.equal(matchesPlayerFilter({ title: 'G', minPlayers: 10 }, PLAYER_FILTER_TOP), true);
+  assert.equal(matchesPlayerFilter(box(9, 12), PLAYER_FILTER_TOP), true, 'fits 9 but not 8');
+  assert.equal(matchesPlayerFilter(box(100, 120), PLAYER_FILTER_TOP), true);
+  assert.equal(matchesPlayerFilter(box(2, 4, {
+    expansions: [{ title: 'Mega', minPlayers: 10, maxPlayers: 12 }],
+  }), PLAYER_FILTER_TOP), true, 'through an expansion that starts past eight');
+});
+
+test('8+ still drops a half-declared expansion, per the union rule', () => {
+  assert.equal(matchesPlayerFilter(box(2, 4, {
+    expansions: [{ title: 'Halb', minPlayers: 10 }],
+  }), PLAYER_FILTER_TOP), false);
+});
