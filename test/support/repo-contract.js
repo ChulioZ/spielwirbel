@@ -5987,7 +5987,7 @@ module.exports = function repoContract(repo) {
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
       'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'roundsWithSavedFilters', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
+      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
       'sessionsImported', 'sessionsImportedBgStats',
@@ -6016,6 +6016,9 @@ module.exports = function repoContract(repo) {
       // The three shelf states, on ONE round, so the union counts once.
       const shelved = await repo.createGame(tn, r.id, gameFields({ title: 'Regal' }));
       await repo.updateGame(tn, r.id, shelved.id, { retired: true, completed: true, wish: true });
+      // A guest game (#1681) — and a SECOND one, so the figure counts the round once.
+      await repo.createGame(tn, r.id, gameFields({ title: 'Gast 1', guestGame: true }));
+      await repo.createGame(tn, r.id, gameFields({ title: 'Gast 2', guestGame: true }));
 
       const session = await repo.createSession(tn, r.id, {
         gameIds: [own.id],
@@ -6039,7 +6042,7 @@ module.exports = function repoContract(repo) {
       }
       // The denominators move with them, or the shares the panel renders are
       // measured against a total that never grew.
-      assert.equal(m.content.games, mid.content.games + 3);
+      assert.equal(m.content.games, mid.content.games + 5);
       assert.equal(m.content.sessions, mid.content.sessions + 1);
       assert.equal(m.accounts.total, mid.accounts.total + 1);
     });
