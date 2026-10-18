@@ -5910,6 +5910,7 @@ module.exports = function repoContract(repo) {
       'roundsWithTags', 'roundsWithSavedFilters', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
+      'sessionsImported', 'sessionsImportedBgStats',
     ];
 
     await t.test('every adoption figure moves on a fixture that uses the feature', async () => {
@@ -5943,6 +5944,7 @@ module.exports = function repoContract(repo) {
         finished: true,
         guests: [{ id: 'g1', name: 'Gast' }],
         teams: [{ id: 't1', personIds: [r.members[0].id, 'g1'] }],
+        importRef: { source: 'bgstats', id: 'p1' },
       });
       await repo.createSessionVoteLink({ tenantId: tn, roundId: r.id, sessionId: session.id });
 
@@ -5960,6 +5962,19 @@ module.exports = function repoContract(repo) {
       assert.equal(m.content.games, mid.content.games + 3);
       assert.equal(m.content.sessions, mid.content.sessions + 1);
       assert.equal(m.accounts.total, mid.accounts.total + 1);
+    });
+
+    await t.test('an imported session counts under its own source, and in the total (#1665)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `adi-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Import', members: ['Ann'] });
+      await repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, importRef: { source: 'bgg', id: '7#1' },
+      });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.sessionsImportedBgg, mid.adoption.sessionsImportedBgg + 1);
+      assert.equal(m.adoption.sessionsImportedBgStats, mid.adoption.sessionsImportedBgStats);
+      assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
     });
 
     await t.test('a round using NOTHING moves no adoption figure', async () => {

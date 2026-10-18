@@ -53,6 +53,7 @@ const STATUS = (over = {}) => ({
       gamesLinked: 55, gamesWithOwnCover: 12, gamesWithProviderCover: 40,
       gamesWithOwners: 9, gamesWithExpansions: 4,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
+      sessionsImported: 6, sessionsImportedBgStats: 4, sessionsImportedBgg: 2,
       accountsWithPasskey: 11, accountsWithBggUsername: 6,
       /* The card's own denominators (#1174), DELIBERATELY DIFFERENT from the
          instance-wide twins above — `accounts.total` is 42 against 40 here,
@@ -348,6 +349,9 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['mit Gästen', '8', '27 %', 0],
         ['mit Teams', '2', '7 %', 0],
         ['mit Vote-Link', '5', '17 %', 0],
+        ['importiert', '6', '20 %', 0],
+        ['aus BG Stats', '4', '67 %', 1],
+        ['aus BoardGameGeek', '2', '33 %', 1],
         ['gestartet (ohne Split-Eltern)', '28', '93 %', 0],
         ['als gespielt markiert', '12', '43 %', 1],
         ['von ≥2 bewertet', '18', '64 %', 1],
