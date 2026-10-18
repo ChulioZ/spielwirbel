@@ -65,26 +65,102 @@ const shelfDims = (p) => ['seats', 'time', 'weight'].filter((dim) => p[dim]).map
    that CARRY the value — so a bar reads "6 of the 9 games that say", and the
    „ohne Angabe" line under it says how many did not. A gap (shelfBandIsGap) is
    marked, and its count is real text, so the bar is never the only
-   carrier of the number. */
-function shelfBars(dim, d) {
+   carrier of the number.
+
+   With `open` (the screen, #1668) a non-zero count is the button that lists
+   the band's games; the Start card passes none and stays a summary. */
+function shelfBars(dim, d, open) {
   const list = h('<ul class="shelf-bars"></ul>');
   d.bands.forEach((b) => {
     const pct = d.known ? Math.round((b.n / d.known) * 100) : 0;
+    const label = shelfBandLabel(dim, b.key);
     const row = h(`<li class="shelf-bar${shelfBandIsGap(dim, b) ? ' shelf-bar--gap' : ''}">
-         <span class="shelf-bar__label">${esc(shelfBandLabel(dim, b.key))}</span>
+         <span class="shelf-bar__label">${esc(label)}</span>
          <span class="shelf-bar__track" aria-hidden="true"><span class="shelf-bar__fill" style="width:${pct}%"></span></span>
          <span class="shelf-bar__n">${b.n}</span>
        </li>`);
+    if (open && b.n) {
+      const btn = shelfCountButton(row.querySelector('.shelf-bar__n'), String(b.n));
+      btn.setAttribute('aria-label', tn(b.n, 'shelfProfile.showGamesOne', 'shelfProfile.showGames', { what: label }));
+      btn.addEventListener('click', () => open(btn, shelfListTitle(dim, b.key), b.games));
+    }
     list.appendChild(row);
   });
   return list;
 }
 
-// The gaps as a list, capped for the card and complete on the screen.
-function shelfGapList(gaps, max) {
+/* Swap a count's <span> for a <button> carrying the same classes and text, so
+   every design's rule for the span (the gap accent, the tabular numerals) still
+   applies. `.shelf-count` adds only the button reset and the affordance. */
+function shelfCountButton(span, text) {
+  const btn = h(`<button type="button" class="${esc(span.className)} shelf-count" aria-haspopup="dialog" aria-expanded="false">${esc(text)}</button>`);
+  span.replaceWith(btn);
+  return btn;
+}
+
+// A band's list title: the dimension and the band, „Personen · für 5".
+const shelfListTitle = (dim, key) =>
+  t('shelfProfile.listTitle', { label: t(SHELF_DIM_TITLES[dim]), name: shelfBandLabel(dim, key) });
+
+/* The games behind one count (#1668), as #1562 lists the games behind a
+   favourite name: openEditor, so an anchored popover from 860px and a sheet
+   below it, with Escape, Back, the backdrop and focus restoration included
+   (.claude/rules/popover-vs-sheet-editors.md). It wears the stats list's
+   `stats-games` variant and classes on purpose — the same popup, so every
+   design that paints that one paints this one, and the phone sheet docks the
+   same way.
+
+   Each title links to the game's own Spielepass IN THIS ROUND, not to BGG:
+   these are the round's games. A sheet owns a history marker, so the link
+   closes it first and navigates after (closeSheet(next)); a popover dies in
+   syncUrl. `scoreOf` is given for a score-ranked list only, and puts the
+   shelf's own pill on each row. */
+function openShelfGames(btn, title, games, rid, scoreOf) {
+  btn.setAttribute('aria-expanded', 'true');
+  openEditor(btn, 'stats-games', title, (el) => {
+    const bare = el.classList.contains('popover') && !el.querySelector('.popover__head');
+    if (bare) {
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', title);
+    }
+    const body = h(`<div class="stats-games">
+        ${bare ? `<h2 class="stats-games__title">${esc(title)}</h2>` : ''}
+        <ol class="stats-games__list"></ol>
+      </div>`);
+    const list = body.querySelector('ol');
+    games.forEach((g) => {
+      const score = scoreOf ? scoreOf(g) : null;
+      const row = h(`<li class="stats-games__row">
+          ${g.image
+    ? `<img class="stats-games__cover" src="${esc(coverUrl(g.image, COVER_THUMB))}" alt="" loading="lazy" />`
+    : '<span class="stats-games__cover stats-games__cover--none" aria-hidden="true"></span>'}
+          <span class="stats-games__body shelf-games__body">
+            <a class="stats-games__name">${esc(g.title)}</a>
+            ${typeof score === 'number' ? `<span class="score-pill" style="--sc:${scoreColor(score)}" data-stop="${scoreStop(score)}">${fmtAvg(displayScore(score))}</span>` : ''}
+          </span>
+        </li>`);
+      navLink(row.querySelector('a'), gamePath(rid, g.id), () => closeSheet(() => showGameDetail(rid, g.id)));
+      list.appendChild(row);
+    });
+    el.appendChild(body);
+    const first = body.querySelector('a');
+    // After the container is live — focus() on a detached node does nothing.
+    return () => { if (first) first.focus(); };
+  }, () => btn.setAttribute('aria-expanded', 'false'));
+}
+
+// The gaps as a list, capped for the card and complete on the screen. With
+// `open` (the screen) a gap that HAS games — „nur 2 Spiele" — is the button that
+// lists them; „kein Spiel" stays text, there is nothing to open.
+function shelfGapList(gaps, max, open) {
   const list = h('<ul class="shelf-gaps"></ul>');
   gaps.slice(0, max).forEach((gap) => {
-    list.appendChild(h(`<li class="shelf-gap"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${esc(shelfGapText(gap))}</span></li>`));
+    const row = h(`<li class="shelf-gap"><i class="ti ti-alert-triangle" aria-hidden="true"></i><span>${esc(shelfGapText(gap))}</span></li>`);
+    if (open && gap.n) {
+      const btn = shelfCountButton(row.querySelector('span'), shelfGapText(gap));
+      btn.addEventListener('click', () => open(btn, shelfListTitle(gap.dim, gap.key), gap.games));
+    }
+    list.appendChild(row);
   });
   return list;
 }
@@ -155,7 +231,9 @@ function shelfPanel(title) {
 // to its BGG page once POST /api/bgg-links answers, and stays plain text until
 // then — or for good, when the instance has no id for it. The share image is
 // built from the profile data, not from this panel, so it is unaffected.
-function shelfTopPanel(title, items, type) {
+// `open` (#1668) makes each row's „aus N Spielen" the button that lists the
+// scored games behind the name, best score first — what the mean was taken over.
+function shelfTopPanel(title, items, type, open) {
   const { panel, body } = shelfPanel(title);
   panel.querySelector('.hub-card__title').insertAdjacentHTML('beforeend', ` ${infoButton('score')}`);
   body.appendChild(h(`<div class="shelf-card__sub">${esc(t('shelfProfile.byScore'))}</div>`));
@@ -169,6 +247,14 @@ function shelfTopPanel(title, items, type) {
          </span>
        </li>`));
   });
+  if (open) {
+    list.querySelectorAll('.shelf-top__n').forEach((span, i) => {
+      const it = items[i];
+      const btn = shelfCountButton(span, span.textContent);
+      btn.addEventListener('click', () =>
+        open(btn, t('shelfProfile.listTitle', { label: title, name: it.name }), it.games, true));
+    });
+  }
   body.appendChild(list);
   linkShelfTopNames(list, items, type);
   wireInfoButtons(panel);
@@ -244,7 +330,10 @@ async function showShelfProfile(rid) {
   setDocTitle(t('shelfProfile.title'), round.name);
 
   const activeGames = round.games.filter(isActiveGame);
-  const p = shelfProfile(activeGames, shelfProfileDeps(roundScoreIndex(round, activeGames).byGame));
+  const deps = shelfProfileDeps(roundScoreIndex(round, activeGames).byGame);
+  const p = shelfProfile(activeGames, deps);
+  // Every count on the screen opens the games behind it (#1668).
+  const open = (btn, title, games, scored) => openShelfGames(btn, title, games, rid, scored ? deps.scoreOf : null);
 
   app.innerHTML = '';
   renderSubScreenTabs(round, 'shelf-profile');
@@ -275,7 +364,7 @@ async function showShelfProfile(rid) {
   const grid = h('<div class="shelf-profile"></div>');
   shelfDims(p).forEach(([dim, d]) => {
     const { panel, body } = shelfPanel(t(SHELF_DIM_TITLES[dim]));
-    body.appendChild(shelfBars(dim, d));
+    body.appendChild(shelfBars(dim, d, open));
     if (d.unknown) {
       body.appendChild(h(`<p class="muted hub-card__facts">${esc(tn(d.unknown, 'shelfProfile.unknownOne', 'shelfProfile.unknown'))}</p>`));
     }
@@ -283,11 +372,11 @@ async function showShelfProfile(rid) {
   });
   const gaps = shelfPanel(t('shelfProfile.gaps'));
   gaps.body.appendChild(p.gaps.length
-    ? shelfGapList(p.gaps, p.gaps.length)
+    ? shelfGapList(p.gaps, p.gaps.length, open)
     : h(`<p class="hub-card__facts">${esc(t('shelfProfile.noGaps'))}</p>`));
   grid.appendChild(gaps.panel);
-  if (p.mechanics.length) grid.appendChild(shelfTopPanel(t('metaFilter.mechanics'), p.mechanics, 'mechanic'));
-  if (p.categories.length) grid.appendChild(shelfTopPanel(t('metaFilter.categories'), p.categories, 'category'));
-  if (p.designers.length) grid.appendChild(shelfTopPanel(t('gameInfo.designers'), p.designers, 'designer'));
+  if (p.mechanics.length) grid.appendChild(shelfTopPanel(t('metaFilter.mechanics'), p.mechanics, 'mechanic', open));
+  if (p.categories.length) grid.appendChild(shelfTopPanel(t('metaFilter.categories'), p.categories, 'category', open));
+  if (p.designers.length) grid.appendChild(shelfTopPanel(t('gameInfo.designers'), p.designers, 'designer', open));
   app.appendChild(grid);
 }

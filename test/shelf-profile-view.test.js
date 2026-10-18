@@ -117,9 +117,12 @@ test('the solo band reads as one word in every locale, never „für 1" (#1666)'
 });
 
 // The screen, rendered through its real route to the round.
-async function screen(t, round, { design } = {}) {
+async function screen(t, round, { design, wide } = {}) {
   const dom = loadApp();
   t.after(() => dom.close());
+  if (wide !== undefined) {
+    dom.run(`window.matchMedia = () => ({ matches: ${wide}, addEventListener() {}, removeEventListener() {} });`);
+  }
   if (design) dom.call('applyDesign', design);
   dom.set('api', async () => round);
   dom.set('toast', () => {});
@@ -252,4 +255,78 @@ test('the image lays its lists out at most TWO to a panel, so a third gets a row
   // over the gaps block below it.
   const h = (n) => dom.run(`shelfListsH({ lists: ${JSON.stringify(Array.from({ length: n }, (_, i) => list('L' + i)))} })`);
   assert.ok(h(3) > h(2), 'the second panel adds height');
+});
+
+/* Every count on the screen opens the games behind it (#1668). The fixture adds
+   one 2–5 game, so „Für 5 Personen: nur 1 Spiel" is a gap WITH a game to list,
+   beside „Für 6+ Personen: kein Spiel", which has none. */
+// Both presentations openEditor picks between: the anchored popover from 860px,
+// the sheet below it (jsdom has no matchMedia, so the width is stubbed).
+for (const wide of [true, false]) test(`the screen (${wide ? 'popover' : 'sheet'}): each non-zero count is a button listing its games, each linked to its Spielepass (#1668)`, async (t) => {
+  const r = linkedRound();
+  r.games.push(game(30, { title: 'Fünfer', maxPlayers: 5 }));
+  const dom = await screen(t, r, { wide });
+  const listed = () => [...dom.document.querySelectorAll('.stats-games__list .stats-games__name')];
+  const close = () => { dom.run('closePopover(); closeSheet();'); };
+
+  const seats = dom.app.querySelector('.shelf-panel .shelf-bars');
+  const counts = [...seats.querySelectorAll('.shelf-bar__n')];
+  assert.deepEqual(counts.map((c) => c.tagName), ['SPAN', 'BUTTON', 'BUTTON', 'BUTTON', 'BUTTON', 'SPAN'],
+    'a count of 0 renders no button');
+  assert.equal(counts[4].getAttribute('aria-label'), 'für 5: das Spiel zeigen');
+
+  counts[1].click();
+  assert.equal(counts[1].getAttribute('aria-expanded'), 'true');
+  assert.equal(listed().length, 10, 'the „für 2" list has as many games as its count');
+  assert.deepEqual(listed().map((a) => a.getAttribute('href')).slice(0, 2), ['/round/3/game/30', '/round/3/game/10'],
+    'ordered by title, each linking into THIS round');
+  close();
+
+  const gaps = [...dom.app.querySelectorAll('.shelf-panel .shelf-gap')];
+  const few = gaps.find((g) => /Für 5 Personen/.test(g.textContent));
+  const none = gaps.find((g) => /Für 6\+ Personen/.test(g.textContent));
+  assert.ok(few.querySelector('button.shelf-count'), '„nur 1 Spiel" opens its game');
+  assert.equal(none.querySelector('button'), null, '„kein Spiel" has nothing to open');
+  few.querySelector('button').click();
+  assert.deepEqual(listed().map((a) => a.textContent), ['Fünfer']);
+  close();
+
+  const designers = [...dom.app.querySelectorAll('.shelf-panel')].find((p) => /Autor:innen/.test(p.textContent));
+  const n = designers.querySelector('button.shelf-top__n');
+  assert.equal(n.textContent, 'aus 4 Spielen');
+  n.click();
+  assert.deepEqual(listed().map((a) => a.textContent), ['Spiel 15', 'Spiel 16', 'Spiel 17', 'Spiel 18']);
+  assert.equal(dom.document.querySelectorAll('.stats-games__list .score-pill').length, 4, 'a score-ranked list shows each score');
+  close();
+
+  // A title navigates — and, as a sheet, closes itself first (closeSheet(next)),
+  // or it would float over the Spielepass. A popover dies in syncUrl, which every
+  // view calls first, so the stand-in view calls it too.
+  const went = [];
+  dom.set('showGameDetail', (rid, gid) => { went.push([rid, gid]); dom.call('syncUrl', `/round/${rid}/game/${gid}`); });
+  counts[4].click();
+  listed()[0].dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+  for (let i = 0; i < 5 && !went.length; i++) await new Promise((res) => setTimeout(res, 5));
+  assert.deepEqual(went, [[3, 30]]);
+  assert.equal(dom.document.querySelector('.stats-games__list'), null, 'the list is gone after navigating');
+
+  // The Start card stays a summary: no button anywhere on it.
+  dom.app.innerHTML = '';
+  dom.set('api', noRecos());
+  dom.call('renderStartTab', r, r.games);
+  assert.equal(card(dom).querySelectorAll('button.shelf-count').length, 0);
+});
+
+/* The count button keeps the span's own type (#1668 review). `.shelf-count`
+   ties `.shelf-bar__n` / `.shelf-top__n` on specificity and comes later, so a
+   `font` shorthand there resets their weight 700 and tabular numerals — the
+   trap .claude/rules/native-button-vs-focusable-span.md names. CSS text, since
+   jsdom applies no external stylesheet. */
+test('the count button resets only the font longhands a <button> needs, never the shorthand', () => {
+  const { bodyOf } = require('./support/css');
+  const rule = bodyOf('.shelf-count');
+  assert.ok(rule, '.shelf-count rule not found');
+  assert.doesNotMatch(rule, /(^|[;{\s])font:\s/, '`font:` would blow away the count\'s weight and tabular numerals');
+  assert.match(rule, /font-family:\s*inherit/);
+  assert.match(rule, /font-size:\s*inherit/);
 });

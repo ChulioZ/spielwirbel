@@ -251,6 +251,11 @@ I18N.fr = {
   'shelfProfile.byScore': 'Selon le score Spielwirbel',
   'shelfProfile.topGamesOne': 'sur {n} jeu',
   'shelfProfile.topGames': 'sur {n} jeux',
+  // The games behind a count on the Regal-Steckbrief (#1668): the list's title, and a
+  // bar count's accessible name — the bare number alone would say nothing.
+  'shelfProfile.listTitle': '{label} · {name}',
+  'shelfProfile.showGamesOne': '{what} : voir le jeu',
+  'shelfProfile.showGames': '{what} : voir les {n} jeux',
   'shelfProfile.more': 'Voir le profil complet',
   'shelfProfile.thin': 'Un profil de l’étagère demande au moins {n} jeux avec des données BoardGameGeek.',
   'hub.reco.more': 'Voir toutes les recommandations',

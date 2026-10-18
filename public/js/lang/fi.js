@@ -229,6 +229,11 @@ I18N.fi = {
   'shelfProfile.byScore': 'Spielwirbel-pisteiden mukaan',
   'shelfProfile.topGamesOne': '{n} pelistä',
   'shelfProfile.topGames': '{n} pelistä',
+  // The games behind a count on the Regal-Steckbrief (#1668): the list's title, and a
+  // bar count's accessible name — the bare number alone would say nothing.
+  'shelfProfile.listTitle': '{label} · {name}',
+  'shelfProfile.showGamesOne': '{what}: näytä peli',
+  'shelfProfile.showGames': '{what}: näytä {n} peliä',
   'shelfProfile.more': 'Näytä koko profiili',
   'shelfProfile.thin': 'Hyllyn profiili tarvitsee vähintään {n} peliä, joilla on BoardGameGeekin tiedot.',
   'hub.reco.more': 'Katso kaikki suositukset',
