@@ -745,7 +745,9 @@ What the app does, in detail. For a short overview see the
   part and who won, as one link the user taps on their own device (nothing is
   sent server-side, and ratings deliberately do not travel — BG Stats has no
   per-player rating field). A session with points also sends each player's score
-  (a team's to each of its members) and the game's direction. Off by default and enabled per account under
+  (a team's to each of its members) and the game's direction. An automa
+  opponent travels as a player of its own, with its points, and is marked as
+  the winner when the session ended „Verloren". Off by default and enabled per account under
   **Konto → BG Stats**, because a website cannot tell whether the app is
   installed and the push happens on the tapping person's own device.
 - **Einfacher Modus (simple mode)** – under **Konto → Einfacher Modus** an

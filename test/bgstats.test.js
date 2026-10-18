@@ -24,11 +24,12 @@ const {
   BGSTATS_CREATE_PLAY,
   BGSTATS_URL_MAX,
   bgStatsGuestId,
+  bgStatsAutomaId,
   bgStatsPlay,
   bgStatsPlayUrl,
 } = require('../public/js/bgstats');
 const { MAX_SESSION_GUESTS, GUEST_NAME_MAX } = require('../public/js/session-people');
-const { POINTS_MIN } = require('../public/js/point-records');
+const { POINTS_MIN, AUTOMA_NAME_MAX, parseAutoma } = require('../public/js/point-records');
 
 // --- fixtures ---------------------------------------------------------------
 
@@ -199,7 +200,10 @@ test('the worst case this app can produce stays inside the URL budget', () => {
     // Points on every seat (#1630), each at its widest — the minimum is the
     // longest literal the bounds allow.
     scores: Object.fromEntries(people.map((p, i) => [i % 2 ? 't' + i : 'unused' + i, POINTS_MIN])),
+    // An automa at its widest too (#1674): one more player on the same link.
+    automa: parseAutoma({ name: 'A'.repeat(AUTOMA_NAME_MAX), points: POINTS_MIN }),
   });
+  assert.ok(url.includes('automa-'), 'the worst case carries the automa');
   assert.ok(url.includes(encodeURIComponent(`"score":${POINTS_MIN}`)), 'the worst case carries points');
   assert.ok(url.length <= BGSTATS_URL_MAX, `worst-case URL is ${url.length} chars`);
 });
@@ -227,4 +231,68 @@ test('a session without points keeps the winners-only payload byte for byte', ()
   assert.equal(JSON.stringify(bgStatsPlay(model({ scores: undefined }))), before);
   assert.equal(JSON.parse(before).game.noPoints, true);
   assert.ok(!before.includes('"score"'));
+});
+
+// --- the automa (#1674) -----------------------------------------------------
+
+// The automa reaches the builder already normalized, the way showResults passes
+// it — through the REAL parser, so a change to its shape cannot leave these
+// fixtures describing one the app no longer produces.
+const automaModel = (automa, over = {}) => model({
+  people: [anna],
+  parties: [solo(anna)],
+  winnerIds: [],
+  automa: parseAutoma(automa),
+  ...over,
+});
+
+test('an automa travels as one extra player, with its name and points', () => {
+  const play = bgStatsPlay(automaModel({ name: 'Automa (schwer)', points: 58 }, { scores: { m1: 61 } }));
+  assert.equal(play.players.length, 2);
+  const bot = play.players[1];
+  assert.equal(bot.name, 'Automa (schwer)');
+  assert.equal(bot.score, 58);
+  assert.equal(bot.sourcePlayerId, bgStatsAutomaId('Automa (schwer)'));
+  assert.equal(play.players[0].score, 61);
+});
+
+test('an automa without points sends no score', () => {
+  const play = bgStatsPlay(automaModel({ name: 'Bot' }));
+  assert.equal('score' in play.players[1], false);
+});
+
+test('the automa id is stable per name and disjoint from a guest of the same name', () => {
+  assert.equal(bgStatsAutomaId('Automa'), bgStatsAutomaId('  automa '));
+  assert.notEqual(bgStatsAutomaId('Automa'), bgStatsAutomaId('Rautomat'));
+  assert.notEqual(bgStatsAutomaId('Dana'), bgStatsGuestId('Dana'));
+  assert.match(bgStatsAutomaId('Dana'), /^automa-[0-9a-f]{8}$/);
+});
+
+test('the automa wins only on „Verloren" with no person winning — never from the points', () => {
+  const winner = (over) => bgStatsPlay(automaModel({ name: 'Bot', points: 99 }, over)).players[1].winner;
+  // Lost: the bot beat the player, whatever the points say.
+  assert.equal(winner({ session: { ...session, ending: 'lost' }, scores: { m1: 200 } }), true);
+  // No recorded ending, or another ending: the bot is not the winner, even
+  // though its points are higher.
+  assert.equal(winner({ scores: { m1: 1 } }), false);
+  assert.equal(winner({ session: { ...session, ending: 'noWinner' } }), false);
+  // A person won: a stale `lost` cannot make the bot a second winner.
+  assert.equal(winner({ session: { ...session, ending: 'lost' }, winnerIds: ['m1'] }), false);
+});
+
+test('a session without an automa gives byte-identical output', () => {
+  const before = JSON.stringify(bgStatsPlay(model()));
+  assert.equal(JSON.stringify(bgStatsPlay(model({ automa: null }))), before);
+  assert.equal(JSON.stringify(bgStatsPlay(model({ automa: undefined }))), before);
+});
+
+test('an automa\'s points alone make it a scored play, not a noPoints one', () => {
+  // The points sheet saves an automa with points and no person score, so the
+  // play must not announce `noPoints` while one player carries a score.
+  const play = bgStatsPlay(automaModel({ name: 'Bot', points: 58 }));
+  assert.equal(play.game.highestWins, true);
+  assert.equal('noPoints' in play.game, false);
+  assert.equal(play.players[1].score, 58);
+  // An automa WITHOUT points leaves a winners-only play winners-only.
+  assert.equal(bgStatsPlay(automaModel({ name: 'Bot' })).game.noPoints, true);
 });

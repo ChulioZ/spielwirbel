@@ -409,7 +409,7 @@ const frontendGlobals = {
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
   // bgstats.js (issue #485) — internal helpers listed for the same reason.
   BGSTATS_SOURCE: 'readonly', BGSTATS_CREATE_PLAY: 'readonly', BGSTATS_URL_MAX: 'readonly',
-  bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsTeamLabel: 'readonly',
+  bgStatsPlayDate: 'readonly', bgStatsGuestId: 'readonly', bgStatsAutomaId: 'readonly', bgStatsNameId: 'readonly', bgStatsTeamLabel: 'readonly',
   bgStatsBggId: 'readonly', bgStatsPlay: 'readonly', bgStatsPlayUrl: 'readonly',
   scoreHit: 'readonly', foldTitle: 'readonly', existingTitleState: 'readonly',
   rankLookupHits: 'readonly', hitShelfState: 'readonly',
