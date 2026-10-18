@@ -43,6 +43,19 @@ function bgStatsPlayDate(iso) {
   return new Date(ms).toISOString().slice(0, 19).replace('T', ' ');
 }
 
+// A re-matching id derived from a NAME: FNV-1a over the trimmed, lower-cased
+// name behind a prefix that keeps each namespace disjoint from the others and
+// from member ids, which are bare hex.
+function bgStatsNameId(prefix, name) {
+  let hash = 0x811c9dc5;
+  const norm = String(name || '').trim().toLowerCase();
+  for (let i = 0; i < norm.length; i++) {
+    hash ^= norm.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return prefix + hash.toString(16).padStart(8, '0');
+}
+
 // A guest's re-matching id, derived from their NAME.
 //
 // Guest ids are minted fresh inside the request that starts each session
@@ -50,17 +63,16 @@ function bgStatsPlayDate(iso) {
 // Stats a new stranger every evening and force the user to re-match Dana at
 // every push. A name-derived id makes "Dana" the same person across sessions —
 // which is the same identity the group means when they type the name again.
-//
-// FNV-1a over the trimmed, lower-cased name. The `guest-` prefix is what keeps
-// the namespace disjoint from member ids, which are bare hex.
 function bgStatsGuestId(name) {
-  let hash = 0x811c9dc5;
-  const norm = String(name || '').trim().toLowerCase();
-  for (let i = 0; i < norm.length; i++) {
-    hash ^= norm.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return 'guest-' + hash.toString(16).padStart(8, '0');
+  return bgStatsNameId('guest-', name);
+}
+
+// The automa's re-matching id (#1674). The automa has no id at all — it is
+// `{ name, points? }` on the session — so its name is its identity, as for a
+// guest: „Automa (schwer)" is one BG Stats player that is matched once. Its own
+// prefix keeps a bot called „Dana" from being matched to the guest Dana.
+function bgStatsAutomaId(name) {
+  return bgStatsNameId('automa-', name);
 }
 
 // Team labels are A, B, … AA — BG Stats groups players by an equal `team`
@@ -90,13 +102,15 @@ function bgStatsBggId(game) {
 
 // The play, or null when this session is not one.
 //
-// `model` is { session, game, people, parties, winnerIds, scores } — the values
-// showResults already holds. `game` is the CHOSEN game resolved against the
+// `model` is { session, game, people, parties, winnerIds, scores, automa } —
+// the values showResults already holds. `game` is the CHOSEN game resolved against the
 // round, so a null there means "nothing chosen" and needs no second check.
 // `scores` is the session's points (#1630) keyed by PARTY id — a team's id or
-// an un-teamed person's — absent when nobody entered any.
+// an un-teamed person's — absent when nobody entered any. `automa` is the
+// session's automa already through `parseAutoma` (point-records.js, which this
+// file cannot require), or null.
 function bgStatsPlay(model) {
-  const { session, game, people, parties, winnerIds, scores } = model || {};
+  const { session, game, people, parties, winnerIds, scores, automa } = model || {};
   if (!session || !game) return null;
   if (!session.finished || session.cancelled) return null;
   // The end of the evening, falling back to when it started: a session finished
@@ -160,6 +174,21 @@ function bgStatsPlay(model) {
       return player;
     }),
   };
+  // The automa as a player of its own (#1674) — how BG Stats users log one by
+  // hand, so the bot's score has something to sit beside and a loss reads as
+  // one. It wins exactly when the user recorded „Verloren" and no person won:
+  // the flag follows the ending the user chose, never a comparison of points
+  // (#1672's rule). `bgStatsPlay` has already gated on a finished, uncancelled
+  // session, so `ending === 'lost'` with no winners is sessionEnding's 'lost'.
+  if (automa && automa.name) {
+    const bot = {
+      name: automa.name,
+      sourcePlayerId: bgStatsAutomaId(automa.name),
+      winner: session.ending === 'lost' && won.size === 0,
+    };
+    if (Number.isInteger(automa.points)) bot.score = automa.points;
+    play.players.push(bot);
+  }
   const bggId = bgStatsBggId(game);
   if (bggId) play.game.bggId = bggId;
   return play;
@@ -180,6 +209,7 @@ if (typeof module !== 'undefined' && module.exports) {
     BGSTATS_URL_MAX,
     bgStatsPlayDate,
     bgStatsGuestId,
+    bgStatsAutomaId,
     bgStatsTeamLabel,
     bgStatsBggId,
     bgStatsPlay,
