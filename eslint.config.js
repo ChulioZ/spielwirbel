@@ -379,7 +379,7 @@ const frontendGlobals = {
   careList: 'readonly', anniversary: 'readonly',
   // shelf-profile.js (#1173) — the Regal-Steckbrief's builder
   SHELF_PROFILE_MIN_GAMES: 'readonly', SHELF_PROFILE_FEW: 'readonly', SHELF_PROFILE_TOP: 'readonly',
-  SHELF_SEAT_BANDS: 'readonly', SHELF_TIME_BANDS: 'readonly',
+  SHELF_SEAT_BANDS: 'readonly', SHELF_TIME_BANDS: 'readonly', shelfBandIsGap: 'readonly',
   SHELF_WEIGHT_BANDS: 'readonly', shelfNum: 'readonly', shelfList: 'readonly',
   shelfHasData: 'readonly', shelfSeatKnown: 'readonly', shelfSeatBands: 'readonly',
   shelfDimension: 'readonly', shelfTop: 'readonly', shelfProfile: 'readonly',

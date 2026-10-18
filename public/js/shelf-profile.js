@@ -33,8 +33,9 @@ const SHELF_PROFILE_FEW = 3;
 // How many mechanics, categories and designers the profile names.
 const SHELF_PROFILE_TOP = 5;
 // The table sizes the seat bands ask about. The last one is „6+": a game
-// counts there when it seats ANY table of six or more.
-const SHELF_SEAT_BANDS = [2, 3, 4, 5, 6];
+// counts there when it seats ANY table of six or more. The first is solo
+// (#1666), which is drawn but never a gap — see shelfBandIsGap.
+const SHELF_SEAT_BANDS = [1, 2, 3, 4, 5, 6];
 // Playing-time bands by the game's OWN MAXIMUM — the containment reading the
 // draw filter uses (#1025, fitsMetadataFilters): a 30–60 game is a "31–60"
 // game, because an evening that has 30 minutes cannot be sure to finish it.
@@ -139,6 +140,17 @@ function shelfTop(games, field, scoreOf, keep = (list) => list) {
     .slice(0, SHELF_PROFILE_TOP);
 }
 
+// Whether a band is thin enough to be marked as a GAP. The bars, the tiles, the
+// share image and the gap list all ask this one function, so none of them can
+// disagree with the others about solo. Solo never is a gap (#1666): most group
+// shelves hold no solo game on purpose — a taste, not a hole a draw will hit —
+// and „Für 1 Person: kein Spiel" would scold them for it. (Weight is the other
+// taste, but it is kept out of the gap LIST below, not out of the bar marking.)
+function shelfBandIsGap(dim, band) {
+  if (dim === 'seats' && band.key === '1') return false;
+  return band.n < SHELF_PROFILE_FEW;
+}
+
 /* The profile of a shelf, or null when it has too little data to say anything.
 
    `games` is the ACTIVE shelf (isActiveGame) — a wished or archived game reaches
@@ -152,7 +164,7 @@ function shelfTop(games, field, scoreOf, keep = (list) => list) {
    designers, gaps }:
    each of seats/time/weight is { known, unknown, bands: [{ key, n }] } or null;
    each of mechanics/categories/designers is [{ name, score, n }] (shelfTop);
-   `gaps` lists every seat/time band under SHELF_PROFILE_FEW as { dim, key, n }, emptiest
+   `gaps` lists every band shelfBandIsGap names as { dim, key, n }, emptiest
    first (a band with NOTHING is the stronger statement), dimension order
    otherwise. */
 function shelfProfile(games, deps) {
@@ -175,13 +187,12 @@ function shelfProfile(games, deps) {
     (shelfNum(g.weight) ? [SHELF_WEIGHT_BANDS.find((b) => g.weight < b.max).key] : null));
 
   // Weight is drawn as bars but never listed as a gap (#1173 review): a light
-  // family shelf has no heavy game on purpose — that is a taste, not a hole a
-  // draw will hit, and „Schwer: kein Spiel" on every such shelf reads as a
-  // reproach.
+  // family shelf has no heavy game on purpose, and „Schwer: kein Spiel" on every
+  // such shelf reads as a reproach.
   const gaps = [];
   [['seats', seats], ['time', time]].forEach(([dim, d]) => {
     if (!d) return;
-    d.bands.forEach((b) => { if (b.n < SHELF_PROFILE_FEW) gaps.push({ dim, key: b.key, n: b.n }); });
+    d.bands.forEach((b) => { if (shelfBandIsGap(dim, b)) gaps.push({ dim, key: b.key, n: b.n }); });
   });
   // Array.prototype.sort is stable, so equal counts keep the dimension order.
   gaps.sort((a, b) => a.n - b.n);
@@ -203,6 +214,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     shelfProfile,
     shelfHasData,
+    shelfBandIsGap,
     SHELF_PROFILE_MIN_GAMES,
     SHELF_PROFILE_FEW,
     SHELF_PROFILE_TOP,

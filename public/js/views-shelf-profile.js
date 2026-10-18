@@ -40,8 +40,10 @@ const SHELF_DIM_TITLES = { seats: 'shelfProfile.seats', time: 'metaFilter.playti
 
 const shelfSeatName = (key) => (key === '6' ? '6+' : key);
 
-// A band's label as a bar shows it.
+// A band's label as a bar shows it. Solo has its own word (#1666): „für 1"
+// reads as a typo beside „für 2", and every locale has a plain one.
 function shelfBandLabel(dim, key) {
+  if (dim === 'seats' && key === '1') return t('shelfProfile.seatsSolo');
   if (dim === 'seats') return t('shelfProfile.seatsShort', { seats: shelfSeatName(key) });
   return t(`shelfProfile.${dim}.${key}`);
 }
@@ -61,14 +63,14 @@ const shelfDims = (p) => ['seats', 'time', 'weight'].filter((dim) => p[dim]).map
 
 /* One dimension as horizontal bars. Each fill is the band's share of the games
    that CARRY the value — so a bar reads "6 of the 9 games that say", and the
-   „ohne Angabe" line under it says how many did not. A band under the gap
-   threshold is marked, and its count is real text, so the bar is never the only
+   „ohne Angabe" line under it says how many did not. A gap (shelfBandIsGap) is
+   marked, and its count is real text, so the bar is never the only
    carrier of the number. */
 function shelfBars(dim, d) {
   const list = h('<ul class="shelf-bars"></ul>');
   d.bands.forEach((b) => {
     const pct = d.known ? Math.round((b.n / d.known) * 100) : 0;
-    const row = h(`<li class="shelf-bar${b.n < SHELF_PROFILE_FEW ? ' shelf-bar--gap' : ''}">
+    const row = h(`<li class="shelf-bar${shelfBandIsGap(dim, b) ? ' shelf-bar--gap' : ''}">
          <span class="shelf-bar__label">${esc(shelfBandLabel(dim, b.key))}</span>
          <span class="shelf-bar__track" aria-hidden="true"><span class="shelf-bar__fill" style="width:${pct}%"></span></span>
          <span class="shelf-bar__n">${b.n}</span>
@@ -88,12 +90,11 @@ function shelfGapList(gaps, max) {
 }
 
 /* Der Tisch's card body (T2.2's stat-tile language, as the Rundenpuls speaks
-   it): one tile per seat band, the count over „für 2". A band under the gap
-   threshold is marked `.shelf-tile--gap`. */
+   it): one tile per seat band, the count over „für 2". A gap is marked `.shelf-tile--gap`. */
 function shelfSeatTiles(d) {
   const tiles = h('<div class="pulse-tiles shelf-tiles"></div>');
   d.bands.forEach((b) => {
-    tiles.appendChild(h(`<div class="pulse-tile shelf-tile${b.n < SHELF_PROFILE_FEW ? ' shelf-tile--gap' : ''}">
+    tiles.appendChild(h(`<div class="pulse-tile shelf-tile${shelfBandIsGap('seats', b) ? ' shelf-tile--gap' : ''}">
          <span class="pulse-tile__n">${b.n}</span>
          <span class="pulse-tile__label">${esc(shelfBandLabel('seats', b.key))}</span>
        </div>`));
@@ -204,7 +205,7 @@ function shelfShareModel(round, p) {
     dims: shelfDims(p).map(([dim, d]) => ({
       title: t(SHELF_DIM_TITLES[dim]),
       known: d.known,
-      rows: d.bands.map((b) => ({ label: shelfBandLabel(dim, b.key), n: b.n, gap: b.n < SHELF_PROFILE_FEW })),
+      rows: d.bands.map((b) => ({ label: shelfBandLabel(dim, b.key), n: b.n, gap: shelfBandIsGap(dim, b) })),
     })),
     lists,
     gapsTitle: t('shelfProfile.gaps'),
