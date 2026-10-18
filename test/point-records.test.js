@@ -8,7 +8,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { gamePointRecords, sessionPointLines, memberPointRecords, isValidPoints, pointsBeat, POINTS_MIN, POINTS_MAX } =
+const { gamePointRecords, sessionPointLines, memberPointRecords, isValidPoints, pointsBeat, POINTS_MIN, POINTS_MAX, parseAutoma, AUTOMA_NAME_MAX } =
   require('../public/js/point-records');
 const { sessionPartyGroups } = require('../public/js/session-people');
 const { sortSessionsByDate } = require('../public/js/session-order');
@@ -183,4 +183,38 @@ test('memberPointRecords: a tie at the record within the session that set it is 
   assert.deepEqual(memberPointRecords(round, 'b', deps).held, ['g']);
   assert.deepEqual(memberPointRecords(round, 'c', deps).held, ['g'], 'the second party tied in the record session holds it too');
   assert.deepEqual(memberPointRecords(round, 'a', deps).held, [], 'a later tie is not a record — the earliest reach holds it');
+});
+
+// #1672: the automa is session.automa, not a party, so it can hold neither a
+// best nor the round record — even with the highest score of the game.
+test('an automa’s points never hold the record, and the player’s own still set a best', () => {
+  const bot = { name: 'Automa (schwer)', points: 500 };
+  const s1 = play(1, { a: 60 }, { memberIds: ['a'], automa: bot });
+  const s2 = play(2, { a: 72 }, { memberIds: ['a'], automa: bot });
+  const r = gamePointRecords(roundOf([s1, s2]), game, deps);
+  assert.equal(r.record.points, 72, 'the record is the player’s, not the automa’s 500');
+  assert.equal(r.record.party.id, 'a');
+  assert.equal(r.bests.get('a').points, 72);
+  assert.deepEqual(marks(r), [[], ['a']], 'the second evening is a new personal best');
+  assert.deepEqual(r.plays.map((p) => p.lines.map((l) => l.points)), [[60], [72]], 'no automa line among the parties');
+  const strip = (s) => { const c = { ...s }; delete c.automa; return c; };
+  // The results carry the session objects, so compare what they derive.
+  const view = (x) => ({
+    record: [x.record.points, x.record.party.id, x.record.session.id],
+    bests: [...x.bests].map(([id, b]) => [id, b.points, b.session.id]),
+    lines: x.plays.map((p) => [p.session.id, p.lines.map((l) => [l.party.id, l.points, l.newRecord, l.groupRecord])]),
+  });
+  assert.deepEqual(view(gamePointRecords(roundOf([strip(s1), strip(s2)]), game, deps)), view(r),
+    'without the field every derived value is identical');
+  assert.deepEqual(memberPointRecords(roundOf([s1, s2]), 'a', deps).held, ['g']);
+});
+
+test('parseAutoma normalizes a valid automa and refuses everything else', () => {
+  assert.deepEqual(parseAutoma({ name: ' Bot ', points: 3 }), { name: 'Bot', points: 3 });
+  assert.deepEqual(parseAutoma({ name: 'Bot', points: null }), { name: 'Bot' });
+  assert.deepEqual(parseAutoma({ name: 'x'.repeat(AUTOMA_NAME_MAX) }), { name: 'x'.repeat(AUTOMA_NAME_MAX) });
+  for (const bad of [null, 'Bot', [], {}, { name: '' }, { name: ' ' }, { name: 1 },
+    { name: 'x'.repeat(AUTOMA_NAME_MAX + 1) }, { name: 'Bot', points: 1.5 }, { name: 'Bot', points: '3' }]) {
+    assert.equal(parseAutoma(bad), null, JSON.stringify(bad));
+  }
 });

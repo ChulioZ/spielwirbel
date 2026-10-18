@@ -725,6 +725,12 @@ What the app does, in detail. For a short overview see the
   records and the order for golf-style games. Points never decide the winner,
   which is still tapped as before. Bests and records are derived from the
   sessions, never stored, so deleting or re-dating a session corrects them.
+  **„Automa hinzufügen"** (issue #1672) adds the bot opponent of a solo or co-op
+  game as one more line — a name („Automa", editable to „Automa (schwer)") and
+  optional points. It is not a person: the session stays solo for contests, win
+  rate, Abzeichen and Pokale, and its points never hold a best or the round
+  record. The result lists it after the people; won or „Verloren" is still
+  tapped, never inferred from the two scores.
   A member's page lists their **Bestleistungen** (issue #1631): their best score
   per game with its date, a medal on the games whose round record they hold,
   and how many records they hold and bests they have beaten — a record their

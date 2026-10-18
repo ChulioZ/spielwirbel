@@ -1296,6 +1296,13 @@ I18N.en = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Lower score wins',
+  // #1672: the bot opponent of a solo/co-op game — a line beside the people, never one of them.
+  'points.automa.add': 'Add an automa',
+  'points.automa.remove': 'Remove the automa',
+  'points.automa.default': 'Automa',
+  'points.automa.name': 'Name of the automa',
+  'points.automa.points': 'Points of the automa',
+  'points.automa.sign': 'Switch plus/minus for the automa',
   'log.votedSelf': '{name} voted',
   'log.votedFor': '{actor} voted for {name}',
   'log.closed': '{actor} ended the voting',

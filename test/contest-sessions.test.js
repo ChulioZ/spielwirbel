@@ -113,3 +113,20 @@ test('a whole-table team win extends the streak for every winner; a team loss br
   const solo = winStreak(r, [sess({ winnerIds: ['m1'] }), sess({ memberIds: ['m1'], winnerIds: ['m1'] })], STREAK_DEPS);
   assert.equal(solo.n, 1);
 });
+
+// #1672: an automa is the bot a solo player plays against. It is a session
+// field, never a person, so the evening stays solo for every reader of the
+// rule — the guest-named-„bot" workaround it replaces turned it into a contest.
+test('an automa opponent leaves a one-person session out of the contest rule', () => {
+  const automa = { name: 'Automa (schwer)', points: 82 };
+  const won = sess({ memberIds: ['m1'], winnerIds: ['m1'], automa, scores: { m1: 90 } });
+  const lost = sess({ memberIds: ['m1'], ending: 'lost', automa, scores: { m1: 70 } });
+  const r = round([won, lost]);
+  assert.equal(isContestSession(r, won, sessionEnding), false, 'a win over the automa is no contest');
+  assert.equal(isContestSession(r, lost, sessionEnding), false, 'a loss to it is none either');
+  const st = memberStats(r, 'm1', STATS_DEPS);
+  assert.deepEqual([st.contested, st.contestedWins], [0, 0], 'nothing reaches the win rate');
+  // Byte-for-byte: the same evenings without the field derive the same stats.
+  const bare = round([won, lost].map((s) => { const c = { ...s }; delete c.automa; return c; }));
+  assert.deepEqual(memberStats(bare, 'm1', STATS_DEPS), st);
+});
