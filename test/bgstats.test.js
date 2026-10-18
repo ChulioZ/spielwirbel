@@ -285,3 +285,14 @@ test('a session without an automa gives byte-identical output', () => {
   assert.equal(JSON.stringify(bgStatsPlay(model({ automa: null }))), before);
   assert.equal(JSON.stringify(bgStatsPlay(model({ automa: undefined }))), before);
 });
+
+test('an automa\'s points alone make it a scored play, not a noPoints one', () => {
+  // The points sheet saves an automa with points and no person score, so the
+  // play must not announce `noPoints` while one player carries a score.
+  const play = bgStatsPlay(automaModel({ name: 'Bot', points: 58 }));
+  assert.equal(play.game.highestWins, true);
+  assert.equal('noPoints' in play.game, false);
+  assert.equal(play.players[1].score, 58);
+  // An automa WITHOUT points leaves a winners-only play winners-only.
+  assert.equal(bgStatsPlay(automaModel({ name: 'Bot' })).game.noPoints, true);
+});

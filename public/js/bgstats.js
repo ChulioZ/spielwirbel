@@ -135,6 +135,9 @@ function bgStatsPlay(model) {
     (party.people || []).forEach((p) => teamOf.set(p.id, label));
   });
   const points = scores && typeof scores === 'object' && Object.keys(scores).length ? scores : null;
+  // A scored play is one where ANYONE has points — the automa's alone count,
+  // since the points sheet saves those without a person score.
+  const scored = Boolean(points) || Boolean(automa && Number.isInteger(automa.points));
 
   const won = new Set(winnerIds || []);
   const play = {
@@ -157,7 +160,7 @@ function bgStatsPlay(model) {
       // Field names per BG Stats' "Linking and pushing to BG Stats from other
       // apps or websites" support page, whose example play carries
       // game.highestWins, game.noPoints and players[].score.
-      ...(points ? { highestWins: !game.lowScoreWins } : { noPoints: true }),
+      ...(scored ? { highestWins: !game.lowScoreWins } : { noPoints: true }),
     },
     players: (people || []).map((person) => {
       const player = {
