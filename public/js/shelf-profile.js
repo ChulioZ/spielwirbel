@@ -141,8 +141,8 @@ function shelfTop(games, field, scoreOf, keep = (list) => list) {
 }
 
 // Whether a band is thin enough to be marked as a GAP. The bars, the tiles, the
-// share image and the gap list all ask this one function, so a bar can never be
-// marked for a band no sentence would name. Solo never is (#1666): most group
+// share image and the gap list all ask this one function, so none of them can
+// disagree with the others about solo. Solo never is a gap (#1666): most group
 // shelves hold no solo game on purpose — a taste, not a hole a draw will hit —
 // and „Für 1 Person: kein Spiel" would scold them for it. (Weight is the other
 // taste, but it is kept out of the gap LIST below, not out of the bar marking.)
