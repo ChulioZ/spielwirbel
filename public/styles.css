@@ -8706,10 +8706,12 @@ a.k-tile:focus-visible,
 .play-import__filters > label { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
 .play-import__filters .play-import__check { flex-direction: row; align-items: center; gap: 6px; }
 .play-import__map { margin-bottom: 12px; }
-.play-import__map-row { gap: 12px; }
+.play-import__map-row { gap: 8px 12px; flex-wrap: wrap; }
 .play-import__map-row .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-.play-import__map-row select { max-width: 12rem; }
-.play-import__dropped:empty { display: none; }
+.play-import__map-row select { max-width: 100%; }
+/* Always in the tree — a live region that is display:none while empty is never
+   announced when it fills (.claude/rules/accessibility-contrast-and-modals.md §4). */
+.play-import__dropped:empty { margin: 0; }
 
 /* ---- Edition-cover picker (#519) ---- */
 

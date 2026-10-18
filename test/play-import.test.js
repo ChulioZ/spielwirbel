@@ -97,6 +97,19 @@ test('a co-op the whole table lost becomes ending: lost', () => {
   assert.equal(plays.find((p) => p.sourceId === 'u-pandemic').ending, 'lost');
 });
 
+test('plays before the floor or in the future are left out of the preview', () => {
+  const exp = { ...EXPORT, plays: [
+    { ...EXPORT.plays[0], uuid: 'old', playDate: '1999-12-31 20:00:00' },
+    { ...EXPORT.plays[0], uuid: 'ok', playDate: '2000-01-01 20:00:00' },
+    { ...EXPORT.plays[0], uuid: 'future', playDate: '2026-01-02 20:00:00' },
+  ] };
+  const now = new Date(2026, 0, 1, 12);
+  assert.deepEqual(parseBgStatsExport(exp, { minDay: '2000-01-01', now }).plays.map((p) => p.sourceId), ['ok']);
+  const raw = [{ id: '1', date: '1999-06-01', quantity: 1, game: { bggId: 1, title: 'X' }, players: [] },
+    { id: '2', date: '2001-06-01', quantity: 1, game: { bggId: 1, title: 'X' }, players: [] }];
+  assert.deepEqual(normaliseBggPlays(raw, { playedOnInstant, minDay: '2000-01-01', now }).map((p) => p.sourceId), ['2']);
+});
+
 test('parseBgStatsExport refuses a file that is not an export, and lets JSON errors through', () => {
   assert.throws(() => parseBgStatsExport('{"games": []}'), /not_bgstats/);
   assert.throws(() => parseBgStatsExport('[]'), /not_bgstats/);

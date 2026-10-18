@@ -93,7 +93,7 @@ async function showPlayImport(round) {
     body.replaceChildren(h(`<p class="muted">${esc(t('playImport.loading'))}</p>`));
     let parsed;
     try {
-      parsed = parseBgStatsExport(await f.text());
+      parsed = parseBgStatsExport(await f.text(), { minDay: PLAYED_ON_MIN });
     } catch (err) {
       // A wrong file is the user's to fix and says so; anything else is ours.
       const wrongFile = err && (err.message === 'not_bgstats' || err.name === 'SyntaxError');
@@ -135,7 +135,7 @@ async function showPlayImport(round) {
       status.textContent = t('playImport.loadingCount', { n: raw.length, total: res.total });
       if (!res.plays.length || raw.length >= res.total) break;
     }
-    start('bgg', normaliseBggPlays(raw, { playedOnInstant }), [...new Set(raw.map((p) => p.location).filter(Boolean))].sort());
+    start('bgg', normaliseBggPlays(raw, { playedOnInstant, minDay: PLAYED_ON_MIN }), [...new Set(raw.map((p) => p.location).filter(Boolean))].sort());
   }
 
   // Suggestions are made once, on load, from the round as it stands.

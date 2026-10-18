@@ -620,7 +620,7 @@ I18N.nl = {
   'playImport.people.droppedOne': '{n} partij heeft niemand uit deze groep meer en wordt overgeslagen.',
   'playImport.people.dropped': '{n} partijen hebben niemand uit deze groep meer en worden overgeslagen.',
   'playImport.games.intro': 'Deze spellen staan nog niet in de groep.',
-  'playImport.games.retired': 'Als uitgezocht toevoegen',
+  'playImport.games.retired': 'Opzijgelegd toevoegen',
   'playImport.games.shelf': 'In de kast',
   'playImport.confirmOne': '{n} partij wordt geïmporteerd als gespeelde sessie.',
   'playImport.confirm': '{n} partijen worden geïmporteerd als gespeelde sessies.',

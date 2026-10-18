@@ -596,7 +596,7 @@ const frontendGlobals = {
   renderSessionPoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
-  importScore: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
+  importScore: 'readonly', importDayInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
   normaliseBggPlays: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
   duplicateState: 'readonly', playMemberIds: 'readonly', playPassesFilter: 'readonly',
   buildImportBatches: 'readonly', resolveCreated: 'readonly', showPlayImport: 'readonly',

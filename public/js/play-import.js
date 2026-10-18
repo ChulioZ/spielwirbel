@@ -65,10 +65,20 @@ function dayKeyOf(iso) {
   return `${d.getFullYear()}-${importPad(d.getMonth() + 1)}-${importPad(d.getDate())}`;
 }
 
+// Whether a play's day is one the server will store: not before `minDay`
+// (played-on.js `PLAYED_ON_MIN`, injected — a public/js file cannot require a
+// sibling, and a copied date would drift) and not in the future. A play outside
+// that range is left out of the preview: the route would refuse its whole batch,
+// possibly after earlier batches had already been written.
+function importDayInRange(playedOn, { minDay, now = new Date() }) {
+  if (minDay && dayKeyOf(playedOn) < minDay) return false;
+  return Date.parse(playedOn) <= now.getTime();
+}
+
 // A BG Stats backup → normalised plays plus the location names (the preview's
 // third filter). Throws on a file that is not an export at all, so the sheet
 // can say „not a BG Stats file" rather than „no plays".
-function parseBgStatsExport(json) {
+function parseBgStatsExport(json, { minDay = null, now = new Date() } = {}) {
   const data = typeof json === 'string' ? JSON.parse(json) : json;
   if (!data || typeof data !== 'object' || !Array.isArray(data.plays)) {
     throw new Error('not_bgstats');
@@ -83,7 +93,7 @@ function parseBgStatsExport(json) {
     const title = game && String(game.name || game.bggName || '').trim();
     if (!title) continue;
     const playedOn = localStampToIso(play.playDate);
-    if (!playedOn) continue;
+    if (!playedOn || !importDayInRange(playedOn, { minDay, now })) continue;
     const bggId = game.bggId > 0 ? Number(game.bggId) : null;
     const coop = game.cooperative === true;
     const scores = Array.isArray(play.playerScores) ? play.playerScores : [];
@@ -124,12 +134,12 @@ function parseBgStatsExport(json) {
 // and `quantity` N becomes N sessions on that day, since a session holds one
 // play (#1616). `playedOnInstant` is played-on.js's, injected because a
 // public/js file cannot require() a sibling.
-function normaliseBggPlays(raw, { playedOnInstant, now = new Date() }) {
+function normaliseBggPlays(raw, { playedOnInstant, minDay = null, now = new Date() }) {
   const plays = [];
   for (const play of raw || []) {
     if (!play || !play.date || !play.game || !play.game.title) continue;
     const playedOn = playedOnInstant(play.date, now);
-    if (!playedOn) continue;
+    if (!playedOn || !importDayInRange(playedOn, { minDay, now })) continue;
     const bggId = play.game.bggId || null;
     const players = (play.players || []).map((p, i) => ({
       // BGG has no stable id for a non-user player, only the name typed in —
@@ -303,6 +313,7 @@ if (typeof module !== 'undefined' && module.exports) {
     IMPORT_BATCH_MAX,
     IMPORT_KEY_MAX,
     importScore,
+    importDayInRange,
     localStampToIso,
     parseBgStatsExport,
     normaliseBggPlays,

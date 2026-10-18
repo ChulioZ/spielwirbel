@@ -1024,7 +1024,10 @@ module.exports = function repoContract(repo) {
     const batch = {
       members: [{ id: 'ccccccccccccccc1', name: 'Eli' }],
       games: [importGame('3000000000000001'), importGame('3000000000000002')],
-      sessions: [importBlob('q1')],
+      sessions: [
+        importBlob('q1', { memberIds: ['ccccccccccccccc1'], gameIds: ['3000000000000001'], chosenGameId: '3000000000000001' }),
+        importBlob('q2', { memberIds: ['ccccccccccccccc1'], gameIds: ['3000000000000002'], chosenGameId: '3000000000000002' }),
+      ],
     };
     assert.equal(await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 2, maxGames: 10 }), 'quota_members');
     assert.equal(await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 3, maxGames: 1 }), 'quota_games');
@@ -1032,7 +1035,30 @@ module.exports = function repoContract(repo) {
     assert.equal(stored.sessions.length, 0, 'nothing was written');
     assert.equal(stored.members.length, 2);
     assert.equal(stored.games.length, 0);
-    assert.equal((await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 3, maxGames: 2 })).sessions.length, 1);
+    assert.equal((await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 3, maxGames: 2 })).sessions.length, 2);
+  });
+
+  test('importSessions writes only the new seats and games a surviving session names, quota measured after dedupe (#1665)', async () => {
+    const round = await freshRound();
+    await repo.importSessions(T, round.id, { members: [], games: [], sessions: [importBlob('d1')] });
+    // A re-run whose only play is a duplicate: its new seat would break the cap,
+    // but it would never be written, so the batch is not refused.
+    const rerun = await repo.importSessions(T, round.id, {
+      members: [{ id: 'ddddddddddddddd1', name: 'Fay' }], games: [],
+      sessions: [importBlob('d1', { memberIds: ['ddddddddddddddd1'] })],
+    }, undefined, { maxMembers: 2, maxGames: 10 });
+    assert.deepEqual(rerun, { sessions: [], skipped: 1, members: [], games: [] });
+    // A fresh play naming one of two new seats writes that one only.
+    const res = await repo.importSessions(T, round.id, {
+      members: [{ id: 'ddddddddddddddd2', name: 'Gus' }, { id: 'ddddddddddddddd3', name: 'Hal' }],
+      games: [importGame('4000000000000001'), importGame('4000000000000002')],
+      sessions: [importBlob('d2', { memberIds: ['ddddddddddddddd2'], gameIds: ['4000000000000001'], chosenGameId: '4000000000000001' })],
+    });
+    assert.deepEqual(res.members.map((m) => m.name), ['Gus']);
+    assert.deepEqual(res.games.map((g) => g.id), ['4000000000000001']);
+    const stored = await repo.getRound(T, round.id);
+    assert.deepEqual(stored.members.map((m) => m.name), ['Alice', 'Bob', 'Gus']);
+    assert.deepEqual(stored.games.map((g) => g.id), ['4000000000000001']);
   });
 
   test('createGames records the acting member on its one activity (#481)', async () => {

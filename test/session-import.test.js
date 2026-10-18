@@ -161,6 +161,19 @@ test('the route refuses what the client got wrong', async () => {
   assert.equal((await get(round.id)).sessions.length, 0, 'none of it wrote anything');
 });
 
+test('an over-long name or title from the source is truncated, not refused', async () => {
+  const { round, body } = await setup();
+  const long = 'Bartholomäus-Maximilian von Hohenzollern-Sigmaringen';
+  const people = body.people.map((p) => (p.key === 'c' ? { key: 'c', newMember: long } : p.key === 'd' ? { key: 'd', guest: long } : p));
+  const games = body.games.map((g) => (g.key === 'bgg:230802' ? { key: g.key, create: { title: 'T'.repeat(260), bggId: 230802 } } : g));
+  const res = await request(app).post(base(round.id)).send({ ...body, people, games });
+  assert.equal(res.status, 201, JSON.stringify(res.body));
+  const after = await get(round.id);
+  const seat = after.members.find((m) => m.id === res.body.people.c);
+  assert.equal(seat.name, long.slice(0, 30).trim());
+  assert.equal(after.games.find((g) => g.id === res.body.games['bgg:230802']).title.length, 200);
+});
+
 test('an unknown round is a 404', async () => {
   const { body } = await setup();
   const res = await request(app).post(base('nope')).send(body);

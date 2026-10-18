@@ -52,6 +52,11 @@ test('parsePlays drops a co-player\'s BGG username — only the account row is m
   const xml = CAPTURE.replace('username="" userid="0" name="Bea"', 'username="bea_on_bgg" userid="7" name="Bea"');
   const json = JSON.stringify(parsePlays(xml, 'AdaPlays'));
   assert.ok(!json.includes('bea_on_bgg'), 'a co-player handle must not leave the parser');
+  // …not even as the NAME of a row that has none: such a row is dropped.
+  const nameless = CAPTURE.replace('username="" userid="0" name="Cem"', 'username="cem_on_bgg" userid="8" name=""');
+  const parsed = parsePlays(nameless, 'AdaPlays');
+  assert.ok(!JSON.stringify(parsed).includes('cem_on_bgg'));
+  assert.equal(parsed.plays[0].players.length, 3);
   assert.ok(!json.includes('AdaPlays'), 'nor the account\'s own — `me` is enough');
 });
 
