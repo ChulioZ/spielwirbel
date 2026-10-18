@@ -229,7 +229,7 @@ test('the top designers: ranked like mechanics, with BGG\'s (Uncredited) sentine
     designers: i < 5 ? ['(Uncredited)'] : i < 8 ? ['Uwe Rosenberg'] : ['Uwe Rosenberg', 'Solo Person'],
   }));
   const p = shelfProfile(shelf, deps);
-  assert.deepEqual(p.designers, [{ name: 'Uwe Rosenberg', score: 3, n: 4 }]);
+  assert.deepEqual(p.designers.map(({ name, score, n }) => ({ name, score, n })), [{ name: 'Uwe Rosenberg', score: 3, n: 4 }]);
   // A shelf with no designer data has an empty list, like the other two.
   assert.deepEqual(shelfProfile(shelfOf(9, { score: 3 }), deps).designers, []);
 });
@@ -239,4 +239,49 @@ test('an open-topped box starting above six counts in the 6+ band (#1669)', () =
   // so a box with a minimum of seven and no maximum was never asked about.
   const shelf = [...shelfOf(SHELF_PROFILE_MIN_GAMES), g({ title: 'Party', minPlayers: 7, maxPlayers: undefined })];
   assert.equal(band(shelfProfile(shelf, deps).seats, '6'), 1);
+});
+
+/* The games behind every count (#1668): each band, gap and top name carries the
+   games its number counts, so the button and the list it opens come from ONE
+   derivation. The fixture holds the three shapes the issue names — an owned
+   expansion widening a range, a game with no provider data at all, and an
+   unscored game — since each is a way for a list and a count to part. */
+test('every band, gap and top name carries exactly the games its count counts (#1668)', () => {
+  const shelf = [
+    ...Array.from({ length: 7 }, (_, i) => g({ title: `B${i}`, score: 6 + i / 10, mechanics: ['Hand Management', 'Drafting'] })),
+    // A 3–4 base widened to solo by an owned 1–1 expansion: counts at 1, 3, 4.
+    g({ title: 'Widened', minPlayers: 3, maxPlayers: 4, score: 9, expansions: [{ minPlayers: 1, maxPlayers: 1 }] }),
+    // No provider data — and no range: unknown everywhere, listed nowhere.
+    { title: 'Bare' },
+    // Linked but unscored: in every band, in no top name.
+    g({ title: 'Unscored', maxPlaytime: 150, weight: 4, mechanics: ['Hand Management', 'Drafting'] }),
+  ];
+  const p = shelfProfile(shelf, deps);
+  const titles = (games) => games.map((x) => x.title);
+  for (const dim of ['seats', 'time', 'weight']) {
+    for (const b of p[dim].bands) {
+      assert.ok(Array.isArray(b.games), `${dim}/${b.key} carries no games`);
+      assert.equal(b.games.length, b.n, `${dim}/${b.key}: list and count disagree`);
+      assert.ok(!titles(b.games).includes('Bare'), `${dim}/${b.key} lists a game with no data`);
+    }
+  }
+  assert.deepEqual(titles(p.seats.bands.find((b) => b.key === '1').games), ['Widened']);
+  assert.ok(!titles(p.seats.bands.find((b) => b.key === '2').games).includes('Widened'), 'union, never hull');
+  assert.deepEqual(titles(p.time.bands.find((b) => b.key === 'over120').games), ['Unscored']);
+  // A band's list is ordered by title — its count says nothing about score.
+  const two = titles(p.seats.bands.find((b) => b.key === '2').games);
+  assert.deepEqual(two, [...two].sort((a, b) => a.localeCompare(b)));
+  for (const gap of p.gaps) {
+    assert.equal(gap.games.length, gap.n, `gap ${gap.dim}/${gap.key}: list and count disagree`);
+  }
+  for (const field of ['mechanics', 'categories']) {
+    assert.ok(p[field].length, `${field}: the fixture must rank something`);
+    for (const it of p[field]) {
+      assert.equal(it.games.length, it.n, `${field}/${it.name}: list and count disagree`);
+      assert.ok(!titles(it.games).includes('Unscored'), `${field}/${it.name} lists an unscored game`);
+      const scores = it.games.map(scoreOf);
+      assert.deepEqual(scores, [...scores].sort((a, b) => b - a), `${field}/${it.name}: best score first`);
+    }
+  }
+  assert.equal(p.mechanics.find((m) => m.name === 'Hand Management').games[0].title, 'Widened');
 });

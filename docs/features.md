@@ -378,7 +378,9 @@ What the app does, in detail. For a short overview see the
     categories and designers the round rates best, ranked by the mean
     Spielwirbel-Score of their games (a name counts once two of its games have a
     score; unscored games are left out; each name links to its BoardGameGeek
-    page once the instance knows its BGG id, issue #1638), and a „Teilen" that draws the profile as an image
+    page once the instance knows its BGG id, issue #1638); every count there —
+    a band, a gap with games in it, a name's „aus N Spielen" — opens the games
+    behind it, each linking to its Spielepass in the round (issue #1668), and a „Teilen" that draws the profile as an image
     on the device, issue #1173), a „**heute vor N Jahren**"
     anniversary when one falls on today, and a teaser from the recommendations
     screen. Below the derived cards, a **preview of each of the round's other

@@ -230,6 +230,11 @@ I18N.ko = {
   'shelfProfile.byScore': 'Spielwirbel 점수순',
   'shelfProfile.topGamesOne': '게임 {n}개 기준',
   'shelfProfile.topGames': '게임 {n}개 기준',
+  // The games behind a count on the Regal-Steckbrief (#1668): the list's title, and a
+  // bar count's accessible name — the bare number alone would say nothing.
+  'shelfProfile.listTitle': '{label} · {name}',
+  'shelfProfile.showGamesOne': '{what}: 게임 보기',
+  'shelfProfile.showGames': '{what}: 게임 {n}개 보기',
   'shelfProfile.more': '프로필 전체 보기',
   'shelfProfile.thin': '프로필을 만들려면 BoardGameGeek 데이터가 있는 게임이 {n}개 이상 필요해요.',
   'hub.reco.more': '추천 전체 보기',

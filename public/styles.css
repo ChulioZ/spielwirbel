@@ -1722,6 +1722,35 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .shelf-top__n { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 /* The pill was made for a cover's corner (absolute); here it is a row value. */
 .shelf-top__val .score-pill { position: static; }
+/* A count as the button that lists its games (#1668) — the favourites' count
+   line (#1560) shape: the span's own classes stay on it, so its weight,
+   numerals and gap accent still apply, and this adds only the reset and a
+   dotted underline as the affordance. `color: inherit` is safe here: every
+   span this replaces takes its colour from its own class or the row, never
+   from `.muted`. The vertical padding lifts the hit box to the 24px WCAG 2.5.8
+   floor without moving the text; the negative margin gives it back. */
+.shelf-count {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  margin: -4px 0;
+  text-align: inherit;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.shelf-count:hover { text-decoration-style: solid; }
+.shelf-count:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: 2px; border-radius: 2px; }
+/* A bar's count sits in a 2.5ch column: hold the 24px width floor and grow
+   leftwards into the gap, so the numbers stay right-aligned in one column. */
+.shelf-bar__n.shelf-count { min-width: 24px; justify-self: end; text-align: right; }
+.shelf-top__n.shelf-count { color: var(--ink-soft); }
+/* The list's rows on this screen: the title, then the game's shelf score. */
+/* Compound, because `.stats-games__body` (column) comes later in this file. */
+.stats-games__body.shelf-games__body { flex: 1; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
+.shelf-games__body .score-pill { position: static; flex: none; }
 
 /* The quick-start chips (#923), directly under the big CTA they modify — in the
    pane below 1280px and in the rail above it, following that button either way. */

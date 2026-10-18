@@ -83,21 +83,34 @@ function shelfSeatBands(game, fits, fitsFrom) {
   return SHELF_SEAT_BANDS.filter((n) => (n < top ? fits(game, n) : fitsFrom(game, n)));
 }
 
+// Titles in reading order, for a list whose count says nothing about score.
+const shelfByTitle = (a, b) => String(a.title || '').localeCompare(String(b.title || ''));
+
 // One dimension's bands. `bandOf` names the band a game falls into, or null
 // when the game has no value; `null` comes back when too few games carry the
 // value for the bands to mean anything — the dimension is then left out rather
 // than drawn as a row of gaps.
+//
+// Each band carries the GAMES it counts (#1668), and `n` is their length, so
+// the number on the screen's button and the list it opens cannot disagree.
 function shelfDimension(games, keys, bandsOf) {
-  const counts = new Map(keys.map((k) => [k, 0]));
+  const members = new Map(keys.map((k) => [k, []]));
   let known = 0;
   games.forEach((g) => {
     const bands = bandsOf(g);
     if (!bands) return;
     known++;
-    bands.forEach((k) => counts.set(k, counts.get(k) + 1));
+    bands.forEach((k) => members.get(k).push(g));
   });
   if (known < SHELF_PROFILE_MIN_GAMES) return null;
-  return { known, unknown: games.length - known, bands: keys.map((key) => ({ key, n: counts.get(key) })) };
+  return {
+    known,
+    unknown: games.length - known,
+    bands: keys.map((key) => {
+      const list = members.get(key).sort(shelfByTitle);
+      return { key, n: list.length, games: list };
+    }),
+  };
 }
 
 // The names in one list field the round RATES best (#1556): ranked by the mean
@@ -127,15 +140,22 @@ function shelfTop(games, field, scoreOf, keep = (list) => list) {
     if (!shelfNum(score)) return;
     new Set(keep(g[field])).forEach((name) => {
       if (typeof name !== 'string' || !name) return;
-      const acc = byName.get(name) || { sum: 0, n: 0 };
+      const acc = byName.get(name) || { sum: 0, games: [] };
       acc.sum += score;
-      acc.n += 1;
+      acc.games.push(g);
       byName.set(name, acc);
     });
   });
   return [...byName.entries()]
-    .filter(([, acc]) => acc.n >= 2)
-    .map(([name, acc]) => ({ name, score: acc.sum / acc.n, n: acc.n }))
+    .filter(([, acc]) => acc.games.length >= 2)
+    // The games behind the name (#1668), best score first: that is what the
+    // mean was taken over, and `n` is their length by construction.
+    .map(([name, acc]) => ({
+      name,
+      score: acc.sum / acc.games.length,
+      n: acc.games.length,
+      games: acc.games.sort((a, b) => scoreOf(b) - scoreOf(a) || shelfByTitle(a, b)),
+    }))
     .sort((a, b) => b.score - a.score || b.n - a.n || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
     .slice(0, SHELF_PROFILE_TOP);
 }
@@ -162,9 +182,9 @@ function shelfBandIsGap(dim, band) {
 
    Returns { linked, total, seats, time, weight, mechanics, categories,
    designers, gaps }:
-   each of seats/time/weight is { known, unknown, bands: [{ key, n }] } or null;
-   each of mechanics/categories/designers is [{ name, score, n }] (shelfTop);
-   `gaps` lists every band shelfBandIsGap names as { dim, key, n }, emptiest
+   each of seats/time/weight is { known, unknown, bands: [{ key, n, games }] } or null;
+   each of mechanics/categories/designers is [{ name, score, n, games }] (shelfTop);
+   `gaps` lists every band shelfBandIsGap names as { dim, key, n, games }, emptiest
    first (a band with NOTHING is the stronger statement), dimension order
    otherwise. */
 function shelfProfile(games, deps) {
@@ -192,7 +212,7 @@ function shelfProfile(games, deps) {
   const gaps = [];
   [['seats', seats], ['time', time]].forEach(([dim, d]) => {
     if (!d) return;
-    d.bands.forEach((b) => { if (shelfBandIsGap(dim, b)) gaps.push({ dim, key: b.key, n: b.n }); });
+    d.bands.forEach((b) => { if (shelfBandIsGap(dim, b)) gaps.push({ dim, key: b.key, n: b.n, games: b.games }); });
   });
   // Array.prototype.sort is stable, so equal counts keep the dimension order.
   gaps.sort((a, b) => a.n - b.n);

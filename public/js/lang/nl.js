@@ -252,6 +252,11 @@ I18N.nl = {
   'shelfProfile.byScore': 'Op Spielwirbel-score',
   'shelfProfile.topGamesOne': 'uit {n} spel',
   'shelfProfile.topGames': 'uit {n} spellen',
+  // The games behind a count on the Regal-Steckbrief (#1668): the list's title, and a
+  // bar count's accessible name — the bare number alone would say nothing.
+  'shelfProfile.listTitle': '{label} · {name}',
+  'shelfProfile.showGamesOne': '{what}: toon het spel',
+  'shelfProfile.showGames': '{what}: toon de {n} spellen',
   'shelfProfile.more': 'Bekijk het hele kastprofiel',
   'shelfProfile.thin': 'Een kastprofiel heeft minstens {n} spellen met gegevens van BoardGameGeek nodig.',
   'hub.reco.more': 'Alle aanbevelingen bekijken',
