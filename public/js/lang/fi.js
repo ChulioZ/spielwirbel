@@ -223,7 +223,7 @@ I18N.fi = {
   'shelfProfile.gap.none': '{what}: ei yhtään peliä',
   'shelfProfile.gap.fewOne': '{what}: vain {n} peli',
   'shelfProfile.gap.few': '{what}: vain {n} peliä',
-  'shelfProfile.noGaps': 'Ei aukkoja: jokaiselle pelaajamäärälle, kestolle ja vaikeudelle on vähintään kolme peliä.',
+  'shelfProfile.noGaps': 'Ei aukkoja: jokaiselle pelaajamäärälle kahdesta ylöspäin ja jokaiselle kestolle on vähintään kolme peliä.',
   'shelfProfile.unknownOne': '{n} peli ilman tätä tietoa',
   'shelfProfile.unknown': '{n} peliä ilman tätä tietoa',
   'shelfProfile.byScore': 'Spielwirbel-pisteiden mukaan',

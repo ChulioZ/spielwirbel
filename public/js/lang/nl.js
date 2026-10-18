@@ -246,7 +246,7 @@ I18N.nl = {
   'shelfProfile.gap.none': '{what}: geen spel',
   'shelfProfile.gap.fewOne': '{what}: maar {n} spel',
   'shelfProfile.gap.few': '{what}: maar {n} spellen',
-  'shelfProfile.noGaps': 'Geen gaten: elk spelersaantal, elke speelduur en elk gewicht heeft minstens drie spellen.',
+  'shelfProfile.noGaps': 'Geen gaten: elk spelersaantal vanaf twee en elke speelduur heeft minstens drie spellen.',
   'shelfProfile.unknownOne': '{n} spel zonder dit gegeven',
   'shelfProfile.unknown': '{n} spellen zonder dit gegeven',
   'shelfProfile.byScore': 'Op Spielwirbel-score',

@@ -236,7 +236,7 @@ I18N.en = {
   'shelfProfile.gap.none': '{what}: no game',
   'shelfProfile.gap.fewOne': '{what}: only {n} game',
   'shelfProfile.gap.few': '{what}: only {n} games',
-  'shelfProfile.noGaps': 'No gaps — every table size, length and weight has at least three games.',
+  'shelfProfile.noGaps': 'No gaps — every table size from two players up and every playing time has at least three games.',
   'shelfProfile.unknownOne': '{n} game without this detail',
   'shelfProfile.unknown': '{n} games without this detail',
   'shelfProfile.byScore': 'By Spielwirbel score',

@@ -238,7 +238,7 @@ I18N.de = {
   'shelfProfile.gap.none': '{what}: kein Spiel',
   'shelfProfile.gap.fewOne': '{what}: nur {n} Spiel',
   'shelfProfile.gap.few': '{what}: nur {n} Spiele',
-  'shelfProfile.noGaps': 'Keine Lücken — jede Tischgröße, Dauer und Komplexität hat mindestens drei Spiele.',
+  'shelfProfile.noGaps': 'Keine Lücken — jede Tischgröße ab zwei Personen und jede Spieldauer hat mindestens drei Spiele.',
   'shelfProfile.unknownOne': '{n} Spiel ohne Angabe',
   'shelfProfile.unknown': '{n} Spiele ohne Angabe',
   'shelfProfile.byScore': 'Nach Spielwirbel-Score',

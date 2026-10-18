@@ -224,7 +224,7 @@ I18N.ko = {
   'shelfProfile.gap.none': '{what}: 게임 없음',
   'shelfProfile.gap.fewOne': '{what}: 게임 {n}개뿐',
   'shelfProfile.gap.few': '{what}: 게임 {n}개뿐',
-  'shelfProfile.noGaps': '빈틈 없음 — 모든 인원, 시간, 난이도에 게임이 3개 이상 있어요.',
+  'shelfProfile.noGaps': '빈틈 없음 — 2인 이상 모든 인원과 모든 플레이 시간에 게임이 3개 이상 있어요.',
   'shelfProfile.unknownOne': '이 정보가 없는 게임 {n}개',
   'shelfProfile.unknown': '이 정보가 없는 게임 {n}개',
   'shelfProfile.byScore': 'Spielwirbel 점수순',

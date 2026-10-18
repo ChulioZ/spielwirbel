@@ -245,7 +245,7 @@ I18N.fr = {
   'shelfProfile.gap.none': '{what} : aucun jeu',
   'shelfProfile.gap.fewOne': '{what} : seulement {n} jeu',
   'shelfProfile.gap.few': '{what} : seulement {n} jeux',
-  'shelfProfile.noGaps': 'Aucun manque : chaque nombre de joueurs, durée et complexité compte au moins trois jeux.',
+  'shelfProfile.noGaps': 'Aucun manque : chaque nombre de joueurs à partir de deux et chaque durée compte au moins trois jeux.',
   'shelfProfile.unknownOne': '{n} jeu sans cette donnée',
   'shelfProfile.unknown': '{n} jeux sans cette donnée',
   'shelfProfile.byScore': 'Selon le score Spielwirbel',
