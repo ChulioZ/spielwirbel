@@ -48,6 +48,51 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1665, „Partien importieren". A capability that did not exist: a group
+   * switching from BG Stats or BGG had to start from zero. Says where it is,
+   * which two sources, and that the user stays in control of what comes along.
+   */
+  {
+    revision: '2026-10-18',
+    kind: 'new',
+    de: {
+      title: 'Partien importieren',
+      body: 'In der Chronik einer Runde holt „Partien importieren“ eure bisherigen Partien herein: aus einer Exportdatei von BG Stats oder aus euren auf BoardGameGeek eingetragenen Partien. Ihr wählt, was mitkommt, und ordnet jede Person einmal zu. Jede Partie wird zu einer gespielten Session an ihrem Datum, mit Gewinnern und Punkten.',
+    },
+    en: {
+      title: 'Import plays',
+      body: 'In a round’s Chronik, “Import plays” brings in your past plays: from a BG Stats export file or from the plays you logged on BoardGameGeek. You choose what comes along and match each person once. Each play becomes a finished session on its date, with winners and points.',
+    },
+    es: {
+      title: 'Importar partidas',
+      body: 'En la crónica de una ronda, «Importar partidas» trae vuestras partidas anteriores: desde un archivo exportado de BG Stats o desde las partidas registradas en BoardGameGeek. Elegís qué se trae y asignáis cada persona una vez. Cada partida se convierte en una sesión jugada en su fecha, con ganadores y puntos.',
+    },
+    fr: {
+      title: 'Importer des parties',
+      body: 'Dans la chronique d’un groupe, « Importer des parties » fait entrer vos parties passées : depuis un fichier d’export BG Stats ou depuis les parties enregistrées sur BoardGameGeek. Vous choisissez ce qui vient et associez chaque personne une seule fois. Chaque partie devient une session jouée à sa date, avec gagnants et points.',
+    },
+    it: {
+      title: 'Importa partite',
+      body: 'Nella cronaca di un gruppo, «Importa partite» porta dentro le vostre partite passate: da un file esportato da BG Stats o dalle partite registrate su BoardGameGeek. Scegliete cosa portare e abbinate ogni persona una volta. Ogni partita diventa una sessione giocata nella sua data, con vincitori e punti.',
+    },
+    nl: {
+      title: 'Partijen importeren',
+      body: 'In de kroniek van een groep haalt ‘Partijen importeren’ jullie eerdere partijen binnen: uit een exportbestand van BG Stats of uit de partijen die op BoardGameGeek zijn vastgelegd. Jullie kiezen wat mee komt en koppelen elke persoon één keer. Elke partij wordt een gespeelde sessie op haar datum, met winnaars en punten.',
+    },
+    pt: {
+      title: 'Importar partidas',
+      body: 'Na crônica de um grupo, “Importar partidas” traz suas partidas anteriores: de um arquivo exportado do BG Stats ou das partidas registradas no BoardGameGeek. Vocês escolhem o que vem junto e associam cada pessoa uma vez. Cada partida vira uma sessão jogada na sua data, com vencedores e pontos.',
+    },
+    fi: {
+      title: 'Tuo pelikerrat',
+      body: 'Porukan kronikassa ”Tuo pelikerrat” tuo aiemmat pelikertanne: BG Statsin vientitiedostosta tai BoardGameGeekiin kirjatuista pelikerroista. Valitsette, mitä tuodaan, ja yhdistätte jokaisen henkilön kerran. Jokaisesta pelikerrasta tulee pelattu sessio omalle päivälleen voittajineen ja pisteineen.',
+    },
+    ko: {
+      title: '플레이 기록 가져오기',
+      body: '모임의 연대기에서 ‘플레이 기록 가져오기’로 지난 플레이를 가져올 수 있어요. BG Stats에서 내보낸 파일이나 BoardGameGeek에 기록한 플레이에서 가져와요. 가져올 것을 고르고 사람마다 한 번씩 연결하면, 각 플레이가 해당 날짜의 완료된 세션이 되고 승자와 점수도 함께 남아요.',
+    },
+  },
+  /*
    * #1646, „Einfacher Modus". A capability that did not exist: a group that
    * only wants the draw had no way to make the app quieter. Says where it is,
    * that each option stands alone, and — the reassurance that matters — that

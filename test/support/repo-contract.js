@@ -946,6 +946,95 @@ module.exports = function repoContract(repo) {
     assert.equal(fits.skipped, 1);
   });
 
+  // #1665: an imported play history — members, games and sessions in one write.
+  const importBlob = (ref, over = {}) => ({
+    createdAt: '2025-03-07T18:30:00.000Z', dateOnly: true, memberIds: [], gameIds: [], votes: {},
+    chosenGameId: null, chosenAt: '2025-03-07T18:30:00.000Z', finished: true,
+    finishedAt: '2025-03-07T18:30:00.000Z', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    importRef: { source: 'bgstats', id: ref }, ...over,
+  });
+  const importGame = (gid, over = {}) => ({
+    id: gid, title: `G ${gid}`, minPlayers: null, maxPlayers: null, image: null, retired: true,
+    retiredAt: '2026-01-01T00:00:00.000Z', completed: false, completedAt: null, wish: false, wishAt: null,
+    source: { provider: 'bgg', externalId: gid, url: `https://boardgamegeek.com/boardgame/${gid}` }, ...over,
+  });
+
+  test('importSessions writes the new seats, games and sessions together (#1665)', async () => {
+    const round = await freshRound();
+    const seat = round.members[0].id;
+    const res = await repo.importSessions(T, round.id, {
+      members: [{ id: 'aaaaaaaaaaaaaaa1', name: 'Cem' }],
+      games: [importGame('1000000000000001'), importGame('1000000000000002', { retired: false, retiredAt: null })],
+      sessions: [
+        importBlob('p1', { memberIds: [seat, 'aaaaaaaaaaaaaaa1'], gameIds: ['1000000000000001'], chosenGameId: '1000000000000001', winnerIds: [seat] }),
+        importBlob('p2', { createdAt: '2024-01-01T19:00:00.000Z', memberIds: [seat], gameIds: ['1000000000000002'], chosenGameId: '1000000000000002' }),
+      ],
+    }, seat);
+    assert.equal(res.sessions.length, 2);
+    assert.equal(res.skipped, 0);
+    assert.ok(res.sessions.every((s) => /^[0-9a-f]{16}$/.test(s.id)), 'session ids are minted by the repo');
+
+    const stored = await repo.getRound(T, round.id);
+    assert.deepEqual(stored.members.map((m) => m.name), ['Alice', 'Bob', 'Cem']);
+    assert.equal(stored.members[2].id, 'aaaaaaaaaaaaaaa1', 'a member keeps the id the sessions name it by');
+    assert.deepEqual(stored.games.map((g) => [g.id, g.retired]), [['1000000000000001', true], ['1000000000000002', false]]);
+    assert.deepEqual(stored.sessions.map((s) => s.importRef.id), ['p2', 'p1'], 'read in date order, like every session');
+    assert.deepEqual(stored.sessions[1].winnerIds, [seat]);
+
+    // One seat → one member_added; only the shelved game is announced.
+    const feed = await repo.listActivities(T, round.id);
+    assert.equal(feed.filter((a) => a.type === 'member_added').length, 1);
+    const imported = feed.filter((a) => a.type === 'games_imported');
+    assert.equal(imported.length, 1);
+    assert.equal(imported[0].count, 1);
+    assert.equal(imported[0].actorMemberId, seat);
+
+    assert.equal(await repo.importSessions(T, 'missing', { members: [], games: [], sessions: [importBlob('x')] }), null);
+    assert.equal(await repo.importSessions(OTHER, round.id, { members: [], games: [], sessions: [importBlob('x')] }), null);
+  });
+
+  test('importSessions skips a play the round already holds, and a batch of only those writes nothing (#1665)', async () => {
+    const round = await freshRound();
+    await repo.importSessions(T, round.id, { members: [], games: [], sessions: [importBlob('p1')] });
+    const again = await repo.importSessions(T, round.id, {
+      members: [{ id: 'bbbbbbbbbbbbbbb1', name: 'Dio' }],
+      games: [importGame('2000000000000001')],
+      sessions: [importBlob('p1')],
+    });
+    assert.deepEqual(again, { sessions: [], skipped: 1, members: [], games: [] });
+    const stored = await repo.getRound(T, round.id);
+    assert.equal(stored.sessions.length, 1);
+    assert.equal(stored.members.length, 2, 'no seat for a batch that imported nothing');
+    assert.equal(stored.games.length, 0);
+
+    // The same source id from ANOTHER source is a different play; a repeat
+    // inside one batch is not.
+    const mixed = await repo.importSessions(T, round.id, { members: [], games: [], sessions: [
+      importBlob('p1', { importRef: { source: 'bgg', id: 'p1' } }), importBlob('p9'), importBlob('p9'),
+    ] });
+    assert.equal(mixed.sessions.length, 2);
+    assert.equal(mixed.skipped, 1);
+    // An ordinary session (no importRef) never collides with anything.
+    await repo.createSession(T, round.id, importBlob('ignored', { importRef: undefined }));
+    assert.equal((await repo.importSessions(T, round.id, { members: [], games: [], sessions: [importBlob('p10')] })).sessions.length, 1);
+  });
+
+  test('importSessions refuses the whole batch over the member or game quota (#1665)', async () => {
+    const round = await freshRound();
+    const batch = {
+      members: [{ id: 'ccccccccccccccc1', name: 'Eli' }],
+      games: [importGame('3000000000000001'), importGame('3000000000000002')],
+      sessions: [importBlob('q1')],
+    };
+    assert.equal(await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 2, maxGames: 10 }), 'quota_members');
+    assert.equal(await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 3, maxGames: 1 }), 'quota_games');
+    const stored = await repo.getRound(T, round.id);
+    assert.equal(stored.sessions.length, 0, 'nothing was written');
+    assert.equal(stored.members.length, 2);
+    assert.equal(stored.games.length, 0);
+    assert.equal((await repo.importSessions(T, round.id, batch, undefined, { maxMembers: 3, maxGames: 2 })).sessions.length, 1);
+  });
+
   test('createGames records the acting member on its one activity (#481)', async () => {
     const round = await freshRound();
     const seat = round.members[0].id;

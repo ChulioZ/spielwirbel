@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?><!-- Captured live from /xmlapi2/plays on 2026-10-18 (#1665), every name, handle, id and location replaced. -->
+<plays username="AdaPlays" userid="100001" total="2" page="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+<play id="900000001" date="2026-10-14" quantity="1" length="180" incomplete="0" nowinstats="0" location="Strandhaus">
+			<item name="Alchemists" objecttype="thing" objectid="161970">
+				<subtypes>
+										<subtype value="boardgame" />
+									</subtypes>
+			</item>
+									<players>
+									<player username="AdaPlays" userid="100001" name="Ada Lovelace" startposition="" color="" score="64" new="0" rating="0" win="0" />
+						<player username="" userid="0" name="Bea" startposition="" color="" score="59" new="0" rating="0" win="0" />
+						<player username="" userid="0" name="Cem" startposition="" color="" score="63" new="1" rating="0" win="0" />
+						<player username="" userid="0" name="Dio" startposition="" color="" score="55" new="1" rating="0" win="0" />
+						</players>
+					</play>
+	<play id="900000002" date="2026-09-04" quantity="2" length="30" incomplete="0" nowinstats="0" location="">
+			<item name="Boss Fighters QR" objecttype="thing" objectid="454672">
+				<subtypes>
+										<subtype value="boardgame" />
+									</subtypes>
+			</item>
+									<players>
+									<player username="AdaPlays" userid="100001" name="Ada Lovelace" startposition="" color="" score="" new="0" rating="0" win="0" />
+						<player username="" userid="0" name="Cem" startposition="" color="" score="" new="0" rating="0" win="0" />
+						</players>
+					</play>
+	</plays>

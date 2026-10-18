@@ -16,7 +16,7 @@ analysis). Don't turn this into one without revisiting that decision.
 ## The events
 
 `round_created` · `session_created` · `session_finished` · `game_added` ·
-`games_imported` · `tag_created` — the set is the `EVENTS` allowlist in
+`games_imported` · `sessions_imported` · `tag_created` — the set is the `EVENTS` allowlist in
 `lib/observability.js`. An
 unknown name is **dropped** and logged as `unknown_product_event`, so a typo
 can't silently create a new event stream. Adding an event means adding it to

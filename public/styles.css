@@ -8691,6 +8691,26 @@ a.k-tile:focus-visible,
   background-position: center;
 }
 
+/* ---- Play-history import (#1665) ----
+   The BGG import's sheet, states and row components, plus four things of its
+   own: the two source buttons, the filter strip, the person/game mapping rows
+   (a name beside a <select>), and the Chronik button beside „Nachtragen". */
+.chronik-import { margin: -6px 0 16px 8px; }
+.play-import__sources { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 18px; }
+.play-import__source { width: 100%; text-align: left; font: inherit; color: inherit; }
+.play-import__source .ds-row__main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.play-import__source .ds-row__main > .ti { font-size: var(--text-xl); color: var(--brand-ink, var(--brand)); flex: none; }
+.play-import__source .ds-row__main > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.play-import__source .muted { font-size: var(--text-sm); }
+.play-import__filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 14px; }
+.play-import__filters > label { display: flex; flex-direction: column; gap: 4px; font-size: var(--text-sm); }
+.play-import__filters .play-import__check { flex-direction: row; align-items: center; gap: 6px; }
+.play-import__map { margin-bottom: 12px; }
+.play-import__map-row { gap: 12px; }
+.play-import__map-row .ds-row__main { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.play-import__map-row select { max-width: 12rem; }
+.play-import__dropped:empty { display: none; }
+
 /* ---- Edition-cover picker (#519) ---- */
 
 /* Shown inline inside whatever field opened it (the add-game sheet, an import

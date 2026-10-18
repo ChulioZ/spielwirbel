@@ -117,6 +117,8 @@ const MOUNTS = [
   ['/games', '../lib/routes/games'],
   ['/members', '../lib/routes/members'],
   ['/sessions', '../lib/routes/sessions'],
+  // Mounted on its own path, ahead of the sessions router (#1665).
+  ['/sessions/import', '../lib/routes/session-import'],
   ['/activities', '../lib/routes/activities'],
   // The per-round design route it once shared a file with was retired at the
   // flip (#1202).
@@ -136,7 +138,7 @@ const MOUNTS = [
 // only because there was nothing to miss.
 test('MOUNTS covers every round sub-router the app actually mounts', () => {
   const appSrc = require('node:fs').readFileSync(require.resolve('../lib/app.js'), 'utf8');
-  const mounted = [...appSrc.matchAll(/app\.use\('\/api\/rounds\/:rid(\/[a-z-]+)'/g)].map((m) => m[1]);
+  const mounted = [...appSrc.matchAll(/app\.use\('\/api\/rounds\/:rid(\/[a-z/-]+)'/g)].map((m) => m[1]);
   assert.ok(mounted.length >= 8, `the mount scan found only ${mounted.length} routers — the regex has drifted`);
   const listed = new Set(MOUNTS.map(([prefix]) => prefix));
   assert.deepEqual(mounted.filter((p) => !listed.has(p)), [],

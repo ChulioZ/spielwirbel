@@ -208,3 +208,8 @@
 .ti-run::before { content: "\ec82"; }
 .ti-books::before { content: "\eff2"; }
 .ti-trending-down::before { content: "\eb42"; }
+/* The play-history import (#1665) — codepoints read from this woff2's cmap. */
+.ti-file-import::before { content: "\edea"; }
+.ti-file-upload::before { content: "\ec91"; }
+.ti-world-download::before { content: "\ef8a"; }
+.ti-file-alert::before { content: "\ede6"; }

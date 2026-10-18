@@ -225,6 +225,12 @@ function renderChronikTab(round, activities) {
   // axis — the place a missing evening is noticed. One renderer serves every
   // design, so every design gets it. Offered only with something on the shelf
   // to log, since a logged session is a direct pick of one shelf game.
+  // „Partien importieren" (#1665) sits beside it: the same back-catalogue,
+  // brought in bulk from BG Stats or BGG. Offered with an empty shelf too —
+  // the import creates the games it needs.
+  const importBtn = h(`<button type="button" class="btn btn--sm chronik-import">${iconText('ti-file-import', t('playImport.cta'))}</button>`);
+  importBtn.addEventListener('click', () => showPlayImport(round));
+  chips.after(importBtn);
   if (round.games.some(isActiveGame)) {
     const logBtn = h(`<button type="button" class="btn btn--sm chronik-log">${iconText('ti-calendar-plus', t('chronik.log.cta'))}</button>`);
     logBtn.addEventListener('click', () => showLogSessionPicker(round));

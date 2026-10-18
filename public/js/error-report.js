@@ -46,6 +46,10 @@ const CLIENT_ERROR_KINDS = [
   'clipboard_read',
   'sw_register',
   'storage_unavailable',
+  // Reading a BG Stats export in the browser (#1665) failed for a reason other
+  // than the file not being one — the user cannot fix that, so the operator
+  // needs to hear about it.
+  'play_import_parse',
 ];
 
 // Truncation is applied on BOTH sides: here so the request stays small, and at

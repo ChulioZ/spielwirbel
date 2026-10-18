@@ -672,6 +672,18 @@ What the app does, in detail. For a short overview see the
   game from the shelf, then the same sheet, dated yesterday. A logged session
   counts in the Chronik, the recaps, Pokale and the badges on its own day, and is
   not announced to friends (it is bookkeeping, not news).
+- **Partien importieren** (import plays, #1665) – beside „Session nachtragen",
+  the Chronik brings in a whole play history: from a **BG Stats** export file
+  (read in the browser, never uploaded) or, with a BGG name linked to the
+  account, from the plays logged on **BoardGameGeek**. A preview filters by
+  date range, location and „only plays with someone from this round"; each
+  source player is matched once to a member, a new member, a guest or nobody
+  (name matches pre-selected, regulars suggested as members and one-offs as
+  guests); games the round lacks are created **retired** unless put on the
+  shelf. Each play becomes a finished session on its date with winners, points,
+  teams and a co-op loss — never ratings. A re-import skips what is already
+  there, and a play that looks like one this app pushed to BG Stats starts
+  unchecked. Like a logged session, nothing is announced to friends.
 - **Datum ändern** (change date) – any played session can be moved to another
   day, and given or stripped of a time, from its results screen; the session's
   log records who changed it.

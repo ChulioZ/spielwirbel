@@ -11,6 +11,9 @@ nothing to do with each other:
 | `avatar.js` / `avatar-policy.js` | the profile-picture re-encoder (#841) | the policy constants + `member-avatar.js` |
 | `tag-icons.js` | the server copy | the frontend copy |
 
+`lib/` and `lib/routes/` collide too: `session-import.js` is the pure translator
+in one and the router in the other (#1665).
+
 So "name the spec after the module" produces a **collision**, and the collision
 is silent in both directions:
 
@@ -37,6 +40,15 @@ ls test/<name>.test.js 2>/dev/null && echo "TAKEN — pick another name"
 And **read `git status` after creating any test file.** A new spec must appear
 as `??`. An `M` on a path you believe you just created means you replaced
 someone else's file, and it is the only signal you will get.
+
+## The same collision eats a BREAK SWEEP'S BACKUP
+
+`cp lib/session-import.js lib/routes/session-import.js $BAK/` keeps ONE file —
+the second copy overwrites the first — and the restore after the next break
+then writes the router over the translator. Measured on #1665: the suite went
+red with `Cannot find module '../validate'`, i.e. the router's own relative
+require, resolved from the wrong directory. Back up into a mirrored tree
+(`mkdir -p "$BAK/lib/routes"` and copy each file to its own path under it), never flat.
 
 ## Why the usual guards do not catch it
 
