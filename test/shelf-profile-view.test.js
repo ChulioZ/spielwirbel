@@ -316,3 +316,17 @@ for (const wide of [true, false]) test(`the screen (${wide ? 'popover' : 'sheet'
   dom.call('renderStartTab', r, r.games);
   assert.equal(card(dom).querySelectorAll('button.shelf-count').length, 0);
 });
+
+/* The count button keeps the span's own type (#1668 review). `.shelf-count`
+   ties `.shelf-bar__n` / `.shelf-top__n` on specificity and comes later, so a
+   `font` shorthand there resets their weight 700 and tabular numerals — the
+   trap .claude/rules/native-button-vs-focusable-span.md names. CSS text, since
+   jsdom applies no external stylesheet. */
+test('the count button resets only the font longhands a <button> needs, never the shorthand', () => {
+  const { bodyOf } = require('./support/css');
+  const rule = bodyOf('.shelf-count');
+  assert.ok(rule, '.shelf-count rule not found');
+  assert.doesNotMatch(rule, /(^|[;{\s])font:\s/, '`font:` would blow away the count\'s weight and tabular numerals');
+  assert.match(rule, /font-family:\s*inherit/);
+  assert.match(rule, /font-size:\s*inherit/);
+});

@@ -1730,7 +1730,9 @@ a.hub-row:hover { background: var(--sunken-soft); }
    from `.muted`. The vertical padding lifts the hit box to the 24px WCAG 2.5.8
    floor without moving the text; the negative margin gives it back. */
 .shelf-count {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
   color: inherit;
   background: none;
   border: 0;
