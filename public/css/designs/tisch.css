@@ -4464,6 +4464,9 @@
      (measured, that left a 70–96px gap under the box). The log takes column 1,
      under the Tafel. */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .session-log { grid-column: 1; }
+  /* The guest-game offer (#1681) is the log's neighbour and takes its column —
+     spanning both, its buttons slid under the box column's sticky pin. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) > .guest-offer { grid-column: 1; }
   /* Beside the Tafel the band is a column, not a 128px-cover row. */
   :root[data-design="tisch"][data-scheme="dark"] .result-screen:has(.tisch:not([hidden])) .tisch {
     grid-template-columns: minmax(0, 1fr);

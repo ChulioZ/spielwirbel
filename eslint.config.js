@@ -114,7 +114,7 @@ const frontendGlobals = {
   memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly', personNameInk: 'readonly', designPersonTone: 'readonly',
-  renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
+  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
@@ -438,7 +438,7 @@ const frontendGlobals = {
   // share one global scope, so all their top-level names are listed together.
   showRoundSettings: 'readonly', cardMeta: 'readonly',
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
-  showWishlist: 'readonly', showRecommendations: 'readonly',
+  showWishlist: 'readonly', showGuestGames: 'readonly', showRecommendations: 'readonly',
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', acquireWishedExpansion: 'readonly',
   // round-marker.js (#1187): a round's colour marker, the one thing a round

@@ -157,3 +157,14 @@ test('a brought game obeys the player range and the metadata filters, never the 
   // untagged guest game is in despite the tag filter.
   assert.deepEqual(res.body.session.gameIds.sort(), [fits.id, tagged.id].sort());
 });
+
+test('broughtGames maps each brought id to the FIRST guest naming it, and is empty without guests', () => {
+  const { broughtGames } = require('../public/js/session-people');
+  const dana = { id: 'a', name: 'Dana', gameIds: ['x1', 'x2'] };
+  const eli = { id: 'b', name: 'Eli', gameIds: ['x2', 'x3'] };
+  const map = broughtGames({ guests: [dana, { id: 'c', name: 'Kim' }, eli] });
+  assert.deepEqual([...map.keys()], ['x1', 'x2', 'x3']);
+  assert.equal(map.get('x2'), dana);
+  assert.equal(broughtGames({}).size, 0);
+  assert.equal(broughtGames(null).size, 0);
+});

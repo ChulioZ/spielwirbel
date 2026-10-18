@@ -515,7 +515,7 @@ async function showMember(rid, mid) {
          (.claude/rules/member-seat-self-claim.md §1). For another person's
          linked seat the honest path is „Zugriff entfernen“ above, which drops
          the grant and the link together. */
-      const solely = (round.games || []).filter((g) => !g.retired && !g.completed && !g.wish
+      const solely = (round.games || []).filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame
         && Array.isArray(g.ownerIds) && g.ownerIds.length === 1 && g.ownerIds[0] === mid);
       const options = [];
       if (solely.length) {

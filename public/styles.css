@@ -10182,6 +10182,76 @@ kbd {
   color: var(--ink-soft);
   line-height: 1;
 }
+/* Guest games (#1681). The seat's count of games a guest brought sits on the
+   avatar's rim, so the ring stays one row of seats; it is the page accent on
+   its own ink, the pair `.nr-seat__avatar` itself paints with. */
+.nr-seat--guest .nr-seat__avatar { position: relative; }
+.nr-seat__brought {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--on-accent);
+  border: 2px solid var(--surface);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+/* „Gastspiel" as a tag and as the vote card's inline mark — the guest seat's
+   own neutral pair, so its contrast figure carries over. */
+.tag--guest,
+.guest-mark {
+  background: var(--sunken);
+  color: var(--ink-soft);
+}
+.guest-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  vertical-align: middle;
+}
+.guest-sheet__intro { margin: 0 0 14px; }
+.guest-sheet__games { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
+.guest-sheet__game {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--sunken);
+}
+.guest-sheet__title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.guest-sheet__picks { margin-bottom: 14px; }
+.guest-sheet__picks-label { font-size: var(--text-sm); margin-bottom: 6px; }
+.guest-sheet__cap { margin: 0 0 14px; }
+/* The results screen's offer: a quiet card under the Tafel, never a step. */
+.guest-offer {
+  margin: 18px 0;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.guest-offer__title { font-size: var(--text-md); margin: 0 0 10px; }
+.guest-offer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 6px 0;
+}
+.guest-offer__game { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.guest-offer__acts { display: flex; flex-wrap: wrap; gap: 8px; }
 /* The name input the „+" seat unfolds, BELOW the ring rather than inside it:
    the ring is a fixed-aspect box with absolutely-placed seats, so it has no
    flow for a field to grow into. Hidden by the `hidden` attribute plus its own

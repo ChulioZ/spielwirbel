@@ -221,6 +221,7 @@
    belongs to the voice and is not gated. */
 :root[data-design="programmheft"] :is(
   .remove-person__heading,
+  .guest-offer__title,
   .topbar__home,
   .rail__name,
   .page-head h2,

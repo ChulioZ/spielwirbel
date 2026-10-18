@@ -82,7 +82,7 @@ function collectRatings(round, peopleOf) {
 // worst thing the group owns, which reads as a bug rather than as thin data.
 function bestAndWorst(round, index, shelfScoreOf) {
   const rated = round.games
-    .filter((g) => !g.retired && !g.completed && !g.wish)
+    .filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame)
     .map((g) => {
       const entry = index.games.get(g.id);
       const ratings = entry ? entry.all : [];
@@ -215,7 +215,7 @@ function roundRecap(round, peopleOf, shelfScoreOf) {
       // neither owned (so not `games`) nor something the group ever had (so not
       // `archived`). A game they do not own belongs in neither half of a recap
       // of their year.
-      games: round.games.filter((g) => !g.retired && !g.completed && !g.wish).length,
+      games: round.games.filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame).length,
       archived: round.games.filter((g) => g.retired || g.completed).length,
       ratings: index.total,
     },

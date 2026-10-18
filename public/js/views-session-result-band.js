@@ -138,7 +138,7 @@ function resultRenderBand(rs) {
      and a badge sitting in a different place would be a second implementation
      waiting to drift. It joins the link's accessible name, which is the
      behaviour the row has shipped since #250. */
-  const title = h(`<a class="tisch__title">${esc(game ? game.title : '')}${game ? resultArchivedBadge(game) : ''}</a>`);
+  const title = h(`<a class="tisch__title">${esc(game ? game.title : '')}${game ? resultArchivedBadge(game, session) : ''}</a>`);
   if (game) makeGameLink(title, round.id, game.id);
   main.appendChild(title);
 

@@ -8,6 +8,7 @@
    other files read, which is why the file stayed rather than being folded into
    the ring: `renderTeamPicker` position-resolves a guest against `guestKeys`
    (.claude/rules/session-teams.md) and both screens POST `guests` at submit time.
+   Since #1681 it also holds each guest's brought games (the draw flow only).
 
    Frontend shared-scope script; load order: see index.html. */
 
@@ -33,23 +34,69 @@
 // The cap (MAX_SESSION_GUESTS) is deliberately NOT enforced here: the ring stops
 // rendering its „+" seat at the cap, so there is no second copy of the limit and
 // no unreachable branch pretending to guard one.
-function createGuestList(note) {
+//
+// `bringsGames` (#1681) is true on the draw flow only: there a guest may bring
+// their own games, which join THIS session's pool. `guestGames` is the third
+// index-aligned array — each guest's brought game ids — and `payload()` is what
+// the start request sends: a bare name for a guest who brought nothing (the
+// wire form that predates #1681, so a guestless or game-less draw is
+// byte-identical), `{ name, gameIds }` otherwise. Direct play has no pool to
+// bring a game into, so its list never offers it.
+function createGuestList(note, { bringsGames = false } = {}) {
   const guests = [];
   const guestKeys = [];
+  const guestGames = [];
   let seq = 0;
+  const at = (key) => guestKeys.indexOf(key);
   return {
     guests,
     guestKeys,
+    guestGames,
     note,
+    bringsGames,
     add(name) {
       guests.push(name);
       guestKeys.push('g' + ++seq);
+      guestGames.push([]);
     },
     remove(key) {
-      const i = guestKeys.indexOf(key);
+      const i = at(key);
       if (i < 0) return;
       guests.splice(i, 1);
       guestKeys.splice(i, 1);
+      guestGames.splice(i, 1);
+    },
+    nameOf(key) {
+      const i = at(key);
+      return i < 0 ? '' : guests[i];
+    },
+    gamesOf(key) {
+      const i = at(key);
+      return i < 0 ? [] : guestGames[i];
+    },
+    // One box is brought by one guest, so bringing it moves it off anyone else;
+    // the cap is MAX_GUEST_GAMES, the same number the start route enforces.
+    bring(key, gameId) {
+      const i = at(key);
+      if (i < 0 || guestGames[i].includes(gameId) || guestGames[i].length >= MAX_GUEST_GAMES) return false;
+      guestGames.forEach((list) => {
+        const j = list.indexOf(gameId);
+        if (j >= 0) list.splice(j, 1);
+      });
+      guestGames[i].push(gameId);
+      return true;
+    },
+    unbring(key, gameId) {
+      const list = this.gamesOf(key);
+      const j = list.indexOf(gameId);
+      if (j >= 0) list.splice(j, 1);
+    },
+    // Every brought game id, as the Set the draw pool's `isBroughtGame` takes.
+    broughtIds() {
+      return new Set(guestGames.flat());
+    },
+    payload() {
+      return guests.map((name, i) => (guestGames[i].length ? { name, gameIds: guestGames[i].slice() } : name));
     },
   };
 }

@@ -74,7 +74,7 @@ function existingTitleState(games, title) {
   let archived = null;
   for (const g of games || []) {
     if (foldTitle(g && g.title) !== key) continue;
-    if (!g.retired && !g.completed) return 'active';
+    if (!g.retired && !g.completed && !g.guestGame) return 'active';
     archived = 'archived';
   }
   return archived;
@@ -119,7 +119,9 @@ function hitShelfState(games, hit) {
     const src = g && g.source;
     if (!src || src.provider !== hit.provider || String(src.externalId) !== id) continue;
     if (g.wish) wish = true;
-    else if (g.retired || g.completed) archived = true;
+    // A guest game (#1681) is off the shelf like the two archives: adding the
+    // title to the Regal is still what the person may want.
+    else if (g.retired || g.completed || g.guestGame) archived = true;
     else return 'shelf';
   }
   if (wish) return 'wish';

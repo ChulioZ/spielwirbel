@@ -27,7 +27,16 @@ not own — so the clause is now `!g.retired && !g.completed && !g.wish`
 The trap: the filter is **not** centralized, and the two most consequential
 sites are on the **server**, where no view test would catch a miss.
 
-**`wish` is the sharpest of the three:** retired and completed games were *once*
+**#1681 added a fourth, `guestGame`** — a box a session guest brought — so the
+clause is now `… && !g.guestGame` (Postgres: a fourth `IS NOT TRUE`). Unlike
+the other three it is PRESENT only on such a row, never `false`: the setters
+that leave the state drop the key (`delete` / `mergeOutOfGuest`). And it has
+the one sanctioned way back INTO a pool: `isBroughtGame(game, broughtIds)` in
+`draw-pool.js`, the session's brought ids, which `drawPool` and the setup
+preview both admit through the table clauses only (range, metadata) — never
+tags or owners. Do not loosen `isActiveGame` to get there.
+
+**`wish` is the sharpest of the original three:** retired and completed games were *once*
 on the shelf, so a missed filter merely surfaces something the group really
 owns. A wish is a game they **do not own at all**, so a missed filter offers a
 night with a box nobody can put on the table.

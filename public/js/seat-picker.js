@@ -198,14 +198,27 @@ function renderSeatPicker(round, joining, onChange, guestList, opts = {}) {
          accessible name carries both regardless.
          Die Brücke (#1240, B2.3) words it as the seat's state, „Gast · nur
          heute", since its seats are a checklist with a state word each. */
+      /* Where a guest may bring games (#1681, the draw flow), the tap opens
+         their sheet instead — the games they brought, „Spiel mitbringen" and
+         „Gast entfernen", which is where sending them home moved to. The seat
+         then carries a small count of what they brought, so the ring shows it
+         without opening anything. Direct play keeps the one-tap removal. */
+      const bringing = guestList.bringsGames;
+      const brought = bringing ? guestList.gamesOf(key).length : 0;
       const seat = h(`<button type="button" class="nr-seat nr-seat--guest"
-           aria-label="${esc(t('startSession.guestRemove', { name }))}"
+           aria-label="${esc(bringing
+             ? tn(brought, 'startSession.guestOpenOne', 'startSession.guestOpen', { name })
+             : t('startSession.guestRemove', { name }))}"
            title="${esc(t('people.guest', { name }))}">
-           <span class="nr-seat__avatar">${esc(initials(name))}</span>
+           <span class="nr-seat__avatar">${esc(initials(name))}${brought ? `<span class="nr-seat__brought" aria-hidden="true">${brought}</span>` : ''}</span>
            <span class="nr-seat__name">${esc(name)}</span>
            <span class="nr-seat__guest">${esc(t(designIs('bruecke') ? 'startSession.guestSeatBruecke' : 'startSession.guestSeat'))}</span>
          </button>`);
       seat.addEventListener('click', () => {
+        if (bringing) {
+          openGuestSheet(round, guestList, key, changed);
+          return;
+        }
         guestList.remove(key);
         // Removing the last guest while the input is open is fine — the „+" seat
         // is back by definition, so the open box still belongs to it.

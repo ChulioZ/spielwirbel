@@ -71,6 +71,28 @@ const ARCHIVES = {
         : t('wish.expansionOfUnknown');
     },
   },
+  // Gastspiele (#1681): boxes a session guest brought. Like the wish list it
+  // points forwards — „Ins Regal" leads — and it has a SECOND way out, onto the
+  // wish list, declared as `alt`. Its meta line is who brought it rather than a
+  // timestamp: the row has none of its own, and the guest is what identifies it.
+  // Deleting one takes its session history with it, so the bin stays red.
+  guest: {
+    icon: 'ti-door',
+    flag: (g) => g.guestGame === true,
+    at: () => null,
+    meta: (g, round) => {
+      const names = [...new Set((round.sessions || [])
+        .map((s) => broughtGames(s).get(g.id))
+        .filter(Boolean)
+        .map((guest) => guest.name))];
+      return names.length ? t('guestGames.broughtBy', { name: names.join(', ') }) : t('guestGames.marker');
+    },
+    endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/guest-game`,
+    body: { to: 'shelf' },
+    restoreIcon: 'ti-cards',
+    primaryRestore: true,
+    alt: { key: 'guest.toWish', icon: 'ti-heart', body: { to: 'wish' } },
+  },
 };
 
 const showRetired = (rid) => showArchive(rid, 'retired');
@@ -79,6 +101,8 @@ const showCompleted = (rid) => showArchive(rid, 'completed');
 // is also the data field — so the URL reads as a place and the code reads as a
 // game state.
 const showWishlist = (rid) => showArchive(rid, 'wish', 'wishlist');
+// Same split as the wish list: the URL segment reads as a place.
+const showGuestGames = (rid) => showArchive(rid, 'guest', 'guestgames');
 
 // `kind` keys both ARCHIVES and the i18n namespace (retired.* / completed.* /
 // wish.*), so the two stay in lockstep by construction. `seg` is the URL
@@ -152,11 +176,12 @@ async function showArchive(rid, kind, seg = kind) {
            <a class="archive-row__img">${fallback}</a>
            <div class="archive-row__body">
              <a class="archive-row__title">${esc(g.title)}</a>
-             <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(t(`${kind}.at`, { when }))}</div>
+             <div class="muted archive-row__meta"><i class="ti ${a.icon}" aria-hidden="true"></i> ${esc(a.meta ? a.meta(g, round) : t(`${kind}.at`, { when }))}</div>
              ${note ? `<div class="muted archive-row__meta">${esc(note)}</div>` : ''}
            </div>
            <div class="archive-row__actions">
              <button class="btn${a.primaryRestore ? ' btn--primary' : ''}" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
+             ${a.alt ? `<button class="btn" data-act="alt"><i class="ti ${a.alt.icon}" aria-hidden="true"></i> ${esc(t(a.alt.key))}</button>` : ''}
              ${roundCan(round, 'game.delete') ? `<button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ${a.deleteIcon || 'ti-trash'}" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>` : ''}
            </div>
          </div>`);
@@ -183,6 +208,14 @@ async function showArchive(rid, kind, seg = kind) {
         try {
           await api('POST', a.endpoint(rid, g.id), a.body);
           toast(t(`${kind}.restored`, { title: g.title }));
+          showArchive(rid, kind, seg);
+        } catch (e) { toast(e.message, { tone: 'error' }); }
+      });
+      const altBtn = row.querySelector('[data-act="alt"]');
+      if (altBtn) altBtn.addEventListener('click', async () => {
+        try {
+          await api('POST', a.endpoint(rid, g.id), a.alt.body);
+          toast(t(`${kind}.altDone`, { title: g.title }));
           showArchive(rid, kind, seg);
         } catch (e) { toast(e.message, { tone: 'error' }); }
       });

@@ -11,8 +11,8 @@
    the frontend; all files share one global script scope. */
 
 function setupPoolPreview(setup) {
-  const { form, activeGames, selectedTags, tagFilterState, tableState, metaFilters,
-    joining, guests, playerCount, shelfSeats, tisch, ocean, bruecke, ph, forest } = setup;
+  const { round, form, activeGames, selectedTags, tagFilterState, tableState, metaFilters,
+    joining, guests, guestList, playerCount, shelfSeats, tisch, ocean, bruecke, ph, forest } = setup;
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
   // many people it holds (#575). The range clause and the active filter above are
@@ -27,17 +27,29 @@ function setupPoolPreview(setup) {
   // The owner clause (#971) keys off the joining SEATS, not `playerCount` —
   // guests own nothing — and it is the server's own predicate, like the two
   // above, so the preview cannot promise a pool the draw would refuse.
-  const pool = () =>
-    activeGames.filter(
+  // The clauses about THIS TABLE, which brought guest games (#1681) take too;
+  // they skip the tag filter and the owner clause, exactly as `drawPool` does.
+  const fitsTable = (g) =>
+    (tableState.multiTable
+      ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
+      : fitsPlayerCount(g, playerCount())) &&
+    fitsMetadataFilters(g, metaFilters) &&
+    (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended));
+  // Read live: a guest's sheet pushes a newly created guest game onto
+  // `round.games`, so the brought list is re-derived on every update.
+  const brought = () => {
+    const ids = guestList ? guestList.broughtIds() : new Set();
+    return (round.games || []).filter((g) => isBroughtGame(g, ids));
+  };
+  const pool = () => [
+    ...activeGames.filter(
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
-        (tableState.multiTable
-          ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
-          : fitsPlayerCount(g, playerCount())) &&
-        fitsMetadataFilters(g, metaFilters) &&
-        (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
+        fitsTable(g) &&
         ownedByParty(g, shelfSeats())
-    );
+    ),
+    ...brought().filter(fitsTable),
+  ];
 
   // How many games pass every OTHER clause and fail only on their owners being
   // away (#971). Counted rather than listed, and it is not a filter the user set
@@ -174,7 +186,7 @@ function setupPoolPreview(setup) {
           .map(
             (g) => `<span class="pool-tile${throwClass(marks, g)}"${throwAttr(marks, g)}${styleAttr(throwDecl(marks, g))} title="${esc(g.title)}">
                  <span class="pool-tile__img"${styleAttr(coverDecl(g, COVER_CARD))}>${coverPlaceholder(g)}</span>
-                 <span class="pool-tile__name">${esc(g.title)}</span>${ph ? phPlaytime(g) : ''}
+                 <span class="pool-tile__name">${esc(g.title)}</span>${ph ? phPlaytime(g) : ''}${g.guestGame ? `<span class="pool-tile__meta pool-tile__guest">${esc(t('guestGames.marker'))}</span>` : ''}
                </span>`
           )
           .join('')

@@ -286,7 +286,12 @@ function renderChronikTab(round, activities) {
 
     // Headline is the chosen game (with a rating pill); the date leads only
     // when no game was played. The meta line carries the rest.
-    const title = chosen ? esc(chosen.title) : esc(when);
+    // A guest game (#1681) carries its mark in the title, which every design's
+    // card renders, so no branch below can drop it.
+    const guestNote = chosen ? guestGameNote(s, chosen) : '';
+    const title = chosen
+      ? esc(chosen.title) + (guestNote ? ` <span class="guest-mark"><i class="ti ti-door" aria-hidden="true"></i> ${esc(guestNote)}</span>` : '')
+      : esc(when);
     let pill = '';
     if (chosen) {
       const sst = gameStatsForSession(round, s, chosen.id);
