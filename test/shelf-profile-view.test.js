@@ -73,9 +73,10 @@ test('Klassisch: the card shows the seat bands as bars, the strongest gaps, and 
   assert.ok(c, 'nine linked games must render the card');
   assert.equal(c.querySelector('.hub-card__title').textContent.trim(), 'Regal-Steckbrief');
   const bars = [...c.querySelectorAll('.shelf-bar')];
-  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__label').textContent), ['für 2', 'für 3', 'für 4', 'für 5', 'für 6+']);
-  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__n').textContent), ['9', '9', '9', '0', '0']);
-  assert.deepEqual(bars.map((b) => b.classList.contains('shelf-bar--gap')), [false, false, false, true, true]);
+  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__label').textContent), ['solo', 'für 2', 'für 3', 'für 4', 'für 5', 'für 6+']);
+  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__n').textContent), ['0', '9', '9', '9', '0', '0']);
+  // An empty solo band is drawn but never marked: it is a taste, not a gap (#1666).
+  assert.deepEqual(bars.map((b) => b.classList.contains('shelf-bar--gap')), [false, false, false, false, true, true]);
   assert.equal(c.querySelectorAll('.shelf-tile').length, 0, 'Klassisch draws bars, not tiles');
   // Seven empty bands exist (5, 6+, three time bands, two weight bands); the card
   // names three and leaves the rest to the screen.
@@ -95,10 +96,24 @@ test('Der Tisch: the seat bands are the Rundenpuls’s stat tiles, gaps marked',
   const c = card(dom);
   assert.ok(c);
   const tiles = [...c.querySelectorAll('.pulse-tiles.shelf-tiles > .pulse-tile')];
-  assert.equal(tiles.length, 5);
-  assert.deepEqual(tiles.map((x) => x.querySelector('.pulse-tile__n').textContent), ['9', '9', '9', '0', '0']);
-  assert.deepEqual(tiles.map((x) => x.classList.contains('shelf-tile--gap')), [false, false, false, true, true]);
+  assert.equal(tiles.length, 6);
+  assert.deepEqual(tiles.map((x) => x.querySelector('.pulse-tile__n').textContent), ['0', '9', '9', '9', '0', '0']);
+  assert.deepEqual(tiles.map((x) => x.classList.contains('shelf-tile--gap')), [false, false, false, false, true, true]);
+  assert.equal(tiles[0].querySelector('.pulse-tile__label').textContent, 'solo');
   assert.equal(c.querySelectorAll('.shelf-bar').length, 0);
+});
+
+test('the solo band reads as one word in every locale, never „für 1" (#1666)', (t) => {
+  const dom = loadApp({ locale: 'en' });
+  t.after(() => dom.close());
+  dom.set('api', noRecos());
+  const r = linkedRound();
+  r.games[0].minPlayers = 1;
+  dom.call('renderStartTab', r, r.games);
+  const bars = [...card(dom).querySelectorAll('.shelf-bar')];
+  assert.equal(bars[0].querySelector('.shelf-bar__label').textContent, 'solo');
+  assert.equal(bars[0].querySelector('.shelf-bar__n').textContent, '1');
+  assert.equal(bars[1].querySelector('.shelf-bar__label').textContent, 'for 2');
 });
 
 // The screen, rendered through its real route to the round.

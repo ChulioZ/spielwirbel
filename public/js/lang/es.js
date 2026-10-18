@@ -222,6 +222,7 @@ I18N.es = {
   'shelfProfile.basis': 'Con los datos de {n} juegos',
   'shelfProfile.seats': 'Jugadores',
   'shelfProfile.seatsShort': 'para {seats}',
+  'shelfProfile.seatsSolo': 'en solitario',
   'shelfProfile.seatsLabel': 'Para {seats} jugadores',
   'shelfProfile.time.upTo30': 'Hasta 30 min',
   'shelfProfile.time.to60': '31–60 min',

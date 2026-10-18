@@ -211,6 +211,7 @@ I18N.ko = {
   'shelfProfile.basis': '게임 {n}개의 데이터 기준',
   'shelfProfile.seats': '인원',
   'shelfProfile.seatsShort': '{seats}인',
+  'shelfProfile.seatsSolo': '1인',
   'shelfProfile.seatsLabel': '{seats}인',
   'shelfProfile.time.upTo30': '30분 이하',
   'shelfProfile.time.to60': '31–60분',

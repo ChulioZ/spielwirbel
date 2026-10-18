@@ -225,6 +225,7 @@ I18N.de = {
   'shelfProfile.basis': 'Aus den Daten von {n} Spielen',
   'shelfProfile.seats': 'Personen',
   'shelfProfile.seatsShort': 'für {seats}',
+  'shelfProfile.seatsSolo': 'solo',
   'shelfProfile.seatsLabel': 'Für {seats} Personen',
   'shelfProfile.time.upTo30': 'Bis 30 Min.',
   'shelfProfile.time.to60': '31–60 Min.',

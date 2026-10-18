@@ -371,7 +371,8 @@ What the app does, in detail. For a short overview see the
     winner *or* an ending leaves the list — games with no cover, games with no
     player count; each deep-linking to the fix), a **Regal-Steckbrief** once
     eight or more games carry BoardGameGeek data (how many games seat each table
-    size from 2 to 6+, counting owned expansions, and the gaps a draw will hit —
+    size from solo to 6+, counting owned expansions, and the gaps a draw will hit
+    — never solo, which most group shelves skip on purpose, issue #1666 —
     „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
     screen with every band — players, playing time, weight — the mechanics,
     categories and designers the round rates best, ranked by the mean

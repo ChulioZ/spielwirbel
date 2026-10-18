@@ -210,6 +210,7 @@ I18N.fi = {
   'shelfProfile.basis': '{n} pelin tietojen pohjalta',
   'shelfProfile.seats': 'Pelaajat',
   'shelfProfile.seatsShort': '{seats} pelaajalle',
+  'shelfProfile.seatsSolo': 'yksin',
   'shelfProfile.seatsLabel': '{seats} pelaajalle',
   'shelfProfile.time.upTo30': 'Enintään 30 min',
   'shelfProfile.time.to60': '31–60 min',

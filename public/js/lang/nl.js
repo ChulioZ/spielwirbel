@@ -233,6 +233,7 @@ I18N.nl = {
   'shelfProfile.basis': 'Op basis van {n} spellen',
   'shelfProfile.seats': 'Spelers',
   'shelfProfile.seatsShort': 'met {seats}',
+  'shelfProfile.seatsSolo': 'solo',
   'shelfProfile.seatsLabel': 'Met {seats} spelers',
   'shelfProfile.time.upTo30': 'Tot 30 min',
   'shelfProfile.time.to60': '31–60 min',

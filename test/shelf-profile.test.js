@@ -57,6 +57,18 @@ test('seat bands: a game counts in every size its range covers, and 6+ means any
   assert.equal(band(p.seats, '4'), 7);
   assert.equal(band(p.seats, '5'), 1);
   assert.equal(band(p.seats, '6'), 2, 'a 7–10 game seats a table of six or more even though it cannot seat six');
+  assert.equal(band(p.seats, '1'), 0, 'nothing on this shelf plays solo');
+});
+
+test('the solo band (#1666): first in the row, counted by the same predicate as every other band', () => {
+  const shelf = [
+    ...shelfOf(7),                                // 2–4: not solo
+    g({ minPlayers: 1, maxPlayers: 4 }),          // 1–4: solo and 2…4
+  ];
+  const p = shelfProfile(shelf, deps);
+  assert.deepEqual(p.seats.bands.map((b) => b.key), ['1', '2', '3', '4', '5', '6']);
+  assert.equal(band(p.seats, '1'), 1);
+  assert.equal(band(p.seats, '2'), 8, 'a 1–4 game still counts at two');
 });
 
 test('owned expansions widen the range by UNION, never by hull', () => {
@@ -71,6 +83,12 @@ test('owned expansions widen the range by UNION, never by hull', () => {
   assert.equal(band(p.seats, '5'), 1);
   assert.equal(band(p.seats, '6'), 1);
   assert.equal(band(p.seats, '2'), 7, 'the solo expansion must not make its 3–4 game count at two');
+  assert.equal(band(p.seats, '1'), 1, 'the owned solo expansion makes its 3–4 game count at one');
+  // A 2–4 base with a 1–1 expansion: one game at one, and only ONCE — the base
+  // and the expansion both seat a table, but the game is one box.
+  const solo = shelfProfile([...shelfOf(7), g({ expansions: [{ title: 'Solo', minPlayers: 1, maxPlayers: 1 }] })], deps);
+  assert.equal(band(solo.seats, '1'), 1);
+  assert.equal(band(solo.seats, '2'), 8, 'counted once at two, not once per seating source');
 });
 
 test('a game with no range at all is UNKNOWN for seats, not "any table size"', () => {
@@ -128,6 +146,9 @@ test('gaps: every seat and time band under three, the empty ones first, dimensio
   // heavy game on purpose, so the bars show weight and no sentence claims it.
   assert.equal(p.weight.bands.find((b) => b.key === 'heavy').n, 0, 'the fixture really has an empty weight band');
   assert.ok(!p.gaps.some((x) => x.dim === 'weight'), 'weight never produces a gap');
+  // Solo is a taste too (#1666): this shelf has NO solo game, and still no gap.
+  assert.equal(p.seats.bands.find((b) => b.key === '1').n, 0, 'the fixture really has an empty solo band');
+  assert.ok(!p.gaps.some((x) => x.dim === 'seats' && x.key === '1'), 'the solo band never produces a gap');
   const full = shelfProfile([
     ...shelfOf(3, { minPlayers: 1, maxPlayers: 8, maxPlaytime: 20, weight: 1.2 }),
     ...shelfOf(3, { minPlayers: 1, maxPlayers: 8, maxPlaytime: 50, weight: 2.4 }),

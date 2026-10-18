@@ -223,6 +223,7 @@ I18N.en = {
   'shelfProfile.basis': 'From the data of {n} games',
   'shelfProfile.seats': 'Players',
   'shelfProfile.seatsShort': 'for {seats}',
+  'shelfProfile.seatsSolo': 'solo',
   'shelfProfile.seatsLabel': 'For {seats} players',
   'shelfProfile.time.upTo30': 'Up to 30 min',
   'shelfProfile.time.to60': '31–60 min',
