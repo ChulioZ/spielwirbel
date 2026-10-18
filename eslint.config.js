@@ -114,7 +114,7 @@ const frontendGlobals = {
   memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly', personNameInk: 'readonly', designPersonTone: 'readonly',
-  renderSeatPicker: 'readonly', createGuestList: 'readonly', renderTeamPicker: 'readonly',
+  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
@@ -147,7 +147,7 @@ const frontendGlobals = {
   normalizeRole: 'readonly', capabilityRole: 'readonly', can: 'readonly',
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
-  isActiveGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
+  isActiveGame: 'readonly', isBroughtGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
   PLAYER_FILTER_CHOICES: 'readonly', PLAYER_FILTER_TOP: 'readonly', requiredExpansions: 'readonly',
   expansionAddedCounts: 'readonly',
   ownedByParty: 'readonly', shelfParty: 'readonly', fitsRecommendedCount: 'readonly',
@@ -192,6 +192,7 @@ const frontendGlobals = {
   voteAdvanceMs: 'readonly', createVoteAdvance: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
+  MAX_GUEST_GAMES: 'readonly', broughtGames: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
   sessionRaters: 'readonly', // #1538
   sessionPartyGroups: 'readonly',
@@ -437,7 +438,7 @@ const frontendGlobals = {
   // share one global scope, so all their top-level names are listed together.
   showRoundSettings: 'readonly', cardMeta: 'readonly',
   showRound: 'readonly', showRetired: 'readonly', showCompleted: 'readonly',
-  showWishlist: 'readonly', showRecommendations: 'readonly',
+  showWishlist: 'readonly', showGuestGames: 'readonly', showRecommendations: 'readonly',
   recReasonText: 'readonly', recFacts: 'readonly', recEmptyKey: 'readonly',
   showArchive: 'readonly', ARCHIVES: 'readonly', acquireWishedExpansion: 'readonly',
   // round-marker.js (#1187): a round's colour marker, the one thing a round

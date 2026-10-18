@@ -149,7 +149,11 @@ What the app does, in detail. For a short overview see the
   collection: a **scope strip** — Regal · Wunschliste · Aussortiert ·
   Durchgespielt · Könnte euch gefallen, each with its count — heads the Regal
   and every list at every screen size, the current one marked, each a real
-  link to its own page.
+  link to its own page. A fourth list, **Gastspiele**, joins the strip once a
+  guest has brought a game along (see *Guests*): those games stay off the shelf
+  and out of every later draw, and from the list, the game's own page or the
+  finished session's results they can go **Ins Regal** — counted as an
+  acquisition, like a wish — or **onto the Wunschliste**.
   Where the instance has it switched on (`PRICES_ENABLED`), opening a wished game
   that carries a provider link also shows **what it costs right now** — the
   cheapest in-stock offer including shipping via Brettspielpreise.de, with the
@@ -625,7 +629,14 @@ What the app does, in detail. For a short overview see the
   sessions keep it too, so the list always reads as complete.
 - **Guests** – a visitor who isn't part of the group takes a seat on the ring
   like everybody else: a dashed „+" seat asks for their name, and a tap on their
-  seat sends them home again. They count toward the player range the draw
+  seat opens their sheet — where they can be sent home again, and where they can
+  **bring their own games** („Spiel mitbringen": search, or one tap for a game a
+  guest brought before). A brought game joins *that* session's draw only, still
+  filtered by player count and the game filters but never by tags or owners; it
+  is stored as a **guest game**, marked „Gastspiel · mitgebracht von Dana" on the
+  vote card, the results and the Chronik, and counts in every session figure but
+  in none about the shelf. In direct play a tap on a guest's seat still sends
+  them home. Guests count toward the player range the draw
   filters by, take their own
   hot-seat turn, can be recorded as a winner, and stay in that session's record
   marked as a guest — but they never join the round, so they leave the member

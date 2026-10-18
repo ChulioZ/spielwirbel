@@ -104,7 +104,7 @@ function pokaleGameCard(round, icon, label, games, sub, loadCover) {
     // The game name opens its detail page (archived games too — the detail
     // view supports them; only the "Jetzt spielen" launcher is omitted).
     makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-    if (!g.retired && !g.completed && !g.wish) {
+    if (!g.retired && !g.completed && !g.wish && !g.guestGame) {
       const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
       btn.addEventListener('click', () => startDirectSession(round, g));
       row.appendChild(btn);
@@ -559,7 +559,7 @@ function renderPokaleTab(round) {
     const at = s.createdAt;
     if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
   });
-  const active = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
+  const active = round.games.filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame);
   // Find the earliest last-played timestamp ('' = never played sorts first),
   // then pick a random game among all that tie for it, so the same game isn't
   // always highlighted.

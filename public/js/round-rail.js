@@ -79,7 +79,7 @@ function railItem({ icon, label, path, onNav, current, inside }) {
 
 function buildRoundRail(round, activeTab, sub) {
   const rid = round.id;
-  const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish);
+  const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame);
   const playedCount = round.sessions.filter((s) => s.finished).length;
   // A sub-screen with its own entry claims the current marker, so the section
   // list stays unhighlighted rather than lighting up two rows at once.

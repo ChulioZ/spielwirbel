@@ -40,7 +40,8 @@ async function showTransferGames(round) {
     g.retired ? t('retired.crumb')
       : g.completed ? t('completed.crumb')
         : g.wish ? t('wish.crumb')
-          : '';
+          : g.guestGame ? t('guest.crumb')
+            : '';
 
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog sheet--list" role="dialog" aria-modal="true" aria-label="${esc(t('moveGames.title'))}">

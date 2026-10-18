@@ -49,7 +49,7 @@ const STATUS = (over = {}) => ({
     content: { games: 90, activeGames: 70, members: 25, sessions: 33, sessionsFinished: 20 },
     adoption: {
       roundsWithRetired: 3, roundsWithCompleted: 1, roundsWithWish: 5, roundsWithAnyShelf: 7,
-      roundsWithTags: 6, roundsWithSavedFilters: 4,
+      roundsWithTags: 6, roundsWithSavedFilters: 4, roundsWithGuestGame: 3,
       gamesLinked: 55, gamesWithOwnCover: 12, gamesWithProviderCover: 40,
       gamesWithOwners: 9, gamesWithExpansions: 4,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
@@ -319,6 +319,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['geteilt', '2', '20 %', 0],
         ['eigene Tags', '6', '60 %', 0],
         ['gespeicherte Filter', '4', '40 %', 0],
+        ['mit Gastspiel', '3', '30 %', 0],
         ['Regal genutzt', '7', '70 %', 0],
         ['Aussortiert', '3', '43 %', 1],
         ['Durchgespielt', '1', '14 %', 1],

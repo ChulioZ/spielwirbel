@@ -842,6 +842,10 @@ public/
     guest-picker.js  the live guest list that ring drives — names, stable keys
                      for the team picker, and the per-screen note (issues #458,
                      #532)
+    guest-games-sheet.js  a guest's sheet on the setup ring: the games they
+                     brought, „Spiel mitbringen", „Gast entfernen"; plus the
+                     „Gastspiel" note and the results screen's keep-it offer
+                     (issue #1681)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
     setup-addons.js  the add-on chip row those two fields now sit behind: one
@@ -997,8 +1001,10 @@ public/
                           the round's name and colour marker on the page
                           (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
-    views-round-lookup.js the two lookup sheets: add a game, link an existing
-                          game to a provider
+    views-round-lookup.js the add-game lookup sheet, incl. its guest-game mode
+                          (#1681)
+    views-game-link.js    the other lookup sheet: link an existing game to a
+                          provider (#74, split out in #1681)
     add-game-search.js  Der Tisch's search-first add step: hits as rows with
                         their own state, then the BGG import or the form (#1264)
     bgg-import.js    the one-shot BoardGameGeek collection import: the

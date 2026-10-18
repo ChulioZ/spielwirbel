@@ -234,7 +234,8 @@ function showStartSession(round, prefill) {
   // and removes them, and everything that follows from the count comes through
   // its `onChange`. The note travels with the list because it is a statement
   // about THESE guests: here they vote, in the direct-play sheet they do not.
-  const guestList = createGuestList(t('startSession.guestsNote'));
+  // Here a guest may also BRING games (#1681), which join tonight's pool only.
+  const guestList = createGuestList(t('startSession.guestsNote'), { bringsGames: true });
   const guests = guestList.guests;
   // Teams (#575): two or more of the people above playing as one party. Frozen
   // at the draw like the seats and the guests, and the reason the pool count
@@ -272,7 +273,7 @@ function showStartSession(round, prefill) {
      this function has finished. */
   const setup = {
     round, form, activeGames, selectedTags, tagFilterState, tableState, metaFilters,
-    joining, awayShelves, guests, playerCount, shelfSeats,
+    joining, awayShelves, guests, guestList, playerCount, shelfSeats,
     tisch, ocean, bruecke, ph, forest,
     filterPanel: null,
   };
@@ -566,7 +567,10 @@ function showStartSession(round, prefill) {
         // preview above used, so the two cannot apply different arithmetic to
         // the same answer.
         withoutShelfIds: [...awayShelves],
-        guests, // names only; the server mints the ids (#458)
+        // Names, the server mints the ids (#458) — a guest who brought games
+        // goes as `{ name, gameIds }` (#1681). Positions are unchanged either
+        // way, so the team payload's guest indices still line up.
+        guests: guestList.payload(),
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false
       });
@@ -1033,6 +1037,12 @@ function startVoting(round, session, games, people, opts = {}) {
     // only when the game actually carries the data — and when it doesn't but
     // could, the card self-heals below.
     const infoBtn = gameInfoButton(game);
+    // A guest game (#1681) says so in the same title line, for the same height
+    // reason: a short „Gastspiel" mark, with who brought it in its label.
+    const guestNote = guestGameNote(session, game);
+    if (guestNote) {
+      card.querySelector('.vote__title').append(' ', h(`<span class="guest-mark" title="${esc(guestNote)}"><i class="ti ti-door" aria-hidden="true"></i> ${esc(guestNote)}</span>`));
+    }
     if (infoBtn) card.querySelector('.vote__title').append(' ', infoBtn);
     else fetchCardGameInfo(game, card);
 
@@ -1556,6 +1566,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // (.claude/rules/frontend-script-load-order.md).
   // Collapsed here (#1055): 355px on every visit for a list most sessions never
   // open. The lobby renders the same builder open — there it is the live record.
+  // Guest games this evening played (#1681): a light offer to keep them —
+  // Ins Regal or onto the wish list — never a step the screen waits on.
+  const guestOffer = guestGameOffers(round, session, games);
+  if (guestOffer) screen.appendChild(guestOffer);
   const sessionLog = renderSessionLog(round, session, { collapsed: true });
   if (sessionLog) screen.appendChild(sessionLog);
 

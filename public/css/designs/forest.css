@@ -246,6 +246,7 @@
    only, so it belongs to the voice and is not gated. */
 :root[data-design="forest"] :is(
   .avatar,
+  .guest-offer__title,
   .hub-card__title,
   .hub-offshelf__title,
   .hub-care__head,

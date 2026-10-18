@@ -155,6 +155,13 @@ The rest — the positional wire format, the party-count arithmetic and why
   guest-owner — is worse, because a guest is ephemeral by design (§1) and the
   ownership would vanish with the session that created it. Recording it properly
   would need a third state ("owned by nobody here"), not a guest.
+- **A guest may BRING GAMES (#1681)** — `session.guests[i].gameIds`, guest-game
+  rows (`guestGame: true`), absent on a guest who brought nothing, never `[]`.
+  The start route drops any id that is not this round's guest game, gives each
+  box to the first guest naming it and caps a guest at `MAX_GUEST_GAMES`. On
+  the draw flow a tap on a guest seat therefore opens their sheet
+  (`openGuestSheet`) and „Gast entfernen" moved in there; direct play keeps the
+  one-tap removal. Bringing a box still makes them its owner NOWHERE (above).
 - **`guests` is absent, never `[]`.** The route spreads
   `...(guests.length ? { guests } : {})`; the contract suite pins the absent key
   in both backends (`.claude/rules/postgres-backend.md`). Unlike

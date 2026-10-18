@@ -25,7 +25,9 @@
 // round's OWN games, while this one would number a list the round has never
 // seen — a promise rather than an inventory. Keep that asymmetry; it is the
 // reason `count` is null here rather than 0.
-function offShelfEntries(round) {
+// `activeSub` keeps a hide-when-empty entry on the screen it names, so the list
+// you are looking at never drops out of its own strip.
+function offShelfEntries(round, activeSub) {
   const rid = round.id;
   const games = round.games || [];
   /* One row per state, and the COUNT IS DERIVED ONCE per row — `count` and the
@@ -38,10 +40,14 @@ function offShelfEntries(round) {
     { sub: 'wishlist', icon: 'ti-heart', key: 'wish.link', nameKey: 'wish.title', flag: (g) => g.wish, go: () => showWishlist(rid) },
     { sub: 'retired', icon: 'ti-archive', key: 'retired.link', nameKey: 'retired.title', flag: (g) => g.retired, go: () => showRetired(rid) },
     { sub: 'completed', icon: 'ti-circle-check', key: 'completed.link', nameKey: 'completed.title', flag: (g) => g.completed, go: () => showCompleted(rid) },
-  ].map(({ sub, icon, key, nameKey, flag, go }) => {
+    // Gastspiele (#1681) — only while there IS one: most rounds never have a
+    // guest bring a box, and a permanent „Gastspiele (0)" would be a fifth
+    // segment advertising an empty list on every Regal.
+    { sub: 'guestgames', icon: 'ti-door', key: 'guest.link', nameKey: 'guest.title', flag: (g) => g.guestGame === true, go: () => showGuestGames(rid), hideEmpty: true },
+  ].map(({ sub, icon, key, nameKey, flag, go, hideEmpty }) => {
     const count = games.filter(flag).length;
-    return { sub, icon, count, label: t(key, { n: count }), name: t(nameKey), go };
-  });
+    return { sub, icon, count, label: t(key, { n: count }), name: t(nameKey), go, hideEmpty };
+  }).filter((e) => !(e.hideEmpty && e.count === 0 && e.sub !== activeSub));
   return [
     ...counted,
     // „Einfacher Modus" (#1646): „Könnte euch gefallen" rides `suggestions`.
@@ -83,7 +89,7 @@ function offShelfSegments(round, activeSub) {
     label: t('offShelf.regal', { n: shelf }), name: t('hub.tab.regal'),
     go: () => showRound(round.id, 'regal'),
   };
-  [regal, ...offShelfEntries(round)].forEach(({ icon, label, name, count, sub, go }) => {
+  [regal, ...offShelfEntries(round, activeSub)].forEach(({ icon, label, name, count, sub, go }) => {
     const on = sub === activeSub;
     // `data-sub` lets a design set the recommendations apart from the lists
     // (Ocean, #1218: O13.3 gives „Könnte euch gefallen" its own column).

@@ -336,7 +336,7 @@ against each, and the Node version the answering process is running.
 population (issue #1480): **Konten** (verified / unverified / suspended, then
 passkey, BGG username, profile picture, BG Stats hand-off, no round yet), the
 accounts that **answered the design chooser** (one line per offered design),
-**Runden** (shared, own tags, saved filters, shelf use with its three states,
+**Runden** (shared, own tags, saved filters, a guest game brought along, shelf use with its three states,
 and how many sessions each round has played), **Spiele** (linked vs. by hand,
 owned, with expansions, with a cover — own or from the provider) and
 **Sessions** (guests, teams, shared vote link, and the session funnel under

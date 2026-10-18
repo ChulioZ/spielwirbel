@@ -2178,3 +2178,34 @@ test('a WEAK designer match prints no reason line (#1505)', () => {
   const rec = recommend(round, corpus).recommendations.find((r) => r.externalId === 'c1');
   assert.equal(rec.reasons.some((r) => r.term === 'designers'), false);
 });
+
+/* ------------------------------- guest games ------------------------------- */
+/*
+ * A guest game (#1681) is a visitor's box. It only says something about what this
+ * group likes once the group has PLAYED or RATED it — then it is real taste
+ * („we loved Dana's Azul"). Brought and never drawn, it is a wish's case: known,
+ * so never recommended back, but no part of the profile, or "based on {n} of your
+ * games" counts a box the group does not have and has never touched.
+ */
+const guestGame = () => ({ id: 'gq', title: 'Brought', guestGame: true, source: { provider: 'bgg', externalId: WISH_ID } });
+
+test('an UNPLAYED guest game shapes nothing in the profile, and is still never recommended back', () => {
+  const without = profileOf(shelfRound(), shelfCorpus());
+  const round = shelfRound();
+  round.games.push(guestGame());
+  const withGuest = profileOf(round, [...shelfCorpus(), wishRow()]);
+  assert.deepEqual(withGuest.mechanics, without.mechanics);
+  assert.equal(withGuest.targetWeight, without.targetWeight);
+  assert.equal(withGuest.linkedGames, without.linkedGames, 'linkedGames counts a box nobody played');
+  assert.ok(withGuest.ownedIds.has(WISH_ID));
+});
+
+test('a PLAYED guest game profiles like any game the round played', () => {
+  const without = profileOf(shelfRound(), shelfCorpus());
+  const round = shelfRound({ sessions: [directPick('s1', 'gq')] });
+  round.games.push(guestGame());
+  const withGuest = profileOf(round, [...shelfCorpus(), wishRow()]);
+  assert.equal(withGuest.linkedGames, without.linkedGames + 1);
+  assert.ok((withGuest.mechanics['M-wish'] || 0) > 0, 'the night they played it says nothing about their taste');
+  assert.ok(withGuest.ownedIds.has(WISH_ID));
+});

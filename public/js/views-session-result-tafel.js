@@ -17,12 +17,20 @@
    and the table band (#1107) rather than written twice: the band is the ONLY
    surface carrying it once the Tafel is gated away, so a look-alike copy here
    would be a fact that silently drifts. */
-function resultArchivedBadge(g) {
-  return g.retired
+//
+// A guest game (#1681) gets the same kind of tag: „Gastspiel", or „mitgebracht
+// von Dana" where the session knows who brought it — which it still does after
+// the game was moved onto the shelf, so the night keeps its attribution.
+function resultArchivedBadge(g, session) {
+  // Beside the state badge, not instead of it: a guest game that was later
+  // shelved and retired is both, and the results row says both.
+  const guestNote = session ? guestGameNote(session, g) : '';
+  const guestTag = guestNote ? ` <span class="tag tag--guest">${iconText('ti-door', guestNote)}</span>` : '';
+  return guestTag + (g.retired
     ? ` <span class="tag tag--retired">${iconText('ti-archive', t('result.retiredTag'))}</span>`
     : g.completed
       ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
-      : '';
+      : '');
 }
 
 function tallyResultRows(games, people, session) {
@@ -197,7 +205,7 @@ function buildResultTafel(rs) {
       })
       .join('');
     // Info if the game has been archived in the meantime (#250: either way).
-    const retiredBadge = resultArchivedBadge(g);
+    const retiredBadge = resultArchivedBadge(g, session);
     /* The score's NAME, not a vote count (#902). Within one session `n` is the
        same on every row — the vote card refuses to advance until each drawn
        game has been placed somewhere on the scale (see the guard in

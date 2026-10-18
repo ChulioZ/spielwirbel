@@ -1793,6 +1793,86 @@ module.exports = function repoContract(repo) {
     assert.equal(deleted[0].title, 'Owned');
   });
 
+  // #1681: a GUEST GAME — a box a session guest brought — is the fourth state
+  // off the shelf. It is created silent (the round acquired nothing), it is
+  // counted nowhere a shelf figure is, and the key is ABSENT on every other game
+  // so an ordinary row is byte-identical to what it always was.
+  test('a guest game is created silent, and only a guest game carries the key', async () => {
+    const round = await freshRound();
+    const plain = await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    assert.equal('guestGame' in plain, false, 'an ordinary game grows no guestGame key');
+    const guest = await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true }));
+    assert.equal(guest.guestGame, true);
+    assert.equal(guest.wish, false);
+    assert.equal('ownerIds' in guest, false, 'a guest game is owned by nobody here');
+    const added = (await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_added');
+    assert.deepEqual(added.map((a) => a.title), ['Owned'], 'bringing a game is not an acquisition');
+    assert.equal((await repo.getRound(T, round.id)).games.find((g) => g.id === guest.id).guestGame, true);
+  });
+
+  test('a guest game is excluded from gameCount, activeGames and a round copy', async () => {
+    const round = await freshRound();
+    await repo.createGame(T, round.id, gameFields({ title: 'Owned' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true }));
+    assert.equal((await repo.getRoundSummary(T, round.id)).gameCount, 1);
+    const row = (await repo.tenantSummary(T)).rounds.find((r) => r.id === round.id);
+    assert.equal(row.games, 2, 'a guest game still holds a row (the quota counts it)');
+    assert.equal(row.activeGames, 1);
+    const copy = await repo.createRound(T, { name: 'Copy', members: ['A'], importFromRoundId: round.id });
+    assert.deepEqual(copy.games.map((g) => g.title), ['Owned']);
+  });
+
+  // Leaving the state: onto the shelf is an ACQUISITION (the ordinary
+  // game_added, like a wish reaching the shelf); onto the wish list is silent.
+  test('releaseGuestGame moves a guest game onto the shelf or the wish list', async () => {
+    const round = await freshRound();
+    const a = await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true }));
+    const b = await repo.createGame(T, round.id, gameFields({ title: 'Cascadia', guestGame: true }));
+
+    const shelved = await repo.releaseGuestGame(T, round.id, a.id, 'shelf');
+    assert.equal('guestGame' in shelved, false, 'the key goes, so the row reads as any shelf game');
+    assert.equal(shelved.wish, false);
+    const wished = await repo.releaseGuestGame(T, round.id, b.id, 'wish');
+    assert.equal('guestGame' in wished, false);
+    assert.equal(wished.wish, true);
+    assert.ok(wished.wishAt);
+
+    const added = (await repo.listActivities(T, round.id)).filter((x) => x.type === 'game_added');
+    assert.deepEqual(added.map((x) => x.title), ['Azul'], 'only the shelf move is an event');
+    assert.equal((await repo.getRoundSummary(T, round.id)).gameCount, 1);
+
+    // Only a guest game can be released — a second call is refused, not repeated.
+    assert.equal(await repo.releaseGuestGame(T, round.id, a.id, 'shelf'), 'not_guest_game');
+    assert.equal(await repo.releaseGuestGame(T, round.id, 'missing', 'shelf'), null);
+    assert.equal(await repo.releaseGuestGame(T, 'missing', a.id, 'shelf'), null);
+    assert.equal(await repo.releaseGuestGame(OTHER, round.id, a.id, 'shelf'), null);
+  });
+
+  // Exclusivity, four-way: setting any other state takes the game out of this one.
+  test('retiring, completing or wishing a guest game clears the guest state', async () => {
+    const round = await freshRound();
+    for (const [name, call] of [
+      ['retire', (gid) => repo.retireGame(T, round.id, gid, true)],
+      ['complete', (gid) => repo.completeGame(T, round.id, gid, true)],
+      ['wish', (gid) => repo.wishGame(T, round.id, gid, true)],
+      ['bulk retire', async (gid) => {
+        await repo.retireGames(T, round.id, [gid]);
+        return (await repo.getRound(T, round.id)).games.find((g) => g.id === gid);
+      }],
+    ]) {
+      const g = await repo.createGame(T, round.id, gameFields({ title: name, guestGame: true }));
+      const after = await call(g.id);
+      assert.equal('guestGame' in after, false, `${name} must clear guestGame`);
+    }
+  });
+
+  test('deleteGame accepts a guest game, and writes no game_deleted entry', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true, image: '/uploads/a.png' }));
+    assert.deepEqual(await repo.deleteGame(T, round.id, g.id), { image: '/uploads/a.png' });
+    assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_deleted').length, 0);
+  });
+
   // The bulk counterpart (#863). The count reports what the round actually
   // OWNED, while the returned `deleted` keeps counting every removed row — that
   // is what the caller's toast reports. An all-wish selection (the only shape
@@ -5907,7 +5987,7 @@ module.exports = function repoContract(repo) {
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
       'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'roundsWithSavedFilters', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
+      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
       'sessionsImported', 'sessionsImportedBgStats',
@@ -5936,6 +6016,9 @@ module.exports = function repoContract(repo) {
       // The three shelf states, on ONE round, so the union counts once.
       const shelved = await repo.createGame(tn, r.id, gameFields({ title: 'Regal' }));
       await repo.updateGame(tn, r.id, shelved.id, { retired: true, completed: true, wish: true });
+      // A guest game (#1681) — and a SECOND one, so the figure counts the round once.
+      await repo.createGame(tn, r.id, gameFields({ title: 'Gast 1', guestGame: true }));
+      await repo.createGame(tn, r.id, gameFields({ title: 'Gast 2', guestGame: true }));
 
       const session = await repo.createSession(tn, r.id, {
         gameIds: [own.id],
@@ -5959,7 +6042,7 @@ module.exports = function repoContract(repo) {
       }
       // The denominators move with them, or the shares the panel renders are
       // measured against a total that never grew.
-      assert.equal(m.content.games, mid.content.games + 3);
+      assert.equal(m.content.games, mid.content.games + 5);
       assert.equal(m.content.sessions, mid.content.sessions + 1);
       assert.equal(m.accounts.total, mid.accounts.total + 1);
     });

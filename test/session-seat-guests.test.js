@@ -78,6 +78,12 @@ const typeGuest = (name, root = dom.app) => {
   input.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
 };
 const seatName = (seat) => seat.querySelector('.nr-seat__name').textContent;
+// On the draw flow a guest's seat opens their sheet (#1681), and sending them
+// home is „Gast entfernen" in it — the one-tap removal stays on direct play.
+const sendHome = (seat) => {
+  seat.click();
+  dom.document.querySelector('.guest-sheet [data-act="remove"]').click();
+};
 /* The POST body is built in the jsdom realm, so its arrays and objects do not
    share a prototype with this file's literals and `deepStrictEqual` reports
    "same structure but not reference-equal". Round-trip through JSON rather than
@@ -148,7 +154,8 @@ test('Enter adds one too, and the „(Gast)" marker survives on its own line', a
   assert.equal(seatName(seat), 'Kim');
   assert.equal(seat.querySelector('.nr-seat__guest').textContent, 'Gast',
     'the marker is the half that must not be lost — a bare name reads as a member of the round');
-  assert.equal(seat.getAttribute('aria-label'), 'Gast Kim entfernen');
+  assert.equal(seat.getAttribute('aria-label'), 'Kim, Gast – 0 Spiele mitgebracht',
+    'on the draw flow the seat opens the guest\'s sheet, so its name says what is behind it');
   assert.equal(seat.getAttribute('aria-pressed'), null,
     'a guest seat is not a toggle — aria-pressed would announce them as out of the session');
 });
@@ -172,19 +179,19 @@ test('an empty name is refused, and adding stays open for the next one', async (
   dom.set('toast', () => {});
 });
 
-test('tapping a guest sends them home, and the pool opens back up', async () => {
+test('sending a guest home from their sheet, and the pool opens back up', async () => {
   await showSetup();
 
   addGuest('Kim');
   addGuest('Lea');
   assert.deepEqual(guestSeats().map(seatName), ['Kim', 'Lea']);
 
-  guestSeats()[0].click();
+  sendHome(guestSeats()[0]);
   assert.deepEqual(guestSeats().map(seatName), ['Lea'], 'the wrong guest left — the seats hold a stale index');
   assert.equal(centre(), '3 spielen mit');
   assert.deepEqual(previewed(), drawable(3));
 
-  guestSeats()[0].click();
+  sendHome(guestSeats()[0]);
   assert.equal(centre(), '2 spielen mit');
   assert.deepEqual(previewed(), ['Duo']);
 });
@@ -197,7 +204,7 @@ test('the „+" seat disappears at the cap and comes back below it', async () =>
   assert.equal(addSeat(), null, 'the ring still offers a seat the server would refuse to fill');
   assert.equal(addBox().hidden, true, 'the input is still open over a „+" seat that is no longer there');
 
-  guestSeats()[0].click();
+  sendHome(guestSeats()[0]);
   assert.ok(addSeat(), 'one seat free and no way to use it');
 });
 
@@ -235,7 +242,7 @@ test('the ring is rebuilt whole on every change, so it has to put focus back', a
   addGuest('Kim');
   const guest = guestSeats()[0];
   guest.focus();
-  guest.click();
+  sendHome(guest);
   assert.equal(dom.document.activeElement, addSeat(),
     'the seat that had focus is gone — focus must land on the „+" seat, not on <body>');
 });

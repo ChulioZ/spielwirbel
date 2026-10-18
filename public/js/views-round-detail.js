@@ -131,6 +131,7 @@ const OFF_SHELF_LISTS = [
   { id: 'retired', holds: (g) => !!g.retired, show: (rid) => showRetired(rid) },
   { id: 'completed', holds: (g) => !!g.completed, show: (rid) => showCompleted(rid) },
   { id: 'wishlist', holds: (g) => !!g.wish, show: (rid) => showWishlist(rid) },
+  { id: 'guestgames', holds: (g) => g.guestGame === true, show: (rid) => showGuestGames(rid) },
 ];
 
 // The off-shelf list a game sits in, or null while it is on the shelf.
@@ -524,8 +525,9 @@ async function showGameDetail(rid, gameId) {
 
   // Owners (#971): named when recorded, an empty chip as the way in otherwise.
   // Never on a WISH — the round does not own the game, so there is no owner to
-  // record and the route refuses one.
-  if (!game.wish) {
+  // record and the route refuses one. Nor on a GUEST GAME (#1681): the box is a
+  // visitor's, and the route refuses owners for it too.
+  if (!game.wish && !game.guestGame) {
     const owners = ownerNames(round, game.ownerIds);
     if (owners.length) {
       chips.append(editableTag('tag--custom',
@@ -565,6 +567,7 @@ async function showGameDetail(rid, gameId) {
   // the two above are shared with the session results rows, and a wish can never
   // appear on one — the round does not own the game, so it was never played.
   if (game.wish) chips.append(h(`<span class="tag tag--wish">${iconText('ti-heart', t('wish.tag'))}</span>`));
+  if (game.guestGame) chips.append(h(`<span class="tag tag--guest">${iconText('ti-door', t('guestGames.marker'))}</span>`));
 
   // The glance facts (#717/#724), promoted out of the „Über das Spiel" section
   // and onto the card as pills (#1039): weight, playing time, minimum age are
@@ -986,6 +989,14 @@ async function showGameDetail(rid, gameId) {
       // active-games-filter-sites.md) — so the user got a seat picker, a start
       // button and an English server error.
       restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
+    } else if (game.guestGame) {
+      // A guest game (#1681) has two ways out and no third: the Regal (an
+      // acquisition) or the wish list. „Direkt spielen" stays off it for the
+      // wish's reason — the direct pick refuses a guest game.
+      restoreFrom('guest', 'guest-game', { to: 'shelf' }, { icon: 'ti-cards', label: t('guest.restore') });
+      const toWish = h(`<button class="btn btn--lg"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('guest.toWish'))}</button>`);
+      toWish.addEventListener('click', () => releaseGuestGame(round, game, 'wish', () => showGameDetail(rid, gameId)));
+      bar.appendChild(toWish);
     } else {
       // Direct launch: skip the vote and play this game right away.
       const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
@@ -1011,7 +1022,7 @@ async function showGameDetail(rid, gameId) {
   // play button (operator decision), and each keeps its existing confirm sheet
   // verbatim.
   const menuItems = [];
-  if (!game.retired && !game.completed && !game.wish) {
+  if (isActiveGame(game)) {
     menuItems.push({ icon: 'ti-circle-check', label: t('detail.complete'), cls: 'popover__opt--good', kind: 'undoable', run: async () => {
       if (!await confirmDialog({
         body: t('detail.completeConfirm', { title: game.title }),

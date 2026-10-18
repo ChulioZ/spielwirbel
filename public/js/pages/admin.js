@@ -535,6 +535,9 @@
         line('geteilt', m.social.sharedRounds, rounds),
         line('eigene Tags', a.roundsWithTags, rounds),
         line('gespeicherte Filter', a.roundsWithSavedFilters, rounds),
+        // A guest brought a game along (#1681) — outside the shelf union below,
+        // since a visitor's box is not a state of the round's own collection.
+        line('mit Gastspiel', a.roundsWithGuestGame, rounds),
         // The UNION — one round can be in two states, so the three below are
         // shares of it and cannot be summed into it.
         line('Regal genutzt', a.roundsWithAnyShelf, rounds),

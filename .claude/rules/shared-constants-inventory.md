@@ -42,7 +42,7 @@ places `.claude/rules/frontend-helper-modules-and-coverage.md` lists (script tag
 already listed).
 
 **The third is `public/js/session-people.js`** (#458, #575): `MAX_SESSION_GUESTS`,
-`GUEST_NAME_MAX` and `MIN_TEAM_SIZE`, offered by the guest and team pickers and
+`GUEST_NAME_MAX`, `MIN_TEAM_SIZE` and, since #1681, `MAX_GUEST_GAMES`, offered by the guest and team pickers and
 required by `lib/routes/sessions.js`. It is the sharpest case of the first three, because the server is
 deliberately **lenient** — it truncates an over-long guest list and an over-long
 name instead of 400ing — so a drifted client copy would silently drop guests and
