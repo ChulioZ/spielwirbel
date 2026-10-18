@@ -36,14 +36,16 @@ async function releaseGuestGame(round, game, to, done) {
   }
 }
 
-// The results screen's offer for the guest games a session drew (#1681): one
-// line per game that is STILL a guest game, with „Ins Regal" and „Auf die
-// Wunschliste". Null when there is none, so the screen grows nothing for an
-// ordinary evening. Only once the session is over — while it runs, deciding the
-// fate of a box nobody has played yet is the wrong question.
+// The results screen's offer for the guest game a session PLAYED (#1681): a
+// line for it while it is STILL a guest game, with „Ins Regal" and „Auf die
+// Wunschliste". Null otherwise, so the screen grows nothing for an ordinary
+// evening. Only the chosen game, and only once the session is finished: a box
+// that was drawn but not played was not part of the evening, and a running or
+// cancelled session has played nothing yet. The other guest games stay reachable
+// from the „Gastspiele" list and their own pages.
 function guestGameOffers(round, session, games) {
-  if (!session.finished && !session.cancelled) return null;
-  const open = (games || []).filter((g) => g && g.guestGame === true);
+  if (!session.finished) return null;
+  const open = (games || []).filter((g) => g && g.guestGame === true && g.id === session.chosenGameId);
   if (!open.length || !roundCan(round, 'round.write')) return null;
   const wrap = h(`<section class="guest-offer" aria-labelledby="guestOfferTitle">
       <h2 class="guest-offer__title" id="guestOfferTitle">${esc(tn(open.length, 'guestGames.offerTitleOne', 'guestGames.offerTitle'))}</h2>

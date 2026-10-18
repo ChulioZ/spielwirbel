@@ -22,13 +22,15 @@
 // von Dana" where the session knows who brought it — which it still does after
 // the game was moved onto the shelf, so the night keeps its attribution.
 function resultArchivedBadge(g, session) {
+  // Beside the state badge, not instead of it: a guest game that was later
+  // shelved and retired is both, and the results row says both.
   const guestNote = session ? guestGameNote(session, g) : '';
-  if (guestNote) return ` <span class="tag tag--guest">${iconText('ti-door', guestNote)}</span>`;
-  return g.retired
+  const guestTag = guestNote ? ` <span class="tag tag--guest">${iconText('ti-door', guestNote)}</span>` : '';
+  return guestTag + (g.retired
     ? ` <span class="tag tag--retired">${iconText('ti-archive', t('result.retiredTag'))}</span>`
     : g.completed
       ? ` <span class="tag tag--completed">${iconText('ti-circle-check', t('result.completedTag'))}</span>`
-      : '';
+      : '');
 }
 
 function tallyResultRows(games, people, session) {

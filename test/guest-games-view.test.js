@@ -144,9 +144,12 @@ test('„Spiel mitbringen" opens the add-game form as a guest game, and a save b
   dom.call('closeSheet');
 });
 
-test('the results offer appears for a finished session\'s guest games and releases them', async () => {
+test('the results offer appears for the guest game a finished session PLAYED, and releases it', async () => {
   const round = roundFixture();
-  const session = { id: 's1', finished: true, gameIds: ['x1', 'g1'], guests: [{ id: 'q', name: 'Dana', gameIds: ['x1'] }] };
+  const session = {
+    id: 's1', finished: true, chosenGameId: 'x1', gameIds: ['x1', 'x2', 'g1'],
+    guests: [{ id: 'q', name: 'Dana', gameIds: ['x1', 'x2'] }],
+  };
   const games = round.games.filter((g) => session.gameIds.includes(g.id));
   const sent = [];
   dom.set('api', async (method, path, body) => { sent.push([method, path, plain(body)]); return {}; });
@@ -154,11 +157,22 @@ test('the results offer appears for a finished session\'s guest games and releas
     'a running session is not asked what becomes of a box nobody has played yet');
   const el = dom.call('guestGameOffers', round, session, games);
   assert.ok(el);
-  assert.equal(el.querySelectorAll('.guest-offer__row').length, 1, 'only the guest game is offered');
+  assert.equal(el.querySelectorAll('.guest-offer__row').length, 1,
+    'only the PLAYED guest game is offered — x2 was drawn but not played');
+  assert.match(el.textContent, /Azul/);
+  assert.equal(dom.call('guestGameOffers', round, { ...session, finished: false, cancelled: true }, games), null,
+    'a cancelled session played nothing');
   assert.equal(dom.call('guestGameNote', session, round.games[1]), 'mitgebracht von Dana');
   el.querySelector('[data-to="wish"]').click();
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(sent, [['POST', `/api/rounds/${round.id}/games/x1/guest-game`, { to: 'wish' }]]);
+});
+
+test('a guest game that was later shelved and retired keeps BOTH badges on the results row', () => {
+  const session = { guests: [{ id: 'q', name: 'Dana', gameIds: ['x1'] }] };
+  const html = dom.call('resultArchivedBadge', { id: 'x1', title: 'Azul', retired: true }, session);
+  assert.match(html, /tag--guest/);
+  assert.match(html, /tag--retired/, 'the guest tag hid the game\'s current state');
 });
 
 test('a box the server REUSES moves to the guest who brought it last', async () => {
