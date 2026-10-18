@@ -147,7 +147,7 @@ const frontendGlobals = {
   normalizeRole: 'readonly', capabilityRole: 'readonly', can: 'readonly',
   roundCan: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
-  isActiveGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
+  isActiveGame: 'readonly', isBroughtGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
   PLAYER_FILTER_CHOICES: 'readonly', PLAYER_FILTER_TOP: 'readonly', requiredExpansions: 'readonly',
   expansionAddedCounts: 'readonly',
   ownedByParty: 'readonly', shelfParty: 'readonly', fitsRecommendedCount: 'readonly',
@@ -192,6 +192,7 @@ const frontendGlobals = {
   voteAdvanceMs: 'readonly', createVoteAdvance: 'readonly',
   // session-people.js (issue #458)
   MAX_SESSION_GUESTS: 'readonly', GUEST_NAME_MAX: 'readonly', MIN_TEAM_SIZE: 'readonly',
+  MAX_GUEST_GAMES: 'readonly', broughtGames: 'readonly',
   sessionPeople: 'readonly', personLabel: 'readonly',
   sessionRaters: 'readonly', // #1538
   sessionPartyGroups: 'readonly',

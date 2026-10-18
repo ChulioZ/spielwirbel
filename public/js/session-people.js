@@ -22,6 +22,12 @@ const MAX_SESSION_GUESTS = 10;
 // shorter name than the user typed.
 const GUEST_NAME_MAX = 30;
 
+// Most games one guest may bring to the draw (#1681). The guest sheet stops
+// offering „Spiel mitbringen" at it, and the start route caps each guest's list
+// at the same number — leniently, like the two limits above, which is why the
+// route requires it from here instead of keeping a copy.
+const MAX_GUEST_GAMES = 5;
+
 // Smallest team that is a team (#575). A group of one is a solo player, so the
 // server drops such a team on the way in and the resolver below drops one that
 // has shrunk to it since — otherwise the same person would appear both as a
@@ -262,10 +268,23 @@ function isContestSession(round, session, endingOf) {
   return ending !== null && ending !== 'noWinner' && ending !== 'ongoing';
 }
 
+// The guest games brought to this session (#1681), as a Map of game id → the
+// guest record that brought it. A session with no guests, or none who brought
+// anything, gives an empty Map: `gameIds` is absent on such a guest, never [].
+function broughtGames(session) {
+  const out = new Map();
+  ((session && session.guests) || []).forEach((g) => {
+    (g.gameIds || []).forEach((gid) => { if (!out.has(gid)) out.set(gid, g); });
+  });
+  return out;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     MAX_SESSION_GUESTS,
     GUEST_NAME_MAX,
+    MAX_GUEST_GAMES,
+    broughtGames,
     MIN_TEAM_SIZE,
     sessionPeople,
     sessionRaters,

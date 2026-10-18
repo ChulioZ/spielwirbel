@@ -25,7 +25,20 @@
 // stats drop retired games only
 // (.claude/rules/active-games-filter-sites.md).
 function isActiveGame(game) {
-  return !game.retired && !game.completed && !game.wish;
+  return !game.retired && !game.completed && !game.wish && !game.guestGame;
+}
+
+// A GUEST GAME (#1681) — a box a session guest brought — is off the shelf by
+// `isActiveGame` above and drawable in exactly ONE place: the session it was
+// brought to. `broughtIds` is that session's set of brought game ids (a Set),
+// so a guest game nobody brought tonight stays out, and a shelf game whose id
+// a client slipped into the list is not a brought game at all. The draw applies
+// the range and metadata clauses to it but never the tag filter (it has no
+// tags) or the owner clause (its owner is at the table by definition) — see
+// `drawPool` in lib/draw.js and the setup screen's preview, which compose the
+// same clauses over the same two lists.
+function isBroughtGame(game, broughtIds) {
+  return game.guestGame === true && broughtIds.has(game.id);
 }
 
 // Whether the game's OWN box admits a table of `playerCount`, ignoring anything
@@ -570,6 +583,7 @@ const EXPANSION_TITLE_MAX = 120;
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isActiveGame,
+    isBroughtGame,
     fitsPlayerCount,
     fitsPlayerCountFrom,
     matchesPlayerFilter,
