@@ -741,6 +741,15 @@ every heavy game's lookup, which the client swallows by design — the names jus
 stay plain text, exactly as before the feature, so nothing on screen says it is
 broken.
 
+**The thirty-first is `public/js/play-import.js`** (#1665): `IMPORT_SOURCES`,
+`IMPORT_BATCH_MAX` and `IMPORT_KEY_MAX`, required by
+`lib/routes/session-import.js`. The plain offer/validate shape: the client
+builds keys up to the cap and splits a selection into batches of the size the
+route accepts, so a drifted server bound would 400 the last batch of a large
+import after the first had already been written. `IMPORT_SOURCES` is the
+`importRef.source` vocabulary, and a source the route does not know is a
+whole import refused. The parsers in the same file are client-only.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

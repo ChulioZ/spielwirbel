@@ -41,6 +41,8 @@ const SESSION_EVENTS = {
   // session was entered, not run — and a finished session moved to another day.
   logged: 'log.logged',
   redated: 'log.redated',
+  // A session written by a play-history import (#1665), from BG Stats or BGG.
+  imported: 'log.imported',
   // A finished session's points entered, changed or cleared (#1630).
   scored: 'log.scored',
   voted: 'log.voted', // resolved to votedSelf/votedFor below — it needs two names

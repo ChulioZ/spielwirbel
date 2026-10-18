@@ -246,6 +246,9 @@ lib/
                      mutation both repo backends apply, keeping the person's
                      votes for the shelf while dropping them from everything
                      the session itself decides (issue #1538)
+  session-import.js  an imported play history (#1665) as stored sessions: the
+                     people and games mapping resolved against the round, new
+                     member and game ids minted, one finished session per play
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)
@@ -483,7 +486,9 @@ lib/
                                             scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for
                                              BoardGameGeek; round-scoped, plus the
-                                             BGG-only covers/expansions/import hops)
+                                             BGG-only covers/expansions/import/plays hops)
+    session-import.js …/sessions/import     (a play history from BG Stats or BGG,
+                                             written as finished sessions — #1665)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
                                              a share via …/:rid/shares/:userId)
@@ -784,6 +789,9 @@ public/
                      client — 20:00 when no time is given — the server validates
                      it with the same file, and whether a session is shown by
                      date only is read here too (issues #1616, #1629)
+    play-import.js   the pure half of the play-history import: the BG Stats
+                     export parser, the BGG normaliser, who-is-who and which
+                     game suggestions, duplicates and request batches (#1665)
     point-records.js per-player points on a finished session: the bounds the
                      route also validates with, and the personal bests and group
                      records derived from the sessions, never stored (issue #1630),
@@ -1002,6 +1010,8 @@ public/
     session-date.js  a session's day when it is not today: the „Wann?" field,
                      „Datum ändern" on a played session and the Chronik's
                      „Session nachtragen" game picker (issue #1616)
+    play-import-view.js „Partien importieren": the sheet that brings a BG
+                     Stats or BGG play history into the round (#1665)
     session-points.js a finished session's points: the sheet that enters
                      them, the result's points block and the game page's record
                      line (issue #1630)
