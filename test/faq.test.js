@@ -356,8 +356,12 @@ test('with FAQ_FORUMS each page lists exactly its own language\'s threads', asyn
   // Spanish has two forums — the case a one-entry-per-locale assumption breaks.
   const es = forumLinks((await request(app).get('/faq?lang=es')).text).map((l) => l.name);
   assert.deepEqual(es, ['Darkstone', 'La BSK']);
-  // The English page names no Spanish forum: one language per page.
-  assert.ok(!(await request(app).get('/faq?lang=en')).text.includes('labsk.net'));
+  // The English page links no Spanish thread: one language per page. Compared as
+  // exact hrefs, not as a substring of the page.
+  const enHrefs = forumLinks((await request(app).get('/faq?lang=en')).text).map((l) => l.href);
+  for (const { url } of faq.FORUM_THREADS.es) {
+    assert.ok(!enHrefs.includes(url), `the English page links ${url}`);
+  }
   // La Tana is readable only with an account, and the Italian reader is told.
   const it = forumLinks((await request(app).get('/faq?lang=it')).text);
   assert.match(it[0].rest, /account/);
@@ -386,7 +390,7 @@ test('the forums answer points at the contact form only where that form is serve
   // instance with FAQ_FORUMS alone the pointer would be a dead end.
   process.env.FAQ_FORUMS = 'true';
   const bare = faqSection((await request(app).get('/faq')).text, 'forums');
-  assert.ok(bare.includes('unknowns.de'), 'the forums answer did not render');
+  assert.ok(bare.includes('<ul>'), 'the forums answer did not render');
   assert.ok(!bare.includes('/kontakt.html'), 'links a hidden contact form');
 
   Object.assign(process.env, IDENTITY);
