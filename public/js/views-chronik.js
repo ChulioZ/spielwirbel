@@ -228,14 +228,19 @@ function renderChronikTab(round, activities) {
   // „Partien importieren" (#1665) sits beside it: the same back-catalogue,
   // brought in bulk from BG Stats or BGG. Offered with an empty shelf too —
   // the import creates the games it needs.
-  const importBtn = h(`<button type="button" class="btn btn--sm chronik-import">${iconText('ti-file-import', t('playImport.cta'))}</button>`);
-  importBtn.addEventListener('click', () => showPlayImport(round));
-  chips.after(importBtn);
+  // Both go in ONE row, appended in reading order (#1680): as bare siblings
+  // placed by repeated `chips.after()` they landed in reverse and each carried
+  // a margin that assumed its neighbour.
+  const actions = h('<div class="chronik-actions"></div>');
   if (round.games.some(isActiveGame)) {
     const logBtn = h(`<button type="button" class="btn btn--sm chronik-log">${iconText('ti-calendar-plus', t('chronik.log.cta'))}</button>`);
     logBtn.addEventListener('click', () => showLogSessionPicker(round));
-    chips.after(logBtn);
+    actions.appendChild(logBtn);
   }
+  const importBtn = h(`<button type="button" class="btn btn--sm chronik-import">${iconText('ti-file-import', t('playImport.cta'))}</button>`);
+  importBtn.addEventListener('click', () => showPlayImport(round));
+  actions.appendChild(importBtn);
+  chips.after(actions);
   // Forest's phone entry to the recap (#1473, F13.2), right under the head.
   const recapEntry = forest ? forestRecapEntry(periodSec) : null;
   if (recapEntry) secHead.after(recapEntry);

@@ -2167,10 +2167,12 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .sort-select:focus { outline: 2px solid var(--brand-ring, var(--brand)); border-color: var(--brand); }
 
 /* Filter chips: type (radio-like) and duration (multi-toggle). */
-/* „Session nachtragen" (#1616), under the Chronik's filter chips — a quiet
-   secondary action, so it sits left-aligned below the row it follows rather
-   than competing with the chips for their line. */
-.chronik-log { margin: -6px 0 16px; }
+/* The Chronik's actions (#1680) — „Session nachtragen" (#1616) and „Partien
+   importieren" (#1665) — under the filter chips: quiet secondary actions, so
+   they get a left-aligned row of their own rather than competing with the chips
+   for their line. The row owns all the spacing and the buttons carry no margin,
+   so a lone import button sits flush with the chips. */
+.chronik-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -6px 0 16px; }
 /* The game list in front of the direct-play sheet (#1616, shared with the
    Start tab's „Jetzt spielen" since #1682): one button per game, picking is the
    action. The „Ein Spiel, das ihr nicht habt" row sits above it, set off by a
@@ -8705,10 +8707,9 @@ a.k-tile:focus-visible,
 }
 
 /* ---- Play-history import (#1665) ----
-   The BGG import's sheet, states and row components, plus four things of its
-   own: the two source buttons, the filter strip, the person/game mapping rows
-   (a name beside a <select>), and the Chronik button beside „Nachtragen". */
-.chronik-import { margin: -6px 0 16px 8px; }
+   The BGG import's sheet, states and row components, plus three things of its
+   own: the two source buttons, the filter strip and the person/game mapping rows
+   (a name beside a <select>). Its Chronik button sits in `.chronik-actions`. */
 .play-import__sources { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 18px; }
 .play-import__source { width: 100%; text-align: left; font: inherit; color: inherit; }
 .play-import__source .ds-row__main { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
