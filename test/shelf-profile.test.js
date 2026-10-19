@@ -8,7 +8,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  shelfProfile, shelfHasData, SHELF_PROFILE_MIN_GAMES,
+  shelfProfile, shelfHasData, SHELF_PROFILE_MIN_GAMES, shelfHeadline, SHELF_HEADLINE_SHARE,
 } = require('../public/js/shelf-profile');
 // The REAL seat predicate, not a paraphrase — the builder is handed it in the
 // browser, so the spec hands it the same function.
@@ -284,4 +284,72 @@ test('every band, gap and top name carries exactly the games its count counts (#
     }
   }
   assert.equal(p.mechanics.find((m) => m.name === 'Hand Management').games[0].title, 'Widened');
+});
+
+// ------------------------------------------------- the Start tile's sentence
+
+/* shelfHeadline (#1683): one clause per dimension naming its DOMINANT RANGE.
+   Built from band counts directly, so each case states exactly the
+   distribution it is about rather than deriving one from games. */
+const dimOf = (keys, counts) => ({
+  known: counts.reduce((a, b) => a + b, 0),
+  bands: keys.map((key, i) => ({ key, n: counts[i] })),
+});
+const TIME = ['upTo30', 'to60', 'to120', 'over120'];
+const WEIGHT = ['light', 'medium', 'heavy'];
+const SEATS = ['1', '2', '3', '4', '5', '6'];
+
+test('shelfHeadline takes the SHORTEST run of bands holding two thirds of the games', () => {
+  // 10 games, so the bar is 6.67: no single band holds it, two do.
+  assert.deepEqual(shelfHeadline({ time: dimOf(TIME, [1, 6, 3, 0]) }),
+    [{ dim: 'time', from: 'to60', to: 'to120' }]);
+  // One band alone clearing the bar wins over any longer run.
+  assert.deepEqual(shelfHeadline({ time: dimOf(TIME, [1, 7, 2, 0]) }),
+    [{ dim: 'time', from: 'to60', to: 'to60' }]);
+  // Exactly two thirds counts: 6 of 9.
+  assert.deepEqual(shelfHeadline({ weight: dimOf(WEIGHT, [6, 2, 1]) }),
+    [{ dim: 'weight', from: 'light', to: 'light' }]);
+  assert.equal(SHELF_HEADLINE_SHARE, 2 / 3);
+});
+
+test('shelfHeadline breaks a tie in length by the run holding more games, then by the earlier one', () => {
+  // Both two-band runs clear 6.67 of 10; the later one holds 8 against 7.
+  assert.deepEqual(shelfHeadline({ time: dimOf(TIME, [0, 3, 4, 4]) }),
+    [{ dim: 'time', from: 'to120', to: 'over120' }]);
+  // Equal holdings (7 of 10 each, no pair reaching 6.67): the earlier run.
+  assert.deepEqual(shelfHeadline({ time: dimOf(TIME, [3, 2, 2, 3]) }),
+    [{ dim: 'time', from: 'upTo30', to: 'to120' }]);
+});
+
+test('shelfHeadline leaves a clause out when its run spans every band, or the dimension is missing', () => {
+  // 4/1/4: every two-band run holds 5 of 9, under the bar — only all three do.
+  assert.deepEqual(shelfHeadline({ weight: dimOf(WEIGHT, [4, 1, 4]) }), []);
+  assert.deepEqual(shelfHeadline({ seats: null, time: null, weight: null }), []);
+  assert.deepEqual(shelfHeadline(null), []);
+});
+
+test('the seat clause is the longest run where EVERY band seats two thirds — a game counts in each band it fits', () => {
+  // A 2–4 shelf is in 2, 3 and 4 at once; „covering ⅔" would be won by any
+  // single one of them, so seats ask whether each band seats most of the shelf.
+  // `known` is the number of games carrying a range, NOT the sum of the
+  // bands — so these fixtures state it rather than using dimOf.
+  const shelf = { known: 10, bands: SEATS.map((key, i) => ({ key, n: [1, 9, 9, 8, 3, 1][i] })) };
+  assert.deepEqual(shelfHeadline({ seats: shelf }), [{ dim: 'seats', from: '2', to: '4' }]);
+  const seats = { known: 10, bands: SEATS.map((key, i) => ({ key, n: [0, 7, 9, 9, 7, 5][i] })) };
+  assert.deepEqual(shelfHeadline({ seats }), [{ dim: 'seats', from: '2', to: '5' }]);
+  // No band at the bar: nothing to say about seats.
+  const thin = { known: 10, bands: SEATS.map((key, i) => ({ key, n: [0, 5, 6, 6, 5, 2][i] })) };
+  assert.deepEqual(shelfHeadline({ seats: thin }), []);
+  // Every band at the bar: every table size, which says nothing either.
+  const all = { known: 9, bands: SEATS.map((key) => ({ key, n: 9 })) };
+  assert.deepEqual(shelfHeadline({ seats: all }), []);
+});
+
+test('shelfHeadline reads a real profile in dimension order', () => {
+  const p = shelfProfile(shelfOf(9), deps);
+  assert.deepEqual(shelfHeadline(p), [
+    { dim: 'seats', from: '2', to: '4' },
+    { dim: 'time', from: 'to60', to: 'to60' },
+    { dim: 'weight', from: 'medium', to: 'medium' },
+  ]);
 });

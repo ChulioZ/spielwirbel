@@ -1602,6 +1602,68 @@ a.hub-row:hover { background: var(--sunken-soft); }
   flex: none;
 }
 
+/* A tile's FILL region (#1683, hub-fill.js): extra covers, sessions or
+   suggestions for a tile a stretched grid row has made taller than its base
+   content. OFF by default — Klassisch and every column flow have no spare
+   height, so they render exactly as before. A design whose hub tiles stretch
+   to a shared row height turns it on (tisch.css, from 1280px) by giving the
+   region `display` plus `flex: 1 1 0; min-height: 0; contain: size;
+   overflow: hidden` inside the card's flex column: `contain: size` is what
+   keeps the region from adding any height to the row, and hub-fill.js hides
+   every item that does not fit whole. Everything below is how the items look
+   once a design has switched the region on. */
+.hub-fill { display: none; }
+/* An item hub-fill.js hides must really be GONE — out of the tab order and the
+   accessibility tree, not just clipped. The `hidden` attribute alone loses to
+   every author `display` on these items (`.hub-row` is flex, a session row is
+   grid; .claude/rules/hidden-attribute-vs-display-rule.md), and measured in
+   Chrome the clipped suggestion links stayed focusable. `!important` because
+   this is a state guard that every item rule, in any design, must lose to. */
+.hub-fill > [hidden] { display: none !important; }
+.hub-fill--covers { flex-direction: row; flex-wrap: wrap; align-content: flex-start; gap: 6px; padding-top: 6px; }
+/* The rows bleed to the card's padding edge like every .hub-row, and a region
+   that clips (overflow: hidden) would cut that bleed off — so the region
+   reaches the edge itself and pads the rows back in. */
+.hub-fill--rows { flex-direction: column; margin-inline: -16px; padding-inline: 16px; }
+.hub-fill--rows > .hub-row:first-child { border-top: 1px solid var(--line); }
+.hub-fill .hub-preview__session {
+  display: grid;
+  grid-template-columns: 32px auto minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 1px;
+  align-items: center;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  font-size: var(--text-sm);
+}
+.hub-fill .hub-preview__session .hub-preview__cover { grid-row: 1 / span 2; width: 32px; }
+.hub-fill .hub-preview__session .hub-preview__name {
+  grid-column: 2 / -1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-fill .hub-preview__when,
+.hub-fill .hub-preview__who { grid-row: 2; font-size: var(--text-xs); color: var(--ink-soft); }
+.hub-fill .hub-preview__who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-fill .hub-preview__who .ti { color: var(--brand-ink, var(--brand)); }
+/* The suggestion rows' cover thumb, shown with the fill (#1683) — on the base
+   rows too, so the card reads as one list. `position: relative` hosts the
+   no-cover placeholder, which is absolutely positioned. */
+.hub-row__cover {
+  position: relative;
+  width: 32px;
+  aspect-ratio: 1;
+  flex: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+.hub-row > .hub-row__cover { display: none; }
+
 /* A standings row. Not a `.ds-row`: that component promises a click
    (.claude/rules/ds-row-is-a-click-target.md) and these rows are inert — the
    card's one link is at its foot. */
@@ -1694,6 +1756,8 @@ a.hub-row:hover { background: var(--sunken-soft); }
    games is a gap: its count takes the accent, and the gap list under it says
    so in words — the colour is never the only carrier. */
 .shelf-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+/* The Start tile's one sentence (#1683). A <p>, so the UA's 1em margins go. */
+.shelf-card__headline { margin: 0 0 6px; text-wrap: pretty; }
 .shelf-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .shelf-bar {
   display: grid;

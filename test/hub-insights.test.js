@@ -105,6 +105,49 @@ test('gameSuggestions never proposes an excluded game, even when it would lead',
   assert.equal(out[0].game.id, 'g6', 'the runner-up did not take its place');
 });
 
+/* The runner-ups (#1683): a stretched hub tile's fill asks for MORE rows
+   through `limit`, cycling the reasons — second „never", second „longAgo",
+   second „loved", third „never", … — under every existing floor. */
+const runnerUpShelf = () => {
+  const games = shelfOf(12);
+  const sessions = [
+    played('s1', 'g1', at(2024, 3, 1)),   // the longest gap
+    played('s2', 'g2', at(2024, 6, 1)),
+    played('s3', 'g3', at(2025, 1, 1)),
+    played('s4', 'g12', at(2026, 8, 20)), // just played: no reason names it
+  ];
+  // g4 leads „never", g5 is the best-liked once g4 is taken, g6 the second
+  // „never"; g8 was voted down and g9 is excluded, so neither may ever appear.
+  const stats = { g4: { score: 4.9 }, g5: { score: 4.5 }, g6: { score: 4.2 }, g8: { score: 1 }, g9: { score: 5 } };
+  return { games, r: round(games, sessions), opts: { now: NOW, statsByGame: stats, exclude: new Set(['g9']) } };
+};
+
+test('gameSuggestions with a limit cycles the reasons round by round, after today\'s three', () => {
+  const { games, r, opts } = runnerUpShelf();
+  const out = gameSuggestions(r, games, { ...opts, limit: 7 }, deps);
+  assert.deepEqual(out.map((x) => x.game.id), ['g4', 'g1', 'g5', 'g6', 'g2', 'g7', 'g3']);
+  assert.deepEqual(out.map((x) => x.reason.kind),
+    ['never', 'longAgo', 'loved', 'never', 'longAgo', 'never', 'longAgo']);
+});
+
+test('without a limit gameSuggestions is round one only, and the longer answer starts with it', () => {
+  const { games, r, opts } = runnerUpShelf();
+  const base = gameSuggestions(r, games, opts, deps);
+  assert.deepEqual(base.map((x) => x.game.id), ['g4', 'g1', 'g5']);
+  const more = gameSuggestions(r, games, { ...opts, limit: 50 }, deps);
+  assert.deepEqual(more.slice(0, base.length), base, 'the fill must continue the base rows, not reorder them');
+});
+
+test('the runner-ups keep every floor: no repeat, no excluded game, nothing voted down, nothing just played', () => {
+  const { games, r, opts } = runnerUpShelf();
+  const ids = gameSuggestions(r, games, { ...opts, limit: 50 }, deps).map((x) => x.game.id);
+  assert.equal(new Set(ids).size, ids.length, 'a game appeared twice');
+  for (const banned of ['g9', 'g8', 'g12']) assert.ok(!ids.includes(banned), `${banned} was suggested`);
+  // Everything else on the shelf qualifies for some reason, so the list ends
+  // when the candidates do rather than at the limit.
+  assert.deepEqual([...ids].sort(), ['g1', 'g10', 'g11', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7']);
+});
+
 test('gameSuggestions will not headline a never-played game the group has already voted down', () => {
   /* „Never played" does not mean „never voted on": a game drawn in two sessions
      but never chosen carries four real ratings while still qualifying for the

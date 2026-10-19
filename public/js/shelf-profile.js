@@ -230,11 +230,73 @@ function shelfProfile(games, deps) {
   };
 }
 
+/* The Steckbrief TILE's one sentence (#1683): what this shelf mostly is, as
+   one clause per dimension — „Meist für 2–4 Personen · bis 60 Min. · leicht bis
+   mittel". Returns clause DESCRIPTORS; the view turns them into words, so this
+   stays pure and the wording stays in the language files.
+
+   Each clause names the dimension's DOMINANT RANGE: the shortest contiguous
+   run of bands holding at least SHELF_HEADLINE_SHARE of the games that carry
+   the value. Ties in length go to the run that holds more games, then to the
+   earlier one. A clause is left out when its run spans EVERY band (that says
+   nothing) or when the dimension is null (too few games carry it).
+
+   SEATS ASK THE QUESTION DIFFERENTLY, because a game counts in every seat band
+   it can be played at (shelfSeatBands) — a 2–4 game is in 2, 3 and 4. „Covering
+   ⅔ of the games" would then be won by a single middle band that nearly every
+   game happens to include, and „Meist für 3 Personen" is not what the shelf is.
+   So the seat run is the LONGEST run whose every band seats at least that share
+   of the games: „most of the shelf can be played at each of 2, 3 and 4". With
+   no band at the share, the clause is left out.
+
+   Returns [{ dim, from, to }] in dimension order (band keys; from === to for a
+   single band), or [] when no clause survives — the tile then renders nothing,
+   the null-or-nothing contract every hub card keeps. */
+const SHELF_HEADLINE_SHARE = 2 / 3;
+
+function shelfHeadlineRun(dim, d) {
+  if (!d || !d.known) return null;
+  const counts = d.bands.map((b) => b.n);
+  const need = d.known * SHELF_HEADLINE_SHARE;
+  const keys = d.bands.map((b) => b.key);
+  let best = null;
+  if (dim === 'seats') {
+    let start = -1;
+    for (let i = 0; i <= counts.length; i++) {
+      if (i < counts.length && counts[i] >= need) {
+        if (start < 0) start = i;
+      } else if (start >= 0) {
+        if (!best || i - start > best[1] - best[0] + 1) best = [start, i - 1];
+        start = -1;
+      }
+    }
+  } else {
+    for (let len = 1; len <= counts.length && !best; len++) {
+      let held = -1;
+      for (let i = 0; i + len <= counts.length; i++) {
+        const sum = counts.slice(i, i + len).reduce((a, b) => a + b, 0);
+        if (sum >= need && sum > held) { held = sum; best = [i, i + len - 1]; }
+      }
+    }
+  }
+  if (!best || (best[0] === 0 && best[1] === counts.length - 1)) return null;
+  return { dim, from: keys[best[0]], to: keys[best[1]] };
+}
+
+function shelfHeadline(p) {
+  if (!p) return [];
+  return ['seats', 'time', 'weight']
+    .map((dim) => shelfHeadlineRun(dim, p[dim]))
+    .filter(Boolean);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     shelfProfile,
     shelfHasData,
     shelfBandIsGap,
+    shelfHeadline,
+    SHELF_HEADLINE_SHARE,
     SHELF_PROFILE_MIN_GAMES,
     SHELF_PROFILE_FEW,
     SHELF_PROFILE_TOP,

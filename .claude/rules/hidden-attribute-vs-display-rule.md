@@ -75,6 +75,19 @@ The tell is that the element is correctly hidden everywhere **except** inside th
 one state that reveals its container — which reads as the reveal being too eager
 rather than as a cascade fight.
 
+## The fourth instance (#1683): a script that HIDES items for you
+
+`hub-fill.js` sets `hidden` on every fill item that does not fit its tile —
+precisely so a clipped suggestion link leaves the tab order. The items are
+`.hub-row` (flex) and session rows (grid), so the attribute did nothing:
+measured in headless Chrome, the clipped links were still focusable. The fix is
+one container-scoped guard, `.hub-fill > [hidden] { display: none !important }`
+— `!important` because a state guard must beat every item rule in any design.
+
+Nothing but a real engine sees this: jsdom applies no stylesheet, so every spec
+reported the items hidden. **When code hides things by attribute, probe
+`getClientRects().length` on them in a browser**, not `el.hidden`.
+
 ## The verification trap that hid it
 
 The DOM probe lied. `el.hidden` is the **IDL attribute** — it returned `true`

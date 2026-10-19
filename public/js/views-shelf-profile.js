@@ -149,7 +149,7 @@ function openShelfGames(btn, title, games, rid, scoreOf) {
   }, () => btn.setAttribute('aria-expanded', 'false'));
 }
 
-// The gaps as a list, capped for the card and complete on the screen. With
+// The gaps as a list (the screen passes them all). With
 // `open` (the screen) a gap that HAS games — „nur 2 Spiele" — is the button that
 // lists them; „kein Spiel" stays text, there is nothing to open.
 function shelfGapList(gaps, max, open) {
@@ -165,42 +165,21 @@ function shelfGapList(gaps, max, open) {
   return list;
 }
 
-/* Der Tisch's card body (T2.2's stat-tile language, as the Rundenpuls speaks
-   it): one tile per seat band, the count over „für 2". A gap is marked `.shelf-tile--gap`. */
-function shelfSeatTiles(d) {
-  const tiles = h('<div class="pulse-tiles shelf-tiles"></div>');
-  d.bands.forEach((b) => {
-    tiles.appendChild(h(`<div class="pulse-tile shelf-tile${shelfBandIsGap('seats', b) ? ' shelf-tile--gap' : ''}">
-         <span class="pulse-tile__n">${b.n}</span>
-         <span class="pulse-tile__label">${esc(shelfBandLabel('seats', b.key))}</span>
-       </div>`));
-  });
-  return tiles;
-}
-
-// How many gap lines the Start card shows. The screen one tap away has them all.
-const SHELF_CARD_GAPS = 3;
-
-/* The Start tab's card. Null below the threshold, like every Start card.
-
-   It shows ONE dimension — the seats, since „can we play this at our table
-   size" is the question a draw asks first — plus the strongest gaps, and links
-   to the screen. Should a shelf lack seat data but carry the others, the first
-   dimension that has enough data stands in. */
+/* The Start tab's card. Null below the threshold, like every Start card, and
+   null when the shelf has no dominant range worth a sentence. */
 function hubShelfProfileCard(round, activeGames, statsByGame) {
   if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
   const p = shelfProfile(activeGames, shelfProfileDeps(statsByGame));
-  if (!p) return null;
+  /* One sentence and the link, in every design (#1683). The tile used to draw
+     the lead dimension's bars and the first gaps — a slice of the screen it
+     links to rather than a summary of what the shelf IS. The bars, Der Tisch's
+     seat tiles and the gap list all still live on the screen. */
+  const sentence = shelfHeadlineText(shelfHeadline(p));
+  if (!sentence) return null;
   const card = hubCard('ti-id', t('shelfProfile.title'));
   card.classList.add('hub-card--shelf', 'hub-card--link');
   const body = card.querySelector('.hub-card__body');
-  const [lead] = shelfDims(p);
-  if (lead) {
-    const [dim, d] = lead;
-    body.appendChild(h(`<div class="shelf-card__sub">${esc(t(SHELF_DIM_TITLES[dim]))}</div>`));
-    body.appendChild(designIs('tisch') && dim === 'seats' ? shelfSeatTiles(d) : shelfBars(dim, d));
-  }
-  if (p.gaps.length) body.appendChild(shelfGapList(p.gaps, SHELF_CARD_GAPS));
+  body.appendChild(h(`<p class="shelf-card__headline">${esc(sentence)}</p>`));
   const link = h(`<a class="hub-row hub-row--quiet hub-card__go">
        <span class="hub-row__main"><span class="hub-row__sub">${esc(t('shelfProfile.more'))}</span></span>
        <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
@@ -208,6 +187,38 @@ function hubShelfProfileCard(round, activeGames, statsByGame) {
   navLink(link, roundPath(round.id, 'shelf-profile'), () => showShelfProfile(round.id));
   body.appendChild(link);
   return card;
+}
+
+/* shelfHeadline's clause descriptors (shelf-profile.js) as words. Each clause
+   is a whole phrase from the language files, so no grammar is built here by
+   concatenation; the clauses are joined with a fixed separator, and the lead
+   word („Meist") wraps the result. '' when there is nothing to say. */
+const SHELF_TIME_MAX = { upTo30: 30, to60: 60, to120: 120 };
+const SHELF_TIME_ORDER = ['upTo30', 'to60', 'to120', 'over120'];
+function shelfHeadlineClause({ dim, from, to }) {
+  if (dim === 'seats') {
+    if (from === '1' && to === '1') return t('shelfProfile.headline.solo');
+    if (to === '6') return t('shelfProfile.headline.seatsFrom', { seats: from });
+    if (from === to) return t('shelfProfile.headline.seatsOne', { seats: from });
+    return t('shelfProfile.headline.seatsRange', { from, to });
+  }
+  if (dim === 'time') {
+    const i = SHELF_TIME_ORDER.indexOf(from);
+    const min = i > 0 ? SHELF_TIME_MAX[SHELF_TIME_ORDER[i - 1]] : 0;
+    if (to === 'over120') return t('shelfProfile.headline.timeOver', { min });
+    if (!min) return t('shelfProfile.headline.timeUpTo', { max: SHELF_TIME_MAX[to] });
+    // „31–60", as the band labels read: the band above 30 starts at 31.
+    return t('shelfProfile.headline.timeRange', { min: min + 1, max: SHELF_TIME_MAX[to] });
+  }
+  if (from === to) return t(`shelfProfile.headline.weight.${from}`);
+  return t('shelfProfile.headline.weightRange', {
+    from: t(`shelfProfile.headline.weight.${from}`),
+    to: t(`shelfProfile.headline.weight.${to}`),
+  });
+}
+function shelfHeadlineText(clauses) {
+  if (!clauses.length) return '';
+  return t('shelfProfile.headline', { clauses: clauses.map(shelfHeadlineClause).join(' · ') });
 }
 
 // A titled panel on the screen — the Start card's frame, so every design paints
