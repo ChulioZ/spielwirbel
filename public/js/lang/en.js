@@ -1407,6 +1407,9 @@ I18N.en = {
   'directPlay.guestsNote': 'Guests play along but never join the round.',
   // No draw here, so no pool to filter — this note may not promise one (#575).
   'directPlay.teamsNote': 'Teams play together — and win together.',
+  'directPlay.pickTitle': 'Which game are you playing?',
+  'directPlay.notOwned': 'A game you don’t own',
+  'directPlay.notOwnedHint': 'Search any game – it’s played as a guest game',
 
   'vote.progress': 'Step {n} of {total}',
   'vote.advanced': 'Game {n} of {total}: {title}',

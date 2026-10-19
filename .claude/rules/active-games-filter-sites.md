@@ -65,7 +65,10 @@ before assuming you have them all:
   the predicate directly rather than only through an HTTP round-trip. The route
   still spells the *message* per archive ("Game is retired" / "Game is
   completed"), so that branch survives — but the 400 itself no longer can be
-  missed.
+  missed. **#1682 admits exactly one off-shelf state on top:** a `guestGame`,
+  so „Jetzt spielen" can play a game the group does not own — an explicit
+  `&& game.guestGame !== true` beside the predicate, never a wider predicate
+  (`test/guest-games.test.js` pins retired, completed and wish still 400).
 
   **It lived in `lib/draw.js` until #634**, which moved it (with the player-range
   clause, now `fitsPlayerCount`) into a shared `public/js/` module so the setup

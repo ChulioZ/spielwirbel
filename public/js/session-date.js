@@ -6,8 +6,9 @@
      and an optional time;
    - `showSessionDateSheet`, moving a finished session to another day or time —
      opened from the results screen's rare actions;
-   - `showLogSessionPicker`, the Chronik's „Session nachtragen": pick a game
-     from the shelf, then the SAME direct-play sheet, dated yesterday.
+   - `showLogSessionPicker`, the Chronik's „Session nachtragen": the shared
+     game picker (direct-session.js), then the SAME direct-play sheet, dated
+     yesterday.
 
    The arithmetic lives in played-on.js (pure, shared with the server); this
    file only renders and posts. No `module.exports`: DOM. */
@@ -146,65 +147,16 @@ function showSessionDateSheet(round, session, onSaved) {
 // The Chronik's „Session nachtragen": choose WHICH game was played, then hand
 // over to the direct-play sheet with the date field set to yesterday — the
 // common case, and the one that tells the user at once that the field is there
-// to change. Shelf games only: the same isActiveGame predicate direct play
-// itself enforces, so nothing is offered that the server would refuse.
+// to change. The picker itself is the Start tab's „Jetzt spielen" one
+// (direct-session.js, #1682), so a guest game can be logged the same way.
 function showLogSessionPicker(round) {
-  const games = round.games.filter(isActiveGame)
-    .slice().sort((a, b) => String(a.title).localeCompare(String(b.title)));
-  const label = t('chronik.log.title');
-  const backdrop = h(`<div class="sheet-backdrop">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(label)}">
-        <div class="sheet__head">
-          <h2>${esc(label)}</h2>
-          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-        </div>
-        <p class="muted">${esc(t('chronik.log.hint'))}</p>
-        <div class="field">
-          <label for="logPickSearch">${esc(t('chronik.log.search'))}</label>
-          <input id="logPickSearch" class="input" type="search" autocomplete="off" autocorrect="off" spellcheck="false">
-        </div>
-        <ul class="log-pick" role="list"></ul>
-        <p class="muted log-pick__empty" hidden>${esc(t('chronik.log.none'))}</p>
-      </div>
-    </div>`);
-  const sheet = backdrop.querySelector('.sheet');
-  const list = sheet.querySelector('.log-pick');
-  const empty = sheet.querySelector('.log-pick__empty');
-  const search = sheet.querySelector('#logPickSearch');
   // Yesterday as a CALENDAR day: now − 24 h lands two days back in the first
   // hour after a DST change (.claude/rules/server-computed-calendar-periods.md §3).
   const now = new Date();
   const yesterday = localDayKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12));
-
-  // One <button> per game: picking IS the action, so there is no OK step.
-  games.forEach((g) => {
-    const li = h(`<li><button type="button" class="ds-row log-pick__row" data-title="${esc(String(g.title).toLowerCase())}">
-        <span class="ds-row__main">${esc(g.title)}</span>
-        <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
-      </button></li>`);
-    li.querySelector('button').addEventListener('click', () => {
-      closeSheet(() => startDirectSession(round, g, { dayKey: yesterday }));
-    });
-    list.appendChild(li);
+  showDirectPlayPicker(round, {
+    title: t('chronik.log.title'),
+    hint: t('chronik.log.hint'),
+    play: { dayKey: yesterday },
   });
-  const filter = () => {
-    const q = search.value.trim().toLowerCase();
-    let shown = 0;
-    list.querySelectorAll('li').forEach((li) => {
-      const hit = !q || li.firstElementChild.dataset.title.includes(q);
-      li.hidden = !hit;
-      if (hit) shown++;
-    });
-    empty.hidden = shown > 0;
-  };
-  search.addEventListener('input', filter);
-  filter();
-
-  document.body.appendChild(backdrop);
-  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
-  document.addEventListener('keydown', onKey, true);
-  openSheet(backdrop, onKey);
-  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
-  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
-  search.focus();
 }

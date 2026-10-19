@@ -189,6 +189,9 @@ function renderStartTab(round, activeGames) {
       (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(presets);
     }
   }
+  // „Jetzt spielen" (#1682): after the CTA and its presets, never between them,
+  // and `rail-owned` exactly where the CTA is — directPlayButton says why.
+  (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(directPlayButton(round, `hub-play${railOwned}`));
 
   // "Vote in progress" tickets: a draw whose voting was abandoned before the
   // hot-seat wizard POSTed its results (#329). The row is created server-side at

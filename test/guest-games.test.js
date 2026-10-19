@@ -100,15 +100,39 @@ test('POST …/guest-game { to } moves a guest game onto the shelf or the wish l
   assert.equal(missing.status, 404);
 });
 
-test('a guest game is direct-pick refused and never in an ordinary draw', async () => {
+test('a guest game is never in an ordinary draw', async () => {
   const round = await createRound(request);
-  const g = (await addGame(round.id, { title: 'Azul', guestGame: 'true', minPlayers: '1', maxPlayers: '8' })).body;
-  const direct = await start(round.id, { gameId: g.id, count: 1 });
-  assert.equal(direct.status, 400);
-  assert.match(direct.body.error, /guest/i);
+  await addGame(round.id, { title: 'Azul', guestGame: 'true', minPlayers: '1', maxPlayers: '8' });
   // Not brought by anybody tonight: the round has nothing to draw.
   const draw = await start(round.id, { count: 1, guests: ['Dana'] });
   assert.equal(draw.status, 400);
+});
+
+// #1682: „Jetzt spielen" from the Start tab can play a game the group does not
+// own, so the direct-pick branch admits a guest game — and ONLY that extra
+// state. A retired, completed or wished game still has no business being played
+// by id; each is pinned, so widening the predicate to "anything off the shelf"
+// goes red.
+test('direct play accepts a guest game, and still refuses retired, completed and wish games', async () => {
+  const round = await createRound(request);
+  const g = (await addGame(round.id, { title: 'Azul', guestGame: 'true', minPlayers: '1', maxPlayers: '8' })).body;
+  const direct = await start(round.id, { gameId: g.id, count: 1 });
+  assert.equal(direct.status, 201);
+  assert.equal(direct.body.session.chosenGameId, g.id);
+  assert.equal(direct.body.session.guests, undefined, 'no guest brought it, so the session names none');
+  const fresh = (await request(app).get(`/api/rounds/${round.id}`)).body;
+  assert.equal(fresh.games.find((x) => x.id === g.id).guestGame, true, 'playing it does not shelve it');
+
+  const retired = (await addGame(round.id, { title: 'Old' })).body;
+  await request(app).post(`/api/rounds/${round.id}/games/${retired.id}/retire`).send({});
+  const completed = (await addGame(round.id, { title: 'Done' })).body;
+  await request(app).post(`/api/rounds/${round.id}/games/${completed.id}/complete`).send({});
+  const wish = (await addGame(round.id, { title: 'Someday', wish: 'true' })).body;
+  for (const [game, why] of [[retired, /retired/], [completed, /completed/], [wish, /wishlist/]]) {
+    const res = await start(round.id, { gameId: game.id, count: 1 });
+    assert.equal(res.status, 400, game.title);
+    assert.match(res.body.error, why);
+  }
 });
 
 test('a BROUGHT guest game is drawable in its session, and the session records who brought it', async () => {

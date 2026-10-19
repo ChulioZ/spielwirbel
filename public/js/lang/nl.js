@@ -1357,6 +1357,9 @@ I18N.nl = {
   'chronik.log.none': 'Geen spel gevonden',
   'directPlay.guestsNote': 'Gasten spelen mee, maar horen nooit bij de groep.',
   'directPlay.teamsNote': 'Teams spelen samen — en winnen samen.',
+  'directPlay.pickTitle': 'Welk spel spelen jullie?',
+  'directPlay.notOwned': 'Een spel dat jullie niet hebben',
+  'directPlay.notOwnedHint': 'Zoek een willekeurig spel – het wordt als gastspel gespeeld',
 
   'vote.progress': 'Stap {n} van {total}',
   'vote.advanced': 'Spel {n} van {total}: {title}',

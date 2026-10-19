@@ -1328,6 +1328,9 @@ I18N.fi = {
   'chronik.log.none': 'Peliä ei löytynyt',
   'directPlay.guestsNote': 'Vieraat pelaavat mukana mutta eivät liity porukkaan.',
   'directPlay.teamsNote': 'Joukkueet pelaavat yhdessä — ja voittavat yhdessä.',
+  'directPlay.pickTitle': 'Mitä peliä pelaatte?',
+  'directPlay.notOwned': 'Peli, jota teillä ei ole',
+  'directPlay.notOwnedHint': 'Hae mikä tahansa peli – se pelataan vieraan pelinä',
 
   'vote.progress': 'Vaihe {n} / {total}',
   'vote.advanced': 'Peli {n}/{total}: {title}',

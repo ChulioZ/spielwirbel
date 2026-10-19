@@ -80,8 +80,13 @@ test('Klassisch with games and no session: no invitation, no sentence cards, the
 test('Der Tisch 0-game hub: the empty table sits between the seats and the plate, with both actions', async (t) => {
   const dom = await hub(t, 'tisch', round());
   const stage = dom.app.querySelector('.hub-stage');
-  assert.deepEqual([...stage.children].map((el) => el.classList.contains('empty--table') ? 'table' : el.classList[0]),
-    ['hero', 'table', 'btn'], 'hero → empty table → plate is the sheet’s reading order');
+  const kind = (el) => {
+    if (el.classList.contains('empty--table')) return 'table';
+    return el.classList.contains('hub-play') ? 'hub-play' : el.classList[0];
+  };
+  assert.deepEqual([...stage.children].map(kind), ['hero', 'table', 'btn', 'hub-play'],
+    'hero → empty table → plate → „Jetzt spielen" (#1682) is the sheet’s reading order');
+  assert.equal(stage.querySelector('.hub-play').disabled, false, 'direct play needs no shelf, so the lock does not reach it');
   const table = stage.querySelector('.empty--table');
   assert.equal(table.querySelector('.empty__title').textContent, 'Der Topf ist noch leer');
   assert.match(table.querySelector('.empty__text').textContent, /von BGG\.$/);

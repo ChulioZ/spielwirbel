@@ -1362,6 +1362,9 @@ I18N.fr = {
   'chronik.log.none': 'Aucun jeu trouvé',
   'directPlay.guestsNote': 'Les invités jouent avec vous mais ne rejoignent jamais le groupe.',
   'directPlay.teamsNote': 'Les équipes jouent ensemble — et gagnent ensemble.',
+  'directPlay.pickTitle': 'À quel jeu jouez-vous ?',
+  'directPlay.notOwned': 'Un jeu que vous n’avez pas',
+  'directPlay.notOwnedHint': 'Cherchez n’importe quel jeu – il est joué comme jeu d’invité',
 
   'vote.progress': 'Étape {n} sur {total}',
   'vote.advanced': 'Jeu {n} sur {total} : {title}',

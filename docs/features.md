@@ -669,9 +669,14 @@ What the app does, in detail. For a short overview see the
   that session's result again. Winners, teams and points that the removal
   cleared are not restored; the group sets them again if needed.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
-  launch a session for **one specific game** straight from its detail page or a
-  Pokale tile: pick who joins and skip the vote entirely, landing directly on
-  the results screen with that game chosen.
+  launch a session for **one specific game** straight from its detail page, a
+  Pokale tile, or the Start tab's own „Jetzt spielen" button beside „Session
+  wirbeln" (issue #1682): pick who joins and skip the vote entirely, landing
+  directly on the results screen with that game chosen. The Start tab's button
+  opens a game picker — the shelf, earlier guest games, and **„Ein Spiel, das
+  ihr nicht habt"**, which searches for any game and plays it as a **guest
+  game** (marked „Gastspiel", off the shelf, reused when the same title comes
+  back). It works on an empty shelf too, where the draw is still locked.
   The sheet also asks **Wann?** (when): a day and an optional time. Left on
   today with no time it is the ordinary direct play; a past day, or a time on
   any day, **logs** the session instead — it is created already played then,
@@ -680,7 +685,8 @@ What the app does, in detail. For a short overview see the
   nobody entered; one logged with a time shows that time.
 - **Session nachtragen** (log a past session) – the Chronik offers it for an
   evening played before the group found the app, or entered a day late: pick a
-  game from the shelf, then the same sheet, dated yesterday. A logged session
+  game in the same picker (a guest game included), then the same sheet, dated
+  yesterday. A logged session
   counts in the Chronik, the recaps, Pokale and the badges on its own day, and is
   not announced to friends (it is bookkeeping, not news).
 - **Partien importieren** (import plays, #1665) – beside „Session nachtragen",

@@ -6013,3 +6013,7 @@
     from { color: var(--brand); }
   }
 }
+
+/* „Jetzt spielen" (#1682) sits centred in the Missionskontrolle under the
+   ignition and its presets; the base rule's flex-start would pull it left. */
+:root[data-design="bruecke"] .hub-play { align-self: center; }

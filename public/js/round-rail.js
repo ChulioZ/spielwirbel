@@ -174,6 +174,10 @@ function buildRoundRail(round, activeTab, sub) {
     const presets = hubPresetChips(round, activeGames);
     if (presets) rail.appendChild(presets);
   }
+  // „Jetzt spielen" (#1682) follows the CTA and its presets here too — the
+  // Start tab's copy is `rail-owned`. Defined in direct-session.js, which loads
+  // later: fine, this runs at render time.
+  if (!lean) rail.appendChild(directPlayButton(round, 'rail__play'));
 
   /* Forest's Wegweiser counts the Regal and the Chronik beside their names
      (F1.7, F3.2) — the two figures the hero carries in every other design, so
