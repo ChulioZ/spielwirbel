@@ -7677,3 +7677,7 @@
 @media (min-width: 1100px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .sheet.add-search > .add-search__ways { background: var(--surface); box-shadow: var(--shadow-1); }
 }
+
+/* „Jetzt spielen" (#1682) sits centred under the stump and its presets, which
+   centre too; the base rule's flex-start would leave it alone at the edge. */
+:root[data-design="forest"] .hub-play { align-self: center; }

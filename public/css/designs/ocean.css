@@ -915,6 +915,9 @@
    `.hub-presets`, so whatever chips hubPresetChips hands over — the three
    quick-starts today, saved filters tomorrow (#1328) — sit here the same way. */
 :root[data-design="ocean"] .ocean-hub .hub-presets { justify-content: center; margin: 0; gap: 8px; }
+/* „Jetzt spielen" (#1682) sits centred under the shell and its presets, which
+   centre too; the base rule's flex-start would leave it alone at the edge. */
+:root[data-design="ocean"] .hub-play { align-self: center; }
 
 /* ---- The blocks under the shell: tickets, „Zuletzt gespielt" beside „Wie
    wär's mit", the Rundenpuls and the rest of the cards, one surface each. */

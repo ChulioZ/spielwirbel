@@ -1359,6 +1359,9 @@ I18N.pt = {
   'chronik.log.none': 'Nenhum jogo encontrado',
   'directPlay.guestsNote': 'Convidados jogam junto, mas nunca entram no grupo.',
   'directPlay.teamsNote': 'Times jogam juntos — e vencem juntos.',
+  'directPlay.pickTitle': 'Qual jogo vocês vão jogar?',
+  'directPlay.notOwned': 'Um jogo que vocês não têm',
+  'directPlay.notOwnedHint': 'Busque qualquer jogo – ele é jogado como jogo de convidado',
 
   'vote.progress': 'Passo {n} de {total}',
   'vote.advanced': 'Jogo {n} de {total}: {title}',

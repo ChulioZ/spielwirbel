@@ -126,22 +126,22 @@ test('the Chronik offers „Session nachtragen" — shelf games only — and han
   btn.click();
 
   const sheet = dom.document.querySelector('.sheet');
-  const titles = () => [...sheet.querySelectorAll('.log-pick li:not([hidden]) .log-pick__row')].map((b) => b.textContent.trim());
+  const titles = () => [...sheet.querySelectorAll('.play-pick li:not([hidden]) .play-pick__row')].map((b) => b.textContent.trim());
   assert.deepEqual(titles(), ['Azul', 'Catan'], 'retired and wished-for games are not offered');
 
-  const search = sheet.querySelector('#logPickSearch');
+  const search = sheet.querySelector('#playPickSearch');
   search.value = 'cat';
   search.dispatchEvent(new dom.window.Event('input'));
   assert.deepEqual(titles(), ['Catan']);
   search.value = 'zzz';
   search.dispatchEvent(new dom.window.Event('input'));
-  assert.equal(sheet.querySelector('.log-pick__empty').hidden, false, 'an empty search says so');
+  assert.equal(sheet.querySelector('.play-pick__empty').hidden, false, 'an empty search says so');
 
   const handed = [];
   dom.set('startDirectSession', (r, g, opts) => handed.push({ title: g.title, dayKey: opts && opts.dayKey }));
   search.value = '';
   search.dispatchEvent(new dom.window.Event('input'));
-  sheet.querySelector('.log-pick__row').click();
+  sheet.querySelector('.play-pick li .play-pick__row').click();
   await waitFor(() => handed.length, { label: 'the picker closing into the direct-play sheet' });
   assert.deepEqual(handed[0], { title: 'Azul', dayKey: day(-1) });
 });

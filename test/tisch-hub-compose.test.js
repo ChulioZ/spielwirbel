@@ -123,8 +123,13 @@ test('Der Tisch gathers hero, CTA and presets on one band, in phone order, rail-
   assert.ok(stage, 'no band under Der Tisch');
   assert.ok(pane(dom).includes(stage), 'the band must be a direct child of #app, where the cap lift names it');
   const kids = [...stage.children];
-  assert.deepEqual(kids.map((el) => el.classList[0] === 'btn' ? 'hub-cta' : el.classList[0]),
-    ['hero', 'hub-cta', 'hub-presets'], 'the band is hero → CTA → presets, the phone reading order');
+  assert.deepEqual(kids.map((el) => {
+    if (el.classList.contains('hub-play')) return 'hub-play';
+    return el.classList[0] === 'btn' ? 'hub-cta' : el.classList[0];
+  }), ['hero', 'hub-cta', 'hub-presets', 'hub-play'],
+  'the band is hero → CTA → presets → „Jetzt spielen" (#1682), the phone reading order');
+  assert.ok(!stage.querySelector('.hub-play').classList.contains('rail-owned'),
+    '„Jetzt spielen" is rail-owned — Der Tisch\'s rail carries no copy of it');
   assert.ok(!stage.querySelector('.hub-cta').classList.contains('rail-owned'),
     'the CTA is still rail-owned — it would vanish at 1280 with no rail copy to replace it');
   assert.ok(!stage.querySelector('.hub-presets').classList.contains('rail-owned'));

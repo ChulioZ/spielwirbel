@@ -43,9 +43,11 @@ function showAddGame(round, opts = {}) {
 // `onCreated` instead of navigating, because the screen behind this sheet is the
 // half-filled setup, which a re-render would wipe. The server REUSES an earlier
 // guest game of the same title, so `onCreated` may receive an existing row.
+// With `name: null` it is the Start tab's „Ein Spiel, das ihr nicht habt"
+// (#1682): a guest game nobody in particular brought, played straight away.
 function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = false, guest = null } = {}) {
   let sheetTitle = wish ? t('addGame.wishTitle') : t('addGame.title');
-  if (guest) sheetTitle = t('guestGames.addTitle', { name: guest.name });
+  if (guest) sheetTitle = guest.name ? t('guestGames.addTitle', { name: guest.name }) : t('directPlay.notOwned');
   const back = guest ? undefined : wish ? () => showWishlist(round.id) : () => showRound(round.id, 'regal');
   const backdrop = h(`<div class="sheet-backdrop">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(sheetTitle)}">
@@ -473,7 +475,9 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     try {
       const created = await api('POST', `/api/rounds/${round.id}/games`, fd);
       if (guest) {
-        toast(t('guestGames.toast.brought', { title: created.title, name: guest.name }), { tone: 'success' });
+        // No toast for the nameless mode: the direct-play sheet opening on the
+        // game is the confirmation.
+        if (guest.name) toast(t('guestGames.toast.brought', { title: created.title, name: guest.name }), { tone: 'success' });
         guest.onCreated(created);
         return;
       }

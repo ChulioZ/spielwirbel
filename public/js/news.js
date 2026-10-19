@@ -48,6 +48,52 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1681 + #1682, guest games. A capability that did not exist: a game the
+   * group does not own could not be played or recorded at all. #1681 shipped
+   * the guest's „Spiel mitbringen" without an entry, so this one says both ways
+   * in, and that the shelf stays untouched.
+   */
+  {
+    revision: '2026-10-19',
+    kind: 'new',
+    de: {
+      title: 'Gastspiele',
+      body: 'Ein Spiel, das ihr nicht habt, könnt ihr jetzt trotzdem spielen: Gäste bringen beim Wirbeln eigene Spiele mit, und „Jetzt spielen“ auf dem Start-Tab startet eine Session für ein beliebiges Spiel. Es zählt als Gastspiel – in der Chronik und den Ergebnissen, nicht im Regal. Gefällt es euch, wandert es mit einem Tipp ins Regal oder auf die Wunschliste.',
+    },
+    en: {
+      title: 'Guest games',
+      body: 'You can now play a game you don’t own: guests bring their own games when you whirl, and “Play now” on the Start tab starts a session for any game. It counts as a guest game – in the Chronik and the results, not on the shelf. If you like it, one tap moves it onto the shelf or the wish list.',
+    },
+    es: {
+      title: 'Juegos invitados',
+      body: 'Ahora podéis jugar a un juego que no tenéis: los invitados traen sus propios juegos al sortear, y «Jugar ya» en la pestaña de inicio empieza una sesión con cualquier juego. Cuenta como juego invitado: en la crónica y en los resultados, no en la estantería. Si os gusta, con un toque pasa a la estantería o a la lista de deseos.',
+    },
+    fr: {
+      title: 'Jeux d’invités',
+      body: 'Vous pouvez désormais jouer à un jeu que vous n’avez pas : les invités apportent leurs propres jeux au tirage, et « Jouer maintenant » dans l’onglet d’accueil lance une session pour n’importe quel jeu. Il compte comme jeu d’invité – dans la chronique et les résultats, pas sur l’étagère. S’il vous plaît, un geste le range sur l’étagère ou dans la liste d’envies.',
+    },
+    it: {
+      title: 'Giochi degli ospiti',
+      body: 'Ora potete giocare a un gioco che non avete: gli ospiti portano i propri giochi all’estrazione, e «Gioca subito» nella scheda iniziale avvia una sessione per qualsiasi gioco. Conta come gioco dell’ospite: nella cronaca e nei risultati, non sullo scaffale. Se vi piace, con un tocco va sullo scaffale o nella lista dei desideri.',
+    },
+    nl: {
+      title: 'Gastspellen',
+      body: 'Jullie kunnen nu een spel spelen dat jullie niet hebben: gasten nemen bij het loten hun eigen spellen mee, en ‘Nu spelen’ op het starttabblad start een sessie voor elk spel. Het telt als gastspel – in de kroniek en de uitslagen, niet in de kast. Bevalt het, dan gaat het met één tik naar de kast of de verlanglijst.',
+    },
+    pt: {
+      title: 'Jogos de convidados',
+      body: 'Agora vocês podem jogar um jogo que não têm: convidados trazem os próprios jogos no sorteio, e “Jogar agora” na aba inicial começa uma sessão com qualquer jogo. Ele conta como jogo de convidado – na crônica e nos resultados, não na estante. Se gostarem, um toque o leva para a estante ou para a lista de desejos.',
+    },
+    fi: {
+      title: 'Vieraiden pelit',
+      body: 'Nyt voitte pelata peliä, jota teillä ei ole: vieraat tuovat omia pelejään arvontaan, ja aloitusvälilehden ”Pelaa heti” aloittaa session mistä tahansa pelistä. Se lasketaan vieraan peliksi – kronikkaan ja tuloksiin, ei hyllyyn. Jos se miellyttää, yksi napautus siirtää sen hyllyyn tai toivelistalle.',
+    },
+    ko: {
+      title: '손님 게임',
+      body: '이제 가지고 있지 않은 게임도 플레이할 수 있어요. 손님이 추첨할 때 자기 게임을 가져올 수 있고, 시작 탭의 ‘바로 플레이’로 어떤 게임이든 세션을 시작할 수 있어요. 손님 게임으로 기록되어 연대기와 결과에는 남지만 선반에는 올라가지 않아요. 마음에 들면 한 번 탭으로 선반이나 위시리스트로 옮길 수 있어요.',
+    },
+  },
+  /*
    * #1665, „Partien importieren". A capability that did not exist: a group
    * switching from BG Stats or BGG had to start from zero. Says where it is,
    * which two sources, and that the user stays in control of what comes along.

@@ -7,7 +7,9 @@
    had nothing to do with looking a game up: its own header said so, and it is
    opened from the game detail page and the Pokale cards rather than from either
    lookup sheet. It is a session-starting screen, so it reads views-session.js's
-   showResults and the shared guest/team pickers. No `module.exports`: DOM. */
+   showResults and the shared guest/team pickers. Since #1682 it also holds the
+   game picker in front of the sheet and the Start tab's button that opens it.
+   No `module.exports`: DOM. */
 
 // Bottom sheet: pick who joins, then start a session for one specific game with
 // no vote and no draw, landing straight on the results screen with that game
@@ -132,4 +134,116 @@ function startDirectSession(round, game, opts = {}) {
       closeSheet(() => showResults(round, data.session, data.games));
     } catch (e) { toast(e.message, { tone: 'error' }); }
   });
+}
+
+/* Which game? — the picker in front of the direct-play sheet (#1682). Opened
+   by the Start tab's „Jetzt spielen" and by the Chronik's „Session nachtragen"
+   (`opts.play` carries that one's `dayKey`), so the two cannot drift apart.
+
+   One <button> per game, because picking IS the action — there is no OK step.
+   The list is the shelf (the same isActiveGame predicate the draw uses) plus
+   the round's earlier guest games, the one off-shelf state the server's direct
+   pick admits. The last row is always „Ein Spiel, das ihr nicht habt": the
+   add-game form in its guest mode with no guest name, which creates — or, by
+   title or provider id, REUSES — a guest game and hands it to the sheet. It
+   sits ABOVE the list, not after it: on a 60-game shelf the last row is a long
+   scroll away when the sheet opens. It stays visible under an empty search on
+   purpose: „not found" is exactly when it is wanted, and it takes the typed
+   query as its title.
+
+   A guest game created here and then abandoned in the direct-play sheet stays
+   an unused guest game: it is listed under „Gastspiele", deletable there, and
+   reused the next time the same title is brought (#1682, "Abandoned start"). */
+function showDirectPlayPicker(round, { title = t('directPlay.pickTitle'), hint = '', play = {} } = {}) {
+  const shelf = round.games.filter(isActiveGame);
+  const guests = round.games.filter((g) => g.guestGame === true);
+  const games = [...shelf, ...guests].sort((a, b) => String(a.title).localeCompare(String(b.title)));
+  const backdrop = h(`<div class="sheet-backdrop">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="sheet__head">
+          <h2>${esc(title)}</h2>
+          <button class="sheet__close" type="button" aria-label="${esc(t('common.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>
+        ${hint ? `<p class="muted">${esc(hint)}</p>` : ''}
+        <div class="field"${games.length ? '' : ' hidden'}>
+          <label for="playPickSearch">${esc(t('chronik.log.search'))}</label>
+          <input id="playPickSearch" class="input" type="search" autocomplete="off" autocorrect="off" spellcheck="false">
+        </div>
+        <button type="button" class="ds-row play-pick__row play-pick__guest">
+          <span class="ds-row__main"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('directPlay.notOwned'))}
+            <span class="play-pick__sub muted">${esc(t('directPlay.notOwnedHint'))}</span></span>
+          <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
+        </button>
+        <ul class="play-pick" role="list"></ul>
+        <p class="muted play-pick__empty" hidden>${esc(t('chronik.log.none'))}</p>
+      </div>
+    </div>`);
+  const sheet = backdrop.querySelector('.sheet');
+  const list = sheet.querySelector('.play-pick');
+  const empty = sheet.querySelector('.play-pick__empty');
+  const search = sheet.querySelector('#playPickSearch');
+
+  games.forEach((g) => {
+    const marker = g.guestGame === true ? `<span class="play-pick__tag">${esc(t('guestGames.marker'))}</span>` : '';
+    const li = h(`<li><button type="button" class="ds-row play-pick__row" data-title="${esc(String(g.title).toLowerCase())}">
+        <span class="ds-row__main">${esc(g.title)}</span>
+        <span class="ds-row__meta">${marker}<i class="ti ti-chevron-right" aria-hidden="true"></i></span>
+      </button></li>`);
+    li.querySelector('button').addEventListener('click', () => {
+      closeSheet(() => startDirectSession(round, g, play));
+    });
+    list.appendChild(li);
+  });
+  const filter = () => {
+    const q = search.value.trim().toLowerCase();
+    let shown = 0;
+    list.querySelectorAll('li').forEach((li) => {
+      const hit = !q || li.firstElementChild.dataset.title.includes(q);
+      li.hidden = !hit;
+      if (hit) shown++;
+    });
+    // An empty round has no list to come up empty — only the guest row.
+    empty.hidden = shown > 0 || games.length === 0;
+  };
+  search.addEventListener('input', filter);
+  filter();
+
+  // The add-game form REPLACES this sheet and the direct-play sheet replaces
+  // the form, each reusing the history marker (openSheet), so Back still
+  // dismisses exactly one sheet.
+  sheet.querySelector('.play-pick__guest').addEventListener('click', () => {
+    showAddGameForm(round, {
+      title: search.value.trim(),
+      guest: {
+        name: null,
+        onCreated(game) {
+          if (!round.games.some((g) => g.id === game.id)) round.games.push(game);
+          startDirectSession(round, game, play);
+        },
+      },
+    });
+  });
+
+  document.body.appendChild(backdrop);
+  const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
+  document.addEventListener('keydown', onKey, true);
+  openSheet(backdrop, onKey);
+  backdrop.addEventListener('mousedown', (e) => { if (e.target === backdrop) closeSheet(); });
+  sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
+  (games.length ? search : sheet.querySelector('.play-pick__guest')).focus();
+}
+
+/* The Start tab's „Jetzt spielen" (#1682): the SECONDARY way into a session,
+   beside „Session wirbeln" in every design, and in the Klassisch rail. Never
+   disabled — direct play needs no shelf, so the young-round lock on the draw
+   does not apply to it, and an empty round is precisely the one that can only
+   play something it does not own. `cls` places it (`hub-play`, `rail__play`).
+   The Start tab's copy comes after the CTA and the presets that modify it, so it
+   never splits the two, and is `rail-owned` wherever the CTA is: the Klassisch
+   rail carries its own copy from 1280px up, and the pane keeping this one would
+   leave a lone button where the primary action was. */
+function directPlayButton(round, cls) {
+  const btn = h(`<button type="button" class="btn ${cls}"><i class="ti ti-player-play" aria-hidden="true"></i>${esc(t('directPlay.button'))}</button>`);
+  btn.addEventListener('click', () => showDirectPlayPicker(round));
+  return btn;
 }

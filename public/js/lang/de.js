@@ -1396,6 +1396,9 @@ I18N.de = {
   'chronik.log.none': 'Kein Spiel gefunden',
   'directPlay.guestsNote': 'Gäste spielen mit, gehören aber nicht zur Runde.',
   'directPlay.teamsNote': 'Teams spielen zusammen – und gewinnen zusammen.',
+  'directPlay.pickTitle': 'Welches Spiel spielt ihr?',
+  'directPlay.notOwned': 'Ein Spiel, das ihr nicht habt',
+  'directPlay.notOwnedHint': 'Beliebiges Spiel suchen – es wird als Gastspiel gespielt',
 
   'vote.progress': 'Schritt {n} von {total}',
   'vote.advanced': 'Spiel {n} von {total}: {title}',

@@ -577,6 +577,8 @@ const frontendGlobals = {
   openEditor: 'readonly', formSheetDesign: 'readonly', usesEditorSheet: 'readonly', EDITOR_SHEET_BELOW: 'readonly',
   renderPriceSection: 'readonly', renderPriceNoOffers: 'readonly', priceAge: 'readonly',
   startDirectSession: 'readonly',
+  showDirectPlayPicker: 'readonly',
+  directPlayButton: 'readonly',
   // A session's day when it is not today (#1616): played-on.js (pure, shared
   // with the server) and session-date.js (the field and the two sheets).
   PLAYED_ON_MIN: 'readonly', localDayKey: 'readonly', isPastDay: 'readonly', playedOnInstant: 'readonly',

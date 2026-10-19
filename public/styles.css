@@ -1086,6 +1086,7 @@ h1, h2, h3 { font-family: var(--font-display); }
      Anything that must beat `.btn` needs a compounded `.btn.rail__cta` — see
      `.claude/rules/state-rules-clobber-component-values.md`. */
   .rail__cta { width: 100%; }   /* its glyph gap is the shared --icon-gap (#1640) */
+  .rail__play { width: 100%; }  /* „Jetzt spielen" (#1682), the CTA's quiet sibling */
   .rail__group { display: flex; flex-direction: column; gap: 2px; }
   .rail__label {
     font-size: var(--text-xs);
@@ -1758,6 +1759,13 @@ a.hub-row:hover { background: var(--sunken-soft); }
    pane below 1280px and in the rail above it, following that button either way. */
 .hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .rail .hub-presets { margin: -6px 0 4px; }
+/* „Jetzt spielen" (#1682): the secondary way into a session, after the CTA and
+   its presets. Content-width on purpose — the CTA above is the full-width
+   primary, and a second full-width button would read as its equal. */
+/* `align-self` keeps it content-width where the launch area is a flex column
+   (Ocean, Forest, the Programmheft's box), which would otherwise stretch it to
+   the column and make it the CTA's equal. */
+.hub-play { margin: 12px 0 18px; align-self: flex-start; }
 /* A SAVED filter's chip (#1328) carries a user-authored name of up to 40
    characters, where the built-ins are two short words. Capped and ellipsised
    on ONE line rather than wrapped: a wrapped chip is a taller chip, and in the
@@ -2163,12 +2171,17 @@ a.hub-row:hover { background: var(--sunken-soft); }
    secondary action, so it sits left-aligned below the row it follows rather
    than competing with the chips for their line. */
 .chronik-log { margin: -6px 0 16px; }
-/* The game list „Session nachtragen" opens: one button per shelf game, picking
-   is the action. A bounded box the sheet scrolls past, never a page-long list. */
-.log-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.log-pick li[hidden] { display: none; }
-.log-pick__row { width: 100%; font-family: inherit; color: var(--ink); text-align: left; }
-.log-pick__empty { margin: 8px 0 0; }
+/* The game list in front of the direct-play sheet (#1616, shared with the
+   Start tab's „Jetzt spielen" since #1682): one button per game, picking is the
+   action. The „Ein Spiel, das ihr nicht habt" row sits above it, set off by a
+   dashed edge because it creates something instead of choosing it. */
+.play-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.play-pick li[hidden] { display: none; }
+.play-pick__row { width: 100%; font-family: inherit; color: var(--ink); text-align: left; }
+.play-pick__empty { margin: 8px 0 0; }
+.play-pick__tag { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
+.play-pick__guest { margin-bottom: 10px; border-style: dashed; }
+.play-pick__sub { display: block; font-size: var(--text-sm); font-weight: 400; margin-top: 2px; }
 .filter-chips {
   display: flex;
   align-items: center;
