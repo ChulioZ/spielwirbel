@@ -2656,7 +2656,10 @@ a.btn:where(:has(> .ti:first-child):not([hidden], [aria-label])) {
   flex-direction: column;
   gap: 6px;
 }
-.card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
+/* The weekly quiz reuses `.card` as a plain container (#1686), so its cards are
+   left out of the lift. `:where()` keeps this at (0,2,0), the specificity every
+   component `…:hover` override was written against. */
+.card:not(:where(.quiz-q, .quiz-archive__week)):hover { box-shadow: var(--shadow-2); transform: translateY(-2px) rotate(-0.3deg); }
 .card :is(h2, h3) { font-size: var(--text-xl); margin: 0; text-transform: none; letter-spacing: 0; color: var(--ink); }
 .card__meta { color: var(--ink-soft); font-size: var(--text-md); }
 .card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -11109,7 +11112,15 @@ kbd {
 .quiz-archive-link { margin: 18px 0 0; }
 .quiz-archive-link a { display: inline-flex; align-items: center; gap: 6px; }
 .quiz-archive__week { margin-top: 14px; }
-.quiz-archive__week > summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+/* Not a click target (#1686): `.card` gives every card the pointer. (0,2,0) so it
+   wins on specificity rather than on its place in the sheet. A past week's
+   summary row is the one part that opens, so it alone keeps the pointer and
+   carries the chevron (the `.gd-more` shape: a real <i>, the native marker off). */
+.card:is(.quiz-q, .quiz-archive__week) { cursor: auto; }
+.quiz-archive__week > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.quiz-archive__week > summary::-webkit-details-marker { display: none; }
+.quiz-archive__week > summary .ti { margin-left: auto; align-self: center; color: var(--ink-soft); transition: transform var(--dur-base) var(--ease-out); }
+.quiz-archive__week[open] > summary .ti { transform: rotate(180deg); }
 .quiz-archive__summary { margin: 0 0 10px; }
 .quiz-archive__past-title { margin-top: 28px; }
 .quiz-archive__questions { margin: 10px 0 0; padding-left: 1.4em; display: flex; flex-direction: column; gap: 10px; }
