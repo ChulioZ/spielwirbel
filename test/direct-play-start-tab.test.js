@@ -112,6 +112,8 @@ test('„Ein Spiel, das ihr nicht habt" stays under an empty search and runs the
   const guestRow = sheet.querySelector('.play-pick__guest');
   assert.ok(guestRow && !guestRow.hidden, '„not found" is exactly when the guest row is wanted');
   assert.match(guestRow.textContent, /Ein Spiel, das ihr nicht habt/);
+  assert.ok(guestRow.compareDocumentPosition(sheet.querySelector('.play-pick')) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
+    'the row sits ABOVE the list — after it, a long shelf scrolls it out of sight');
 
   guestRow.click();
   assert.equal(forms.length, 1);

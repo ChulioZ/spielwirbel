@@ -1359,7 +1359,7 @@ I18N.nl = {
   'directPlay.teamsNote': 'Teams spelen samen — en winnen samen.',
   'directPlay.pickTitle': 'Welk spel spelen jullie?',
   'directPlay.notOwned': 'Een spel dat jullie niet hebben',
-  'directPlay.notOwnedHint': 'Zoek een willekeurig spel – het wordt als gastspel gespeeld',
+  'directPlay.notOwnedHint': 'Zoek een spel naar keuze – het wordt als gastspel gespeeld',
 
   'vote.progress': 'Stap {n} van {total}',
   'vote.advanced': 'Spel {n} van {total}: {title}',

@@ -146,8 +146,10 @@ function startDirectSession(round, game, opts = {}) {
    pick admits. The last row is always „Ein Spiel, das ihr nicht habt": the
    add-game form in its guest mode with no guest name, which creates — or, by
    title or provider id, REUSES — a guest game and hands it to the sheet. It
-   stays visible under an empty search on purpose: „not found" is exactly when
-   it is wanted, and it takes the typed query as its title.
+   sits ABOVE the list, not after it: on a 60-game shelf the last row is a long
+   scroll away when the sheet opens. It stays visible under an empty search on
+   purpose: „not found" is exactly when it is wanted, and it takes the typed
+   query as its title.
 
    A guest game created here and then abandoned in the direct-play sheet stays
    an unused guest game: it is listed under „Gastspiele", deletable there, and
@@ -167,13 +169,13 @@ function showDirectPlayPicker(round, { title = t('directPlay.pickTitle'), hint =
           <label for="playPickSearch">${esc(t('chronik.log.search'))}</label>
           <input id="playPickSearch" class="input" type="search" autocomplete="off" autocorrect="off" spellcheck="false">
         </div>
-        <ul class="play-pick" role="list"></ul>
-        <p class="muted play-pick__empty" hidden>${esc(t('chronik.log.none'))}</p>
         <button type="button" class="ds-row play-pick__row play-pick__guest">
           <span class="ds-row__main"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('directPlay.notOwned'))}
             <span class="play-pick__sub muted">${esc(t('directPlay.notOwnedHint'))}</span></span>
           <span class="ds-row__meta"><i class="ti ti-chevron-right" aria-hidden="true"></i></span>
         </button>
+        <ul class="play-pick" role="list"></ul>
+        <p class="muted play-pick__empty" hidden>${esc(t('chronik.log.none'))}</p>
       </div>
     </div>`);
   const sheet = backdrop.querySelector('.sheet');

@@ -141,7 +141,7 @@ test('the Chronik offers „Session nachtragen" — shelf games only — and han
   dom.set('startDirectSession', (r, g, opts) => handed.push({ title: g.title, dayKey: opts && opts.dayKey }));
   search.value = '';
   search.dispatchEvent(new dom.window.Event('input'));
-  sheet.querySelector('.play-pick__row').click();
+  sheet.querySelector('.play-pick li .play-pick__row').click();
   await waitFor(() => handed.length, { label: 'the picker closing into the direct-play sheet' });
   assert.deepEqual(handed[0], { title: 'Azul', dayKey: day(-1) });
 });

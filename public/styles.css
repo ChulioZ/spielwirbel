@@ -2173,15 +2173,14 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .chronik-log { margin: -6px 0 16px; }
 /* The game list in front of the direct-play sheet (#1616, shared with the
    Start tab's „Jetzt spielen" since #1682): one button per game, picking is the
-   action. A bounded box the sheet scrolls past, never a page-long list. The
-   „Ein Spiel, das ihr nicht habt" row closes it, set off by a dashed edge
-   because it creates something instead of choosing it. */
+   action. The „Ein Spiel, das ihr nicht habt" row sits above it, set off by a
+   dashed edge because it creates something instead of choosing it. */
 .play-pick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .play-pick li[hidden] { display: none; }
 .play-pick__row { width: 100%; font-family: inherit; color: var(--ink); text-align: left; }
 .play-pick__empty { margin: 8px 0 0; }
 .play-pick__tag { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
-.play-pick__guest { margin-top: 10px; border-style: dashed; }
+.play-pick__guest { margin-bottom: 10px; border-style: dashed; }
 .play-pick__sub { display: block; font-size: var(--text-sm); font-weight: 400; margin-top: 2px; }
 .filter-chips {
   display: flex;
