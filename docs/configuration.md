@@ -125,6 +125,13 @@ app and is served to the client through the public `GET /api/config` (as
 `donateUrl`, `null` when unset), so the button also works before login. Unset
 (the default) the feature does not exist.
 
+FAQ forum threads (issue #1684): set `FAQ_FORUMS=true` to add the FAQ question
+listing the forum threads the maintainer posts in, one list per page language
+(`FORUM_THREADS` in `lib/faq.js`). Only the hosted instance sets it — the
+threads are the maintainer's own, so a self-hosted instance leaves it unset and
+the question never renders. Its pointer to the contact form appears only where
+that form is served (the legal identity is configured).
+
 Guest demo mode (issue #427): set `DEMO_ENABLED=true` (on top of
 `ACCOUNTS_ENABLED`) and the landing page offers **"Ohne Anmeldung ausprobieren"**
 alongside registering, plus a `/demo` deep link so a launch post can point

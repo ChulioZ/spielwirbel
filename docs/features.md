@@ -872,7 +872,10 @@ What the app does, in detail. For a short overview see the
   `DONATE_URL` is unset, the account answers with accounts off, the data answers
   where no privacy policy is published — is left out of the page entirely rather
   than hidden with JavaScript a crawler never runs. Questions touching personal
-  data link `/datenschutz` instead of restating it.
+  data link `/datenschutz` instead of restating it. With `FAQ_FORUMS=true` (the
+  hosted instance only, issue #1684) it also answers where to talk with other
+  people about Spielwirbel, listing the forum threads the maintainer posts in —
+  each page only its own language's threads.
 - **„Was spielen wir heute?" guide** – one public page per shipped language
   (issue #1171), at a path in that language (`/de/was-spielen-wir-heute`,
   `/en/what-should-we-play-tonight`, …), written as a guide rather than a pitch:
