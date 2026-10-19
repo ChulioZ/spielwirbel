@@ -52,7 +52,7 @@ test('the row owns the spacing: one wrapping flex line, no margin on either butt
   assert.ok(row, 'the row has an unconditional rule');
   assert.match(row, /display:\s*flex/);
   assert.match(row, /flex-wrap:\s*wrap/);
-  assert.match(row, /gap:/);
+  assert.match(row, /gap:\s*[1-9]/, 'the buttons are spaced by a positive gap');
   // A margin on a button is what indented a lone import button (#1680), and it
   // would come back from any sheet, so every design stylesheet is read too.
   const sheets = [path.join(ROOT, 'public/styles.css'),
