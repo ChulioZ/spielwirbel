@@ -477,7 +477,7 @@ async function showQuizArchive() {
     data.past.forEach((w) => {
       // One closed week, collapsed to its share right until opened.
       const box = h(`<details class="card quiz-archive__week">
-          <summary><strong>${esc(quizWeekLabel(w.week))}</strong> <span class="muted">${esc(quizOverall(w.correctPct))}</span></summary>
+          <summary><strong>${esc(quizWeekLabel(w.week))}</strong> <span class="muted">${esc(quizOverall(w.correctPct))}</span><i class="ti ti-chevron-down" aria-hidden="true"></i></summary>
           <ol class="quiz-archive__questions"></ol>
         </details>`);
       const ol = box.querySelector('ol');

@@ -267,6 +267,11 @@ test('/quiz/archiv: percentages only — the running week with its trickiest que
   assert.equal(cur.querySelector('.quiz-archive__choices'), null, 'the running week shows choices');
   const past = dom.app.querySelector('details.quiz-archive__week');
   assert.match(text(past), /KW 40\/2026 50 % der Antworten richtig/);
+  // The summary is the one part that opens, so it carries the chevron (#1686).
+  const chevron = past.querySelector(':scope > summary > i.ti-chevron-down');
+  assert.ok(chevron, 'the past week\'s summary has no chevron');
+  assert.equal(chevron.getAttribute('aria-hidden'), 'true');
+  assert.equal(cur.querySelector('.ti-chevron-down'), null, 'the running week does not open, so it has no chevron');
   const right = past.querySelector('.quiz-archive__choice--right');
   assert.match(text(right), /2018 \(richtige Antwort\) 50 % gewählt/);
   assert.ok(right.querySelector('.ti-check'));

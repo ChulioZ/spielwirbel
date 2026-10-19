@@ -394,8 +394,8 @@
 }
 
 /* ---- Panels. Flat, one line, no lift on hover („keine Bewegung") — the edge
-   lights instead. */
-:root[data-design="bruecke"][data-scheme="dark"] .card:hover {
+   lights instead. The quiz's cards are not click targets and stay dark (#1686). */
+:root[data-design="bruecke"][data-scheme="dark"] .card:not(:where(.quiz-q, .quiz-archive__week)):hover {
   transform: none;
   border-color: var(--brand);
   box-shadow: 0 0 18px var(--glow-accent);
