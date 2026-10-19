@@ -47,7 +47,7 @@ const IDENTITY = {
 
 test.afterEach(() => {
   for (const k of ['IMPRESSUM_ADDRESS', 'IMPRESSUM_EMAIL', 'DONATE_URL',
-    'ACCOUNTS_ENABLED', 'SESSION_SECRET']) {
+    'ACCOUNTS_ENABLED', 'SESSION_SECRET', 'FAQ_FORUMS']) {
     delete process.env[k];
   }
 });
@@ -318,6 +318,98 @@ test('every gate drops the same questions in every language', async () => {
   assert.ok(!base.includes('faq-donations'), 'the gate did not drop the donations answer');
   for (const code of SUPPORTED_LOCALES) {
     assert.equal(await idsOf(code), base, `${code} answers a different set of questions`);
+  }
+});
+
+/* ------------------------------- forums (#1684) ------------------------------ */
+
+// The links inside one page's forums section, as [name, href, rest-of-line].
+function forumLinks(html) {
+  const section = faqSection(html, 'forums');
+  if (!section) return null;
+  return [...section.matchAll(/<li><a href="([^"]+)" target="_blank" rel="noopener">([^<]+)<\/a>([^<]*)<\/li>/g)]
+    .map((m) => ({ href: m[1].replace(/&amp;/g, '&'), name: m[2], rest: m[3] }));
+}
+
+test('the forums answer appears in no language without FAQ_FORUMS', async () => {
+  for (const code of SUPPORTED_LOCALES) {
+    const page = (await request(app).get(`/faq?lang=${code}`)).text;
+    assert.equal(faqSection(page, 'forums'), '', `${code} advertises the operator's forums on a self-hosted instance`);
+    for (const { url } of faq.FORUM_THREADS[code] || []) {
+      assert.ok(!page.includes(url.replace(/&/g, '&amp;')), `${code} leaks a thread URL outside the gated answer`);
+    }
+  }
+});
+
+test('with FAQ_FORUMS each page lists exactly its own language\'s threads', async () => {
+  process.env.FAQ_FORUMS = 'true';
+  let pages = 0;
+  for (const code of SUPPORTED_LOCALES) {
+    const links = forumLinks((await request(app).get(`/faq?lang=${code}`)).text);
+    assert.ok(links, `${code} renders no forums answer`);
+    assert.deepEqual(links.map(({ name, href }) => ({ name, href })),
+      faq.FORUM_THREADS[code].map(({ name, url }) => ({ name, href: url })),
+      `${code} lists other threads than its own`);
+    pages += 1;
+  }
+  assert.equal(pages, SUPPORTED_LOCALES.length);
+  // Spanish has two forums — the case a one-entry-per-locale assumption breaks.
+  const es = forumLinks((await request(app).get('/faq?lang=es')).text).map((l) => l.name);
+  assert.deepEqual(es, ['Darkstone', 'La BSK']);
+  // The English page links no Spanish thread: one language per page. Compared as
+  // exact hrefs, not as a substring of the page.
+  const enHrefs = forumLinks((await request(app).get('/faq?lang=en')).text).map((l) => l.href);
+  for (const { url } of faq.FORUM_THREADS.es) {
+    assert.ok(!enHrefs.includes(url), `the English page links ${url}`);
+  }
+  // La Tana is readable only with an account, and the Italian reader is told.
+  const it = forumLinks((await request(app).get('/faq?lang=it')).text);
+  assert.match(it[0].rest, /account/);
+});
+
+test('a language without a forum drops only its own forums answer', async () => {
+  process.env.FAQ_FORUMS = 'true';
+  const saved = faq.FORUM_THREADS.nl;
+  delete faq.FORUM_THREADS.nl;
+  try {
+    const idsOf = async (code) => [...(await request(app).get(`/faq?lang=${code}`)).text
+      .matchAll(/<section id="(faq-[^"]+)"/g)].map((m) => m[1]);
+    const nl = await idsOf('nl');
+    const de = await idsOf('de');
+    assert.ok(!nl.includes('faq-forums'), 'nl renders a forums answer with no forum to list');
+    assert.ok(de.includes('faq-forums'), 'removing nl dropped the answer elsewhere too');
+    // Apart from that one locale-gated question the set is still portable.
+    assert.deepEqual(nl, de.filter((id) => id !== 'faq-forums'));
+  } finally {
+    faq.FORUM_THREADS.nl = saved;
+  }
+});
+
+test('the forums answer points at the contact form only where that form is served', async () => {
+  // /kontakt.html is hidden until the legal identity is configured, so on an
+  // instance with FAQ_FORUMS alone the pointer would be a dead end.
+  process.env.FAQ_FORUMS = 'true';
+  const bare = faqSection((await request(app).get('/faq')).text, 'forums');
+  assert.ok(bare.includes('<ul>'), 'the forums answer did not render');
+  assert.ok(!bare.includes('/kontakt.html'), 'links a hidden contact form');
+
+  Object.assign(process.env, IDENTITY);
+  for (const code of SUPPORTED_LOCALES) {
+    const section = faqSection((await request(app).get(`/faq?lang=${code}`)).text, 'forums');
+    assert.ok(section.includes('href="/kontakt.html"'), `${code} lost the contact pointer once it is served`);
+  }
+});
+
+test('FORUM_THREADS covers exactly the shipped locales', () => {
+  /* Both directions. A key that is not a locale is a typo nothing renders; a
+     locale with no key silently hides the answer on that page — so a tenth
+     language has to decide whether it has a forum rather than lose one. */
+  assert.deepEqual(Object.keys(faq.FORUM_THREADS).sort(), [...SUPPORTED_LOCALES].sort());
+  for (const [code, list] of Object.entries(faq.FORUM_THREADS)) {
+    assert.ok(list.length >= 1, `${code} has an empty forum list`);
+    for (const { name, url } of list) {
+      assert.ok(name && /^https:\/\//.test(url), `${code}: ${name} needs a name and an https URL`);
+    }
   }
 });
 
