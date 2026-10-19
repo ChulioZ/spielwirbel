@@ -33,6 +33,24 @@ function members(group) {
   }
   return [...out, cur.trim()];
 }
+/* Is `.card` (as a whole class) in the same compound as a later `:hover`? Walks
+   the text once, tracking paren depth, so a `:not(:where(a, b))` between the two
+   is not mistaken for a combinator. A loop rather than a nested-quantifier regex,
+   which CodeQL rightly flags as exponential (js/redos). */
+function hoversACard(member) {
+  const at = [...member.matchAll(/\.card(?![\w-])/g)].map((m) => m.index);
+  return at.some((start) => {
+    let depth = 0;
+    for (let i = start + 5; i < member.length; i++) {
+      const ch = member[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      else if (depth === 0 && /[\s>+~]/.test(ch)) return false;
+      else if (depth === 0 && member.startsWith(':hover', i)) return true;
+    }
+    return false;
+  });
+}
 const DESIGNS = path.join(ROOT, 'public/css/designs');
 const SHEETS = [
   ['styles.css', path.join(ROOT, 'public/styles.css')],
@@ -48,7 +66,7 @@ function cardHoverMembers() {
   for (const [file, p] of SHEETS) {
     for (const [sel, body] of rulesOf(strip(fs.readFileSync(p, 'utf8')))) {
       for (const one of members(sel)) {
-        if (!/\.card(?![\w-])(?:[^\s>+~()]|\([^()]*(?:\([^()]*\))?[^()]*\))*:hover/.test(one)) continue;
+        if (!hoversACard(one)) continue;
         if (!['transform', 'box-shadow', 'border-color'].some((prop) => declaredValue(body, prop))) continue;
         out.push({ file, sel: one, bare: one.replace(/:hover/g, '') });
       }
