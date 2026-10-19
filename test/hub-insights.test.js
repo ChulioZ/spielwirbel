@@ -130,6 +130,12 @@ test('gameSuggestions with a limit cycles the reasons round by round, after toda
     ['never', 'longAgo', 'loved', 'never', 'longAgo', 'never', 'longAgo']);
 });
 
+test('a limit below three caps round one too', () => {
+  const { games, r, opts } = runnerUpShelf();
+  assert.deepEqual(gameSuggestions(r, games, { ...opts, limit: 1 }, deps).map((x) => x.game.id), ['g4']);
+  assert.deepEqual(gameSuggestions(r, games, { ...opts, limit: 2 }, deps).map((x) => x.game.id), ['g4', 'g1']);
+});
+
 test('without a limit gameSuggestions is round one only, and the longer answer starts with it', () => {
   const { games, r, opts } = runnerUpShelf();
   const base = gameSuggestions(r, games, opts, deps);

@@ -207,12 +207,15 @@ function gameSuggestions(round, activeGames, opts, deps) {
     longAgo,
     () => { const g = loved(); return g ? [g, { kind: 'loved', score: (stats[g.id] || {}).score }] : null; },
   ];
-  const limit = Number.isFinite(o.limit) ? o.limit : 0;
+  // A given limit caps every round, the first included; without one the
+  // answer is round one, whatever its length.
+  const capped = Number.isFinite(o.limit);
+  const full = () => capped && out.length >= o.limit;
   let more = true;
-  for (let roundNo = 0; more && (roundNo === 0 || out.length < limit); roundNo++) {
+  for (let roundNo = 0; more && (capped || roundNo === 0) && !full(); roundNo++) {
     more = false;
     for (const pick of pickers) {
-      if (roundNo > 0 && out.length >= limit) break;
+      if (full()) break;
       const hit = pick();
       if (hit && take(...hit)) more = true;
     }
