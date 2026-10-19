@@ -184,22 +184,42 @@ function hubSuggestCard(round, activeGames, statsByGame, exclude) {
   }
   const card = hubCard('ti-bulb', t('hub.suggest.title'));
   const body = card.querySelector('.hub-card__body');
-  rows.forEach(({ game, reason }) => {
-    const why =
-      reason.kind === 'longAgo'
-        ? tn(reason.months, 'hub.suggest.longAgoOne', 'hub.suggest.longAgo')
-        : t('hub.suggest.' + reason.kind);
-    const row = h(`<a class="hub-row">
-         <span class="hub-row__main">
-           <span class="hub-row__title">${esc(game.title)}</span>
-           <span class="hub-row__sub">${esc(why)}</span>
-         </span>
-         <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-       </a>`);
-    navLink(row, gamePath(round.id, game.id), () => showGameDetail(round.id, game.id));
-    body.appendChild(row);
-  });
+  rows.forEach((row) => body.appendChild(hubSuggestRow(round, row)));
+  /* The fill (#1683): the runner-ups, cycling through the reasons. The base
+     rows above are exactly the no-limit answer, and gameSuggestions builds
+     round by round, so the longer answer starts with them by construction
+     (test/hub-insights.test.js pins the prefix). */
+  const more = gameSuggestions(
+    round, activeGames, { statsByGame, exclude, limit: rows.length + HUB_FILL_SUGGESTIONS }, hubDeps()
+  ).slice(rows.length);
+  const fill = hubFill(more.map((row) => hubSuggestRow(round, row)), 'hub-fill--rows');
+  if (fill) body.appendChild(fill);
   return card;
+}
+
+// How many runner-ups the fill may offer; hub-fill.js shows the ones that fit.
+const HUB_FILL_SUGGESTIONS = 9;
+
+/* One suggestion row. The cover thumb is in every row, and styles.css keeps it
+   `display: none`: only a design that stretches its tiles shows it (#1683), so
+   the column-flow designs render as they did. aria-hidden, since the title
+   beside it already names the game. */
+function hubSuggestRow(round, { game, reason }) {
+  const why =
+    reason.kind === 'longAgo'
+      ? tn(reason.months, 'hub.suggest.longAgoOne', 'hub.suggest.longAgo')
+      : t('hub.suggest.' + reason.kind);
+  const style = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+  const row = h(`<a class="hub-row">
+       <span class="hub-row__cover" aria-hidden="true"${style}>${game.image ? '' : coverPlaceholder(game)}</span>
+       <span class="hub-row__main">
+         <span class="hub-row__title">${esc(game.title)}</span>
+         <span class="hub-row__sub">${esc(why)}</span>
+       </span>
+       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
+     </a>`);
+  navLink(row, gamePath(round.id, game.id), () => showGameDetail(round.id, game.id));
+  return row;
 }
 
 /* b) Schnellstart-Presets — chips under the big CTA that open the session setup

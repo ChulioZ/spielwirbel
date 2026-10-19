@@ -111,7 +111,7 @@ test('the Regal preview states the shelf count and shows a handful of covers', (
     card.querySelector('.hub-preview__sub').textContent.trim(),
     dom.run("tn(8, 'home.chip.gamesOne', 'home.chip.games')"),
   );
-  const covers = card.querySelectorAll('.hub-preview__cover');
+  const covers = card.querySelectorAll('.hub-preview__covers > .hub-preview__cover');
   assert.equal(covers.length, 6, 'the cover strip is capped at HUB_PREVIEW_COVERS');
   assert.equal(dom.run('HUB_PREVIEW_COVERS'), 6);
 });
@@ -338,4 +338,115 @@ test('the previews are NOT rail-owned — the rail carries no preview', (t) => {
   for (const card of dom.app.querySelectorAll('.hub-preview')) {
     assert.equal(card.classList.contains('rail-owned'), false);
   }
+});
+
+// ---------------------------------------------------------- the fill (#1683)
+
+/* Each fill region is in the markup in every design, its items `hidden`;
+   whether it gets any room is CSS's call (styles.css keeps it off, tisch.css
+   switches it on from 1280px), and hub-fill.js unhides the whole items that
+   fit. jsdom has no ResizeObserver and no layout, so here every item must stay
+   hidden — the honest answer for an engine that cannot measure. */
+const fillOf = (card) => card.querySelector('.hub-card__body > .hub-fill');
+
+test('the Regal fill continues the strip with the next covers, hidden from assistive tech, all hidden without layout', (t) => {
+  const r = busyRound();
+  // Twelve on the shelf: six in the strip, six more for the fill.
+  r.games.push(...Array.from({ length: 4 }, (_, i) => game(40 + i)));
+  const dom = hub(t, r);
+  const card = previewByTitle(dom, dom.run("t('hub.tab.regal')"));
+  const fill = fillOf(card);
+  assert.ok(fill, 'the Regal preview has no fill region');
+  assert.ok(fill.classList.contains('hub-fill--covers'));
+  assert.equal(fill.getAttribute('aria-hidden'), 'true');
+  const covers = [...fill.querySelectorAll(':scope > .hub-preview__cover')];
+  assert.equal(covers.length, 6, 'the fill holds the covers after the strip');
+  assert.ok(covers.every((c) => c.hidden), 'a fill item is visible with no layout to fit it into');
+});
+
+test('the Regal fill holds nothing when the strip already shows the whole overflow', (t) => {
+  const r = busyRound();
+  const dom = hub(t, r);
+  const card = previewByTitle(dom, dom.run("t('hub.tab.regal')"));
+  // Eight active: six in the strip, two in the fill — the threshold is unchanged.
+  assert.equal(fillOf(card).children.length, 2);
+});
+
+test('the Chronik fill lists the newest sessions with cover, title, date and winners, a guest winner named', (t) => {
+  const r = busyRound();
+  r.sessions.push({
+    ...play(905, 15, '2026-06-01T18:00:00.000Z', ['g1']),
+    guests: [{ id: 'g1', name: 'Dora' }],
+  });
+  // A night with nobody named as winner: no winner part, no invented label.
+  r.sessions.push(play(906, 16, '2026-06-02T18:00:00.000Z', []));
+  const dom = hub(t, r);
+  const card = previewByTitle(dom, dom.run("t('hub.tab.chronik')"));
+  const fill = fillOf(card);
+  assert.ok(fill.classList.contains('hub-fill--rows'));
+  const rows = [...fill.children];
+  assert.ok(rows.every((row) => row.hidden));
+  assert.deepEqual(rows.map((row) => row.querySelector('.hub-preview__name').textContent),
+    ['Spiel 16', 'Spiel 15', 'Spiel 14', 'Spiel 12', 'Spiel 13', 'Spiel 11', 'Spiel 10'],
+    'the rows must follow the Chronik, newest first');
+  assert.equal(rows[0].querySelector('.hub-preview__who'), null, 'a winnerless night grew a winner part');
+  assert.equal(rows[1].querySelector('.hub-preview__who').textContent.trim(),
+    dom.run("t('people.guest', { name: 'Dora' })"));
+  assert.equal(rows[2].querySelector('.hub-preview__who').textContent.trim(), 'Cem');
+  assert.equal(rows[0].querySelector('.hub-preview__when').textContent,
+    dom.run("fmtDate('2026-06-02T18:00:00.000Z')"));
+  assert.ok(rows[0].querySelector('.hub-preview__cover[aria-hidden="true"]'));
+  // Plain rows: the card's one link stays its „öffnen".
+  assert.equal(card.querySelectorAll('a').length, 1);
+  // The base content is unchanged above it.
+  assert.ok(card.querySelector('.hub-card__body > .hub-preview__last'));
+});
+
+test('Ocean keeps its three Chronik rows, from the same builder, with no winner and no fill', (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  dom.set('api', async () => ({ recommendations: [] }));
+  dom.call('applyDesign', 'ocean');
+  const r = busyRound();
+  dom.call('renderStartTab', r, activeOf(r));
+  const card = previewByTitle(dom, dom.run("t('hub.tab.chronik')"));
+  const rows = [...card.querySelectorAll('.hub-preview__session')];
+  assert.equal(rows.length, 3);
+  assert.equal(card.querySelector('.hub-preview__who'), null);
+  assert.equal(fillOf(card), null);
+});
+
+test('the fill is OFF in the base stylesheet and switched on only by a stretched design', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { rulesOf, topLevel } = require('./support/css');
+  const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+  const base = rulesOf(topLevel()).find(([sel]) => sel.trim() === '.hub-fill');
+  assert.ok(base && /display:\s*none/.test(base[1]), 'styles.css must keep .hub-fill off by default');
+  // A hidden item must really be gone: `.hub-row` is flex and a session row is
+  // grid, and any author `display` beats the bare `hidden` attribute — measured
+  // in Chrome, the clipped suggestion links stayed focusable without this.
+  const gone = rulesOf(topLevel()).find(([sel]) => sel.trim() === '.hub-fill > [hidden]');
+  assert.ok(gone && /display:\s*none\s*!important/.test(gone[1]), 'a hidden fill item can still render');
+  const designs = fs.readdirSync(path.join(__dirname, '..', 'public/css/designs'));
+  const on = designs.filter((f) => /\.hub-fill\b/.test(read('public/css/designs/' + f).replace(/\/\*[\s\S]*?\*\//g, '')));
+  // Der Tisch is the design whose hub grid stretches its tiles (#1496). A new
+  // entry here is a design claiming spare height — measure it first.
+  assert.deepEqual(on, ['tisch.css']);
+});
+
+test('„Wie wär\'s mit" keeps its base rows and adds the runner-ups as a hidden fill, every row with a cover thumb', (t) => {
+  const r = busyRound();
+  const dom = hub(t, r);
+  const card = [...dom.app.querySelectorAll('.hub-card')].find(
+    (c) => c.querySelector('.hub-card__title').textContent.trim() === dom.run("t('hub.suggest.title')"));
+  assert.ok(card, 'no suggestion card on this fixture');
+  const base = [...card.querySelectorAll('.hub-card__body > a.hub-row')];
+  const fill = [...fillOf(card).querySelectorAll(':scope > a.hub-row')];
+  assert.ok(base.length >= 1 && base.length <= 3, `today's card holds one to three rows, got ${base.length}`);
+  assert.ok(fill.length >= 1, 'the fill offered no runner-up on a shelf that has them');
+  assert.ok(fill.every((row) => row.hidden) && base.every((row) => !row.hidden));
+  const hrefs = [...base, ...fill].map((row) => row.getAttribute('href'));
+  assert.equal(new Set(hrefs).size, hrefs.length, 'a game was suggested twice');
+  assert.ok([...base, ...fill].every((row) => row.querySelector('.hub-row__cover[aria-hidden="true"]')));
 });

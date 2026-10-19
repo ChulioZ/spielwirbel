@@ -40,6 +40,13 @@ const HUB_PREVIEW_COVERS = 6;
 const HUB_PREVIEW_RANKS = 3;
 // And at most this many sessions in Ocean's Chronik preview (O3.2's three).
 const HUB_PREVIEW_SESSIONS = 3;
+/* The FILL caps (#1683, hub-fill.js): how many extra items a stretched tile
+   may offer beyond its base content. Generous on purpose — hub-fill.js shows
+   only the whole ones that fit the height the row already gives the tile, so
+   the cap bounds the markup, not what is seen. Four more cover rows of six;
+   eight sessions, more than any tile has room for at 1440. */
+const HUB_FILL_COVERS = HUB_PREVIEW_COVERS * 4;
+const HUB_FILL_SESSIONS = 8;
 
 /* WHAT EARNS A PREVIEW IS PER SECTION, not one condition for all three.
 
@@ -112,17 +119,29 @@ function hubRegalPreview(round, activeGames) {
   // aria-hidden: the covers are decoration for a card whose count already says
   // what is here, and each tile's only text would be a title the preview is not
   // offering to open.
-  [...activeGames]
-    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
-    .slice(0, HUB_PREVIEW_COVERS)
-    .forEach((game) => {
-      const style = game.image
-        ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"`
-        : '';
-      strip.appendChild(h(`<span class="hub-preview__cover"${style}>${game.image ? '' : coverPlaceholder(game)}</span>`));
-    });
-  card.querySelector('.hub-card__body').appendChild(strip);
+  const newest = [...activeGames]
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  newest.slice(0, HUB_PREVIEW_COVERS).forEach((game) => strip.appendChild(hubCoverTile(game)));
+  const body = card.querySelector('.hub-card__body');
+  body.appendChild(strip);
+  /* The fill (#1683): the next covers in the same order, after the base strip
+     — which still decides the threshold above and still sizes the row. Hidden
+     from assistive tech like the strip it continues. */
+  const fill = hubFill(newest.slice(HUB_PREVIEW_COVERS, HUB_PREVIEW_COVERS + HUB_FILL_COVERS)
+    .map(hubCoverTile), 'hub-fill--covers');
+  if (fill) {
+    fill.setAttribute('aria-hidden', 'true');
+    body.appendChild(fill);
+  }
   return card;
+}
+
+// One cover tile of the Regal strip — its base row and its fill alike.
+function hubCoverTile(game) {
+  const style = game.image
+    ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"`
+    : '';
+  return h(`<span class="hub-preview__cover"${style}>${game.image ? '' : coverPlaceholder(game)}</span>`);
 }
 
 /* b) Pokale — the top of the standings.
@@ -213,26 +232,52 @@ function hubChronikPreview(round) {
      Rundenpuls). Plain spans, like every row inside a preview: the card's one
      link is its „öffnen" at the foot. Newest first by `createdAt`, the order
      the Chronik lists them in. */
+  const newest = newestSessionsFirst(finished);
   if (designIs('ocean')) {
     const body = card.querySelector('.hub-card__body');
-    newestSessionsFirst(finished)
-      .slice(0, HUB_PREVIEW_SESSIONS)
-      .forEach((s) => {
-        const game = round.games.find((g) => g.id === s.chosenGameId);
-        const style = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
-        body.appendChild(h(`<div class="hub-preview__session">
-             <span class="hub-preview__cover" aria-hidden="true"${style}>${game && !game.image ? coverPlaceholder(game) : ''}</span>
-             <span class="hub-preview__name">${esc(game ? game.title : t('sessions.played'))}</span>
-             <span class="hub-preview__when">${esc(fmtDate(s.createdAt))}</span>
-           </div>`));
-      });
+    newest.slice(0, HUB_PREVIEW_SESSIONS)
+      .forEach((s) => body.appendChild(hubSessionRow(round, s, { winners: false })));
     return card;
   }
+  const body = card.querySelector('.hub-card__body');
   if (last) {
-    card.querySelector('.hub-card__body')
-      .appendChild(h(`<div class="hub-preview__last">${esc(t('hub.preview.chronikLast', { date: fmtDate(last) }))}</div>`));
+    body.appendChild(h(`<div class="hub-preview__last">${esc(t('hub.preview.chronikLast', { date: fmtDate(last) }))}</div>`));
   }
+  // The fill (#1683): the newest sessions as rows, with their winners — what a
+  // stretched tile has room for below „Zuletzt am …".
+  const fill = hubFill(newest.slice(0, HUB_FILL_SESSIONS).map((s) => hubSessionRow(round, s)), 'hub-fill--rows');
+  if (fill) body.appendChild(fill);
   return card;
+}
+
+/* One played session as a preview row: cover, title, date and — unless the
+   caller says not — the winner(s). ONE builder for Ocean's three rows and the
+   fill's (#1683), so the two presentations cannot drift. Ocean passes
+   `winners: false`: its row is one line with the date pushed to the right
+   edge, and a fourth item there would sit past it.
+
+   Winners are resolved against the SESSION's own people, as the Chronik does,
+   so a guest winner is named with its marker rather than dropped (#458). A
+   night with no winner shows no winner part — the ending labels are the
+   Chronik's to state, not a preview's. */
+function hubSessionRow(round, s, { winners = true } = {}) {
+  const game = round.games.find((g) => g.id === s.chosenGameId);
+  const style = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+  let who = '';
+  if (winners) {
+    const people = sessionPeople(round, s);
+    const names = (s.winnerIds || [])
+      .map((wid) => personLabel(people.find((p) => p.id === wid)))
+      .filter(Boolean);
+    if (names.length) {
+      who = `<span class="hub-preview__who"><i class="ti ti-trophy" aria-hidden="true"></i> ${names.map(esc).join(', ')}</span>`;
+    }
+  }
+  return h(`<div class="hub-preview__session">
+       <span class="hub-preview__cover" aria-hidden="true"${style}>${game && !game.image ? coverPlaceholder(game) : ''}</span>
+       <span class="hub-preview__name">${esc(game ? game.title : t('sessions.played'))}</span>
+       <span class="hub-preview__when">${esc(fmtDate(s.createdAt))}</span>${who}
+     </div>`);
 }
 
 /* The off-shelf group, „Weitere Listen": ONE heading over the four

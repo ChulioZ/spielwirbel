@@ -94,7 +94,8 @@ function hubLastPlayedAt(round, deps) {
 }
 
 /* Up to three games worth putting on the table, each with the reason it is
-   there — the positive mirror of the retirement banner sitting above.
+   there — the positive mirror of the retirement banner sitting above. With
+   `opts.limit`, up to that many: the runner-ups after those three (#1683).
 
    ONE GAME PER REASON KIND, in the order below. A shelf with twenty unplayed
    games would otherwise fill the card with three identical sentences; three
@@ -121,14 +122,15 @@ function gameSuggestions(round, activeGames, opts, deps) {
   if ((activeGames || []).length < SUGGEST_MIN_SHELF) return [];
 
   const played = hubLastPlayedAt(round, deps);
-  const never = shelf.filter((g) => !played.has(g.id));
   const seen = new Set();
   const out = [];
   const take = (game, reason) => {
-    if (!game || seen.has(game.id)) return;
+    if (!game || seen.has(game.id)) return false;
     seen.add(game.id);
     out.push({ game, reason });
+    return true;
   };
+  const byScore = (a, b) => suggestScore(stats, b, neutral) - suggestScore(stats, a, neutral);
 
   // 1. Never played, and not already voted down. Ranked by score, so the pick
   // is the most promising of them.
@@ -146,31 +148,31 @@ function gameSuggestions(round, activeGames, opts, deps) {
   // `neutral` is the bar because an unrated game IS the prior: admitting
   // `>= neutral` keeps every genuinely unknown game (the common case) and drops
   // only the ones the group has already spoken against.
-  take(
-    never
-      .filter((g) => !seen.has(g.id) && suggestScore(stats, g, neutral) >= neutral)
-      .sort((a, b) => suggestScore(stats, b, neutral) - suggestScore(stats, a, neutral))[0],
-    { kind: 'never' }
-  );
+  const never = () => shelf
+    .filter((g) => !played.has(g.id) && !seen.has(g.id) && suggestScore(stats, g, neutral) >= neutral)
+    .sort(byScore)[0];
 
   // 2. Longest not played, among games that HAVE been played. Reported in whole
   // months, so it only speaks once the gap is worth mentioning.
   //
-  // `!seen.has` on every candidate list below, not just inside take(): a
-  // candidate the previous row already claimed must not be SELECTED, or the
-  // best pick is spent on a duplicate and take() silently drops the row
-  // entirely — the card loses a whole reason rather than showing its
-  // runner-up. Found by the spec, which asserted three kinds and got two.
-  const stale = shelf
-    .filter((g) => played.has(g.id) && !seen.has(g.id) && suggestScore(stats, g, neutral) >= neutral)
-    .sort((a, b) => played.get(a.id) - played.get(b.id))[0];
-  if (stale) {
+  // `!seen.has` on every candidate list, not just inside take(): a candidate an
+  // earlier row already claimed must not be SELECTED, or the best pick is spent
+  // on a duplicate and take() silently drops the row entirely — the card loses
+  // a whole reason rather than showing its runner-up. Found by the spec, which
+  // asserted three kinds and got two.
+  const longAgo = () => {
+    const stale = shelf
+      .filter((g) => played.has(g.id) && !seen.has(g.id) && suggestScore(stats, g, neutral) >= neutral)
+      .sort((a, b) => played.get(a.id) - played.get(b.id))[0];
+    if (!stale) return null;
     // COMPLETED calendar months, not elapsed 30-day blocks: a 30-day month walks
     // a whole extra month off the calendar over a year, and it made „seit drei
     // Monaten" appear for a gap of 1 March to 31 May (#1080).
     const months = deps.monthsBetween(played.get(stale.id), now);
-    if (months >= 3) take(stale, { kind: 'longAgo', months });
-  }
+    // The oldest candidate is the longest gap, so when it falls short no later
+    // one can clear the bar either.
+    return months >= 3 ? [stale, { kind: 'longAgo', months }] : null;
+  };
 
   // 3. The best-liked game the group has not had out recently. Read through the
   // shelf score the pills and the ring already show (#894) — never a second
@@ -182,15 +184,42 @@ function gameSuggestions(round, activeGames, opts, deps) {
   // be a magnitude nobody could argue with, and it would silently stop meaning
   // what it says the moment the prior is retuned — which vote-score.js's header
   // explicitly expects to happen.
-  const loved = shelf
+  const loved = () => shelf
     .filter((g) => !seen.has(g.id))
     .filter((g) => {
       const at = played.get(g.id);
       return at === undefined || deps.dayIndexOf(now) - deps.dayIndexOf(at) > SUGGEST_RECENT_DAYS;
     })
     .filter((g) => suggestScore(stats, g, neutral) > neutral)
-    .sort((a, b) => suggestScore(stats, b, neutral) - suggestScore(stats, a, neutral))[0];
-  if (loved) take(loved, { kind: 'loved', score: (stats[loved.id] || {}).score });
+    .sort(byScore)[0];
+
+  /* The pickers run ROUND BY ROUND, one game per reason kind per round, in
+     the order above. Round one is today's card — ONE GAME PER REASON KIND, so
+     a shelf with twenty unplayed games does not fill it with three identical
+     sentences. `limit` (#1683, a stretched hub tile's fill) asks for further
+     rounds: the second „never", the second „longAgo", the second „loved", the
+     third „never", … — every floor and the `seen` de-duplication unchanged,
+     because each round re-asks the same pickers. Without it the answer is
+     round one, exactly as before, and a caller can take the fill as whatever
+     follows that prefix. */
+  const pickers = [
+    () => { const g = never(); return g ? [g, { kind: 'never' }] : null; },
+    longAgo,
+    () => { const g = loved(); return g ? [g, { kind: 'loved', score: (stats[g.id] || {}).score }] : null; },
+  ];
+  // A given limit caps every round, the first included; without one the
+  // answer is round one, whatever its length.
+  const capped = Number.isFinite(o.limit);
+  const full = () => capped && out.length >= o.limit;
+  let more = true;
+  for (let roundNo = 0; more && (capped || roundNo === 0) && !full(); roundNo++) {
+    more = false;
+    for (const pick of pickers) {
+      if (full()) break;
+      const hit = pick();
+      if (hit && take(...hit)) more = true;
+    }
+  }
 
   return out;
 }

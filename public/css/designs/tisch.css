@@ -1256,26 +1256,12 @@
 :root[data-design="tisch"][data-scheme="dark"] .pulse-tile--link:hover { border-color: var(--gold); }
 
 /* --- The Regal-Steckbrief (#1173) -----------------------------------------
-   On the Start card the seat bands are the Rundenpuls's stat tiles — six of
-   them since the solo band (#1666), one per table size, so the same `.pulse-tiles` track rule lays them out
-   (views-shelf-profile.js reuses the markup rather than restating it). A band
-   under three games is a GAP: a dashed edge in every scheme, and its number in
-   gold where the felt tokens are in force. The bars on the screen take gold on
-   the dark scheme too; below it they keep styles.css's --brand. */
-:root[data-design="tisch"] .shelf-tile--gap { border: 1px dashed var(--line); }
-:root[data-design="tisch"][data-scheme="dark"] .shelf-tile--gap .pulse-tile__n,
+   The Start card is one sentence and a link since #1683; the screen keeps the
+   bars and the gap list. The bars take gold on the dark scheme, and so does a
+   gap's warning glyph; below it they keep styles.css's --brand. */
 :root[data-design="tisch"][data-scheme="dark"] .shelf-bar--gap .shelf-bar__n,
 :root[data-design="tisch"][data-scheme="dark"] .shelf-gap .ti { color: var(--gold); }
 :root[data-design="tisch"][data-scheme="dark"] .shelf-bar__fill { background: var(--gold); }
-/* Six tiles in one row leave each about 36–39px — the card is a narrow grid
-   cell at EVERY viewport, 1280px included — and „für 6+" then breaks over three
-   lines. Two rows of three keep every label on one line (measured at 320 and
-   1280px), so this is keyed on nothing: a viewport query would ask the wrong
-   width. */
-:root[data-design="tisch"] .shelf-tiles {
-  grid-auto-flow: row;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
 
 /* --- The card grid, and the previews as tiles (T2.2 phone, T3.2 desktop) ---
    Der Tisch's grid is a ROW-MAJOR grid rather than Klassisch's column flow, at
@@ -1408,6 +1394,25 @@
     color: var(--brand);
   }
   :root[data-design="tisch"] .hub-previews .hub-preview__open .ti { display: inline; }
+
+  /* THE FILL (#1683). This grid stretches every tile to the tallest in its
+     row, so the Regal, the Chronik and „Wie wär's mit" sat half empty. Each
+     carries a `.hub-fill` region (off in styles.css); here it is switched on
+     and handed the height the row has already spent. The card becomes a flex
+     column, its body takes what is left, and the region takes what the body
+     leaves — with `contain: size`, so it adds NOTHING to the row's height
+     (measured: the row heights are identical with the region removed).
+     hub-fill.js then hides every item that does not fit whole. */
+  :root[data-design="tisch"] .hub-cards .hub-card:has(.hub-fill) { display: flex; flex-direction: column; }
+  :root[data-design="tisch"] .hub-cards .hub-card:has(.hub-fill) > .hub-card__body { flex: 1 1 auto; min-height: 0; }
+  :root[data-design="tisch"] .hub-cards .hub-fill {
+    display: flex;
+    flex: 1 1 0;
+    min-height: 0;
+    contain: size;
+    overflow: hidden;
+  }
+  :root[data-design="tisch"] .hub-cards .hub-row > .hub-row__cover { display: block; }
 
   :root[data-design="tisch"] .hub-offshelf--tiles {
     display: grid;

@@ -690,7 +690,11 @@ public/
     shelf-profile.js the Regal-Steckbrief's builder: the active shelf's seat,
                      playing-time and weight bands, the mechanics, categories
                      and designers its games score best on (#1556), and the
-                     gaps under three games (issue #1173)
+                     gaps under three games (issue #1173), and the Start
+                     tile's one-sentence dominant ranges (issue #1683)
+    hub-fill.js      a stretched hub tile's fill region: shows the whole extra
+                     covers, sessions or suggestions that fit the height its
+                     grid row already gives it, hides the rest (issue #1683)
     shelf-profile-card.js
                      the Steckbrief as a shareable PNG — flat fills, no SVG, no
                      pattern, the same-origin BGG badge (issue #1173)

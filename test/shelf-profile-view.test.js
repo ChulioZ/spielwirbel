@@ -63,57 +63,61 @@ test('the Start card is absent below the threshold of games with provider data',
   assert.equal(card(dom), null, 'seven linked games is under the floor');
 });
 
-test('Klassisch: the card shows the seat bands as bars, the strongest gaps, and links to the screen', (t) => {
-  const dom = loadApp();
-  t.after(() => dom.close());
-  dom.set('api', noRecos());
-  const r = linkedRound();
-  dom.call('renderStartTab', r, r.games);
-  const c = card(dom);
-  assert.ok(c, 'nine linked games must render the card');
-  assert.equal(c.querySelector('.hub-card__title').textContent.trim(), 'Regal-Steckbrief');
-  const bars = [...c.querySelectorAll('.shelf-bar')];
-  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__label').textContent), ['solo', 'für 2', 'für 3', 'für 4', 'für 5', 'für 6+']);
-  assert.deepEqual(bars.map((b) => b.querySelector('.shelf-bar__n').textContent), ['0', '9', '9', '9', '0', '0']);
-  // An empty solo band is drawn but never marked: it is a taste, not a gap (#1666).
-  assert.deepEqual(bars.map((b) => b.classList.contains('shelf-bar--gap')), [false, false, false, false, true, true]);
-  assert.equal(c.querySelectorAll('.shelf-tile').length, 0, 'Klassisch draws bars, not tiles');
-  // Seven empty bands exist (5, 6+, three time bands, two weight bands); the card
-  // names three and leaves the rest to the screen.
-  const gaps = [...c.querySelectorAll('.shelf-gap')].map((g) => g.textContent.trim());
-  assert.deepEqual(gaps, ['Für 5 Personen: kein Spiel', 'Für 6+ Personen: kein Spiel', 'Bis 30 Min.: kein Spiel']);
-  const link = c.querySelector('a.hub-row');
-  assert.equal(link.getAttribute('href'), '/round/3/shelf-profile');
-});
+/* The card is ONE SENTENCE and the link, in every design (#1683): the bars,
+   Der Tisch's seat tiles and the gap list moved off it and live on the screen.
+   This fixture is 2–4 players, a 30–60 minute box and a medium weight on all
+   nine games, so each dimension's dominant range is known in advance. */
+for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
+  test(`${design}: the card is the headline sentence and the link, nothing else`, (t) => {
+    const dom = loadApp();
+    t.after(() => dom.close());
+    dom.set('api', noRecos());
+    if (design !== 'klassisch') dom.call('applyDesign', design);
+    const r = linkedRound();
+    dom.call('renderStartTab', r, r.games);
+    const c = card(dom);
+    assert.ok(c, 'nine linked games must render the card');
+    assert.equal(c.querySelector('.hub-card__title').textContent.trim(), 'Regal-Steckbrief');
+    assert.equal(c.querySelector('.shelf-card__headline').textContent,
+      'Meist für 2–4 Personen · 31–60 Min. · mittel');
+    assert.equal(c.querySelectorAll('.shelf-bar, .pulse-tile, .shelf-gap').length, 0,
+      'the tile still draws a slice of the screen');
+    assert.equal(c.querySelector('a.hub-row').getAttribute('href'), '/round/3/shelf-profile');
+    assert.equal(c.querySelectorAll('a').length, 1, 'one link per card');
+  });
+}
 
-test('Der Tisch: the seat bands are the Rundenpuls’s stat tiles, gaps marked', (t) => {
-  const dom = loadApp();
-  t.after(() => dom.close());
-  dom.set('api', noRecos());
-  dom.call('applyDesign', 'tisch');
-  const r = linkedRound();
-  dom.call('renderStartTab', r, r.games);
-  const c = card(dom);
-  assert.ok(c);
-  const tiles = [...c.querySelectorAll('.pulse-tiles.shelf-tiles > .pulse-tile')];
-  assert.equal(tiles.length, 6);
-  assert.deepEqual(tiles.map((x) => x.querySelector('.pulse-tile__n').textContent), ['0', '9', '9', '9', '0', '0']);
-  assert.deepEqual(tiles.map((x) => x.classList.contains('shelf-tile--gap')), [false, false, false, false, true, true]);
-  assert.equal(tiles[0].querySelector('.pulse-tile__label').textContent, 'solo');
-  assert.equal(c.querySelectorAll('.shelf-bar').length, 0);
-});
-
-test('the solo band reads as one word in every locale, never „für 1" (#1666)', (t) => {
+test('the headline drops a clause whose range spans every band, and the card goes when none is left', (t) => {
   const dom = loadApp({ locale: 'en' });
   t.after(() => dom.close());
   dom.set('api', noRecos());
+  // Weight 4/1/4 over its three bands and time 4/0/1/4 over its four: every
+  // run short of all bands holds at most 5 of the 9 games, under ⅔, so neither
+  // has a dominant range and only the seats remain.
+  const weights = [1.5, 1.5, 1.5, 1.5, 2.5, 4, 4, 4, 4];
+  const times = [20, 20, 20, 20, 90, 180, 180, 180, 180];
+  const r = linkedRound();
+  r.games.forEach((g, i) => { g.weight = weights[i]; g.maxPlaytime = times[i]; });
+  dom.call('renderStartTab', r, r.games);
+  assert.equal(card(dom).querySelector('.shelf-card__headline').textContent, 'Mostly for 2–4 players');
+
+  // Every game seats 1–6 as well, so the seat run is every band too: nothing
+  // at all to say, so no card.
+  dom.app.innerHTML = '';
+  const wide = linkedRound();
+  wide.games.forEach((g, i) => { g.minPlayers = 1; g.maxPlayers = 6; g.weight = weights[i]; g.maxPlaytime = times[i]; });
+  dom.call('renderStartTab', wide, wide.games);
+  assert.equal(card(dom), null, 'a card with no sentence rendered anyway');
+});
+
+test('the solo band reads as one word on the screen, never „für 1" (#1666)', async (t) => {
   const r = linkedRound();
   r.games[0].minPlayers = 1;
-  dom.call('renderStartTab', r, r.games);
-  const bars = [...card(dom).querySelectorAll('.shelf-bar')];
+  const dom = await screen(t, r);
+  const bars = [...dom.app.querySelectorAll('.shelf-panel .shelf-bar')];
   assert.equal(bars[0].querySelector('.shelf-bar__label').textContent, 'solo');
   assert.equal(bars[0].querySelector('.shelf-bar__n').textContent, '1');
-  assert.equal(bars[1].querySelector('.shelf-bar__label').textContent, 'for 2');
+  assert.equal(bars[1].querySelector('.shelf-bar__label').textContent, 'für 2');
 });
 
 // The screen, rendered through its real route to the round.

@@ -374,11 +374,14 @@ What the app does, in detail. For a short overview see the
     (played sessions with **no result recorded at all** — one that records a
     winner *or* an ending leaves the list — games with no cover, games with no
     player count; each deep-linking to the fix), a **Regal-Steckbrief** once
-    eight or more games carry BoardGameGeek data (how many games seat each table
-    size from solo to 6+, counting owned expansions, and the gaps a draw will hit
-    — never solo, which most group shelves skip on purpose, issue #1666 —
-    „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel"; it opens a
-    screen with every band — players, playing time, weight — the mechanics,
+    eight or more games carry BoardGameGeek data (on the hub, one sentence naming
+    what the shelf mostly is — „Meist für 2–4 Personen · bis 60 Min. · leicht
+    bis mittel", the shortest run of bands holding two thirds of the games per
+    dimension, issue #1683; it opens a screen with how many games seat each
+    table size from solo to 6+, counting owned expansions, the gaps a draw will
+    hit — never solo, which most group shelves skip on purpose, issue #1666 —
+    „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel", every band —
+    players, playing time, weight — the mechanics,
     categories and designers the round rates best, ranked by the mean
     Spielwirbel-Score of their games (a name counts once two of its games have a
     score; unscored games are left out; each name links to its BoardGameGeek
@@ -390,7 +393,11 @@ What the app does, in detail. For a short overview see the
     screen. Below the derived cards, a **preview of each of the round's other
     sections** — the shelf as a handful of covers with its count, the standings'
     top three, and how many evenings there have been with the date of the last —
-    each opening that section. Under all of it, the „Weitere Listen" group
+    each opening that section. Where a design stretches its hub tiles to a
+    shared row height (Der Tisch from 1280px), the Regal, Chronik and „Wie wär's
+    mit" tiles fill that height with whole extra items — more covers, the last
+    sessions with their winners, runner-up suggestions — without making any row
+    taller (issue #1683). Under all of it, the „Weitere Listen" group
     (Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen) and one
     Einstellungen entry. Every card renders nothing at all when it has nothing
     to say, so a young round sees none of them: the Pokale and Chronik previews
