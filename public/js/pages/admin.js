@@ -584,6 +584,10 @@
         line('mit Gästen', a.sessionsWithGuests, sessions),
         line('mit Teams', a.sessionsWithTeams, sessions),
         line('mit Vote-Link', a.sessionsWithVoteLink, sessions),
+        // Per-player points (#1630) and the automa (#1672). Both are shares of
+        // the card, NOT nested: an automa may be stored without any points.
+        line('mit Punkten', a.sessionsWithPoints, sessions),
+        line('mit Automa', a.sessionsWithAutoma, sessions),
         // The play-history import (#1665), split by where the plays came from.
         line('importiert', a.sessionsImported, sessions),
         line('aus BG Stats', a.sessionsImportedBgStats, a.sessionsImported, 1),

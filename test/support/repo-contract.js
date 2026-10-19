@@ -5766,6 +5766,7 @@ module.exports = function repoContract(repo) {
          under RLS), so it is the one whose filter can be wrong on its own. */
       const demoSession = await repo.createSession(demoTenant, demoRound.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: false,
+        scores: { m1: 7 }, automa: { name: 'Bot', points: 5 },
       });
       await repo.createSessionVoteLink({
         tenantId: demoTenant, roundId: demoRound.id, sessionId: demoSession.id,
@@ -5991,6 +5992,7 @@ module.exports = function repoContract(repo) {
       'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
       'sessionsImported', 'sessionsImportedBgStats',
+      'sessionsWithPoints', 'sessionsWithAutoma',
     ];
 
     await t.test('every adoption figure moves on a fixture that uses the feature', async () => {
@@ -6028,6 +6030,8 @@ module.exports = function repoContract(repo) {
         guests: [{ id: 'g1', name: 'Gast' }],
         teams: [{ id: 't1', personIds: [r.members[0].id, 'g1'] }],
         importRef: { source: 'bgstats', id: 'p1' },
+        scores: { [r.members[0].id]: 42 },
+        automa: { name: 'Automa', points: 38 },
       });
       await repo.createSessionVoteLink({ tenantId: tn, roundId: r.id, sessionId: session.id });
 
@@ -6060,6 +6064,20 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
     });
 
+    await t.test('an automa without points counts as automa only (#1675)', async () => {
+      /* #1672 stores an automa with nobody's points, so „mit Automa" is a share
+         of the Sessions card, never a subset of „mit Punkten". */
+      const mid = await repo.instanceMetrics();
+      const tn = `ada-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Solo', members: ['Ann'] });
+      await repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, automa: { name: 'Bot' },
+      });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.sessionsWithAutoma, mid.adoption.sessionsWithAutoma + 1);
+      assert.equal(m.adoption.sessionsWithPoints, mid.adoption.sessionsWithPoints);
+    });
+
     await t.test('a round using NOTHING moves no adoption figure', async () => {
       /* `guests`, `teams`, `expansions`, `ownerIds` and `tags` are ABSENT keys on
          an unused row by deliberate design, so this is where a predicate that
@@ -6072,6 +6090,9 @@ module.exports = function repoContract(repo) {
       const g = await repo.createGame(tn, r.id, gameFields({ title: 'Nackt' }));
       await repo.createSession(tn, r.id, {
         gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true,
+        // No route writes an empty points map (#1630), but the predicate must
+        // still read it as „no points" — the same present-but-empty trap.
+        scores: {},
       });
       // An explicitly EMPTY list is not adoption either — the same trap one step
       // over, and the shape a round that once had a tag and lost it leaves behind.
@@ -6245,6 +6266,7 @@ module.exports = function repoContract(repo) {
       await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
       await repo.createSession(tn, r.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
+        scores: { m1: 12 }, automa: { name: 'Bot' },
       });
       await repo.createUser({
         ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch',
@@ -6268,7 +6290,8 @@ module.exports = function repoContract(repo) {
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
         'accountsVerified', 'accountsDisabled',
-        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats']) {
+        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats',
+        'sessionsWithPoints', 'sessionsWithAutoma']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
