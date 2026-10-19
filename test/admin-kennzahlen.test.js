@@ -54,6 +54,9 @@ const STATUS = (over = {}) => ({
       gamesWithOwners: 9, gamesWithExpansions: 4,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
       sessionsImported: 6, sessionsImportedBgStats: 4, sessionsImportedBgg: 2,
+      // #1675: the automa is NOT a subset of points (it may be stored alone),
+      // so 4 > 3 here and a renderer dividing by „mit Punkten" would read 133 %.
+      sessionsWithPoints: 3, sessionsWithAutoma: 4,
       accountsWithPasskey: 11, accountsWithBggUsername: 6,
       /* The card's own denominators (#1174), DELIBERATELY DIFFERENT from the
          instance-wide twins above — `accounts.total` is 42 against 40 here,
@@ -350,6 +353,8 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['mit Gästen', '8', '27 %', 0],
         ['mit Teams', '2', '7 %', 0],
         ['mit Vote-Link', '5', '17 %', 0],
+        ['mit Punkten', '3', '10 %', 0],
+        ['mit Automa', '4', '13 %', 0],
         ['importiert', '6', '20 %', 0],
         ['aus BG Stats', '4', '67 %', 1],
         ['aus BoardGameGeek', '2', '33 %', 1],
