@@ -164,7 +164,7 @@ const LANDING_SHOTS_TISCH = {
   de: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.de.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.de.webp', w: 624, h: 1077 },
-    result: { src: '/img/tisch/landing-result.de.webp', w: 624, h: 2283 },
+    result: { src: '/img/tisch/landing-result.de.webp', w: 624, h: 2195 },
     desktop: { src: '/img/tisch/landing-desktop.de.webp', w: 1800, h: 1125 },
   },
   es: {
@@ -176,7 +176,7 @@ const LANDING_SHOTS_TISCH = {
   fr: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.fr.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.fr.webp', w: 624, h: 1072 },
-    result: { src: '/img/tisch/landing-result.fr.webp', w: 624, h: 2086 },
+    result: { src: '/img/tisch/landing-result.fr.webp', w: 624, h: 2149 },
     desktop: { src: '/img/tisch/landing-desktop.fr.webp', w: 1800, h: 1125 },
   },
   it: {
@@ -188,25 +188,25 @@ const LANDING_SHOTS_TISCH = {
   nl: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.nl.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.nl.webp', w: 624, h: 1106 },
-    result: { src: '/img/tisch/landing-result.nl.webp', w: 624, h: 2205 },
+    result: { src: '/img/tisch/landing-result.nl.webp', w: 624, h: 2117 },
     desktop: { src: '/img/tisch/landing-desktop.nl.webp', w: 1800, h: 1125 },
   },
   pt: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.pt.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.pt.webp', w: 624, h: 1115 },
-    result: { src: '/img/tisch/landing-result.pt.webp', w: 624, h: 2086 },
+    result: { src: '/img/tisch/landing-result.pt.webp', w: 624, h: 2149 },
     desktop: { src: '/img/tisch/landing-desktop.pt.webp', w: 1800, h: 1125 },
   },
   fi: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.fi.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.fi.webp', w: 624, h: 1106 },
-    result: { src: '/img/tisch/landing-result.fi.webp', w: 624, h: 2146 },
+    result: { src: '/img/tisch/landing-result.fi.webp', w: 624, h: 2058 },
     desktop: { src: '/img/tisch/landing-desktop.fi.webp', w: 1800, h: 1125 },
   },
   ko: {
     shelfPhone: { src: '/img/tisch/landing-shelf-phone.ko.webp', w: 624, h: 1246 },
     vote: { src: '/img/tisch/landing-vote.ko.webp', w: 624, h: 1043 },
-    result: { src: '/img/tisch/landing-result.ko.webp', w: 624, h: 2037 },
+    result: { src: '/img/tisch/landing-result.ko.webp', w: 624, h: 2034 },
     desktop: { src: '/img/tisch/landing-desktop.ko.webp', w: 1800, h: 1125 },
   },
 };

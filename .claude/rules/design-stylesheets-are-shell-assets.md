@@ -96,6 +96,11 @@ of regression, on a surface nobody has looked at yet. Hence:
   style preference; it is what forces a colour up into the block the harness
   reads. `test/design-layer.test.js` sweeps for both a literal and a token
   *shadow* outside the root blocks, and neither guard covers the other's case.
+  **One exemption (#1642):** a rule painting only `.cover-ph` may derive
+  `oklch(from var(--own-token) …)` from a token its root block declares, since
+  the per-game `--cover-h` it shifts by cannot live in a root token.
+  `isPlaceholderDerivation` in that spec holds the line, with its own negatives.
+  Don't widen it to another selector: that is an unmeasured colour again.
 - **A token declared there must also be MEASURED**, which is not the same as
   resolvable. `test/a11y-contrast.test.js` pairs the design-specific families
   (felt, paper, score ramp) by name and then asserts that no design token is left

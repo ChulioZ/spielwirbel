@@ -505,6 +505,22 @@
   background-color: var(--surface);
   background-image: repeating-linear-gradient(135deg, var(--hatch) 0 8px, var(--surface) 8px 16px);
 }
+/* Each coverless game is its own clearing (#1642): --cover-h (0–359, from the
+   title) tints the hatch from straw through moss to mint and turns and spaces
+   it, so manual games stop reading as one repeated tile. --cover-h is UNITLESS
+   (.claude/rules/deterministic-cover-placeholders.md §1). A relative colour of
+   this design's OWN tokens is the one colour function a `.cover-ph` rule may
+   use (test/design-layer.test.js); the rule above is the fallback. Forest's
+   Regal card builds its own placeholder (forestNoCover, forest-shelf.js), which
+   carries --cover-h for this. */
+@supports (color: oklch(from red l c h)) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .cover-ph {
+    --glade-d: calc((var(--cover-h, 180) - 180) / 180);
+    background-image: repeating-linear-gradient(calc(135deg + var(--glade-d) * 70deg),
+      oklch(from var(--moss) calc(l - 0.03 + var(--glade-d) * 0.06) calc(c + 0.02) calc(h + var(--glade-d) * 45)) 0 calc(9px + var(--glade-d) * 4px),
+      var(--surface) 0 calc(18px + var(--glade-d) * 6px));
+  }
+}
 
 /* ---- The score pill (F1.5): Blatt S, the ramp with its FIXED inks, keyed on
    the same `data-stop` the JS writes beside `--sc`, so fill and ink can never

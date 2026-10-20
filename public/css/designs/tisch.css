@@ -509,6 +509,29 @@
       transparent 3px 11px),
     linear-gradient(160deg, var(--wood-light), var(--wood-deep));
 }
+/* Each coverless game is its own wood (#1642): --cover-h (0–359, hashed from
+   the title by coverPlaceholder()) shifts tone and hue within a narrow band and
+   turns the grain's angle and pitch, so a shelf of manual games reads as olive,
+   red and pale oak rather than six identical tiles — and still as the table.
+   --cover-h is UNITLESS (.claude/rules/deterministic-cover-placeholders.md §1):
+   it is added to the `h` channel as a number, and only an angle or a length
+   multiplies it by a unit. A relative colour of this design's OWN tokens is the
+   one colour function a design's `.cover-ph` rule may use
+   (test/design-layer.test.js); the rule above is the fallback without it. */
+@supports (color: oklch(from red l c h)) {
+  :root[data-design="tisch"][data-scheme="dark"] .cover-ph {
+    --wood-dl: calc((var(--cover-h, 180) - 180) / 180 * 0.09);
+    --wood-dh: calc((var(--cover-h, 180) - 180) * 0.2);
+    background:
+      repeating-linear-gradient(
+        calc(84deg + var(--cover-h, 180) * 0.045deg),
+        var(--wood-grain) 0 3px,
+        transparent 3px calc(8px + var(--cover-h, 180) * 0.02px)),
+      linear-gradient(160deg,
+        oklch(from var(--wood-light) calc(l + var(--wood-dl)) calc(c + 0.012) calc(h + var(--wood-dh))),
+        oklch(from var(--wood-deep) calc(l + var(--wood-dl) * 0.6) c calc(h + var(--wood-dh))));
+  }
+}
 
 /* Felt: the table surface the hub and the dock sit on. The gradient is T8.1's
    own — a radial from the light stop to the deep one — and the ink on it is

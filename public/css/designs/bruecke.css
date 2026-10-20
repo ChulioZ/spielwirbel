@@ -450,6 +450,23 @@
   background-color: var(--surface-raised);
   background-image: repeating-linear-gradient(0deg, var(--hairline) 0 1px, transparent 1px 4px);
 }
+/* Each coverless game gets its own panel tint (#1642): --cover-h (0–359, from
+   the title) turns the plate's hue within a band, sets the scanline pitch and
+   the angle of a faint cyan wash, so a wall of manual games stops being one
+   repeated panel. --cover-h is UNITLESS
+   (.claude/rules/deterministic-cover-placeholders.md §1). A relative colour of
+   this design's OWN tokens is the one colour function a `.cover-ph` rule may
+   use (test/design-layer.test.js); the rule above is the fallback. */
+@supports (color: oklch(from red l c h)) {
+  :root[data-design="bruecke"][data-scheme="dark"] .cover-ph {
+    --panel-dh: calc((var(--cover-h, 180) - 180) * 0.35);
+    background-color: oklch(from var(--surface-raised) calc(l + 0.03) calc(c + 0.03) calc(h + var(--panel-dh)));
+    background-image:
+      repeating-linear-gradient(0deg, var(--hairline) 0 1px, transparent 1px calc(3px + var(--cover-h, 180) * 0.008px)),
+      linear-gradient(calc(var(--cover-h, 180) * 1deg),
+        oklch(from var(--brand-strong) l c calc(h + var(--panel-dh)) / 0.12), transparent 70%);
+  }
+}
 
 /* ---- The score pill (B8 „Score-Farbe an der Zahl"). A pill is under 24px,
    so its number prints in --ink on the raised plate and a BAND at its leading
