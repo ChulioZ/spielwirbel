@@ -127,7 +127,9 @@ test('Klassisch keeps its rail: identity, the start button, the five links', asy
   assert.ok(rail.querySelector('.rail__id'), 'Klassisch lost the rail identity');
   assert.ok(rail.querySelector('.rail__cta'), 'Klassisch lost the rail start button');
   // Its off-shelf rows went in #1500 — the Regal's scope strip reaches the lists.
-  assert.equal(rail.querySelectorAll('.rail__item').length, 5, 'the Klassisch rail is not the five links');
+  // On the Start tab the hub's „Weitere Listen" sits at its foot (#1579).
+  assert.equal(rail.querySelectorAll(':scope > .rail__group:not(.rail__offshelf) .rail__item').length, 5,
+    'the Klassisch rail is not the five links');
   assert.equal(dom.app.querySelector('.ocean-hub'), null, 'Klassisch grew the Ocean frame');
   assert.ok(dom.app.querySelector('.hero').classList.contains('rail-owned'), 'Klassisch\'s hero stopped being rail-owned');
 });

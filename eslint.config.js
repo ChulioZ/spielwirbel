@@ -507,7 +507,7 @@ const frontendGlobals = {
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
   RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
-  buildRoundRail: 'readonly', railIsLean: 'readonly',
+  buildRoundRail: 'readonly', railIsLean: 'readonly', railOffShelfGroup: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   // views-round-start.js (#923) — the Start tab and its card grid
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',

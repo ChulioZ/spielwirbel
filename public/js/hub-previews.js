@@ -291,12 +291,15 @@ function hubSessionRow(round, s, { winners = true } = {}) {
    Rows come from off-shelf.js, so this group and the strip offer the same four
    with the same counts by construction.
 
-   NOT `rail-owned` in any design since #1500: the Klassisch rail's own copy of
-   these four is gone, so from 1280px up a `rail-owned` group would leave the
-   hub with no way onto them at all — the #682 trap. */
+   `rail-owned` in Klassisch only (#1579): its rail carries the same four on
+   the Start tab (railOffShelfGroup, round-rail.js), so from 1280px they are
+   links there instead of four full-width rows here. A lean rail carries no
+   copy, so under every other design a `rail-owned` group would leave the hub
+   with no way onto them at all — the #682 trap. Below 1280px Klassisch draws
+   the rows as one wrapping strip (styles.css). */
 function hubOffShelfGroup(round) {
   if (designIs('tisch')) return hubOffShelfTiles(round);
-  const group = h(`<section class="hub-offshelf">
+  const group = h(`<section class="hub-offshelf${railIsLean() ? '' : ' rail-owned'}">
        <h2 class="hub-offshelf__title">${esc(t('offShelf.title'))}</h2>
        <div class="ds-list hub-offshelf__list"></div>
      </section>`);

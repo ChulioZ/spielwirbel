@@ -1121,6 +1121,15 @@ h1, h2, h3 { font-family: var(--font-display); }
   .rail__item span { min-width: 0; }
   .rail__item:not(.is-active):hover { background: var(--brand-tint-soft); color: var(--ink); }
   .rail__item.is-active { background: var(--brand); color: var(--on-accent); }
+  /* „Weitere Listen" on the Start tab (#1579, railOffShelfGroup): the count
+     sits at the row's end, like a list's figure, not beside the name. Scoped to
+     the group — Forest's Wegweiser draws its own `.rail__count` as a pill. */
+  .rail__offshelf .rail__count {
+    margin-left: auto;
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+  }
 }
 
 /* The dock is `position: fixed` (below the strip breakpoint), and .app's own
@@ -1708,6 +1717,26 @@ a.hub-row:hover { background: var(--sunken-soft); }
   letter-spacing: .04em;
   text-transform: uppercase;
   color: var(--ink-soft);
+}
+/* Klassisch draws the four as ONE wrapping strip of pills (#1579), not four
+   full-width rows — ~250px of the hub's foot spent on navigation. From 1280px
+   the group is `rail-owned` and the rail carries the links (round-rail.js), so
+   this is the phone and tablet shape. Same rows as every design, so the chevron
+   goes: a pill is the target, and a row-end arrow has no row end here. */
+:root[data-design="klassisch"] .hub-offshelf__list { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+:root[data-design="klassisch"] .hub-offshelf .off-shelf__row {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+:root[data-design="klassisch"] .hub-offshelf .off-shelf__row .ds-row__meta { display: none; }
+/* A phone: with their icons the four pills measured 182–236px at 390px — one
+   per line, i.e. the stack again. Without them they pair up, the scope strip's
+   own phone treatment (#1578). */
+@media (max-width: 639px) {
+  :root[data-design="klassisch"] .hub-offshelf .off-shelf__row .ti { display: none; }
 }
 
 .hub-care__head {

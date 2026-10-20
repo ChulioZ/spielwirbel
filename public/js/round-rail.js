@@ -4,7 +4,8 @@
    of the in-flow tab strip: identity, the one big CTA, the four sections and
    one entry for the round's Einstellungen screen. (It carried a „Nicht im
    Regal" group too until #1500 — the four lists are reached through the
-   Regal's scope strip now, in every design.)
+   Regal's scope strip now, in every design. Since #1579 the Start tab alone
+   adds the hub's „Weitere Listen" at the foot; see railOffShelfGroup.)
 
    WHY IT IS A RAIL. The strip lives inside `.app`, so the column's width and the
    strip's position are coupled: giving grid screens a wider column moved the
@@ -229,5 +230,33 @@ function buildRoundRail(round, activeTab, sub) {
   }));
   rail.appendChild(settings);
 
+  if (!lean && activeTab === 'start' && !sub) rail.appendChild(railOffShelfGroup(round));
+
   return rail;
+}
+
+/* „Weitere Listen" in Klassisch's rail (#1579) — on the START tab only. The
+   hub's own group spent four full-width rows under the cards; from 1280px it
+   is `rail-owned` (hubOffShelfGroup) and these links stand in for it, the way
+   Ocean's and Forest's hubs carry the four in their own left column.
+
+   Not on the other tabs, deliberately: #1500 took the four off the persistent
+   rail, and the Regal's scope strip is their way in from everywhere else
+   (operator decision 2026-10-20). Last in the rail, so a tab change only adds
+   or drops this group and moves nothing above it.
+
+   Same rows and counts as the hub group by construction — offShelfEntries().
+   The count is its own figure, so the link is named by the full label
+   („Aussortiert (2)"), as Der Tisch's count tiles are. */
+function railOffShelfGroup(round) {
+  const group = h(`<nav class="rail__group rail__offshelf" aria-labelledby="railOffShelfLabel">
+       <div class="rail__label" id="railOffShelfLabel">${esc(t('offShelf.title'))}</div>
+     </nav>`);
+  offShelfEntries(round).forEach(({ icon, label, name, count, sub, go }) => {
+    const el = h(`<a class="rail__item" aria-label="${esc(label)}">
+         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(name)}</span>${count === null ? '' : `<span class="rail__count" aria-hidden="true">${count}</span>`}
+       </a>`);
+    group.appendChild(navLink(el, roundPath(round.id, sub), go));
+  });
+  return group;
 }

@@ -746,6 +746,26 @@
 :root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more, .ph-hub__strip):empty { display: none; }
 :root[data-design="programmheft"] .ph-hub .hub-cards { margin: 0; }
 :root[data-design="programmheft"] .ph-hub > .hub-actions { margin-top: 0; }
+/* „Weitere Listen" as ONE line of tabs (#1579), the scope strip's own
+   vocabulary (P13.7): name and count as bold text over the strip's rule, no
+   card and no chevron — four full-width rows were ~250px of the front page's
+   foot spent on navigation. Wraps on a phone; one line from 1280px, where the
+   group spans the whole strip instead of one of its columns. */
+:root[data-design="programmheft"] .ph-hub .hub-offshelf__list { flex-direction: row; flex-wrap: wrap; gap: 0 var(--space-5); }
+:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: var(--rule-page) solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row:hover { box-shadow: none; border-bottom-color: var(--hair); }
+:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row .ds-row__meta { display: none; }
+:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row[href$="/recommendations"] { color: var(--brand); }
 @media (min-width: 1280px) {
   :root[data-design="programmheft"] .ph-hub__grid {
     display: grid;
@@ -773,7 +793,7 @@
     border-top: var(--rule-page) solid var(--ink);
     padding-top: var(--space-5);
   }
-  :root[data-design="programmheft"] .ph-hub__strip > .hub-offshelf { margin-top: 0; }
+  :root[data-design="programmheft"] .ph-hub__strip > .hub-offshelf { margin-top: 0; grid-column: 1 / -1; }
 }
 
 /* The head: the marker as a bar, the name as the masthead line in Anton, the
