@@ -116,9 +116,7 @@ async function showAccount() {
   if (me.demo) {
     app.appendChild(h(`<h2 class="konto-section__h">${esc(t('konto.demo.title'))}</h2>`));
     app.appendChild(h(`<p class="muted">${esc(t('konto.demo.note'))}</p>`));
-    if (kontoAsCards()) composeKontoCards();
-    else if (designIs('programmheft')) composeKontoProgramme();
-    else if (designIs('forest')) composeKontoForest(me);
+    composeKonto(me);
     return;
   }
 
@@ -162,18 +160,22 @@ async function showAccount() {
   // menu, and it holds no password to re-authenticate with anyway.
   app.appendChild(h(`<h2 class="konto-section__h konto-section__h--danger">${esc(t('konto.delete.title'))}</h2>`));
   app.appendChild(buildDeleteSection(me));
-  if (kontoAsCards()) composeKontoCards();
-  else if (designIs('programmheft')) composeKontoProgramme();
-  else if (designIs('forest')) composeKontoForest(me);
+  composeKonto(me);
 }
 
-// Ocean (#1219) and Die Brücke (#1242, B5.4 — every section a plate) both
-// compose the shared screen as cards; each stylesheet draws its own card.
-const kontoAsCards = () => designIs('ocean') || designIs('bruecke');
+/* Every design but Der Tisch (which returned to its dashboard above) composes
+   the finished screen into sections with an index beside them (#1582,
+   views-account-index.js); Forest adds its icons and „Abmelden" on top. */
+function composeKonto(me) {
+  if (designIs('forest')) composeKontoForest(me);
+  else composeKontoIndex();
+}
 
-/* Ocean's Konto (#1219, O14.3 „Alles auf einer Seite, nichts versteckt"): every
-   section a card of its own, built AFTER the shared screen out of its own nodes,
-   so the forms and their handlers are exactly Klassisch's. Each
+/* The sections (#1219 for Ocean's O14.3 „Alles auf einer Seite, nichts
+   versteckt"; every index design since #1582): every section a card of its
+   own, built AFTER the shared screen out of its own nodes, so the forms and
+   their handlers are exactly Klassisch's. Each design's stylesheet draws the
+   card — Klassisch draws none, so there it is only the grouping. Each
    `h2.konto-section__h` opens a card that takes the siblings up to the next one.
    Two sections already carry their own frame: the design card (#1215,
    `.konto-design`) is left as it is, and the install section, which holds its

@@ -1,19 +1,21 @@
-/* Spielwirbel – Konto as Das Programmheft composes it (#1376). */
+/* Spielwirbel – Konto: an index of its sections beside them (#1376, #1582). */
 
 'use strict';
 
-/* Das Programmheft's Konto (#1376, P5.3): a programme's CONTENTS beside its
-   pages. The shared screen is composed into sections exactly as Ocean and Die
-   Brücke do it (composeKontoCards, so every form and handler is Klassisch's),
-   and then laid out as two columns — an index of those sections on the left,
-   the sections themselves on the right, every one still on the page.
+/* The Konto's index (#1376 P5.3 for Das Programmheft, every non-Tisch design
+   since #1582): a list of the screen's sections beside the sections
+   themselves, every one still on the page. The shared screen is first grouped
+   into sections (composeKontoCards, so every form and handler is Klassisch's),
+   then laid out as two columns — the index on the left, the sections on the
+   right. Each design's stylesheet draws both; Klassisch's base rules live in
+   styles.css, and below 1024px every design hides the index again.
 
-   The sheet draws the index as if it switched between pages; it does not here.
-   Hiding every section but one would move entries out of reach (handover §2),
-   so each index entry only JUMPS to its section — a button that scrolls the
-   section's heading into view and hands it focus. Buttons, not `#hash` links:
-   a fragment navigation fires popstate, which the router answers with a full
-   re-render.
+   Programmheft's sheet draws the index as if it switched between pages; it
+   does not here. Hiding every section but one would move entries out of reach
+   (handover §2), so each index entry only JUMPS to its section — a button that
+   scrolls the section's heading into view and hands it focus. Buttons, not
+   `#hash` links: a fragment navigation fires popstate, which the router answers
+   with a full re-render.
 
    The index is built from the headings actually on the page, so a demo (fewer
    sections) and an instance offering one design (no design heading) get an
@@ -21,9 +23,9 @@
 
    Its own file rather than a branch inside views-account.js, for
    views-account-tisch.js's reason: that file is on the token budget's
-   allowlist, and a design's composition of the screen is a concern of its
-   own. Loaded after views-account.js; called only at render time. */
-function composeKontoProgramme() {
+   allowlist, and a composition of the screen is a concern of its own. Loaded
+   after views-account.js; called only at render time. */
+function composeKontoIndex() {
   composeKontoCards();
   const sections = [...app.children].filter((el) => el.matches('.konto-card, .konto-design'));
   const layout = h('<div class="konto-ph"></div>');

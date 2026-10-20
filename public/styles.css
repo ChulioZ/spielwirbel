@@ -5692,6 +5692,39 @@ a.k-tile:focus-visible,
    `--tile-*` and not the live tokens, because a tile must show the design it
    OFFERS while the page is wearing a different one. */
 .konto-design { margin-bottom: 30px; }
+/* The Konto's index beside its sections (#1582, views-account-index.js). The
+   base every design starts from; Das Programmheft and Forest draw their own
+   on top in their stylesheets, so nothing here may set what theirs leave
+   unset in a way that shows (no border, no padding on the nav). Below 1024px
+   the index is hidden and the screen is the one column it always was — the
+   index only jumps, so on a phone it would be a long list above the content.
+   The list's top margin matches the first heading's 24px, so both columns
+   start on one line. */
+.konto-ph { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
+.konto-index { display: none; }
+.konto-index__list { display: flex; flex-direction: column; gap: 2px; margin: 24px 0 0; padding: 0; list-style: none; }
+.konto-index__link {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--text-md);
+  text-align: start;
+  cursor: pointer;
+}
+.konto-index__link:hover { background: var(--sunken); color: var(--ink); }
+.konto-index__link:focus-visible { outline: 2px solid var(--brand-ring, var(--brand)); outline-offset: -2px; }
+.konto-ph__body > :is(.konto-card, .konto-design) { scroll-margin-top: 24px; }
+@media (min-width: 1024px) {
+  .konto-ph { grid-template-columns: 200px minmax(0, 1fr); }
+  .konto-index { display: block; position: sticky; top: 24px; align-self: start; }
+}
 /* auto-fit over a min track, NOT a viewport media query: this list renders both
    inside a ~460px sheet and full-width on the Konto screen, so a `min-width:
    640px` breakpoint would put two columns in the sheet at desktop widths and

@@ -328,8 +328,8 @@ const frontendGlobals = {
   // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
   renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
-  // views-account-programmheft.js (issue #1376): Konto as Das Programmheft's index + sections
-  composeKontoProgramme: 'readonly', composeKontoCards: 'readonly',
+  // views-account-index.js (issues #1376, #1582): Konto's index beside its sections
+  composeKontoIndex: 'readonly', composeKontoCards: 'readonly',
   // views-account-forest.js (issue #1470): Konto as Forest's index card + section cards
   composeKontoForest: 'readonly',
   // …and the three views-account.js builders it is the first other file to call

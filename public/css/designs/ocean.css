@@ -5096,9 +5096,10 @@
 
 /* --- O14.3 Mein Konto ------------------------------------------------------- */
 /* One column of cards in the reading measure the head above them keeps (O14.3
-   draws 700px; the measure is the app's, so the cards and the title share a
-   left edge). The design card (#1215) keeps its own frame in the same column. */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .app > :is(.konto-card, .konto-design--card) { margin-bottom: 18px; }
+   draws 700px; the measure is the app's), beside the shared section index from
+   1024px (#1582, styles.css). The design card (#1215) keeps its own frame in the
+   same column. */
+:root[data-design="ocean"]:not([data-scheme="dark"]) .konto-ph__body > :is(.konto-card, .konto-design--card) { margin-bottom: 18px; }
 /* The identity facts become rows with the value at the right (O14.3's row),
    not boxed pairs. */
 :root[data-design="ocean"]:not([data-scheme="dark"]) .konto-card .konto-facts { gap: 0; }

@@ -153,13 +153,6 @@ test('#1242: Klassisch\'s design cards never get Brücke\'s parts', (t) => {
   assert.equal(wrap.querySelectorAll('.design-card__desc').length, DESIGN_REGISTRY.length);
 });
 
-test('#1242: the Konto composes as plates under Brücke (and Ocean), never under Klassisch', (t) => {
-  for (const [design, want] of [['bruecke', true], ['ocean', true], [CLASSIC_DESIGN, false]]) {
-    const dom = boot(t, design, { ...ME, design });
-    assert.equal(dom.call('kontoAsCards'), want, design);
-  }
-});
-
 test('#1242: „Deins" and the scheme line clear AA where they are painted', () => {
   // The mark is small text on the cyan fill: the night ink, never the accent.
   assert.ok(contrast(token('--on-accent', BRUECKE), token('--brand', BRUECKE)) >= 4.5);
