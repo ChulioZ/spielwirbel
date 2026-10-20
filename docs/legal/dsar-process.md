@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-10-09
+**Stand:** 2026-10-20
 
 ## Eingang & Identitätsprüfung
 
@@ -55,6 +55,17 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   exportierter Link wäre eine funktionierende Einladung in die Runden des Kontos.
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
+- **Selbstbedienungs-Export je Runde** (#1702) — eine **Ergänzung**, kein
+  Ersatz: Jedes Konto mit Zugriff auf eine Runde (Eigentümer sowie
+  eingeladene Konten mit der Rolle „Mitverwaltung" oder „Mitspielen"; reine
+  Namensplätze ohne Konto haben keinen eigenen Zugriff) lädt sie unter Runde → Einstellungen → „Daten exportieren"
+  jederzeit selbst herunter (ZIP mit CSV-Tabellen + `round.json`, im Browser
+  aus dem ohnehin lesbaren Runden-Abruf erzeugt und nur auf dem Gerät der
+  Person gespeichert; kein neuer Empfänger, keine zusätzliche Speicherung auf
+  dem Server). Bei einer Art-20-Anfrage, die nur Rundendaten betrifft, darf
+  darauf **hingewiesen** werden; die Pflicht zur Antwort bleibt, und der
+  Betreiber-Export oben bleibt der Weg für Kontodaten und für alles, was die
+  Person nicht selbst abrufen kann.
 - **Was der Export NICHT abdeckt — von Hand durchsuchen.** Drei Bestände auf
   Betreiberseite können Daten über die anfragende Person enthalten, tragen aber
   keine Konto-Id und sind deshalb nicht Teil des Exports:

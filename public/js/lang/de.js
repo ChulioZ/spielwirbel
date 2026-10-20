@@ -285,6 +285,8 @@ I18N.de = {
   // own title rather than adding a near-duplicate string.
   'roundSettings.config': 'Runde einrichten',
   'roundSettings.manage': 'Runde verwalten',
+  'roundSettings.export': 'Daten exportieren (CSV + JSON)',
+  'roundSettings.exportFailed': 'Der Export konnte nicht erstellt werden. Bitte versuch es noch einmal.',
   'roundSettings.danger': 'Gefahrenzone',
   'roundSettings.deleteIntro': 'Löscht diese Runde mit allen Spielen, Sessions und Wertungen. Das lässt sich nicht rückgängig machen.',
   'roundSettings.leaveIntro': 'Du gibst deinen Zugriff auf diese geteilte Runde ab. Die Runde selbst bleibt bestehen.',

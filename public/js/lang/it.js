@@ -288,6 +288,8 @@ I18N.it = {
 
   'roundSettings.config': 'Configura questo gruppo',
   'roundSettings.manage': 'Gestisci questo gruppo',
+  'roundSettings.export': 'Esporta i dati (CSV + JSON)',
+  'roundSettings.exportFailed': 'Non è stato possibile creare l’esportazione. Riprova.',
   'roundSettings.danger': 'Zona pericolosa',
   'roundSettings.deleteIntro': 'Elimina questo gruppo insieme a ogni gioco, sessione e valutazione. L’operazione non è reversibile.',
   'roundSettings.leaveIntro': 'Rinunci al tuo accesso a questo gruppo condiviso. Il gruppo resta.',

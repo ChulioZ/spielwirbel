@@ -282,6 +282,8 @@ I18N.en = {
   // title rather than adding a near-duplicate string.
   'roundSettings.config': 'Set up this round',
   'roundSettings.manage': 'Manage this round',
+  'roundSettings.export': 'Export data (CSV + JSON)',
+  'roundSettings.exportFailed': 'The export couldn’t be created. Please try again.',
   'roundSettings.danger': 'Danger zone',
   'roundSettings.deleteIntro': 'Deletes this round along with every game, session and rating. This cannot be undone.',
   'roundSettings.leaveIntro': 'Gives up your access to this shared round. The round itself stays.',

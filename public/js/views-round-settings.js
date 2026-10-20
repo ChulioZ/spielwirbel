@@ -79,6 +79,9 @@ async function showRoundSettings(rid) {
   if (accountsActive() && roundCan(round, 'round.shares.manage')) {
     actions.push({ icon: 'ti-users', label: t('invite.link'), onClick: () => showInvite(round) });
   }
+  // The data export (#1702) is ungated: it only packages the snapshot every
+  // grantee already reads, so this section now renders for every role.
+  actions.push({ icon: 'ti-download', label: t('roundSettings.export'), onClick: () => downloadRoundExport(rid) });
   if (actions.length) {
     app.appendChild(h(`<h2 class="rs-section__h">${esc(t('roundSettings.manage'))}</h2>`));
     const list = h('<div class="ds-list"></div>');

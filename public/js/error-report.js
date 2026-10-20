@@ -50,6 +50,9 @@ const CLIENT_ERROR_KINDS = [
   // than the file not being one — the user cannot fix that, so the operator
   // needs to hear about it.
   'play_import_parse',
+  // Building or saving a round's data export (#1702) — a zip assembled in the
+  // browser, so nothing reaches the server if it fails.
+  'round_export',
 ];
 
 // Truncation is applied on BOTH sides: here so the request stays small, and at

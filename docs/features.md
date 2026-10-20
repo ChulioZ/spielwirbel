@@ -306,6 +306,17 @@ What the app does, in detail. For a short overview see the
   ticking one back on copies it anyway. A copy runs straight from the sheet's
   own button, since it changes nothing here; a move still asks first. Copying
   is owner-only for the same reason moving is.
+- **Exporting a round's data** (issue #1702) – „Daten exportieren (CSV + JSON)"
+  in the round's Einstellungen downloads one zip: `games.csv`, `sessions.csv`,
+  `votes.csv`, `points.csv`, `members.csv` and `tags.csv` for spreadsheets (UTF-8
+  with a BOM so Excel reads accents and Hangul, ids in every table so they
+  join), plus `round.json`, the complete round as the app stores it. Everyone
+  with access to the round may download it — owner, co-owner and editor alike —
+  since it packages nothing a member cannot already see. The numbers are the
+  screens' own: a game's score and play count are the Regal's, sessions carry
+  the Chronik's outcome and ending, and a session logged without a time states
+  its day only. The zip is built in the browser, so the server only answers the
+  ordinary round read. Covers travel as their URL or path, not as image files.
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign

@@ -290,6 +290,8 @@ I18N.nl = {
 
   'roundSettings.config': 'Deze groep instellen',
   'roundSettings.manage': 'Deze groep beheren',
+  'roundSettings.export': 'Gegevens exporteren (CSV + JSON)',
+  'roundSettings.exportFailed': 'De export kon niet worden gemaakt. Probeer het opnieuw.',
   'roundSettings.danger': 'Gevarenzone',
   'roundSettings.deleteIntro': 'Verwijdert deze groep met elk spel, elke sessie en elke beoordeling. Dit kan niet ongedaan worden gemaakt.',
   'roundSettings.leaveIntro': 'Geeft je toegang tot deze gedeelde groep op. De groep zelf blijft bestaan.',

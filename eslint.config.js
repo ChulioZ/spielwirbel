@@ -509,6 +509,8 @@ const frontendGlobals = {
   renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
+  // round-export.js (#1702) — the round settings' data export.
+  downloadRoundExport: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
   showBggImport: 'readonly', canImportBgg: 'readonly', bggImportError: 'readonly',
   buildBggForm: 'readonly',
