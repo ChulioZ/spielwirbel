@@ -219,15 +219,15 @@ async function ownedSection(t, data, mid) {
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   await dom.call('showMember', data.id, mid);
-  const grid = dom.app.querySelector('.member-games');
+  // Klassisch's owned tiles (#1584): the panel the other designs set, in the
+  // page's side column.
+  const grid = dom.app.querySelector('.member-page__aside > .member-owned');
   return {
     dom,
     grid,
-    // The section's own <h2>, not the stats one — scoped through the grid's
-    // parent so the rail's headings can never answer instead
-    // (.claude/rules/testing-views-under-jsdom.md).
-    title: grid ? grid.parentElement.querySelector('h2').textContent : null,
-    titles: grid ? [...grid.querySelectorAll('.pool-tile__name')].map((n) => n.textContent) : [],
+    // The panel's own <h2>, never the rail's (.claude/rules/testing-views-under-jsdom.md).
+    title: grid ? grid.querySelector('h2').textContent : null,
+    titles: grid ? [...grid.querySelectorAll('.member-owned__name')].map((n) => n.textContent) : [],
   };
 }
 
@@ -245,9 +245,11 @@ test('the member page lists the shelf games that member owns, titled and linked'
   assert.deepEqual(titles, ['Azul', 'Catan'], 'a game Ben alone owns is not Anna\'s');
   assert.equal(title, '2 Spiele von Anna');
 
-  const tile = grid.querySelector('.pool-tile');
+  const tile = grid.querySelector('.member-owned__row');
   assert.ok(tile.classList.contains('game-link'), 'each tile must be a real game link');
   assert.match(tile.getAttribute('href') || '', /\/8$/, 'and it points at that game');
+  // The shelf's score, as the Regal prints it — an unrated box says „neu" (#1584).
+  assert.equal(tile.querySelector('.score-pill--none').textContent, 'neu');
 });
 
 test('the section is hidden entirely for a member who owns nothing', async (t) => {

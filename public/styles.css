@@ -937,17 +937,15 @@ h1, h2, h3 { font-family: var(--font-display); }
      Measured before: from 1280px up the member page ran 900 / 1468 / 900 — the
      card at the reading measure, the stats band spanning the pane, the owned
      grid back at 900. Three left edges and two right ones, on a page that is one
-     record. The card, the owned-games grid AND the back row that carries the
-     „…“ page menu now share one width.
+     record. The card, Klassisch's two-column `.member-page` (#1584) AND the
+     back row that carries the „…“ page menu now share one width.
 
-     The back row is a SIBLING of both, so a selector naming only the content
-     leaves „Zurück“ and the menu ~250px inside the page's right edge — the
-     #543/#577 lesson. `.member-games` is wrapped in a `.section`, so it is
-     reached through `:has()` rather than by name.
+     The back row is a SIBLING of the content, so a selector naming only the
+     content leaves „Zurück“ and the menu ~250px inside the page's right edge —
+     the #543/#577 lesson.
 
      (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
-  .app:has(.member-card) > *:not(.rail):not(.dock):is(.back-row, .member-card),
-  .app:has(.member-card) > *:not(.rail):not(.dock):has(.member-games),
+  .app:has(.member-card) > *:not(.rail):not(.dock):is(.back-row, .member-card, .member-page),
   /* The Freundeskreis (#1092) takes the same licence, and its argument is the
      plainest of the three: the screen renders NO navigation at all — no rail, no
      dock, no back row — so widening it moves nothing. That is the setup forms'
@@ -8193,27 +8191,65 @@ a.k-tile:focus-visible,
 .member-swatch.is-active { box-shadow: 0 0 0 3px var(--brand-edge); cursor: default; }
 .member-swatch.is-active .ti { opacity: 1; }
 
-/* „3 Spiele von Anna" (#973): the boxes one member brings. Reuses the setup
-   screen's `.pool-tile` whole — same object, same 4/3 crop — but NOT its
-   `.setup-panel__body` container, whose `max-height` + internal scroll exist to
-   keep that screen's CTA above the fold. A stats page has nothing below it to
-   protect, so this grid simply grows.
-
-   Since #1074 it IS in the >= 1280px width exemption, with the Tischkarte. The
-   note that used to stand here argued the page keeps one left edge while only
-   the stats band spans the pane — which described the raggedness rather than
-   defending it: measured, the widths ran 900 / 1468 / 900 from 1280 up. One
-   width per viewport is the thing that argument actually wanted.
-
-   `auto-fill` so it needs no breakpoint of its own. Measured: 2 tracks of
-   167px at 375px, 7 of 127px in the 960px reading column. `auto-fill` rather
-   than `auto-fit` on purpose — empty tracks stay, so five owned games keep the
-   same tile size as fifteen instead of stretching to fill the row. */
-.member-games {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 12px;
+/* Klassisch's member page (#1584): the card beside a column holding the owned
+   boxes and the two game tiles — Forest's composition in Klassisch's own colours
+   and type. One column below 1280px, the card first (DOM order = reading order).
+   Every rule is under `.member-page`, which only Klassisch renders: the other
+   designs style `.member-owned` in their own sheets, and an unscoped rule here
+   would reach into their cards. */
+.member-page { display: flex; flex-direction: column; gap: 22px; margin-bottom: 22px; }
+.member-page > .member-card { margin: 0; }
+.member-page__aside { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.member-page .member-card__games { margin-top: 0; }
+@media (min-width: 1280px) {
+  .member-page { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); align-items: start; }
 }
+/* „3 Spiele von Anna" as tiles: the cover, its title, and the shelf's score as
+   the Regal pins it — on the cover's corner. `auto-fill` rather than `auto-fit`,
+   so two owned boxes keep the size of fifteen instead of stretching. */
+.member-page .member-owned { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.member-page .member-owned__title { grid-column: 1 / -1; margin: 0; }
+.member-page .member-owned__row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 8px 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+.member-page .member-owned__row:hover { box-shadow: inset 0 0 0 1px var(--brand-edge); }
+.member-page .member-owned__cover {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--sunken-soft) center / cover;
+  font-size: var(--text-2xl);
+}
+.member-page .member-owned__name { font-weight: 700; overflow-wrap: anywhere; }
+.member-page .member-owned__row > .score-pill { top: 14px; right: 14px; }
+/* Badges with their names (#1584): a chip per mark rather than the bare row of
+   discs the compact grid draws everywhere else. */
+.member-page .badge-grid--compact { grid-template-columns: repeat(auto-fill, minmax(150px, max-content)); }
+.member-page .badge-grid--compact .badge {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius-pill);
+  background: var(--sunken-soft);
+  text-align: left;
+}
+.member-page .badge-grid--compact .badge__mark { width: 30px; height: 30px; flex: none; }
+.member-page .badge-grid--compact .badge__name { display: block; color: var(--ink); }
 
 /* Anchored popover used by the edit menus. */
 .popover {

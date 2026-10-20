@@ -135,22 +135,41 @@ test('Der Tisch: a round with no award yet renders the stage alone in the split'
 
 // --- Member page ------------------------------------------------------------
 
-test('Klassisch: the member card and the owned section after it are unchanged', async (t) => {
+test('Klassisch: the card sits beside a column of owned tiles and the two game tiles (#1584)', async (t) => {
   const round = roundWith();
   const dom = boot(t, 'klassisch', round);
   await dom.call('showMember', RID, 'm1');
-  const card = dom.app.querySelector('.member-card');
+  const page = dom.app.querySelector(':scope > .member-page');
+  assert.ok(page, 'no two-column page wrapper');
+  assert.deepEqual(shapeOf(page), ['member-card', 'member-page__aside'], 'card first, then the column');
+  const card = page.querySelector(':scope > .member-card');
   assert.deepEqual(shapeOf(card),
-    // #1388 added the earned Abzeichen row under the figures, on purpose.
-    ['member-card__mark', 'member-card__id', 'member-card__figures', 'member-card__badges', 'pokale-cards member-card__games', 'member-card__table'],
+    ['member-card__mark', 'member-card__id', 'member-card__figures', 'member-card__badges', 'member-card__table'],
     'the Klassisch card changed shape');
   assert.deepEqual(shapeOf(card.querySelector('.member-card__who')), ['', 'member-card__state'],
     'something was added under the Klassisch name');
   assert.equal(dom.app.querySelector('.member-card__attendance'), null, 'the attendance line leaked');
-  assert.equal(dom.app.querySelector('.member-owned'), null, 'the Tisch owned panel leaked');
-  const grid = card.nextElementSibling && card.nextElementSibling.querySelector('.member-games');
-  assert.ok(grid, 'the owned-games section no longer follows the card');
-  assert.equal(grid.querySelectorAll('.pool-tile').length, 2);
+  // Forest's „Zuletzt dabei" and Das Programmheft's „Letzte Siege" stay theirs (#1422).
+  assert.equal(dom.app.querySelector('.forest-recent, .ph-wins'), null, 'a design-only figure leaked');
+
+  const aside = page.querySelector(':scope > .member-page__aside');
+  assert.deepEqual(shapeOf(aside), ['member-owned', 'pokale-cards member-card__games'],
+    'the owned tiles must come first, then the two game tiles');
+  const rows = [...aside.querySelectorAll('a.member-owned__row')];
+  assert.deepEqual(rows.map((r) => r.querySelector('.member-owned__name').textContent), ['Azul', 'Catan']);
+  rows.forEach((r) => {
+    assert.ok(r.getAttribute('href'), 'an owned tile is not a link');
+    assert.ok(r.querySelector('.member-owned__cover'), 'an owned tile carries no cover');
+    assert.ok(r.querySelector('.score-pill'), 'an owned tile carries no score');
+  });
+});
+
+test('Klassisch: a member who owns nothing keeps the column for the two game tiles alone', async (t) => {
+  const round = roundWith({ games: roundWith().games.map((g) => ({ ...g, ownerIds: [] })) });
+  const dom = boot(t, 'klassisch', round);
+  await dom.call('showMember', RID, 'm1');
+  const aside = dom.app.querySelector('.member-page > .member-page__aside');
+  assert.deepEqual(shapeOf(aside), ['pokale-cards member-card__games']);
 });
 
 test('Der Tisch: the attendance line counts this member\'s finished sessions of the round\'s', async (t) => {
@@ -180,7 +199,7 @@ test('Der Tisch: „Gehört <Name>" is a panel inside the card, before the two g
   assert.deepEqual(shapeOf(lower), ['member-owned', 'pokale-cards member-card__games'],
     'the owned panel must come first, then the two tiles — kept, not replaced');
   assert.equal(card.querySelector(':scope > .member-card__games'), null, 'the tiles are still a direct child');
-  assert.equal(dom.app.querySelector('.member-games'), null, 'the Klassisch owned section rendered too');
+  assert.equal(dom.app.querySelector('.member-page'), null, 'the Klassisch page wrapper rendered too');
 
   const panel = lower.querySelector('.member-owned');
   assert.equal(panel.querySelector('h2').textContent, '2 Spiele von Jonas');
