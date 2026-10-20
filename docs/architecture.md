@@ -907,8 +907,8 @@ public/
     tag-chips.js     the tri-state custom-tag filter shared by the Regal and
                      the start-session screen: chips, mode + bulk toggles,
                      icon picker, match predicate (issue #956)
-    vendor/sortable.min.js  SortableJS, committed verbatim — the app's one
-                     vendored library, byte-identical to the `sortablejs`
+    vendor/sortable.min.js  SortableJS, committed verbatim — a vendored
+                     library, byte-identical to the `sortablejs`
                      devDependency (a test asserts it) so Dependabot tracks it;
                      its MIT LICENSE sits beside it (issue #1180)
     reorder-drag.js  the one wrapper around it: drag a tile into place, as a
@@ -1003,8 +1003,14 @@ public/
                      `gamePlaytime` (draw-pool.js)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
+    vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-
+                          identity test, MIT LICENSE beside it) — the zip
+                          writer for the round export (issue #1702)
+    round-export.js       a round's data as a zip — one CSV per table plus
+                          round.json — built in the browser from the screens'
+                          own score/outcome helpers, saved as a download (#1702)
     views-round-settings.js round Einstellungen screen: the round-level actions
-                          (invite, move games, delete/leave) in one place (#561),
+                          (invite, move games, export, delete/leave) in one place (#561),
                           the round's name and colour marker on the page
                           (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite

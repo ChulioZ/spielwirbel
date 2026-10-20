@@ -267,6 +267,8 @@ I18N.fi = {
 
   'roundSettings.config': 'Määritä tämä porukka',
   'roundSettings.manage': 'Hallitse tätä porukkaa',
+  'roundSettings.export': 'Vie tiedot (CSV + JSON)',
+  'roundSettings.exportFailed': 'Vientiä ei voitu luoda. Yritä uudelleen.',
   'roundSettings.danger': 'Vaaravyöhyke',
   'roundSettings.deleteIntro': 'Poistaa tämän porukan sekä kaikki pelit, sessiot ja arviot. Tätä ei voi perua.',
   'roundSettings.leaveIntro': 'Luovut pääsystäsi tähän jaettuun porukkaan. Porukka itse säilyy.',

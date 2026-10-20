@@ -268,6 +268,8 @@ I18N.ko = {
 
   'roundSettings.config': '이 모임 설정하기',
   'roundSettings.manage': '이 모임 관리하기',
+  'roundSettings.export': '데이터 내보내기 (CSV + JSON)',
+  'roundSettings.exportFailed': '내보내기 파일을 만들지 못했어요. 다시 시도해 주세요.',
   'roundSettings.danger': '위험 구역',
   'roundSettings.deleteIntro': '이 모임과 모든 게임, 세션, 평가를 삭제해요. 되돌릴 수 없어요.',
   'roundSettings.leaveIntro': '공유된 이 모임에 대한 접근 권한을 포기해요. 모임 자체는 그대로 남아요.',

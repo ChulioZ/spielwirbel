@@ -2,6 +2,7 @@
 paths:
   - "public/js/vendor/**"
   - "public/js/reorder-drag.js"
+  - "public/js/round-export.js"
   - "package.json"
   - "eslint.config.js"
 ---
@@ -11,6 +12,15 @@ There is no build step in development and `public/` is served statically, so a
 browser library cannot come from `node_modules` at runtime: the file has to be
 committed. SortableJS (#1180) is the first, at
 `public/js/vendor/sortable.min.js`, and its shape is the template for the next.
+**fflate (#1702) is the second** — `vendor/fflate.min.js`, the zip writer for
+the round export, wrapped by `round-export.js` and parity-tested in
+`test/round-export.test.js`. Two ways it differs, both worth knowing for a third:
+
+- **Its UMD build carries no `/*! … */` banner**, so the LICENSE file beside it
+  is the whole MIT notice; there is no banner to assert on.
+- **Its `exports` map hides the UMD path**: `require.resolve('fflate/umd/index.js')`
+  throws `ERR_PACKAGE_PATH_NOT_EXPORTED`. Resolve `fflate/package.json` and join
+  the path from the package root instead.
 
 ## The five pieces, and what each one prevents
 
