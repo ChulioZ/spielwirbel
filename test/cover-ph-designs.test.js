@@ -73,9 +73,21 @@ for (const id of Object.keys(DESIGNS)) {
        `h` is a NUMBER of degrees, so a `deg` there invalidates the whole
        background — computed `none`, a flat box, no console error. An angle or a
        length may multiply --cover-h by a unit; a relative colour may not. */
-    const derivations = placeholderBodies(id).flatMap(relativeColours);
-    for (const d of derivations) {
-      assert.doesNotMatch(d, /deg/, `${id}.css: a unit inside a relative colour drops the background — ${d}`);
+    for (const body of placeholderBodies(id)) {
+      for (const d of relativeColours(body)) {
+        assert.doesNotMatch(d, /deg/, `${id}.css: a unit inside a relative colour drops the background — ${d}`);
+        /* The shift usually arrives through a property declared in the same
+           rule (--wood-dh, --sea-dh, --panel-dh), so a `deg` written THERE
+           reaches the channel without appearing in the oklch() text. Follow
+           each one; the source token and --cover-h are declared elsewhere. */
+        for (const [, name] of d.matchAll(/var\((--[a-z0-9-]+)/g)) {
+          const decl = new RegExp(`(?:^|[;{\\s])${name}\\s*:\\s*([^;]+)`).exec(body);
+          if (decl) {
+            assert.doesNotMatch(decl[1], /deg/,
+              `${id}.css: ${name} feeds a relative colour and carries a unit — ${decl[1].trim()}`);
+          }
+        }
+      }
     }
   });
 }

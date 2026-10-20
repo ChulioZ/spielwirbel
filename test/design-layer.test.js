@@ -360,6 +360,11 @@ const COLOUR_TOKENS = /^--(page-bg|brand|accent|bg|surface|ink|on-accent|shade|s
 function isPlaceholderDerivation(css, at, own) {
   const src = /^oklch\(\s*from\s+var\((--[a-z0-9-]+)\)/.exec(css.slice(at));
   if (!src || !own.has(src[1])) return false;
+  // A BACKGROUND only: `color` here would be inherited by the glyph, i.e. ink.
+  // A gradient value spans lines but holds no `;`, so the last `;` or `{`
+  // before the call starts its declaration.
+  const decl = css.slice(Math.max(css.lastIndexOf(';', at), css.lastIndexOf('{', at)) + 1, at);
+  if (!/^\s*background(?:-color|-image)?\s*:/.test(decl)) return false;
   const open = css.lastIndexOf('{', at);
   if (open === -1 || css.lastIndexOf('}', at) > open) return false;
   const start = Math.max(css.lastIndexOf('}', open), css.lastIndexOf('{', open - 1)) + 1;
@@ -392,6 +397,10 @@ test('the placeholder exemption is narrow — it admits own-token derivations on
     'an oklch literal');
   assert.equal(at(':root[data-design="x"] .cover-ph .ti { color: oklch(from var(--wood-light) l c h); }'), false,
     'the glyph, not the placeholder');
+  assert.equal(at(':root[data-design="x"] .cover-ph { color: oklch(from var(--wood-light) l c h); }'), false,
+    'ink on the placeholder itself, which the glyph inherits');
+  assert.equal(at(':root[data-design="x"] .cover-ph { --x: 1; background:\n  linear-gradient(red, oklch(from var(--wood-light) l c h)); }'), true,
+    'a multi-line background after another declaration');
 
   const query = '@supports (color: oklch(from red l c h)) { .x { color: var(--ink); } }';
   assert.equal(inSupportsQuery(query, query.indexOf('oklch(')), true, 'a feature query paints nothing');
