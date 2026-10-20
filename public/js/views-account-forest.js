@@ -5,7 +5,7 @@
 /* Forest's Konto (#1470, F5.3): Das Programmheft's index beside the sections,
    drawn as Forest draws it — every section a card on the clearing, and the
    index a card of its own with an icon per entry and „Abmelden" at its foot.
-   So this composes on top of composeKontoProgramme (which builds the cards,
+   So this composes on top of composeKontoIndex (which builds the cards,
    the index and its jump-to-section buttons from the headings actually on the
    page) rather than restating any of it, and adds only what F5.3 adds.
 
@@ -20,7 +20,7 @@
    text, resolved per render, so a section the map does not know simply gets
    none. Its own file, for views-account-tisch.js's reason. */
 function composeKontoForest(me) {
-  composeKontoProgramme();
+  composeKontoIndex();
   const nav = app.querySelector('.konto-index');
   if (!nav) return;
   const icons = kontoForestIcons();

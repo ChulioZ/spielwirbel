@@ -2878,7 +2878,7 @@
    passkey stays under the submit (the #1193 ruling) and the register fields
    keep their order. The posters are design-picker.js's print branch
    (designPrintArt + programmeCardBody), the chooser its designPrintSheet, the
-   Konto's index and sections views-account.js's composeKontoProgramme.
+   Konto's index and sections views-account-index.js's composeKontoIndex.
 
    THE OTHER DESIGNS' POSTER COLOURS ARE NOT HERE (P5's „Nicht-Token"): a
    poster paints from --poster-*, which design-picker.js writes INLINE from

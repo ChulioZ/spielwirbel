@@ -228,25 +228,21 @@ async function konto(t, design) {
 
 test('Ocean puts every Konto section in a card and leaves the design card as it is', async (t) => {
   const dom = await konto(t, 'ocean');
-  const cards = [...dom.app.querySelectorAll(':scope > .konto-card')];
+  const body = dom.app.querySelector('.konto-ph__body');
+  const cards = [...body.querySelectorAll(':scope > .konto-card')];
   assert.ok(cards.length >= 6, `only ${cards.length} Konto cards`);
   // Every card opens with its own heading, and no heading is left outside one.
   for (const c of cards) {
     assert.ok(c.firstElementChild.matches('h2.konto-section__h') || c.classList.contains('install-section'));
   }
-  assert.equal(dom.app.querySelectorAll(':scope > h2').length, 0, 'a section heading was left outside its card');
+  assert.equal(body.querySelectorAll(':scope > h2').length, 0, 'a section heading was left outside its card');
   // The forms moved with their headings.
   assert.ok(dom.app.querySelector('.konto-card .konto-facts'));
   assert.ok(dom.app.querySelector('.konto-card--danger .konto-danger .btn--danger'));
-  assert.ok(dom.app.querySelector(':scope > .konto-design'), 'the design card must stay a card of its own');
+  assert.ok(body.querySelector(':scope > .konto-design'), 'the design card must stay a card of its own');
   assert.equal(dom.app.querySelector('.konto-card .konto-design'), null, 'the design card was swallowed');
 });
 
-test('Klassisch renders Konto without cards', async (t) => {
-  const dom = await konto(t, 'klassisch');
-  assert.equal(dom.app.querySelector('.konto-card'), null);
-  assert.ok(dom.app.querySelector(':scope > h2.konto-section__h'));
-});
 
 // --- the stylesheet -----------------------------------------------------------
 

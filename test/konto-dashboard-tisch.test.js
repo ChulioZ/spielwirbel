@@ -80,8 +80,12 @@ const shape = (app) => [...app.children].map((el) => {
 test('Klassisch renders the same column as before #1265 — no dashboard, same order', async (t) => {
   const { dom } = await konto(t);
   const h2 = (key, extra = '') => `h2.konto-section__h${extra} "${T(key)}"`;
-  assert.deepEqual(shape(dom.app), [
-    'div.lobby-head',
+  // Since #1582 the column sits beside the section index, each section grouped
+  // in an unstyled .konto-card; read through both and the order is unchanged.
+  assert.deepEqual(shape(dom.app), ['div.lobby-head', 'div.konto-ph']);
+  const body = dom.app.querySelector('.konto-ph__body');
+  const flat = { children: [...body.children].flatMap((el) => (el.matches('section.konto-card') ? [...el.children] : [el])) };
+  assert.deepEqual(shape(flat), [
     h2('konto.identity'),
     'div.konto-facts',
     h2('konto.avatar.title'),
@@ -106,7 +110,7 @@ test('Klassisch renders the same column as before #1265 — no dashboard, same o
     h2('konto.delete.title', '.konto-section__h--danger'),
     'div.konto-danger',
   ]);
-  assert.equal(dom.document.querySelector('.konto-dash, .konto-row, .konto-card'), null,
+  assert.equal(dom.document.querySelector('.konto-dash, .konto-row'), null,
     'a Tisch-only element leaked into the Klassisch column');
   // The picture form renders exactly its three parts — no name block slipped in.
   assert.deepEqual([...dom.app.querySelector('.konto-avatar').children].map((c) => c.className),
@@ -173,7 +177,8 @@ test('every control the Klassisch column offers is still in the Tisch dashboard'
   const { dom: tisch } = await konto(t, { design: 'tisch' });
   const controls = (app) => new Set([
     ...[...app.querySelectorAll('input')].map((i) => `input#${i.id}[${i.type}]`),
-    ...[...app.querySelectorAll('button, a')].map((b) => `${b.tagName}:${b.textContent.trim()}`),
+    // The section index (#1582) only jumps within the page — navigation, not a control.
+    ...[...app.querySelectorAll('button:not(.konto-index__link), a')].map((b) => `${b.tagName}:${b.textContent.trim()}`),
   ]);
   const have = controls(tisch.app);
   const missing = [...controls(plain.app)].filter((c) => !have.has(c));
