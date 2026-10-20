@@ -559,7 +559,7 @@ const frontendGlobals = {
   hubOffShelfGroup: 'readonly',
   createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
-  CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly',
+  CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly', isShelfChange: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',

@@ -58,11 +58,14 @@ const ROUND = {
   ],
 };
 
-/* Newest first: two August changes between s1 and s2 (a run), one lone July
-   change after s3's month header — the two shapes the fold distinguishes. */
+/* Newest first: two August shelf changes between s1 and s2 (a run), then a
+   member event that is NOT a shelf change and so stays a row of its own
+   (#1573), and one lone July change after s3's month header — the shapes the
+   fold distinguishes. */
 const ACTIVITIES = [
   { id: 'a1', type: 'game_added', at: '2026-08-15T12:00:00.000Z', gameId: 'g1', title: 'Catan' },
-  { id: 'a2', type: 'member_added', at: '2026-08-14T12:00:00.000Z', name: 'Fritz' },
+  { id: 'a2', type: 'game_retired', at: '2026-08-14T12:00:00.000Z', gameId: 'g2', title: 'Azul' },
+  { id: 'a4', type: 'member_added', at: '2026-08-12T12:00:00.000Z', name: 'Fritz' },
   { id: 'a3', type: 'game_completed', at: '2026-07-10T12:00:00.000Z', gameId: 'g2', title: 'Azul' },
 ];
 
@@ -98,9 +101,11 @@ test('Klassisch: the cards are what they were — no strips, no page count', (t)
 // #1573: Klassisch adopted the fold and the phone's recap entry the other
 // designs share; the session cards above stay its own.
 for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
-  test(`${design}: a run of shelf changes folds; a lone change stays a row`, (t) => {
+  test(`${design}: a run of shelf changes folds; a lone change and a member event stay rows`, (t) => {
     const dom = render(t, design);
-    assert.deepEqual(shape(dom), ['month', 'session', 'run', 'session', 'month', 'session', 'change']);
+    assert.deepEqual(shape(dom), ['month', 'session', 'run', 'change', 'session', 'month', 'session', 'change']);
+    assert.match(timeline(dom).querySelector(':scope > .tl-item > .tl-act').textContent, /Fritz/,
+      'the member event is not a Regal-Änderung, so it is not folded into one');
   });
 }
 
@@ -165,7 +170,6 @@ test('Tisch: each session is a strip — date column first, faces, the pill last
 
 test('Tisch: a run of shelf changes folds behind one disclosure; a lone change stays in place', (t) => {
   const dom = render(t, 'tisch');
-  assert.deepEqual(shape(dom), ['month', 'session', 'run', 'session', 'month', 'session', 'change']);
 
   const run = timeline(dom).querySelector('.tl-run');
   const toggle = run.querySelector('.tl-run__toggle');
@@ -189,7 +193,7 @@ test('Tisch: a run of shelf changes folds behind one disclosure; a lone change s
 test('Tisch: with „Regal-Änderungen" chosen nothing folds — the changes are the page', (t) => {
   const dom = render(t, 'tisch', 'changes');
   assert.equal(dom.app.querySelectorAll('.tl-run').length, 0);
-  assert.equal(timeline(dom).querySelectorAll('.tl-act').length, 3);
+  assert.equal(timeline(dom).querySelectorAll('.tl-act').length, 4);
 });
 
 test('Tisch: the recap has a one-line entry that opens the SAME section in place', (t) => {
