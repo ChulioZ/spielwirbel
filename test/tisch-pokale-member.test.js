@@ -164,6 +164,21 @@ test('Klassisch: the card sits beside a column of owned tiles and the two game t
   });
 });
 
+test('Klassisch: the column carries the member tone the moved game tiles paint with', async (t) => {
+  /* The ribbon and the tiles' offset shadow read --m-tone, which the card sets
+     inline. Moved out of the card, the tiles would lose it — a transparent
+     ribbon under white text, and no shadow at all. */
+  const dom = boot(t, 'klassisch', roundWith());
+  await dom.call('showMember', RID, 'm1');
+  const card = dom.app.querySelector('.member-page > .member-card');
+  const tone = card.style.getPropertyValue('--m-tone');
+  assert.ok(tone, 'the card no longer sets --m-tone — this test lost its subject');
+  const aside = dom.app.querySelector('.member-page__aside');
+  const holder = aside.closest('[style*="--m-tone"]');
+  assert.ok(holder, 'nothing above the moved tiles sets --m-tone');
+  assert.equal(holder.style.getPropertyValue('--m-tone'), tone);
+});
+
 test('Klassisch: a member who owns nothing keeps the column for the two game tiles alone', async (t) => {
   const round = roundWith({ games: roundWith().games.map((g) => ({ ...g, ownerIds: [] })) });
   const dom = boot(t, 'klassisch', round);

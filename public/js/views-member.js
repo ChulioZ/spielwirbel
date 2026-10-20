@@ -625,6 +625,9 @@ function memberPage(card, round, member, owned) {
   const tiles = card.querySelector(':scope > .member-card__games');
   if (tiles) aside.appendChild(tiles);
   const page = h('<div class="member-page"></div>');
+  // The game tiles' ribbon and offset shadow read --m-tone, which the card sets
+  // inline: moved out of the card, they need it from the page.
+  page.style.setProperty('--m-tone', card.style.getPropertyValue('--m-tone'));
   page.appendChild(card);
   if (aside.childElementCount) page.appendChild(aside);
   return page;
