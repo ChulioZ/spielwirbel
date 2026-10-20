@@ -808,7 +808,7 @@ h1, h2, h3 { font-family: var(--font-display); }
      the grid). `:has()` alone only ever matched the first kind, which quietly
      capped the lobby at the reading measure — 2 round cards across instead of
      4, on the first screen anyone sees. */
-  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles),
+  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles, .rec-list),
   .app > *:not(.rail):not(.dock):not(.precap):has(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles) {
     max-width: none;
   }
@@ -11952,10 +11952,12 @@ kbd {
 .is-selecting .archive-row.is-picked { border-color: var(--brand); }
 
 /* ---- Recommendations (#682): games the round does NOT own ----
-   Same row anatomy as .archive-row (cover, body, actions) rather than a tile
-   grid: an entry here is RICH — a placeholder cover, four facts and up to two
-   reason lines — and the list is ORDERED by score, which is the case
-   .claude/rules/tiles-vs-lists.md keeps as a list. */
+   Same row anatomy as .archive-row (cover, body, actions) on a phone. From 860px
+   two columns of those rows, from 1280px a tile grid (#1576, every design — the
+   layout Forest and Das Programmheft already drew). The list is a RANKING, which
+   .claude/rules/tiles-vs-lists.md would keep as one column; what licenses the
+   grid here is the printed rank, which states the order the wrap would
+   otherwise blur. */
 .rec-lead { margin: 0 0 12px; }
 .rec-list { display: flex; flex-direction: column; gap: 12px; }
 .rec-card {
@@ -11998,6 +12000,47 @@ kbd {
    the buttons stack rather than overflow. */
 .rec-card__actions { display: flex; gap: 8px; flex: 0 1 auto; flex-wrap: wrap; align-items: center; }
 .rec-card__actions .btn { font-size: var(--text-sm); padding: 8px 14px; }
+/* The rank (#1576), list cards only — a spotlight is not part of the ranking.
+   A column of its own on a phone row, a badge on the cover's corner once the
+   card stands as a tile (below). */
+.rec-card__rank {
+  flex: none;
+  min-width: 1.2em;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.rec-list > .rec-card { position: relative; }
+/* Row-major, never `columns:` — a ranking flowed down column 1 first would put
+   rank 2 under rank 1 on one screen and beside it on the next. */
+@media (min-width: 860px) {
+  .rec-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* The tile. `auto-fill`, so the pane decides the count (4 at 1440, more at
+   1920) without a breakpoint per width; 220px keeps the three actions on at
+   most two lines. `.rec-list` is in the shell's width exemption (the
+   `>= 1280px` block above), or the grid stays at the 900px reading measure. */
+@media (min-width: 1280px) {
+  .rec-list { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .rec-list > .rec-card { flex-direction: column; align-items: stretch; }
+  .rec-list > .rec-card .rec-card__img { width: 100%; height: 150px; }
+  .rec-list > .rec-card .rec-card__body { min-width: 0; }
+  .rec-list > .rec-card .rec-card__rank {
+    position: absolute;
+    top: 18px;
+    left: 22px;
+    z-index: 1;
+    padding: 4px 8px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-1);
+  }
+}
 .rec-source { margin-top: 18px; font-size: var(--text-sm); }
 
 /* The spotlight tiles (#1228): up to three one-game cards above the list, each

@@ -167,8 +167,9 @@ function recSpotlights(rid, spotlights) {
 // One recommendation card — the list's and the spotlight tiles' alike (#1228),
 // so a tile carries the same facts, reasons and three actions, and the wish and
 // dismiss writes stay the one path they already were. `spot` adds the tile's
-// caption on top; everything below it is the list card unchanged.
-function recCard(rid, rec, spot = false) {
+// caption on top; everything below it is the list card unchanged. `rank` (1-based)
+// is set for the list only (#1576): the spotlights are not part of the ranking.
+function recCard(rid, rec, spot = false, rank = 0) {
   const reasons = (rec.reasons || []).map(recReasonText).filter(Boolean);
   const facts = recFacts(rec);
   // The BGG box art (#779), hotlinked like every other provider cover
@@ -183,6 +184,7 @@ function recCard(rid, rec, spot = false) {
   const imgStyle = rec.image ? ` style="background-image:url('${coverUrl(rec.image, COVER_THUMB)}')"` : '';
   const card = h(`<div class="rec-card${spot ? ' rec-card--spot' : ''}">
        ${spot ? recSpotCaption(rec) : ''}
+       ${rank ? `<span class="rec-card__rank" aria-hidden="true">${rank}</span>` : ''}
        <div class="rec-card__img"${imgStyle}>${coverPlaceholder({ title: rec.title, image: rec.image })}</div>
        <div class="rec-card__body">
          <div class="rec-card__title">${esc(rec.title)}${rec.year ? ` <span class="muted">(${esc(rec.year)})</span>` : ''}</div>
@@ -350,7 +352,10 @@ async function showRecommendations(rid) {
   if (tiles) app.appendChild(tiles);
 
   const list = h('<div class="rec-list"></div>');
-  recs.forEach((rec) => list.appendChild(recCard(rid, rec)));
+  // The rank is printed (#1576) because from 860px the list wraps into columns,
+  // where "first" is no longer simply "top". aria-hidden: the DOM order already
+  // is the ranking for a screen reader.
+  recs.forEach((rec, i) => list.appendChild(recCard(rid, rec, false, i + 1)));
   app.appendChild(list);
 
   const ignored = recIgnoredSection(rid, data.dismissed || []);

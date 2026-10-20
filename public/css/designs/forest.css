@@ -312,6 +312,7 @@
   .spotlight--table .spotlight__title,
   .archive-row__title,
   .rec-card__title,
+  .rec-card__rank,
   .rec-spots__title,
   .rec-spot__title,
   .rec-ignored__title,
@@ -2372,6 +2373,8 @@
   :root[data-design="forest"] .rec-list > .rec-card { flex-direction: column; align-items: stretch; }
   :root[data-design="forest"] .rec-list .rec-card__img { width: 100%; height: 150px; }
   :root[data-design="forest"] .rec-list .rec-card__body { min-width: 0; }
+  /* The rank badge (#1576) tracks Forest's wider card padding, 6px inside the cover. */
+  :root[data-design="forest"] .rec-list > .rec-card .rec-card__rank { top: 22px; left: 24px; }
 }
 
 /* ===== #1468 — Session loop: Neue Session, vote card, finale, result, several tables ===== */

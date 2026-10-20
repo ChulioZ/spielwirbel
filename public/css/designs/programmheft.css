@@ -296,6 +296,7 @@
   .spotlight--table .spotlight__title,
   .archive-row__title,
   .rec-card__title,
+  .rec-card__rank,
   .rec-spots__title,
   .rec-spot__title,
   .rec-ignored__title,
@@ -4458,12 +4459,13 @@
 /* ---- Könnte euch gefallen (P13.8): the ranked list as numbered columns — the
    rank a vermilion Anton numeral (display type, so the colour is legal), the
    cover standing on its own base line, the facts, the recommender's reasons
-   behind an ink rule, the actions. Still one ordered list in the DOM. */
+   behind an ink rule, the actions. Still one ordered list in the DOM. The
+   numeral is the shared `.rec-card__rank` (#1576) set back in flow, not a CSS
+   counter: every design now prints the rank, and two would double it. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6) 28px;
-  counter-reset: ph-rec;
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card {
   display: flex;
@@ -4476,12 +4478,17 @@
   border-top: var(--rule-strong) solid var(--ink);
   border-radius: 0;
   box-shadow: none;
-  counter-increment: ph-rec;
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card::before {
-  content: counter(ph-rec);
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .rec-list > .rec-card .rec-card__rank {
+  position: static;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-align: left;
   font-family: var(--font-display);
   font-size: var(--display-4);
+  font-weight: 400;
   line-height: var(--leading-display);
   color: var(--vermilion);
 }

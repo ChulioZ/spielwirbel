@@ -7557,6 +7557,18 @@
   box-shadow: var(--shadow-1);
 }
 
+/* The tile (#1576): the portrait thumbnail above would sit 48px wide in a
+   220px tile, so the cover takes the tile's width like every other design's. */
+@media (min-width: 1280px) {
+  :root[data-design="tisch"][data-scheme="dark"] .rec-list > .rec-card .rec-card__img {
+    width: 100%;
+    height: 150px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .rec-list > .rec-card .rec-card__rank {
+    color: var(--gold);
+  }
+}
+
 /* The spotlight tiles (#1228). T13.3 draws no spotlight row, so this is the
    sheet's own recommendations panel vocabulary applied to three cards rather
    than an invented component: walnut, a brass-edged rim, the caption in gold

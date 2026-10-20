@@ -2623,6 +2623,24 @@
 @media (max-width: 560px) {
   :root[data-design="bruecke"] .rec-card__img { width: 100%; }
   :root[data-design="bruecke"] .rec-card__body { min-width: 0; flex-basis: 100%; }
+  /* The full-width cover would leave the rank (#1576) alone on a line above it,
+     so it sits on the cover's corner, the way the desktop tile carries it. */
+  :root[data-design="bruecke"] .rec-list > .rec-card .rec-card__rank {
+    position: absolute;
+    top: 20px;
+    left: 22px;
+    z-index: 1;
+    padding: 4px 8px;
+  }
+  :root[data-design="bruecke"][data-scheme="dark"] .rec-list > .rec-card .rec-card__rank {
+    background: var(--surface);
+    color: var(--ink);
+  }
+}
+/* The tile (#1576): the plate's cover runs the tile's width, still 4:3. */
+@media (min-width: 1280px) {
+  :root[data-design="bruecke"] .rec-list > .rec-card .rec-card__img { width: 100%; }
+  :root[data-design="bruecke"] .rec-list > .rec-card .rec-card__rank { top: 20px; border-radius: 0; }
 }
 
 /* ===== #1422 — Pokale: the trophy cards as B3.4's plates ===== */

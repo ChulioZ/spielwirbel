@@ -473,3 +473,21 @@ test('a spotlight tile pins its actions to the bottom: a grid whose middle row a
     'the actions span the whole last row');
   assert.match(bodyOf('.rec-spot__cap'), /grid-column:\s*1\s*\/\s*-1/, 'the caption spans the first row');
 });
+
+/* ------------------------- the rank (#1576) ------------------------- */
+
+// The list is the recommender's ranking, and from 860px it wraps into columns
+// (row-major), so "first" is no longer simply "top". The numeral is what keeps
+// the order legible once the cards stand side by side.
+test('each list card carries its rank, in order, and the spotlight tiles carry none', async (t) => {
+  const { dom } = await render(t, full({
+    recommendations: [rec({ title: 'Ark Nova' }), rec({ externalId: '998', title: 'Wingspan' }), rec({ externalId: '997', title: 'Cascadia' })],
+    spotlights: spots(),
+  }));
+  const ranks = [...dom.app.querySelectorAll('.rec-list > .rec-card')].map((c) => c.querySelector('.rec-card__rank')?.textContent);
+  assert.deepEqual(ranks, ['1', '2', '3']);
+  // The DOM order already is the ranking for a screen reader; the numeral is a
+  // visual cue, and read aloud it would only prefix every title with a number.
+  assert.equal(dom.app.querySelector('.rec-card__rank').getAttribute('aria-hidden'), 'true');
+  assert.equal(dom.app.querySelectorAll('.rec-spots .rec-card__rank').length, 0, 'a spotlight is not part of the ranking');
+});
