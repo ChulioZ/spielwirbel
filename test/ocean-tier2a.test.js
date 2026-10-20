@@ -201,7 +201,7 @@ test('Ocean puts „Bringt mit" in the card and the attendance under the name', 
 
   const klassisch = boot(t, 'klassisch');
   await klassisch.call('showMember', RID, 'm1');
-  assert.equal(klassisch.app.querySelector('.member-owned, .member-card__attendance'), null);
+  assert.equal(klassisch.app.querySelector('.member-card .member-owned, .member-card__attendance'), null);
 });
 
 // --- the off-shelf segments ------------------------------------------------

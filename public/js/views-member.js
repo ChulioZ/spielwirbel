@@ -45,7 +45,8 @@ async function showMember(rid, mid) {
   // an attendance line under the name, and the owned boxes as a panel inside
   // the card. Ocean takes the same two (#1218, O13.4 — „Bringt mit" beside the
   // record). Das Programmheft too (#1379, P13.5 „Gehört Jonas" beside the
-  // record). Forest too (#1473, F13.5). Klassisch takes none of these branches.
+  // record). Forest too (#1473, F13.5). Klassisch takes none of these branches —
+  // its owned tiles go in the page's side column instead (#1584, memberPage).
   const panelled = designIs('tisch') || designIs('ocean') || designIs('bruecke') || designIs('programmheft') || designIs('forest');
 
   // Link or unlink this seat, then re-render into the other state. Shared by
@@ -342,8 +343,19 @@ async function showMember(rid, mid) {
   );
 
   /* The boxes this member brings — read here, above the card's foot, because
-     Der Tisch sets them INSIDE the card; Klassisch still renders them as the
-     section after it (see „3 Spiele von Anna" below for the filter's reasons). */
+     Der Tisch sets them INSIDE the card; Klassisch beside it (#1584, memberPage).
+
+     „3 Spiele von Anna" (#973): the fourth reader of `game.ownerIds` (#971) and
+     the only one asking from the PERSON's side — the other three ask whether the
+     table can put a given box on it. `isActiveGame` rather than a hand-written
+     `!retired`: a retired or completed game is off the shelf and a wish is
+     nobody's (.claude/rules/active-games-filter-sites.md). Every design HIDES the
+     panel at zero rather than showing it empty: most rounds never record an
+     owner, and an empty heading would advertise a feature the round does not use.
+
+     The heading puts `{name}` after a preposition in most locales, which is why
+     the demo seed may not name a seat with a pronoun
+     (.claude/rules/interpolated-names-must-not-be-case-governed.md). */
   const owned = round.games
     .filter((g) => isActiveGame(g) && (g.ownerIds || []).includes(mid))
     .sort((a, b) => a.title.localeCompare(b.title, getLocale(), { sensitivity: 'base' }));
@@ -392,47 +404,8 @@ async function showMember(rid, mid) {
     card.appendChild(table);
   }
   // Forest recomposes the card and sets a column beside it (#1473, forest-tier2a.js).
-  app.appendChild(designIs('forest') ? forestMemberPage(card, round, member, st, nameEl) : card);
-
-  /* „3 Spiele von Anna" (#973): the boxes this member brings. The fourth reader
-     of `game.ownerIds` (#971) and the only one asking from the PERSON's side —
-     the other three ask whether the table can put a given box on it.
-
-     `isActiveGame` rather than a hand-written `!retired`: a retired or completed
-     game is off the shelf and a wish is nobody's, so none of the three answers
-     "which boxes are Anna's?" (.claude/rules/active-games-filter-sites.md). An
-     owner id naming a seat that is gone simply never matches, like every other
-     reader.
-
-     HIDDEN ENTIRELY at zero, not shown empty. Most rounds will never record an
-     owner, and „Spiele von Anna" over an empty grid on every member page would
-     advertise a feature the round does not use — the same call the detail page's
-     expansions section makes on a sparse page. */
-  if (owned.length && !panelled) {
-    // This heading puts `{name}` after a preposition in most locales, which is
-    // why the demo seed may not name a seat with a pronoun — „4 Spiele von Du"
-    // is wrong German. See
-    // .claude/rules/interpolated-names-must-not-be-case-governed.md.
-    const ownedSec = h(`<div class="section">
-         <h2>${esc(tn(owned.length, 'member.ownedTitleOne', 'member.ownedTitle', { name: member.name }))}</h2>
-         <div class="member-games"></div>
-       </div>`);
-    const grid = ownedSec.querySelector('.member-games');
-    owned.forEach((g) => {
-      // The setup screen's pool tile, reused whole: same object, same crop, so a
-      // cover the round recognises there is the same picture here. An <a>, not
-      // its <span>, because these navigate — makeGameLink then carries the href
-      // and the .nav-link reset that strips the UA underline.
-      const style = g.image ? ` style="background-image:url('${coverUrl(g.image, COVER_CARD)}')"` : '';
-      const tile = h(`<a class="pool-tile" title="${esc(g.title)}">
-           <span class="pool-tile__img"${style}>${coverPlaceholder(g)}</span>
-           <span class="pool-tile__name">${esc(g.title)}</span>
-         </a>`);
-      makeGameLink(tile, rid, g.id);
-      grid.appendChild(tile);
-    });
-    app.appendChild(ownedSec);
-  }
+  app.appendChild(designIs('forest') ? forestMemberPage(card, round, member, st, nameEl)
+    : panelled ? card : memberPage(card, round, member, owned));
 
   /* The rare seat actions, in the back row's „…“ menu (#1074).
 
@@ -614,7 +587,8 @@ async function showMember(rid, mid) {
    box, its cover standing up, its title, and the shelf score as the Regal pill
    prints it, so the number a member sees here is the one the shelf ranks by.
 
-   The heading is the Klassisch section's own („3 Spiele von Anna"), not a new
+   Every design draws it since #1584, when Klassisch's cover-only grid gave way
+   to it. The heading („3 Spiele von Anna") is that grid's old one, not a new
    sentence: one concept keeps one string in nine languages. Each row is one
    link to the game. */
 function memberOwnedPanel(round, member, owned) {
@@ -637,6 +611,26 @@ function memberOwnedPanel(round, member, owned) {
     panel.appendChild(row);
   });
   return panel;
+}
+
+/* Klassisch's member page (#1584): the card beside a column holding the owned
+   boxes as tiles with this member's shelf score, then the two game tiles —
+   Forest's composition (forestMemberPage) without its design-only pieces: no
+   „Zuletzt dabei", no fifth figure, no „Bearbeiten". Whether those belong in
+   every design is a content question, not a layout one (#1422). The column
+   stands beside the card from 1280px and stacks below it under that. */
+function memberPage(card, round, member, owned) {
+  const aside = h('<div class="member-page__aside"></div>');
+  if (owned.length) aside.appendChild(memberOwnedPanel(round, member, owned));
+  const tiles = card.querySelector(':scope > .member-card__games');
+  if (tiles) aside.appendChild(tiles);
+  const page = h('<div class="member-page"></div>');
+  // The game tiles' ribbon and offset shadow read --m-tone, which the card sets
+  // inline: moved out of the card, they need it from the page.
+  page.style.setProperty('--m-tone', card.style.getPropertyValue('--m-tone'));
+  page.appendChild(card);
+  if (aside.childElementCount) page.appendChild(aside);
+  return page;
 }
 
 /* „Stärkstes Spiel"'s sub-line, shared with the profile (views-profile.js),
