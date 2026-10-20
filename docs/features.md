@@ -399,7 +399,9 @@ What the app does, in detail. For a short overview see the
     sessions with their winners, runner-up suggestions — without making any row
     taller (issue #1683). Under all of it, the „Weitere Listen" group
     (Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen) and one
-    Einstellungen entry. Every card renders nothing at all when it has nothing
+    Einstellungen entry — in Klassisch and Das Programmheft one compact strip of
+    links, and in Klassisch from 1280px links with counts at the foot of the
+    Start tab's rail instead (issue #1579). Every card renders nothing at all when it has nothing
     to say, so a young round sees none of them: the Pokale and Chronik previews
     arrive with the round's first played session, and the shelf preview once the
     shelf outgrows the handful of covers it shows — before that the hero's own

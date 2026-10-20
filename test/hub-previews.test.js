@@ -321,12 +321,18 @@ test('the group is offered on a round with NOTHING off the shelf', (t) => {
   assert.equal(rows.length, 4, 'a round with nothing off the shelf lost its way to the four lists');
 });
 
-test('the group is NOT rail-owned: the rail carries no copy of it since #1500', (t) => {
-  /* `rail-owned` is display:none from 1280px up. The Klassisch rail's own
-     „Nicht im Regal" rows are gone, so a rail-owned group would leave a desktop
-     hub with no way onto the four lists at all — #682's unreachable screen, one
-     surface over. It is a CSS hide, so nothing else in jsdom could see it. */
+test('the group is rail-owned exactly where the rail carries a copy of it (#1579)', (t) => {
+  /* `rail-owned` is display:none from 1280px up. Klassisch's Start-tab rail
+     carries the four (railOffShelfGroup); a lean rail carries none, so a
+     rail-owned group there would leave a desktop hub with no way onto the four
+     lists at all — #682's unreachable screen, one surface over. It is a CSS
+     hide, so nothing else in jsdom could see it. */
   const dom = hub(t, busyRound());
+  assert.equal(dom.app.querySelector('.hub-offshelf').classList.contains('rail-owned'), true);
+  assert.equal(dom.run('railIsLean()'), false, 'the default design grew a lean rail');
+  dom.run("applyDesign('ocean')");
+  dom.app.innerHTML = '';
+  dom.call('renderStartTab', busyRound(), activeOf(busyRound()));
   assert.equal(dom.app.querySelector('.hub-offshelf').classList.contains('rail-owned'), false);
 });
 

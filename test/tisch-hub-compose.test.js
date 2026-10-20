@@ -103,16 +103,18 @@ test('Klassisch keeps its hub exactly: no band, rail-owned CTA and presets, bars
     'the Tisch Pokale lead line leaked into Klassisch');
 
   const group = dom.app.querySelector('.hub-offshelf');
-  // Not rail-owned since #1500: the Klassisch rail no longer carries the four.
-  assert.equal(group.classList.contains('rail-owned'), false);
+  // Rail-owned since #1579: on the Start tab the Klassisch rail carries the four.
+  assert.equal(group.classList.contains('rail-owned'), true);
   assert.equal(group.querySelectorAll('.ds-row.off-shelf__row').length, 4);
   assert.equal(dom.app.querySelector('.offshelf-tile'), null);
 
   const rail = dom.app.querySelector('.rail');
   assert.ok(rail.querySelector('.rail__cta'), 'the Klassisch rail lost its CTA');
   assert.ok(rail.querySelector('.hub-presets'), 'the Klassisch rail lost its presets');
-  assert.equal(rail.querySelectorAll('.rail__item').length, 5,
+  assert.equal(rail.querySelectorAll(':scope > .rail__group:not(.rail__offshelf) .rail__item').length, 5,
     'the Klassisch rail is four sections and Einstellungen (its off-shelf rows went in #1500)');
+  assert.equal(rail.querySelectorAll('.rail__offshelf .rail__item').length, 4,
+    'the Start tab rail carries the hub\'s „Weitere Listen" (#1579)');
 });
 
 // ------------------------------------------------------------- Der Tisch

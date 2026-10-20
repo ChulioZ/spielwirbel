@@ -115,7 +115,9 @@ test('Klassisch: the hub and the lobby still render the DOM they rendered before
     const dom = await render(t);
     const got = domSignature(dom.app);
     assert.ok(got.length > 10, `${name}: only ${got.length} elements — did the render fail?`);
-    assert.equal(dom.app.querySelector('[class*="forest-"], .round-card--forest, .rail__count, .seat__ring'), null,
+    // Forest's counts are on the SECTION links; Klassisch's Start-tab
+    // „Weitere Listen" (#1579) carries counts of its own.
+    assert.equal(dom.app.querySelector('[class*="forest-"], .round-card--forest, .rail__group:not(.rail__offshelf) .rail__count, .seat__ring'), null,
       `${name}: a Forest element leaked into Klassisch`);
     assert.deepEqual(got, want[name], `${name}: Klassisch's DOM changed`);
   }
