@@ -73,12 +73,10 @@ function resultRenderBand(rs) {
   // clears it — a stale intent must not fire on a later, unrelated render.
   const wantedChip = rs.pickerRefocus;
   rs.pickerRefocus = null;
-  // Der Tisch's crowns and foot follow every phase change, and this is the
-  // one function all of them reach — including the early return below.
-  if (tischLook) {
-    paintComposedCrowns(peopleEl, rs.winnerIds);
-    resultRenderFoot(rs);
-  }
+  // The foot (and Der Tisch's crowns) follow every phase change, and this is
+  // the one function all of them reach — including the early return below.
+  if (tischLook) paintComposedCrowns(peopleEl, rs.winnerIds);
+  resultRenderFoot(rs);
   rowRefs.forEach(({ gameId, ownersEl }) => {
     // The table band states the same fact with more context, so the chosen
     // row's own line stands down rather than saying it twice on one screen.

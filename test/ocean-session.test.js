@@ -355,11 +355,12 @@ test('the side column is pinned only where it fits the viewport: sticky behind a
     'no top-level sticky on the side column');
 });
 
-test('Klassisch keeps its one-column result', async (t) => {
+test('Klassisch composes its own result, not Ocean\'s', async (t) => {
   const dom = await result(t, null);
   assert.equal(q(dom, '.result-screen--ocean'), null);
   assert.equal(q(dom, '.ocean-result__side'), null);
-  assert.equal(q(dom, '.result-foot'), null);
+  // The foot is shared since #1575, in Klassisch's own side column.
+  assert.ok(q(dom, '.klassisch-result__side > .result-foot'));
 });
 
 // ------------------------------------------------------------------ several tables

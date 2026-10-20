@@ -1,24 +1,19 @@
 'use strict';
 
-/* The results screen's footer (#614): „Kein Spiel gefällt – Session abbrechen"
-   and „Session löschen" together, below the games and the session log.
+/* Klassisch's result foot (#1575): „Noch eine Session" · „Teilen" · „Mehr",
+   under the table band and ahead of the ranking, with cancelling, deleting and
+   the other corrections behind „Mehr" — the composed designs' foot (#1275),
+   which replaced the link row #614 had put under the session log. That row
+   offered no next evening at all on a reopened result.
 
-   What is being guarded is PLACEMENT, so the screen is rendered for real through
-   the jsdom harness and the assertions compare document positions
-   (.claude/rules/testing-views-under-jsdom.md). A regex over the view source
-   could see that `.cancel-area` exists, which was never in doubt — it existed in
-   the wrong place, directly under the chosen-game banner and above the first
-   `.trow`, giving a destructive action more prominence than the scores it
-   interrupted.
-
-   Note there is no back row at the bottom to anchor against any more: #623/#624
-   moved that control to the top of every screen, so the footer is simply the
-   last block. */
+   What is guarded is PLACEMENT and MENU CONTENT, so the screen is rendered for
+   real through the jsdom harness (.claude/rules/testing-views-under-jsdom.md).
+   The design-specific foot tests for Der Tisch live in tisch-result-tafel.test.js. */
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp } = require('./support/dom');
-const { bodyOf } = require('./support/css');
+const { mediaBlocks, rulesOf } = require('./support/css');
 
 const ME = 'user-me';
 
@@ -42,7 +37,7 @@ function roundFixture(over = {}) {
 
 // Two games with votes, nothing chosen and nothing finished — the only state in
 // which the cancel control is offered at all. `events` is not incidental: the
-// footer has to land after the session log too, and with no events
+// foot has to land before the session log, and with no events
 // `renderSessionLog` returns null and that half of the assertion goes vacuous.
 function sessionFixture(over = {}) {
   return {
@@ -55,8 +50,8 @@ function sessionFixture(over = {}) {
       { at: '2026-08-02T18:05:00.000Z', type: 'voted', actor: 'm1', personId: 'm1' },
     ],
     votes: {
-      m1: { g1: { rating: 5, retire: false }, g2: { rating: 3, retire: false } },
-      m2: { g1: { rating: 4, retire: false }, g2: { rating: 2, retire: false } },
+      m1: { g1: { rating: 5 }, g2: { rating: 3 } },
+      m2: { g1: { rating: 4 }, g2: { rating: 2 } },
     },
     votedIds: ['m1', 'm2'],
     done: true,
@@ -74,157 +69,125 @@ async function results(t, over = {}) {
   round.sessions = [session];
   const dom = loadApp();
   t.after(() => dom.close());
-  dom.set('api', async () => round);
+  const sent = [];
+  dom.set('api', async (method, path) => { sent.push({ method, path }); return round; });
   dom.set('isLoggedIn', () => true);
   dom.set('currentUserId', () => ME);
+  dom.set('canShareResult', () => true);
   await dom.call('showResults', round, session);
-  return dom;
+  return { dom, sent };
 }
 
-/* Both controls are looked up across the WHOLE screen, deliberately not scoped
-   to `.result-footer`. Scoping them there makes every assertion below collapse
-   into "the selector missed" the moment the control moves — which is exactly the
-   regression under test, so the red would stop discriminating placement from a
-   typo (.claude/rules/break-the-code-on-purpose.md, habit 2). Verified: with the
-   append put back above the rows, these lookups still find the control and the
-   placement assertions are what fail. */
-const cancelBtn = (dom) => dom.app.querySelector('.cancel-area button');
-const deleteBtn = (dom) =>
-  [...dom.app.querySelectorAll('button')].find((b) => /Session löschen/.test(b.textContent));
+const text = (el) => el.textContent.replace(/\s+/g, ' ').trim();
+const screen = (dom) => dom.app.querySelector('.result-screen');
+const foot = (dom) => screen(dom).querySelector('.result-foot');
+const flush = () => new Promise((r) => setImmediate(r));
+
+/** Open „Mehr" and return its options' labels and the nodes. */
+function moreMenu(dom) {
+  foot(dom).querySelector('.result-foot__more').click();
+  const opts = [...dom.document.querySelectorAll('.popover .popover__opt')];
+  return { opts, labels: opts.map(text) };
+}
 
 /** Does `a` come before `b` in document order? */
 function precedes(dom, a, b) {
   return !!(a.compareDocumentPosition(b) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
-test('the cancel control renders after the last game row and after the log', async (t) => {
-  const dom = await results(t);
-
-  const btn = cancelBtn(dom);
-  assert.ok(btn, 'expected the cancel control in the footer');
-
-  const rows = [...dom.app.querySelectorAll('.trow')];
-  assert.equal(rows.length, 2, 'fixture should render both games');
-  assert.equal(
-    precedes(dom, rows[rows.length - 1], btn), true,
-    'the cancel control must come after the last .trow, not above the first',
-  );
-
-  const log = dom.app.querySelector('.session-log');
-  assert.ok(log, 'fixture should render a session log to sit above the footer');
-  assert.equal(precedes(dom, log, btn), true, 'and after the session log');
-  assert.ok(btn.closest('.result-footer'), 'it belongs to the shared footer row');
+test('a reopened Klassisch result ends on „Noch eine Session" · „Teilen" · „Mehr"', async (t) => {
+  const { dom } = await results(t, { finished: true, chosenGameId: 'g1' });
+  const f = foot(dom);
+  assert.ok(f, 'Klassisch renders the foot');
+  assert.equal(f.hidden, false);
+  assert.deepEqual([...f.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
+  assert.equal(screen(dom).querySelector('.page-head--result').children.length, 1,
+    '„Teilen" left the head for the foot');
+  assert.equal(screen(dom).querySelector('.result-footer'), null, 'the old link row is gone');
 });
 
-// The whole point of the move: the most-read part of the screen is the run from
-// the banner into the standings, and nothing may interrupt it.
-test('nothing stands between the table band and the ranking', async (t) => {
-  /* The whole point of the move: the most-read part of the screen is the run
-     from the chosen game into the standings, and nothing may interrupt it. The
-     `.chosen-banner` that used to anchor this assertion is gone with #1057 —
-     the h1 states the outcome and the Tafel's kicker carries the prompt — so
-     the anchor is the table band itself, in the one state where it renders. */
-  const dom = await results(t, { chosenGameId: 'g1' });
-
-  const tisch = dom.app.querySelector('.tisch');
-  assert.ok(tisch && !tisch.hidden, 'a chosen game must render the table band');
-  assert.equal(dom.app.querySelector('.chosen-banner'), null,
-    'the banner is gone from this screen — the title and the Tafel kicker carry its states');
-  // Since #1058 the band sits in a slot that can unroll it, so the Tafel is the
-  // SLOT's next sibling rather than the band's.
-  const tafel = tisch.closest('.tisch-slot').nextElementSibling;
-  assert.ok(tafel && tafel.classList.contains('tafel'), 'the Tafel must follow the band directly');
-  assert.equal(
-    tafel.querySelector('.tafel__kick').nextElementSibling,
-    tafel.querySelector('.trow, .tafel-top'),
-    'nothing but the kicker stands between the band and the first row',
-  );
+test('the foot follows the table band and comes before the ranking and the log', async (t) => {
+  const { dom } = await results(t, { chosenGameId: 'g1' });
+  const f = foot(dom);
+  const tisch = screen(dom).querySelector('.tisch');
+  assert.ok(tisch && !tisch.hidden, 'a chosen game renders the table band');
+  assert.equal(precedes(dom, tisch, f), true, 'the foot comes after the band');
+  assert.equal(precedes(dom, f, screen(dom).querySelector('.trow')), true, 'and before the first row');
+  assert.equal(precedes(dom, f, screen(dom).querySelector('.session-log')), true, 'and before the log');
 });
 
-test('cancel is a link-btn with its icon and label, not a ghost button', async (t) => {
-  const dom = await results(t);
-  const btn = cancelBtn(dom);
+test('Klassisch composes two columns: head, people, band and foot beside the ranking', async (t) => {
+  const { dom } = await results(t, { finished: true, chosenGameId: 'g1' });
+  const s = screen(dom);
+  assert.ok(s.classList.contains('result-screen--klassisch'));
+  assert.deepEqual([...s.children].map((c) => c.className),
+    ['klassisch-result__side', 'klassisch-result__tafel']);
+  const [side, list] = s.children;
+  assert.deepEqual([...side.children].map((c) => c.className.split(' ')[0]),
+    ['page-head', 'result-people', 'badge-moment', 'tisch-slot', 'result-foot']);
+  assert.ok(list.querySelector(':scope > .tafel'), 'the ranking is in the second column');
+});
 
-  assert.equal(btn.classList.contains('link-btn'), true);
-  assert.equal(btn.classList.contains('btn'), false, 'must not still be a full-weight button');
-  assert.equal(btn.classList.contains('btn--ghost'), false);
-  assert.ok(btn.querySelector('i.ti-x'), 'expected the ti-x icon to survive the restyle');
-  assert.match(btn.textContent, /Session abbrechen/);
-  /* The reason MOVED to the title in #817, it was not dropped: spelled out in the
-     label the footer wrapped at 375px. Asserting it here rather than deleting the
-     old assertion is the point — a shortening that loses the explanation is the
-     regression, and only the title can still show it. */
-  assert.equal(btn.getAttribute('title'), 'Kein Spiel gefällt');
+test('while nothing is chosen there is no next evening yet, and „Mehr" offers cancel before delete', async (t) => {
+  const { dom } = await results(t);
+  assert.equal(foot(dom).querySelector('.result-foot__again'), null);
+  const { opts, labels } = moreMenu(dom);
+  const cancel = labels.indexOf('Session abbrechen');
+  const del = labels.indexOf('Session löschen');
+  assert.ok(cancel >= 0 && del > cancel, `cancel then delete, got ${JSON.stringify(labels)}`);
+  assert.equal(opts[cancel].dataset.kind, 'destructive');
 });
 
 /* #1360: the confirm's two buttons used to read „Abbrechen" and „Session
-   abbrechen" side by side — opposite answers in nearly the same word. The way
-   out now says what it does. */
+   abbrechen" side by side — opposite answers in nearly the same word. */
 test('the cancel confirm offers „Weiterspielen" as the way back', async (t) => {
-  const dom = await results(t);
+  const { dom } = await results(t);
   const asked = [];
   dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
-  cancelBtn(dom).click();
-  await new Promise((r) => setImmediate(r));
-  assert.equal(asked.length, 1, 'the cancel control raised no confirm');
+  moreMenu(dom).opts.find((o) => /Session abbrechen/.test(o.textContent)).click();
+  await flush();
+  assert.equal(asked.length, 1, 'the cancel item raised no confirm');
   assert.equal(asked[0].cancelLabel, 'Weiterspielen');
   assert.equal(asked[0].confirmLabel, 'Session abbrechen');
 });
 
-// Cancel sits beside delete, and before it: the reversible action ahead of the
-// permanent one.
-test('cancel and delete share one footer row, cancel first', async (t) => {
-  const dom = await results(t);
-
-  const cancel = cancelBtn(dom);
-  const del = deleteBtn(dom);
-  assert.ok(del, 'expected the delete-session link in the same footer');
-
-  /* SAME row, asserted by identity — `precedes` alone is satisfied by the old
-     layout too (cancel sat above the game rows, which are above delete), so an
-     order-only assertion here stays green against the very regression this file
-     guards. Found by breaking the code, not by reading it. */
-  const row = cancel.closest('.result-footer');
-  assert.ok(row, 'cancel must live in the footer row');
-  assert.equal(del.closest('.result-footer'), row, 'delete must be in that same row');
-  assert.equal(precedes(dom, cancel, del), true, 'cancel should come before delete');
+test('a cancelled session offers the next evening and the undo in place of cancel', async (t) => {
+  const { dom } = await results(t, { cancelled: true });
+  assert.ok(foot(dom).querySelector('.result-foot__again'), 'cancelled is settled too');
+  const { labels } = moreMenu(dom);
+  assert.ok(labels.some((l) => /rückgängig/i.test(l)), `undo expected, got ${JSON.stringify(labels)}`);
+  assert.ok(!labels.includes('Session abbrechen'));
 });
 
-test('the undo control replaces it in the same footer spot once cancelled', async (t) => {
-  const dom = await results(t, { cancelled: true });
-
-  const btn = cancelBtn(dom);
-  assert.ok(btn, 'expected the undo control in the footer');
-  assert.match(btn.textContent, /rückgängig/i);
-  assert.equal(btn.classList.contains('link-btn'), true);
-  assert.equal(btn.classList.contains('btn--ghost'), false);
-  assert.equal(precedes(dom, btn, deleteBtn(dom)), true);
-});
-
-// Choosing a game or finishing removes the control — the footer must then hold
-// the delete link alone rather than a half-empty row.
 for (const [label, over] of [
   ['a game is chosen', { chosenGameId: 'g1' }],
   ['the session is finished', { finished: true, chosenGameId: 'g1' }],
 ]) {
-  test(`no cancel control once ${label}, and the footer keeps only delete`, async (t) => {
-    const dom = await results(t, over);
-
-    assert.equal(cancelBtn(dom), null, 'the cancel control must be gone');
-    const wrap = dom.app.querySelector('.result-footer .cancel-area');
-    assert.ok(wrap, 'the wrapper itself stays (resultRenderCancel writes into it)');
-    assert.equal(wrap.children.length, 0, 'and it must be empty, so :empty can hide it');
-    assert.ok(deleteBtn(dom), 'delete stays');
+  test(`no cancel once ${label}, and delete stays behind „Mehr"`, async (t) => {
+    const { dom } = await results(t, over);
+    const { labels } = moreMenu(dom);
+    assert.ok(!labels.includes('Session abbrechen'), 'the cancel item must be gone');
+    assert.ok(labels.includes('Session löschen'), 'delete stays');
   });
 }
 
-/* jsdom applies no external stylesheet, so the assertion above can only prove
-   the wrapper is EMPTY — that empty means invisible is a CSS fact, and it is the
-   one keeping a stray gap out of the footer's flex row. Hence a text assertion
-   over the real rule (.claude/rules/css-text-assertions-strip-comments.md). */
-test('an empty cancel area is taken out of the footer flow entirely', () => {
-  const body = bodyOf('.cancel-area:empty');
-  assert.ok(body, 'expected a .cancel-area:empty rule in styles.css');
-  assert.match(body, /display:\s*none/);
-  assert.match(bodyOf('.result-footer') || '', /display:\s*flex/);
+test('„Session löschen" behind „Mehr" deletes the session as before', async (t) => {
+  const { dom, sent } = await results(t, { finished: true, chosenGameId: 'g1' });
+  dom.set('confirmDialog', async () => true);
+  dom.set('showRound', () => {});
+  moreMenu(dom).opts.find((o) => /Session löschen/.test(o.textContent)).click();
+  await flush();
+  assert.ok(sent.some((c) => c.method === 'DELETE' && /\/sessions\/s1$/.test(c.path)));
+});
+
+/* jsdom applies no external stylesheet, so the two-column arrangement is a CSS
+   fact: asserted over the real rule, inside the 1280px block and nowhere else
+   (.claude/rules/css-text-assertions-strip-comments.md). */
+test('the two columns open at 1280px, and below it the screen stays one column', () => {
+  const wide = mediaBlocks().filter(([q]) => /min-width:\s*1280px/.test(q) && !/height/.test(q))
+    .flatMap(([, css]) => rulesOf(css))
+    .find(([sel]) => sel.trim() === '.result-screen--klassisch');
+  assert.ok(wide, 'expected a .result-screen--klassisch rule inside a 1280px block');
+  assert.match(wide[1], /display:\s*grid/);
+  assert.match(wide[1], /grid-template-columns/);
 });

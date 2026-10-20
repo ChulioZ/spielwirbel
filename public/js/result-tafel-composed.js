@@ -8,10 +8,11 @@
    beside it.
 
    Every builder here is called from the results screen (showResults in
-   views-session.js and the views-session-result-*.js files it is split into) and only
-   under `tischLook` (Der Tisch, and Ocean, which shares the composition) —
-   Klassisch never reaches this file, so its DOM is the default path,
-   untouched. Its own file rather than more branches inside
+   views-session.js and the views-session-result-*.js files it is split into).
+   The rows, the header row and the crowns are `tischLook`'s only (Der Tisch
+   and the designs sharing its composition); the FOOT and the two-column
+   arrangement at the end of the file reach Klassisch too (#1575), which keeps
+   its own rows and people markup. Its own file rather than more branches inside
    views-session.js, which is on the token budget's allowlist already
    (.claude/rules/token-friendly-source-files.md).
 
@@ -117,7 +118,7 @@ function paintComposedCrowns(root, winnerIds) {
    because what belongs in it moves with the session: „Noch eine Session" only
    once this one is settled (finished or cancelled — while it is still running,
    the next one is not the question), and cancelling only while no game is
-   chosen, exactly as Klassisch's footer offers it.
+   chosen.
 
    `again` is null when the button does not belong; `againDisabled` mirrors the
    hub's own gate (no active game to draw from). An empty `more` renders no
@@ -151,4 +152,28 @@ function fillComposedResultFoot(foot, { again, againDisabled, share, more }) {
     foot.appendChild(btn);
   }
   foot.hidden = !foot.childElementCount;
+}
+
+/* Klassisch's arrangement (#1575), modelled on Ocean's (composeOceanResult):
+   everything ahead of the Tafel — the head, who was there, the points, the
+   table band and the foot — in a side column, the ranking and what follows it
+   in the other. styles.css lays the two side by side from 1280px; below that
+   they are two blocks in this same order, so DOM order is the visual order and
+   the foot follows the band ahead of the ranking on a phone too.
+
+   Unlike Ocean, the badge moment stays in the side column, after the headline
+   and before the table band (#1388's order, test/badges-result-moment.test.js):
+   Klassisch's side column is wider than Ocean's, and the order on a phone is
+   then exactly what it was. */
+function composeKlassischResult(screen) {
+  screen.classList.add('result-screen--klassisch');
+  const side = h('<div class="klassisch-result__side"></div>');
+  const list = h('<div class="klassisch-result__tafel"></div>');
+  const kids = [...screen.children];
+  const tafelAt = kids.findIndex((el) => el.classList.contains('tafel'));
+  kids.forEach((el, i) => {
+    if (el.classList.contains('result-foot') || (tafelAt >= 0 && i < tafelAt)) side.appendChild(el);
+    else list.appendChild(el);
+  });
+  screen.replaceChildren(side, list);
 }

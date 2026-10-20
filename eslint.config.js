@@ -653,7 +653,7 @@ const frontendGlobals = {
   // views-session-result-actions.js (issue #1543): row actions, cancel/delete and the footers
   resultIsSoloDirectPlay: 'readonly', resultRemoveGame: 'readonly', resultRenderAction: 'readonly',
   resultUpdateChosen: 'readonly', resultSetCancelled: 'readonly', resultConfirmCancel: 'readonly',
-  resultDeleteSession: 'readonly', resultRenderCancel: 'readonly', resultRenderFoot: 'readonly',
+  resultDeleteSession: 'readonly', resultRenderFoot: 'readonly',
   // views-session-setup-tisch.js (issue #1267): Der Tisch's setup composition
   composeTischSetup: 'readonly', tischDrawSummary: 'readonly',
   tischSetupDateLine: 'readonly',
@@ -681,7 +681,7 @@ const frontendGlobals = {
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
   composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly', splitResultTitle: 'readonly',
-  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
+  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly', composeKlassischResult: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

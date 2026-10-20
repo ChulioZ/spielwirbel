@@ -200,17 +200,24 @@ test('nothing hides the results footer wholesale — that is "Session löschen"'
      old assertion had stopped watching anything: its anti-vacuous floor checks
      that the CSS still DECLARES `.section`/`.center` (it does, for other rules),
      never that a screen still uses them. Hence the floor below counts the
-     wrapper's real uses in the view instead. */
+     wrapper's real uses in the view instead.
+
+     #1575 moved the delete behind the foot's „Mehr" (`.result-foot`); the split
+     summary keeps `.result-footer`. Both guarded; `[hidden]` is the one legit hide. */
+  const tables = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session-tables.js'), 'utf8');
+  assert.match(tables, /class="section result-footer"/,
+    'the split summary no longer renders a .result-footer — this guard now watches nothing');
   const view = fs.readFileSync(path.join(__dirname, '..', 'public/js/views-session.js'), 'utf8');
-  assert.match(view, /class="section result-footer"/,
-    'the results screen no longer renders a .result-footer — this guard now watches nothing');
+  assert.match(view, /class="result-foot"/,
+    'the results screen no longer renders a .result-foot — this guard now watches nothing');
 
   const hides = RULES.filter(([, body]) => /display:\s*none/.test(body));
   const tooBroad = hides
     .map(([sel]) => sel)
-    .filter((sel) => /\.result-footer(?![\w-])/.test(sel));
+    .flatMap((sel) => sel.split(',').map((x) => x.trim()))
+    .filter((sel) => /\.result-foot(?:er)?(?![\w-])(?!\[hidden\])/.test(sel));
   assert.deepEqual(tooBroad, [],
-    'these rules hide the whole results footer, which takes "Session löschen" with it');
+    'these rules hide the whole results footer or foot, which takes "Session löschen" with it');
 });
 
 test('short-entry lists tile, and their rows may wrap inside a tile', () => {

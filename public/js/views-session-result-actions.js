@@ -1,7 +1,6 @@
 /* Spielwirbel – views: the results screen's session management — each row's
    „Spielen" and „…" menu, removing a game, cancelling and deleting the
-   session, and the two footers (Klassisch's link row, the composed designs'
-   foot). Split out of showResults (#1543).
+   session, and the foot every design ends its settled evening on. Split out of showResults (#1543).
 
    Every function here takes the results screen's one context object, `rs`,
    built once by showResults (views-session.js) — see its comment there for
@@ -107,7 +106,7 @@ function resultRenderAction(rs, { gameId, game, actionEl, titleId }) {
   // on „Spielen" before the chip replaced that button.
   // Not for a solo direct-play session: with one game there is nothing else to
   // choose, and with the Tafel gone there would be no way back (#1107). The
-  // escape hatch stays „Session löschen" in the footer.
+  // escape hatch stays „Session löschen" behind the foot's „Mehr".
   if (isChosen && !rs.finished && !rs.cancelled && !resultIsSoloDirectPlay(rs)) {
     items.push({ icon: 'ti-x', label: t('result.clearChoice'), kind: 'undoable', run: async () => {
       try {
@@ -145,17 +144,14 @@ function resultUpdateChosen(rs) {
   // (#1107). Toggled here rather than skipped at build time so `rowRefs` stays
   // intact and nothing downstream needs a null check.
   tafel.hidden = resultIsSoloDirectPlay(rs);
-  resultRenderCancel(rs);
   resultRenderBand(rs);
 }
 
 // Cancel is the alternative final state: only offered while no game is
-// chosen, and undoable like the finish reset. Rendered as a `link-btn` in the
-// footer next to „Session löschen" (#614) — the rare escape hatch, not a peer
-// of the result it used to sit above.
-// The two cancel actions and the delete, as closures both footers call — the
-// Klassisch link row below and Der Tisch's „Mehr" menu (#1275) — so the two
-// designs cannot drift apart on what cancelling or deleting actually does.
+// chosen, and undoable like the finish reset. It sits behind the foot's „Mehr"
+// beside „Session löschen" — the rare escape hatch, not a peer of the result
+// (#614). The two cancel actions and the delete are closures here so that the
+// menu, whatever design draws it, cannot drift from what they actually do.
 async function resultSetCancelled(rs, next) {
   const { round, session } = rs;
   try {
@@ -201,47 +197,11 @@ function resultEditPoints(rs) {
   showSessionPointsSheet(rs.round, rs.session, rs.reopen);
 }
 
-function resultRenderCancel(rs) {
-  const { cancelWrap, dateWrap } = rs;
-  // „Datum ändern" (#1616) beside it, for a finished session only: a date means
-  // something once a game was played, and a running session's date is today.
-  // „Punkte eintragen" (#1630) ahead of it, on the same condition: points are
-  // about a game that was played.
-  if (dateWrap) {
-    dateWrap.innerHTML = '';
-    if (rs.finished && rs.chosenId) {
-      const pts = h(`<button class="link-btn" type="button">${iconText('ti-target', sessionPointsLabel(rs.session))}</button>`);
-      pts.addEventListener('click', () => resultEditPoints(rs));
-      dateWrap.appendChild(pts);
-    }
-    if (rs.finished) {
-      const btn = h(`<button class="link-btn" type="button">${iconText('ti-calendar-event', t('result.changeDate'))}</button>`);
-      btn.addEventListener('click', () => resultChangeDate(rs));
-      dateWrap.appendChild(btn);
-    }
-  }
-  cancelWrap.innerHTML = '';
-  if (rs.finished || rs.chosenId) return;
-  if (rs.cancelled) {
-    const undo = h(`<button class="link-btn">${esc(t('result.cancelUndo'))}</button>`);
-    undo.addEventListener('click', () => resultSetCancelled(rs, false));
-    cancelWrap.appendChild(undo);
-  } else {
-    // „Session abbrechen" alone, with the reason („Kein Spiel gefällt") moved
-    // to the title (#817): spelled out it was 293px, which with „Session
-    // löschen" beside it wrapped the footer row at 375px. Visible text is
-    // present, so the title supplies the accessible DESCRIPTION and not the
-    // name — SC 2.5.3 is unaffected.
-    const btn = h(`<button class="link-btn" title="${esc(t('result.cancelHint'))}">${iconText('ti-x', t('result.cancel'))}</button>`);
-    btn.addEventListener('click', () => resultConfirmCancel(rs));
-    cancelWrap.appendChild(btn);
-  }
-}
-
-/* Der Tisch's foot (#1275): „Noch eine Session" once this one is settled,
-   „Teilen", and „Mehr" holding what Klassisch's footer row offers — cancel
-   (or its undo) while no game is chosen, and delete for a co-owner. Refilled
-   from resultRenderBand, which every phase change reaches.
+/* The foot (#1275; Klassisch since #1575): „Noch eine Session" once this one
+   is settled, „Teilen", and „Mehr" holding the session's corrections — taking
+   someone out, points and date once it is finished, cancel (or its undo) while
+   no game is chosen, and delete for a co-owner. Refilled from resultRenderBand,
+   which every phase change reaches.
 
    „Noch eine Session" opens the setup PREFILLED with tonight's members
    (operator question 1, decided unilaterally — see the PR): the same people
@@ -249,8 +209,7 @@ function resultRenderCancel(rs) {
    member of the round. Guests are not carried: they were named for this
    session only, and the setup's guest list is the place to add them again. */
 function resultRenderFoot(rs) {
-  const { tischFoot, people, round, session, shareNow } = rs;
-  if (!tischFoot) return;
+  const { resultFoot, people, round, session, shareNow } = rs;
   const more = [];
   if (!rs.finished && !rs.chosenId) {
     more.push(rs.cancelled
@@ -274,7 +233,7 @@ function resultRenderFoot(rs) {
     more.push({ icon: 'ti-trash', label: t('result.deleteSession'), kind: 'destructive', run: () => resultDeleteSession(rs) });
   }
   const memberIds = people.filter((p) => !p.guest).map((p) => p.id);
-  fillComposedResultFoot(tischFoot, {
+  fillComposedResultFoot(resultFoot, {
     again: rs.finished || rs.cancelled ? () => showStartSession(round, { memberIds }) : null,
     againDisabled: !round.games.some(isActiveGame),
     share: shareNow,

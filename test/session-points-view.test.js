@@ -51,8 +51,19 @@ async function results(round, session) {
   dom.set('fetchRoundFresh', async () => round);
   await dom.call('showResults', round, session, round.games);
 }
-const pointsButton = () => [...dom.app.querySelectorAll('.date-area button')]
-  .find((b) => /Punkte (eintragen|bearbeiten)/.test(b.textContent));
+/* The foot's „Mehr" item matching `re` (#1575 moved Klassisch's link row into
+   it), or undefined. The menu is closed again when nothing matched, so a later
+   test does not find a stale popover. */
+function mehrItem(re) {
+  const more = dom.app.querySelector('.result-foot__more');
+  if (!more) return undefined;
+  more.click();
+  const pops = dom.document.querySelectorAll('.popover--menu');
+  const opt = [...pops[pops.length - 1].querySelectorAll('.popover__opt')].find((b) => re.test(b.textContent));
+  if (!opt) dom.run('closePopover()');
+  return opt;
+}
+const pointsButton = () => mehrItem(/Punkte (eintragen|bearbeiten)/);
 
 test('the sheet has one field per party, flips the sign, and PUTs the seat map', async () => {
   const session = finished('s1', '2026-03-10T19:00:00.000Z', null, {

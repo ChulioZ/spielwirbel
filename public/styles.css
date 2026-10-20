@@ -6624,8 +6624,7 @@ a.k-tile:focus-visible,
 }
 /* Empty is a real state since #915: with a game chosen the banner says nothing
    (the row is marked, its button reads „Wird gespielt", the title states the
-   outcome), and `display: none` is what stops the removal leaving a 45px gap.
-   Same shape as `.cancel-area:empty` below. */
+   outcome), and `display: none` is what stops the removal leaving a 45px gap. */
 .chosen-banner:empty { display: none; }
 .chosen-banner.is-set {
   background: var(--brand-tint);
@@ -6633,24 +6632,33 @@ a.k-tile:focus-visible,
   border: 1px solid var(--brand-edge);
   font-size: var(--text-lg);
 }
-/* The results footer: cancel and delete side by side, centered, wrapping to two
-   lines on a narrow phone. `.cancel-area:empty` is load-bearing — a chosen or
-   finished session renders no cancel control, and `display:none` takes it out of
-   the flex flow entirely so „Session löschen" stays centered with no stray gap
-   beside it (#614). */
+/* The split summary's footer (views-session-tables.js): its links side by
+   side, centered, wrapping to two lines on a narrow phone. */
 .result-footer {
   display: flex; flex-wrap: wrap;
   justify-content: center; align-items: center;
   gap: 10px 20px;
 }
-.cancel-area { text-align: center; }
-.cancel-area:empty { display: none; }
-/* „Datum ändern" (#1616) beside it — empty until the session is finished, and
-   collapsed then for the same reason as the cancel area. */
-/* It holds „Punkte eintragen" (#1630) too, so it spaces its own two links the
-   way the footer spaces its children. */
-.date-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 20px; }
-.date-area:empty { display: none; }
+/* Klassisch's result (#1575): the foot — „Noch eine Session", „Teilen",
+   „Mehr" — under the table band, and from 1280px the side column it closes
+   beside the ranking (composeKlassischResult). Scoped to the class only
+   Klassisch's composer sets, so no design's own foot rules meet these.
+   The ranking keeps 580px: below that Klassisch's rows (bars beside the title,
+   chosen by viewport width, not by column) crowd and overlap — measured at
+   1280, where the side column gives way to 336px instead. 480px is the de foot
+   on one line (461px with its gaps); narrower, „Mehr" wraps under it and
+   nothing overflows. */
+.result-screen--klassisch .result-foot { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
+.result-screen--klassisch .result-foot[hidden] { display: none; }
+.result-screen--klassisch .result-foot__again { flex: 1 1 auto; justify-content: center; }
+@media (min-width: 1280px) {
+  .result-screen--klassisch {
+    display: grid;
+    grid-template-columns: minmax(320px, 480px) minmax(580px, 1fr);
+    column-gap: 32px;
+    align-items: start;
+  }
+}
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .trow.is-chosen {
   border-color: var(--brand);

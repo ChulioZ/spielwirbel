@@ -202,8 +202,10 @@ test('a session with no log renders no log section', async (t) => {
 });
 
 // The operator asked for it on the results screen too, and specifically before
-// the destructive action rather than after it.
-test('the results screen carries the same log, above the delete link', async (t) => {
+// the destructive action rather than after it. Since #1575 that action is no
+// longer a link on the page at all: it sits behind the foot's „Mehr", so the
+// log can no longer be scrolled past on the way to it.
+test('the results screen carries the same log, and no bare delete link', async (t) => {
   const round = roundFixture();
   const session = sessionFixture({
     events: LOG_EVENTS, done: true, votes: { m1: { g1: { rating: 5, retire: false } } },
@@ -220,14 +222,9 @@ test('the results screen carries the same log, above the delete link', async (t)
   assert.ok(log, 'expected the log on the results screen');
   assert.equal(log.querySelectorAll('.session-log__row').length, 4);
 
-  // Placement: the log must precede the delete affordance in document order.
   const del = [...dom.app.querySelectorAll('.link-btn')].find((b) => /löschen/i.test(b.textContent));
-  assert.ok(del, 'expected the delete-session link');
-  assert.equal(
-    log.compareDocumentPosition(del) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
-    dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
-    'the log should come before the delete link, not after it',
-  );
+  assert.equal(del, undefined, 'delete is behind „Mehr", not a link under the log');
+  assert.ok(dom.app.querySelector('.result-foot__more'), 'expected the foot\'s „Mehr"');
 });
 
 /* The setup toggle's own block used to live here — five specs over an "enabled /

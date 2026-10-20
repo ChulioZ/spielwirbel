@@ -733,8 +733,11 @@ What the app does, in detail. For a short overview see the
   a contested night everybody lost — whether or not the table was recorded as
   one team — while the other two count as non-competitive.
   Or
-  cancel the session if nothing appealed. Sessions can be deleted later, and a
-  single game can be removed from a session's results.
+  cancel the session if nothing appealed. A settled result ends on „Noch eine
+  Session", „Teilen" and „Mehr" in every design — cancelling, deleting and the
+  other corrections sit behind „Mehr" — and from 1280px it lays out in two
+  columns, the chosen game and those actions beside the ranking. A single game
+  can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks
   **„Mehrere Tische"** before the draw. The pool then admits any game that seats
   *some* table of three or more rather than the whole party, everyone votes once

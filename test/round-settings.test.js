@@ -245,11 +245,10 @@ test('the Start tab points at the settings screen instead of separate links', ()
    the last block on the screen now. What still needs pinning is that the two
    have not swapped back, and that neither has been lost in the move.
 
-   #614 put the session-cancel control in that same last block, so the terminal
-   append is now the shared `.result-footer` row rather than the delete wrapper
-   alone. The three properties this pins are unchanged — back first, the
-   destructive block last, and nothing after it — and the DOM-level assertions
-   about what is IN that row live in `test/session-results-footer.test.js`. */
+   #614 put the session-cancel control in that same last block, and #1575 moved
+   both behind the foot's „Mehr" in every design, so the terminal append is now
+   the foot. What this pins — back first, the foot last, nothing after it — is
+   unchanged; what is IN the foot lives in `test/session-results-footer.test.js`. */
 test('the results screen opens with the back control and ends with the delete', () => {
   const results = bodyOfFn(SESSION, 'showResults');
   // The APPEND order, not where the string literal happens to sit: the wrapper
@@ -260,23 +259,25 @@ test('the results screen opens with the back control and ends with the delete', 
   // the back row stays a direct child of `#app` — it opts out of the reading
   // measure in CSS instead, alongside the wrapper. So the two appends name
   // different containers on purpose, and both spellings are checked below.
-  const footer = results.indexOf('screen.appendChild(footer)');
+  // Since #1575 every design ends on the foot („Noch eine Session", „Teilen",
+  // „Mehr"), and the delete lives behind its „Mehr" — Klassisch's old link row
+  // is gone. The foot is the last block appended; the composers only re-arrange.
+  const footer = results.indexOf('screen.appendChild(resultFoot)');
   const back = results.indexOf('app.appendChild(backRow(');
-  assert.notEqual(footer, -1, 'the results screen lost its terminal footer row');
+  assert.notEqual(footer, -1, 'the results screen lost its foot');
   assert.notEqual(back, -1, 'the results screen lost its back control');
-  assert.match(results, /result\.deleteSession/, 'the delete-session control no longer names its own label');
-  // Delete must still be IN that row — the footer landing last means nothing if
-  // the control it is supposed to carry was dropped on the way.
-  assert.match(results, /footer\.appendChild\(delBtn\)/, 'delete-session is no longer part of the footer row');
-  assert.ok(back < footer, 'the back control is appended after the footer — it belongs at the top of the content (#623)');
-  // Last, not merely after the back control: a block appended below it would
-  // put something after the screen's terminal destructive action again.
-  // Both containers, or the check stops seeing the half it is pointed away from:
-  // the wrapper is what the blocks go into, and `#app` is still reachable from
-  // inside the function (that is how the back row gets there).
+  // Delete must still be IN the foot's menu — the foot landing last means
+  // nothing if the control it is supposed to carry was dropped on the way.
+  assert.match(strip(read('public/js/views-session-result-actions.js')),
+    /label: t\('result\.deleteSession'\)[^}]*run: \(\) => resultDeleteSession\(rs\)/,
+    'delete-session is no longer an item of the foot\'s „Mehr"');
+  assert.ok(back < footer, 'the back control is appended after the foot — it belongs at the top of the content (#623)');
+  // Last: a block appended below it would put something after the screen's
+  // own actions again. Both containers, or the check stops seeing the half it
+  // is pointed away from.
   ['screen.appendChild(', 'app.appendChild('].forEach((call) => {
     assert.equal(results.indexOf(call, footer + 1), -1,
-      `something is appended with ${call}…) after the footer row, which is meant to end the screen`);
+      `something is appended with ${call}…) after the foot, which is meant to end the screen`);
   });
   /* Since #1543 the Tafel, the band and the session controls run from three
      files of their own, so "nothing after the footer" must hold there too. Only
