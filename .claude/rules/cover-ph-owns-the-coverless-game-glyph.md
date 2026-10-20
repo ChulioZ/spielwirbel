@@ -29,7 +29,9 @@ The ink is a named property (#1641) so a design rule that sweeps `color` over th
 placeholder's ancestors can hand it back with `var(--cover-ink)` — Der Tisch's
 gold Tafel row does (`test/tisch-gold-row-placeholder.test.js`). A design sheet
 may not restate the formula: `test/design-layer.test.js` bans colour functions
-outside its root block.
+outside its root block. (Its one exemption, #1642, covers the placeholder's
+BACKGROUND — a relative colour of the design's own tokens on `.cover-ph` —
+never `.cover-ph .ti` or any ink.)
 
 So wherever a coverless **game** renders, the box's `--placeholder` is inherited
 and then immediately overridden. Measured in a browser on #938 — the `.cover-ph`

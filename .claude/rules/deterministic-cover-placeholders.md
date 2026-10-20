@@ -3,6 +3,8 @@ paths:
   - "public/js/cover.js"
   - "public/styles.css"
   - "test/cover.test.js"
+  - "public/css/designs/**"
+  - "public/js/forest-shelf.js"
 ---
 
 # Cover placeholders: the two silent traps in `public/js/cover.js` (#256)
@@ -74,6 +76,20 @@ corners — that's why those two lines were added to `.ticket__img`,
 per-table winner cover since #1056 retired the results screen's spotlight;
 `.result-podium__img` until #897) and `.archive-row__img` — and to
 `.result-row__img` until #1056 removed it.
+
+## Every design varies it — and a design's OWN placeholder markup must carry `--cover-h`
+
+Since #1642 each design sheet's `.cover-ph` reads `--cover-h` too (wood
+species, water depth, panel tint, the Programmheft cross, Forest's hatch);
+`test/cover-ph-designs.test.js` pins it per sheet and fails for a new sheet that
+answers nothing. Trap 1 binds there as well: a `deg` inside a relative colour's
+`h` drops the background, and an angle is `var(--cover-h) * 0.045deg`.
+
+The second trap is markup. A design may build its own placeholder instead of
+calling `coverPlaceholder()` — Forest's `forestNoCover()` did, with no argument,
+so its Regal had no `--cover-h` and every rule reading it fell back to one tile,
+silently. A design-specific placeholder takes the game and writes the same
+`--cover-h:${gameHue(game.title)}`.
 
 ## Verifying a change here
 

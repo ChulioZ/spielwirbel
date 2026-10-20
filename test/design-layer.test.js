@@ -348,6 +348,66 @@ test('no design stylesheet re-declares a colour token OUTSIDE its resolved root 
    them. */
 const COLOUR_TOKENS = /^--(page-bg|brand|accent|bg|surface|ink|on-accent|shade|sunken|line|control|placeholder|good|warn|danger|gold|stage|scrim|page-glow)/;
 
+/* The ONE colour function a component rule may hold (#1642): a relative colour
+   of a token the design's own root block declares, in a rule that paints ONLY
+   the no-cover placeholder. `.cover-ph` varies per game by shifting the
+   design's material with the per-title --cover-h, a value the harness cannot
+   know, so no root token could hold it — and the derivation stays legible: its
+   source is a measured token, and the placeholder is aria-hidden decoration
+   whose glyph ink the rule does not touch. Everything else stays banned: a
+   literal, a color-mix, an oklch() without `from`, a source token this design
+   never declares, or the same derivation on any other selector. */
+function isPlaceholderDerivation(css, at, own) {
+  const src = /^oklch\(\s*from\s+var\((--[a-z0-9-]+)\)/.exec(css.slice(at));
+  if (!src || !own.has(src[1])) return false;
+  // A BACKGROUND only: `color` here would be inherited by the glyph, i.e. ink.
+  // A gradient value spans lines but holds no `;`, so the last `;` or `{`
+  // before the call starts its declaration.
+  const decl = css.slice(Math.max(css.lastIndexOf(';', at), css.lastIndexOf('{', at)) + 1, at);
+  if (!/^\s*background(?:-color|-image)?\s*:/.test(decl)) return false;
+  const open = css.lastIndexOf('{', at);
+  if (open === -1 || css.lastIndexOf('}', at) > open) return false;
+  const start = Math.max(css.lastIndexOf('}', open), css.lastIndexOf('{', open - 1)) + 1;
+  const selectors = css.slice(start, open).split(',').map((s) => s.trim());
+  return selectors.every((s) => /\.cover-ph$/.test(s));
+}
+
+/* An `@supports (color: oklch(from red l c h))` condition names a colour
+   function to ASK whether the engine has it; it paints nothing, so it is not
+   a colour the harness could fail to measure. */
+function inSupportsQuery(css, at) {
+  const from = Math.max(css.lastIndexOf('{', at), css.lastIndexOf('}', at), css.lastIndexOf(';', at)) + 1;
+  return /^\s*@supports\b/.test(css.slice(from, at));
+}
+
+test('the placeholder exemption is narrow — it admits own-token derivations on .cover-ph and nothing else', () => {
+  /* The exemption above is a hole in a guard, so it gets its own negatives:
+     each of these must stay a finding, or the sweep below would pass a colour
+     nobody measured. */
+  const own = new Set(['--wood-light']);
+  const at = (css) => isPlaceholderDerivation(css, css.indexOf('oklch('), own);
+  assert.equal(at(':root[data-design="x"] .cover-ph { background: oklch(from var(--wood-light) l c calc(h + 4)); }'), true);
+  assert.equal(at(':root[data-design="x"] .game-card { background: oklch(from var(--wood-light) l c h); }'), false,
+    'another selector');
+  assert.equal(at(':root[data-design="x"] .cover-ph, .x .tile { background: oklch(from var(--wood-light) l c h); }'), false,
+    'a grouped rule painting something else too');
+  assert.equal(at(':root[data-design="x"] .cover-ph { background: oklch(from var(--surface) l c h); }'), false,
+    'a source token the design does not declare');
+  assert.equal(at(':root[data-design="x"] .cover-ph { background: oklch(0.5 0.1 40); }'), false,
+    'an oklch literal');
+  assert.equal(at(':root[data-design="x"] .cover-ph .ti { color: oklch(from var(--wood-light) l c h); }'), false,
+    'the glyph, not the placeholder');
+  assert.equal(at(':root[data-design="x"] .cover-ph { color: oklch(from var(--wood-light) l c h); }'), false,
+    'ink on the placeholder itself, which the glyph inherits');
+  assert.equal(at(':root[data-design="x"] .cover-ph { --x: 1; background:\n  linear-gradient(red, oklch(from var(--wood-light) l c h)); }'), true,
+    'a multi-line background after another declaration');
+
+  const query = '@supports (color: oklch(from red l c h)) { .x { color: var(--ink); } }';
+  assert.equal(inSupportsQuery(query, query.indexOf('oklch(')), true, 'a feature query paints nothing');
+  const paint = '@supports (display: grid) { .x { color: oklch(0.5 0.1 40); } }';
+  assert.equal(inSupportsQuery(paint, paint.indexOf('oklch(')), false, 'a colour INSIDE a @supports block is paint');
+});
+
 test('no design stylesheet contains a colour literal outside its resolved root block', () => {
   /* The half the token sweep cannot see: a component rule inventing its own
      `--tisch-felt-edge: #1a2b1f`, or simply writing `color: #8d6436`, declares
@@ -359,8 +419,10 @@ test('no design stylesheet contains a colour literal outside its resolved root b
      into the one block the harness reads. */
   const found = [];
   for (const [file, css] of designSheets()) {
-    const { rest } = splitRoot(file, css);
+    const { root, rest } = splitRoot(file, css);
+    const own = new Set([...root.matchAll(/(^|[;{\s])(--[a-z0-9-]+)\s*:/gm)].map((m) => m[2]));
     for (const m of rest.matchAll(/#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|color-mix)\s*\(/g)) {
+      if (inSupportsQuery(rest, m.index) || isPlaceholderDerivation(rest, m.index, own)) continue;
       found.push(`${file} -> ${m[0]}`);
     }
   }

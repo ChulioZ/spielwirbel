@@ -508,13 +508,21 @@
    diagonals in --ink-soft (5.29:1 on white). `.cover-ph` owns the coverless
    game box and brings its own gradient
    (.claude/rules/cover-ph-owns-the-coverless-game-glyph.md), so the tone is
-   replaced here; the glyph takes --ink-soft too. */
+   replaced here; the glyph takes --ink-soft too.
+   Each coverless game turns its cross and lays its own fine hatch under it
+   (#1642): --cover-h (0–359, hashed from the title) sets the cross's angle and
+   the hatch's pitch, so manual games stop being one repeated crossed box while
+   staying ink on paper — no colour moves. --cover-h is UNITLESS
+   (.claude/rules/deterministic-cover-placeholders.md §1), so it only ever
+   multiplies a deg or a px here. */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .cover-ph {
+  --cross-a: calc(20deg + var(--cover-h, 180) * 0.14deg);
   color: var(--ink-soft);
   background-color: var(--surface);
   background-image:
-    linear-gradient(to top right, transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-    linear-gradient(to bottom right, transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+    linear-gradient(var(--cross-a), transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    linear-gradient(calc(var(--cross-a) + 90deg), transparent calc(50% - 0.5px), var(--ink-soft) calc(50% - 0.5px), var(--ink-soft) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+    repeating-linear-gradient(calc(var(--cross-a) + 45deg), var(--hatch) 0 calc(2px + var(--cover-h, 180) * 0.012px), transparent 0 calc(5px + var(--cover-h, 180) * 0.03px));
   box-shadow: inset 0 0 0 var(--rule-strong) var(--ink);
 }
 

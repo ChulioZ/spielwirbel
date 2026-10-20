@@ -19,9 +19,12 @@
 /* F1.6's „Kein Bild": the hatch, a leaf and the two words, filling the hollow.
    It replaces coverPlaceholder()'s glyph under Forest only. aria-hidden, like
    the placeholder it stands in for: the card's link is named by the title, and
-   „Kein Bild Catan" would be a worse name, not a better one. */
-function forestNoCover() {
-  return `<span class="cover-ph forest-nocover" aria-hidden="true"><span class="forest-leaf"></span><span class="forest-nocover__label">${esc(t('games.noCover'))}</span></span>`;
+   „Kein Bild Catan" would be a worse name, not a better one. It carries the
+   same per-title --cover-h as coverPlaceholder() (cover.js), which forest.css
+   reads to give each coverless game its own hatch (#1642) — without it every
+   card on the Regal fell back to one tile. */
+function forestNoCover(game) {
+  return `<span class="cover-ph forest-nocover" style="--cover-h:${gameHue(game && game.title)}" aria-hidden="true"><span class="forest-leaf"></span><span class="forest-nocover__label">${esc(t('games.noCover'))}</span></span>`;
 }
 
 /* A Regal card (F3.3/F6.2/F7.8): the cover stands in a light hollow and NOTHING
@@ -39,7 +42,7 @@ function forestShelfCard(round, g, score, evidence, expBadge) {
   const owners = ownerNames(round, g.ownerIds);
   return h(`<a class="game-card game-card--clickable forest-card${g.image ? '' : ' forest-card--bare'}">
        <div class="forest-card__well">
-         <div class="game-card__img">${g.image ? '' : forestNoCover()}
+         <div class="game-card__img">${g.image ? '' : forestNoCover(g)}
            <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
          </div>
        </div>

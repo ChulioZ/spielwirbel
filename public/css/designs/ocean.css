@@ -463,6 +463,24 @@
     radial-gradient(circle at 50% 50%, var(--bubble-2) 0 22%, transparent 23%),
     repeating-linear-gradient(135deg, var(--wave-paper) 0 10px, var(--wave-paper-deep) 10px 20px);
 }
+/* Each coverless game sits at its own depth (#1642): --cover-h (0–359, from the
+   title) deepens the wave paper and nudges its hue, turns the waves and moves
+   the bubble, so manual games stop reading as one repeated tile. --cover-h is
+   UNITLESS (.claude/rules/deterministic-cover-placeholders.md §1). A relative
+   colour of this design's OWN tokens is the one colour function a `.cover-ph`
+   rule may use (test/design-layer.test.js); the rule above is the fallback. */
+@supports (color: oklch(from red l c h)) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .cover-ph {
+    --sea-d: calc(var(--cover-h, 180) / 359);
+    --sea-dh: calc((var(--cover-h, 180) - 180) * 0.12);
+    background-image:
+      radial-gradient(circle at calc(30% + var(--sea-d) * 40%) calc(62% - var(--sea-d) * 24%),
+        var(--bubble-2) 0 calc(18% + var(--sea-d) * 6%), transparent calc(19% + var(--sea-d) * 6%)),
+      repeating-linear-gradient(calc(120deg + var(--cover-h, 180) * 0.09deg),
+        oklch(from var(--wave-paper) calc(l - var(--sea-d) * 0.12) calc(c + var(--sea-d) * 0.04) calc(h + var(--sea-dh))) 0 10px,
+        oklch(from var(--wave-paper-deep) calc(l - var(--sea-d) * 0.16) calc(c + var(--sea-d) * 0.05) calc(h + var(--sea-dh))) 10px 20px);
+  }
+}
 
 /* ---- The score bubble (O1.9 „Score-Blase"): the ramp with its FIXED inks,
    keyed on the same `data-stop` the JS writes beside `--sc`, so fill and ink
