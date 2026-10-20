@@ -434,8 +434,10 @@ What the app does, in detail. For a short overview see the
     undone, and last whatever asks a destructive question (#1195).
   - **Chronik** – one month-grouped timeline of everything that happened:
     games added / retired / restored and session outcomes. A run of shelf
-    changes folds behind one „N Regal-Änderungen" line, so the sessions carry
-    the page. Beside the timeline on a desktop (above it on a phone, where it
+    changes (games added, retired, completed, moved, imported) folds behind one
+    „N Regal-Änderungen" line, so the sessions carry the page; member events
+    and renames stay rows of their own. The „Regal-Änderungen" filter lists the
+    same shelf changes. Beside the timeline on a desktop (above it on a phone, where it
     starts as one line in some designs), a **period recap** sums up one calendar month or year — sessions played,
     distinct games, the period's most-played and best-rated game, and what was
     added, retired or completed — over a picker offering only periods that

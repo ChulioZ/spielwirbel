@@ -193,7 +193,10 @@ test('Tisch: a run of shelf changes folds behind one disclosure; a lone change s
 test('Tisch: with „Regal-Änderungen" chosen nothing folds — the changes are the page', (t) => {
   const dom = render(t, 'tisch', 'changes');
   assert.equal(dom.app.querySelectorAll('.tl-run').length, 0);
-  assert.equal(timeline(dom).querySelectorAll('.tl-act').length, 4);
+  assert.equal(timeline(dom).querySelectorAll('.tl-act').length, 3, 'the three shelf changes');
+  // #1573: the chip and the fold share one definition of a shelf change, so a
+  // member joining is under „Alles" only, never under „Regal-Änderungen".
+  assert.doesNotMatch(timeline(dom).textContent, /Fritz/);
 });
 
 test('Tisch: the recap has a one-line entry that opens the SAME section in place', (t) => {

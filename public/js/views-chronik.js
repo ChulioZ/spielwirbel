@@ -16,7 +16,7 @@ const CHRONIK_MILESTONES = ['game_retired', 'game_completed', 'game_restored', '
 const chronikTier = (type) =>
   CHRONIK_MILESTONES.includes(type) ? 'milestone' : type === 'game_added' ? 'add' : '';
 
-// What the fold may gather (#1573): a SHELF change — every `game_*` and
+// What the fold may gather and the „Regal-Änderungen" chip lists (#1573): a SHELF change — every `game_*` and
 // `games_*` entry, expansions included. A member joining or leaving, a rename
 // or a storefront clean-up is not one, and folding it behind „N Regal-
 // Änderungen" would hide a person's arrival under a label that does not name it.
@@ -580,11 +580,14 @@ function renderChronikTab(round, activities) {
     return row;
   }
 
-  // Month-grouped timeline, newest first.
+  // Month-grouped timeline, newest first. „Regal-Änderungen" lists exactly what
+  // the fold gathers (isShelfChange, #1573); member events and renames are under
+  // „Alles" only.
   function renderTimeline() {
     tl.innerHTML = '';
     const visible = entries.filter((e) =>
-      chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session' : e.kind === 'activity'
+      chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session'
+        : e.kind === 'activity' && isShelfChange(e.type)
     );
     if (visible.length === 0) {
       const empty = tl.appendChild(emptyState({ icon: 'ti-history', title: t('chronik.emptyTitle'), text: t('chronik.empty') }));
