@@ -743,7 +743,12 @@ What the app does, in detail. For a short overview see the
   cancel the session if nothing appealed. A settled result ends on „Noch eine
   Session", „Teilen" and „Mehr" in every design — cancelling, deleting and the
   other corrections sit behind „Mehr" — and from 1280px it lays out in two
-  columns, the chosen game and those actions beside the ranking. A single game
+  columns, the chosen game and those actions beside the ranking. „Teilen" hands
+  the result to the device's share sheet as a message **and an image** in every
+  design — the round, the date, the screen's own sentence, the played game's
+  score and who brings the box, and the ranking with its ties, drawn on the
+  device (no cover art, no per-person votes); where the browser cannot share
+  files, the message goes alone (issue #1628). A single game
   can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks
   **„Mehrere Tische"** before the draw. The pool then admits any game that seats

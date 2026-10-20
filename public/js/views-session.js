@@ -1411,6 +1411,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     cancelled: rs.cancelled,
     playedTitle: rs.chosenId ? (games.find((g) => g.id === rs.chosenId) || {}).title || null : null,
     winnerNames: rs.winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
+    // Who brings the chosen game's box (#1628), for the cards — the same
+    // shared rule the band and the ranking rows print („Gehört Anna"), so the
+    // image cannot name a different person. The text share ignores it.
+    bringers: rs.chosenId && !rs.cancelled ? boxBringers(round, session, games.find((g) => g.id === rs.chosenId), shelfParty) : [],
     // So the shared headline says „Verloren" where the screen does, instead
     // of the bare „wurde gespielt." every winnerless night used to get (#1038).
     ending: sessionEnding(session),
@@ -1635,15 +1639,18 @@ function canShareResult() {
   return !!(navigator.share || (navigator.clipboard && navigator.clipboard.writeText));
 }
 
-// Share the summary the user is looking at. Text only, and never sent anywhere
-// by us: `navigator.share` hands it to a picker the *user* chooses a recipient
-// in, and the fallback only writes the clipboard. That is what keeps this free
+// Share the summary the user is looking at — the card with the text, or the
+// text alone — and never sent anywhere by us: `navigator.share` hands it to a
+// picker the *user* chooses a recipient in, and the fallback only writes the
+// clipboard. That is what keeps this free
 // of any new privacy disclosure — don't add an auto-send of any kind.
 async function shareResult(model) {
   // joinNames is passed in so the shared headline is byte-identical to the h1
   // above it ("Anna und Ben", not "Anna, Ben") — see session-share.js.
   const text = sessionShareText(model, t, joinNames, tn, fmtAvg);
-  if (designCard() && await shareResultCard(model, text)) return;
+  // Every design shares an image beside the text where files can be shared
+  // (#1628); shareResultCard answers false wherever the text alone should go.
+  if (await shareResultCard(model, text)) return;
   if (navigator.share) {
     try {
       await navigator.share({ text });

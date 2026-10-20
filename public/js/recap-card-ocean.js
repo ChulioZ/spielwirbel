@@ -183,6 +183,8 @@ function oceanCardSpec(kind, model) {
     winners,
     winText,
     score: played ? { text: fmtAvg(played.score), stop: rampStop(played.score) } : null,
+    // Who brings the box (#1628) — the results screen's „Gehört Anna".
+    bringers: resultCardBringers(model),
   };
 }
 
@@ -397,7 +399,9 @@ function drawOceanSession(ctx, spec, p, badge) {
   }
   const rowLh = Math.round(rowSize * 1.24);
   const rowH = hasRow ? Math.max(50, rowText.length * rowLh + 4) : 0;
-  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + 16 + 18 + 26;
+  // The bringers line grows the band, like a second line of the winner row.
+  const bringH = spec.bringers ? 26 : 0;
+  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + bringH + 16 + 18 + 26;
   const bandTop = H - bandH;
 
   oceanWater(ctx, W, H, 0.46, p);
@@ -426,6 +430,12 @@ function drawOceanSession(ctx, spec, p, badge) {
     rowText.forEach((line, i) => ctx.fillText(line, tx, top + rowLh * 0.77 + i * rowLh));
     y += rowH;
   }
+  if (bringH) {
+    y += bringH;
+    ctx.fillStyle = p['ink-soft'];
+    ctx.font = oceanFont(700, 17);
+    ctx.fillText(recapFit(ctx, spec.bringers, inner), pad, y - 4);
+  }
   y += 16 + 16;
   ctx.fillStyle = p['ink-soft'];
   ctx.font = oceanFont(600, 16);
@@ -450,7 +460,8 @@ function drawOceanLandscape(ctx, spec, p, badge) {
   ctx.font = oceanFont(700, 19);
   const said = [spec.winText, spec.score && spec.score.text].filter(Boolean).join(' · ');
   const line = said ? oceanLines(ctx, said, inner, 2) : [];
-  const blockH = 16 + 10 + lh * title.lines.length + (line.length ? 4 + 24 * line.length : 0) + 14 + 16;
+  const bringH = spec.bringers ? 22 : 0;
+  const blockH = 16 + 10 + lh * title.lines.length + (line.length ? 4 + 24 * line.length : 0) + bringH + 14 + 16;
   let y = (H - blockH) / 2 + 14;
   ctx.fillStyle = p.brand;
   ctx.font = oceanFont(700, 14);
@@ -464,6 +475,12 @@ function drawOceanLandscape(ctx, spec, p, badge) {
     ctx.fillStyle = p.ink;
     ctx.font = oceanFont(700, 19);
     line.forEach((l) => { y += 24; ctx.fillText(l, x, y); });
+  }
+  if (bringH) {
+    y += bringH;
+    ctx.fillStyle = p['ink-soft'];
+    ctx.font = oceanFont(700, 15);
+    ctx.fillText(recapFit(ctx, spec.bringers, inner), x, y);
   }
   y += 14 + 16;
   ctx.fillStyle = p['ink-soft'];
