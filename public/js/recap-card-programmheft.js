@@ -186,6 +186,8 @@ function programmheftCardSpec(kind, model) {
     date,
     cover: !!model.playedTitle && !model.cancelled,
     headline,
+    // Who brings the box (#1628) — the results screen's „Gehört Anna".
+    bringers: resultCardBringers(model),
     facts: facts.slice(0, 3),
     rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, PROGRAMMHEFT_CARD_ROWS).map((r) => ({
       place: String(r.place),
@@ -411,7 +413,17 @@ function drawProgrammheftCard(ctx, spec, badge) {
     const ch = Math.round(cw * 4 / 3);
     programmheftCover(ctx, pad, y, cw, ch, marker);
     programmheftStamp(ctx, pad, y + ch + 8, p);
-    programmheftHeadline(ctx, spec.headline, pad + cw + 16, y, inner - cw - 16, ch + 44, 38, p);
+    const colX = pad + cw + 16;
+    const colW = inner - cw - 16;
+    // The bringers line takes the column's foot, level with the stamp, so the
+    // headline gives up that row rather than the card growing (#1628).
+    programmheftHeadline(ctx, spec.headline, colX, y, colW, spec.bringers ? ch : ch + 44, 38, p);
+    if (spec.bringers) {
+      ctx.fillStyle = p['ink-soft'];
+      ctx.font = programmheftFont(700, 13);
+      const lines = resultCardWrap(ctx, spec.bringers, colW, 2);
+      lines.forEach((l, i) => ctx.fillText(l, colX, y + ch + 8 + 16 + i * 17));
+    }
     y += ch + 8 + 36;
   } else {
     y += programmheftHeadline(ctx, spec.headline, pad, y, inner, spec.kind === 'period' ? 130 : 200, spec.kind === 'period' ? 60 : 38, p);

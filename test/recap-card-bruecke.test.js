@@ -225,12 +225,84 @@ test('the period share draws Die Brücke’s card only while Die Brücke is worn
   } finally { ocean.close(); }
 });
 
-test('the results screen keeps the text share while Die Brücke is worn', async () => {
+// The results screen's model (shareResult, views-session.js) — the text
+// share's own input. A tie for second: two rows print place 2 (#1628).
+const SESSION = {
+  roundName: 'Donnerstagsrunde', when: '20.09.2026, 20:00', day: '20.09.2026', cancelled: false,
+  playedTitle: 'Nordlichter', winnerNames: ['Jonas'], ending: null, people: [],
+  bringers: ['Lea'],
+  rows: [
+    { title: 'Nordlichter', score: 4.8, count: 5, place: 1 },
+    { title: 'Kartographen', score: 4.1, count: 5, place: 2 },
+    { title: 'Azul', score: 4.1, count: 5, place: 2 },
+    { title: 'Zugvögel', score: 0.5, count: 5, place: 4 },
+    { title: 'Unbewertet', score: 0, count: 0, place: null },
+  ],
+};
+const sessionSpec = (dom, model) => JSON.parse(dom.run(`JSON.stringify(brueckeSessionSpec(${JSON.stringify(model)}))`));
+
+test('session spec (#1628): the screen’s sentence, the played score, who brings it, the ranking with its tie', () => {
   const dom = boot();
   try {
-    dom.run('navigator.canShare = () => true; navigator.share = async () => {};');
-    dom.context.__model = { roundName: 'R', playedTitle: 'Nordlichter', winnerNames: [], people: [], rows: [] };
-    assert.equal(await dom.run('shareResultCard(__model, "msg")'), false, 'no image — the caller runs the text share');
-    assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.length)')), 0, 'and no card was drawn');
+    const s = sessionSpec(dom, SESSION);
+    assert.equal(s.kicker, 'Donnerstagsrunde · 20.09.2026', 'the date alone, no time of day');
+    assert.equal(s.title, '„Nordlichter“ wurde gespielt. Jonas hat gewonnen!');
+    assert.ok(!s.title.includes('\u{1F3C6}'), 'the trophy emoji must not reach the canvas');
+    assert.deepEqual(s.plate, { value: '4,8', label: 'Spielwirbel-Score · 5 Wertungen' });
+    assert.equal(s.bringers, 'Gehört Lea');
+    assert.deepEqual(s.rows.map((r) => r.place), ['1', '2', '2', '4'], 'a shared place prints twice; unrated rows never');
+    assert.deepEqual(s.rows.map((r) => r.chosen), [true, false, false, false]);
+
+    // A cancelled evening names no played game, so it carries no plate and no bringers.
+    const cancelled = sessionSpec(dom, { ...SESSION, cancelled: true });
+    assert.equal(cancelled.plate, null);
+    assert.equal(cancelled.bringers, '');
+    assert.equal(cancelled.rows.length, 4, 'its ratings still stand');
+  } finally { dom.close(); }
+});
+
+test('session drawing: 1080 square, no pattern, nothing under 24 px exported, measured inks only', async () => {
+  const dom = boot();
+  try {
+    const inks = JSON.parse(dom.run('JSON.stringify([...new Set(BRUECKE_CARD_TEXT.map((p) => BRUECKE_CARD_TOKENS[p.ink]))])'));
+    const scale = dom.run('BRUECKE_CARD_SCALE');
+    const long = { ...SESSION, playedTitle: 'Die Siedler von Catan – Städte und Ritter Jubiläumsausgabe', winnerNames: ['Konstantin', 'Maximiliane', 'Jonas'] };
+    for (const model of [SESSION, long]) {
+      dom.run('__calls.length = 0; __canvases.length = 0');
+      dom.context.__model = model;
+      await dom.run('brueckeCardBlob(__model, "session")');
+      assert.deepEqual(calls(dom, 'createPattern'), [], 'a pattern taints the canvas in WebKit');
+      for (const f of calls(dom, 'font').map((a) => a[0])) {
+        assert.ok(!/tabler/i.test(f), 'the icon font must never reach the canvas');
+        const px = Number(/(\d+(?:\.\d+)?)px/.exec(f)[1]);
+        assert.ok(px * scale >= 24, `${f} exports at ${(px * scale).toFixed(1)} px, under B8.4’s 24 px floor`);
+      }
+      assert.deepEqual([...new Set(calls(dom, 'drawImage').map((a) => a[0].img))], ['/icons/powered-by-bgg.png']);
+      const drawn = texts(dom);
+      for (const { text, fill } of drawn) {
+        assert.ok(inks.includes(fill), `„${text}" is drawn in ${fill}, which BRUECKE_CARD_TEXT does not measure`);
+      }
+      const all = drawn.map((d) => d.text).join('');
+      assert.ok(all.includes('Kartographen') && all.includes('Azul'), 'the ranking was drawn');
+      assert.ok(all.includes('4,8'), 'the played score was drawn');
+      assert.ok(all.includes('GEHÖRT'), 'the bringers line was drawn');
+      assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
+    }
+  } finally { dom.close(); }
+});
+
+test('the results screen shares Die Brücke’s session card — and the text alone for a split evening', async () => {
+  const dom = boot();
+  try {
+    dom.run('globalThis.__shared = []; navigator.canShare = () => true; navigator.share = async (d) => { __shared.push((d.files || []).length); };');
+    dom.context.__model = SESSION;
+    assert.equal(await dom.run('shareResultCard(__model, "msg")'), true);
+    assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__shared)')), [1], 'the card went with the text');
+    assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
+
+    dom.run('__canvases.length = 0');
+    dom.context.__model = { roundName: 'R', outcome: 'split', tables: [{ title: 'Azul', names: 'A, B' }] };
+    assert.equal(await dom.run('shareResultCard(__model, "msg")'), false, 'a split parent keeps the text share');
+    assert.equal(JSON.parse(dom.run('JSON.stringify(__canvases.length)')), 0);
   } finally { dom.close(); }
 });

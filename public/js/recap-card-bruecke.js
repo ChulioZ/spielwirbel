@@ -1,9 +1,12 @@
 /* Spielwirbel – Die Brücke's shareable card (#1247), from
    docs/design/bruecke/Bruecke-B8-Farben.dc.html (B8.4 „Die Rückblickkarte").
 
-   ONE format: the period recap, square for messengers. The results screen keeps
-   the text share while Die Brücke is worn (shareResultCard) — B8.4 draws no
-   session card.
+   TWO variants, both square for messengers: the period recap (B8.4), and the
+   session result (#1628). B8.4 drew no session card; the operator asked for one
+   in every design, so it is built from B8.4's own parts — the kicker, the
+   display title, one plate in the figures' idiom, a ranking in the bars' mono
+   voice, the same foot — and makes no rule of its own. The privacy list below
+   holds for it unchanged: no faces, no per-person votes.
 
    DRAWN AT 600x600, EXPORTED AT 1080x1080 (x1.8), AND THE EXPORTED SIZE IS WHAT
    THE RULES APPLY TO. The first package measured its own „no text under 24 px"
@@ -384,10 +387,107 @@ function drawBrueckeCard(ctx, spec, badge) {
   }
 }
 
+/* ------------------------------------------------------------- the session */
+
+// Rows the session card can hold under its plate before the foot; fewer when
+// the title takes three lines.
+const BRUECKE_CARD_ROW_H = 30;
+const BRUECKE_CARD_MAX_ROWS = 5;
+
+// The session result's content (#1628), from the model shareResult builds —
+// the text share's own input, so the card cannot rank or score differently.
+function brueckeSessionSpec(model) {
+  const rows = (model.rows || []).filter((r) => r.place && r.count);
+  const played = model.playedTitle && !model.cancelled
+    ? rows.find((r) => r.title === model.playedTitle) : null;
+  return {
+    kicker: [model.roundName, model.day || model.when].filter(Boolean).join(' · '),
+    title: resultCardSentence(model),
+    plate: played ? {
+      value: fmtAvg(played.score),
+      label: `${t('score.name')} · ${tn(played.count, 'recap.ratingsOne', 'recap.ratings', { n: played.count })}`,
+    } : null,
+    bringers: model.playedTitle && !model.cancelled ? resultCardBringers(model) : '',
+    rows: rows.slice(0, BRUECKE_CARD_MAX_ROWS).map((r) => ({
+      place: String(r.place),
+      title: r.title,
+      score: fmtAvg(r.score),
+      chosen: !!model.playedTitle && r.title === model.playedTitle,
+    })),
+  };
+}
+
+function drawBrueckeSession(ctx, spec, badge) {
+  const p = brueckePalette();
+  const W = BRUECKE_CARD_SIZE;
+  const pad = BRUECKE_CARD_PAD;
+  const inner = W - pad * 2;
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  brueckeGround(ctx, W, p);
+  brueckeDots(ctx, W, p);
+  brueckeFrame(ctx, W, p);
+
+  const badgeW = 84;
+  brueckeBadge(ctx, badge, pad + inner, pad - 2, badgeW, p);
+
+  let y = pad + 14;
+  ctx.fillStyle = p.brand;
+  ctx.font = brueckeFont(500, 14, 'mono');
+  brueckeCaps(ctx, spec.kicker, pad, y, inner - badgeW - 20, 14, 0.2);
+  y += 16;
+  // The sentence people came to read gives up a size before it gives up a
+  // line, as the period card's round name does.
+  const title = brueckeTitle(ctx, spec.title, inner, 34, 24, 3);
+  const lh = Math.round(title.size * 1.02);
+  ctx.fillStyle = p.ink;
+  ctx.font = brueckeFont(700, title.size, 'display');
+  title.lines.forEach((line) => { y += lh; ctx.fillText(line, pad, y - lh * 0.12); });
+  y += 16;
+
+  // The played game's score, as one figure plate across the card.
+  if (spec.plate) {
+    brueckeFigure(ctx, { value: spec.plate.value, label: spec.plate.label, accent: true }, pad, y, inner, 86, p);
+    y += 86;
+  }
+  if (spec.bringers) {
+    ctx.fillStyle = p['ink-soft'];
+    ctx.font = brueckeFont(500, 14, 'mono');
+    brueckeCaps(ctx, spec.bringers, pad, y + 22, inner, 14, 0.1);
+    y += 22;
+  }
+  y += 14;
+
+  // The ranking in the notation voice: place, title, score, a hairline under
+  // each; the played game's place and score in the accent.
+  const foot = W - pad;
+  const footTop = foot - 24 - 3 - 14 - 14;
+  const fit = Math.max(0, Math.floor((footTop - 10 - y) / BRUECKE_CARD_ROW_H));
+  spec.rows.slice(0, fit).forEach((r, i) => {
+    const top = y + i * BRUECKE_CARD_ROW_H;
+    const base = top + 20;
+    ctx.fillStyle = r.chosen ? p.brand : p['ink-soft'];
+    ctx.font = brueckeFont(500, 15, 'mono');
+    ctx.fillText(r.place, pad, base);
+    ctx.font = brueckeFont(500, 15, 'mono');
+    const sw = ctx.measureText(r.score).width;
+    ctx.fillText(r.score, pad + inner - sw, base);
+    ctx.fillStyle = p.ink;
+    ctx.font = brueckeFont(r.chosen ? 700 : 500, 16);
+    ctx.fillText(recapFit(ctx, r.title, inner - 34 - sw - 14), pad + 34, base);
+    ctx.fillStyle = p.line;
+    ctx.fillRect(pad, top + BRUECKE_CARD_ROW_H - 1, inner, 1);
+  });
+
+  ctx.fillStyle = p.line;
+  ctx.fillRect(pad, footTop, inner, 1);
+  brueckeWordmark(ctx, pad + inner, foot - 4, p);
+}
+
 // Render the card to a PNG Blob. Rejects rather than resolving null, so the
 // caller's catch — which reports to the operator (reportClientError in
 // shareRecapCard) as well as toasting — is the one place a failure is seen.
-async function brueckeCardBlob(model) {
+async function brueckeCardBlob(model, kind) {
   if (document.fonts && document.fonts.load) {
     try {
       await Promise.all([
@@ -395,14 +495,15 @@ async function brueckeCardBlob(model) {
       ].map((f) => document.fonts.load(f)));
     } catch { /* a face that cannot load leaves the card in the fallback */ }
   }
-  const spec = brueckeCardSpec(model);
+  const session = kind === 'session';
+  const spec = session ? brueckeSessionSpec(model) : brueckeCardSpec(model);
   const badge = await tischBadge();
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(BRUECKE_CARD_SIZE * BRUECKE_CARD_SCALE);
   canvas.height = Math.round(BRUECKE_CARD_SIZE * BRUECKE_CARD_SCALE);
   const ctx = canvas.getContext('2d');
   ctx.scale(BRUECKE_CARD_SCALE, BRUECKE_CARD_SCALE);
-  drawBrueckeCard(ctx, spec, badge);
+  if (session) drawBrueckeSession(ctx, spec, badge); else drawBrueckeCard(ctx, spec, badge);
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
   });

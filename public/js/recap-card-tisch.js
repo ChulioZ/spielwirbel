@@ -10,7 +10,7 @@
 
    Reached only while Der Tisch is worn: recapCardBlob (the Chronik) and
    shareResult (the results screen) ask `activeDesign().card` and fall through
-   to the classic behaviour otherwise, so Klassisch is untouched. The MODELS are
+   to the classic card otherwise (result-card.js for a session, #1628). The MODELS are
    the ones those two screens already build for their shares — nothing here
    computes a new fact.
 
@@ -194,6 +194,8 @@ function tischCardSpec(kind, model) {
       big: played ? fmtAvg(played.score) : '',
       bigIsTitle: false,
       sub: played ? `${t('score.name')} · ${tn(played.count, 'recap.ratingsOne', 'recap.ratings', { n: played.count })}` : '',
+      // Who brings the box (#1628) — the results screen's „Gehört Anna".
+      bringers: resultCardBringers(model),
     } : null,
     counters: [],
     people: (model.people || []).map((p) => ({ ...p })),
@@ -401,13 +403,15 @@ function drawTischFeature(ctx, f, y, p) {
     lines.forEach((line, i) => ctx.fillText(recapFit(ctx, line.map((w) => w.text).join(''), maxW), x, y + 70 + i * 28));
   } else if (f.big) {
     ctx.font = tischFont(800, 56, true);
-    ctx.fillText(f.big, x, y + 96);
+    // With a bringers line the score and its sub move up a step, so the three
+    // still end at the cover's foot and the Tafel below keeps its place: the
+    // card is a fixed 675, and every row under the feature is already spent.
+    ctx.fillText(f.big, x, y + (f.bringers ? 84 : 96));
   }
-  if (f.sub) {
-    ctx.fillStyle = p['ink-soft'];
-    ctx.font = tischFont(700, 13);
-    ctx.fillText(recapFit(ctx, f.sub, maxW), x, y + 120);
-  }
+  ctx.fillStyle = p['ink-soft'];
+  ctx.font = tischFont(700, 13);
+  if (f.sub) ctx.fillText(recapFit(ctx, f.sub, maxW), x, y + (f.bringers ? 106 : 120));
+  if (f.bringers) ctx.fillText(recapFit(ctx, f.bringers, maxW), x, y + 125);
   return y + ch;
 }
 
@@ -618,8 +622,8 @@ function designCard() {
   return (d && d.card) || null;
 }
 
-/* The results screen's „Teilen" while a design with its own card is worn: the
-   card as a PNG, WITH the message text beside it, through the user's own share
+/* The results screen's „Teilen", in every design (#1628 — Klassisch and Die
+   Brücke joined the four with a session card of their own): the card as a PNG, WITH the message text beside it, through the user's own share
    sheet — the same trust shape as every other share here (nothing is sent by
    us; the user picks the recipient).
 
@@ -633,16 +637,20 @@ function designCard() {
    did not know they were getting. */
 async function shareResultCard(model, text) {
   if (!(navigator.canShare && navigator.share && typeof File !== 'undefined')) return false;
-  // Die Brücke's card is the period recap only (B8.4, #1247): its results
-  // screen keeps the text share rather than wearing Der Tisch's session card.
-  if (designCard() === 'bruecke') return false;
+  const card = designCard();
+  // Klassisch (no card of its own) and Die Brücke draw a ranking (#1628); a
+  // split evening's parent is a table builder, not a ranking, so those two keep
+  // the text share for it.
+  if ((!card || card === 'bruecke') && model.outcome === 'split') return false;
   let blob;
   try {
     // Ocean's card (#1220) picks its proportion from the screen; its spec
     // handles a split session itself.
-    if (designCard() === 'programmheft') blob = await programmheftCardBlob('session', model); else
-    if (designCard() === 'forest') blob = await forestCardBlob('session', model); else
-    blob = designCard() === 'ocean'
+    if (!card) blob = await resultCardBlob(model); else
+    if (card === 'bruecke') blob = await brueckeCardBlob(model, 'session'); else
+    if (card === 'programmheft') blob = await programmheftCardBlob('session', model); else
+    if (card === 'forest') blob = await forestCardBlob('session', model); else
+    blob = card === 'ocean'
       ? await oceanCardBlob(oceanShareKind(), model)
       : await tischCardBlob(model.outcome === 'split' ? 'split' : 'session', model);
   } catch (err) {

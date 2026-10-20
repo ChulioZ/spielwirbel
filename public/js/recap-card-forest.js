@@ -191,16 +191,21 @@ function forestCardSpec(kind, model) {
     if (headline.startsWith(SHARE_TROPHY)) headline = headline.slice(SHARE_TROPHY.length).trimStart();
   }
 
+  // Who brings the box (#1628) — the results screen's „Gehört Anna". The card
+  // is a fixed 675 with the Tafel already filling it, so the line costs a row.
+  const bringers = model.playedTitle && !model.cancelled ? resultCardBringers(model) : '';
   return {
     kind: 'session',
     kicker,
     cover: !!model.playedTitle && !model.cancelled,
     headline: [{ text: headline, gold: false }],
     winner,
-    rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, FOREST_CARD_ROWS).map((r) => ({
-      place: String(r.place), title: r.title, score: fmtAvg(r.score), stop: rampStop(r.score),
-    })),
+    rows: (model.rows || []).filter((r) => r.place && r.count)
+      .slice(0, FOREST_CARD_ROWS - (bringers ? 1 : 0)).map((r) => ({
+        place: String(r.place), title: r.title, score: fmtAvg(r.score), stop: rampStop(r.score),
+      })),
     factLine: model.factLine || '',
+    bringers,
   };
 }
 
@@ -512,12 +517,13 @@ function drawForestCard(ctx, spec, badge) {
     y += forestHeadline(ctx, spec.headline, y, 32, spec.winner ? 2 : 3, p) + 8;
     if (spec.winner) y += forestWinner(ctx, spec.winner, y, p) + 6;
     y += forestRows(ctx, spec.rows, y, p) + 4;
-    if (spec.factLine) {
+    const lines = [spec.factLine, spec.bringers].filter(Boolean);
+    if (lines.length) {
       ctx.fillStyle = p.line;
       ctx.fillRect(FOREST_CARD_PAD, y, W - FOREST_CARD_PAD * 2, 1);
       ctx.fillStyle = p['ink-soft'];
       ctx.font = forestCardFont(700, 13);
-      ctx.fillText(recapFit(ctx, spec.factLine, W - FOREST_CARD_PAD * 2), FOREST_CARD_PAD, y + 20);
+      lines.forEach((line, i) => ctx.fillText(recapFit(ctx, line, W - FOREST_CARD_PAD * 2), FOREST_CARD_PAD, y + 20 + i * 20));
     }
   }
   forestFoot(ctx, badge, p);

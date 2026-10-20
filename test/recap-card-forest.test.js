@@ -331,6 +331,6 @@ test('the results screen adds the long date and its fact line under Forest, and 
 
   const classic = await sharedModel('klassisch');
   assert.deepEqual(Object.keys(classic).sort(),
-    ['cancelled', 'day', 'ending', 'people', 'playedTitle', 'roundName', 'rows', 'when', 'winnerNames'],
-    'Klassisch’s share model is exactly what it was');
+    ['bringers', 'cancelled', 'day', 'ending', 'people', 'playedTitle', 'roundName', 'rows', 'when', 'winnerNames'],
+    'Klassisch’s share model carries only what every card reads');
 });

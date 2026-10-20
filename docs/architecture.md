@@ -698,6 +698,9 @@ public/
     shelf-profile-card.js
                      the Steckbrief as a shareable PNG — flat fills, no SVG, no
                      pattern, the same-origin BGG badge (issue #1173)
+    result-card.js   the session result as a shareable PNG under Klassisch —
+                     the ranking with its ties, the played game and who brings
+                     it (issue #1628)
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
                      definition (issue #1185) — and the scope strip that heads

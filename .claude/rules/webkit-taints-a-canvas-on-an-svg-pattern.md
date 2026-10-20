@@ -122,6 +122,12 @@ and whirl as `Path2D`, and the fireflies as radial-gradient discs — no pattern
 anywhere. Exported clean in headless Chromium; **no WebKit run** — the probe in
 `browser-pane-is-chromium-only.md` needs a Mac, and the slice was built on Linux.
 
+**Klassisch's session card (#1628, `public/js/result-card.js`) and Die
+Brücke's session variant** take the same shape — flat fills, rounded rects, the
+badge via `drawImage`, nothing else — and every session card, the bringers line
+included, exported clean in the Browser pane and a non-persistent WKWebView
+pointed at a running server.
+
 A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it
 cannot see the taint itself; say so rather than reading it as engine coverage.
