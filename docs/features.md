@@ -433,8 +433,10 @@ What the app does, in detail. For a short overview see the
     and every „…" menu in the app keeps one order: change, share, what can be
     undone, and last whatever asks a destructive question (#1195).
   - **Chronik** – one month-grouped timeline of everything that happened:
-    games added / retired / restored and session outcomes. Above the timeline,
-    a **period recap** sums up one calendar month or year — sessions played,
+    games added / retired / restored and session outcomes. A run of shelf
+    changes folds behind one „N Regal-Änderungen" line, so the sessions carry
+    the page. Beside the timeline on a desktop (above it on a phone, where it
+    starts as one line in some designs), a **period recap** sums up one calendar month or year — sessions played,
     distinct games, the period's most-played and best-rated game, and what was
     added, retired or completed — over a picker offering only periods that
     actually have something in them. Any of them can be shared as an image: the

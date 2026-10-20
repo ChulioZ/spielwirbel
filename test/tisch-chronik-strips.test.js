@@ -82,12 +82,10 @@ const shape = (dom) => [...timeline(dom).children].map((c) =>
     : c.classList.contains('tl-run') ? 'run'
       : c.querySelector('.session-card') ? 'session' : 'change');
 
-test('Klassisch: the timeline, its cards and the recap are exactly what they were', (t) => {
+test('Klassisch: the cards are what they were — no strips, no page count', (t) => {
   const dom = render(t, 'klassisch');
-  assert.deepEqual(shape(dom), ['month', 'session', 'change', 'change', 'session', 'month', 'session', 'change'],
-    'every change is its own row between the sessions, nothing folded');
-  assert.equal(dom.app.querySelectorAll('.tl-run, .session-card--strip, .session-card__date, .session-card__faces, .chronik__count').length, 0,
-    'none of the Tisch structure may render under Klassisch');
+  assert.equal(dom.app.querySelectorAll('.session-card--strip, .session-card__date, .session-card__faces, .chronik__count').length, 0,
+    'the Tisch strip structure may not render under Klassisch');
 
   const card = timeline(dom).querySelector('.session-card');
   assert.deepEqual([...card.children].map((c) => c.className), ['session-card__img', 'session-card__body']);
@@ -95,12 +93,39 @@ test('Klassisch: the timeline, its cards and the recap are exactly what they wer
   const meta = card.querySelector('.session-card__meta').textContent;
   assert.match(meta, /2026/, 'the date still leads the meta line');
   assert.doesNotMatch(meta, /dabei/, 'no seat count in the Klassisch meta');
-  assert.equal(dom.app.querySelectorAll('.timeline .tl-dot').length, 6, 'every entry keeps its rail dot');
+});
 
+// #1573: Klassisch adopted the fold and the phone's recap entry the other
+// designs share; the session cards above stay its own.
+for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
+  test(`${design}: a run of shelf changes folds; a lone change stays a row`, (t) => {
+    const dom = render(t, design);
+    assert.deepEqual(shape(dom), ['month', 'session', 'run', 'session', 'month', 'session', 'change']);
+  });
+}
+
+test('Klassisch: the recap has the same one-line entry over the same panel', (t) => {
+  const dom = render(t, 'klassisch');
   const recap = dom.app.querySelector('.precap');
-  assert.ok(recap, 'the fixture has a period to recap');
-  assert.equal(recap.querySelector('.precap__entry, .precap__panel'), null);
-  assert.ok(recap.firstElementChild.classList.contains('section-head'), 'the heading is still the section\'s first child');
+  assert.ok(recap.classList.contains('precap--entry'));
+  const [entry, panel] = recap.children;
+  assert.ok(entry.classList.contains('precap__entry'));
+  assert.equal(entry.getAttribute('aria-controls'), panel.id);
+  assert.equal(entry.querySelector('.precap__entry-label').textContent, 'Rückblick August 2026');
+  entry.click();
+  assert.ok(recap.classList.contains('is-open'));
+  // Still first in the DOM: the desktop column is placed by styles.css, so the
+  // reading order is the phone's.
+  assert.ok(recap.nextElementSibling.querySelector('.timeline'), 'the recap precedes the timeline');
+});
+
+test('the designs with a recap of their own keep it — no entry line', (t) => {
+  for (const design of ['ocean', 'bruecke', 'programmheft', 'forest']) {
+    const dom = render(t, design);
+    const recap = dom.app.querySelector('.precap');
+    assert.ok(recap, `${design} has a recap`);
+    assert.equal(recap.querySelector('.precap__entry, .precap__panel'), null, design);
+  }
 });
 
 test('Tisch: each session is a strip — date column first, faces, the pill last', (t) => {

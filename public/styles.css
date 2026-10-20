@@ -9835,6 +9835,83 @@ kbd {
    simpler render path. Empty the grid has no height — only this margin, which it
    does not need. */
 .precap__body > .pokale-cards:empty { margin-top: 0; }
+
+/* ---- Klassisch adopts the shared Chronik composition (#1573) ----
+   The other five designs already folded a run of shelf changes behind one line
+   (#1271), set the recap beside the timeline on a desktop and shrank it on a
+   phone. Klassisch keeps its colours, type and cards and takes the arrangement.
+   Scoped to Klassisch because each of the five styles these hooks itself. */
+:root[data-design="klassisch"] .tl-run__toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+:root[data-design="klassisch"] .tl-run__toggle:hover { background: var(--surface); }
+:root[data-design="klassisch"] .tl-run__label { flex: 1; min-width: 0; }
+:root[data-design="klassisch"] .tl-run__toggle[aria-expanded="true"] .tl-run__chev { transform: rotate(180deg); }
+/* :not([hidden]) — a display rule on the list would otherwise beat the
+   attribute that keeps it folded (hidden-attribute-vs-display-rule.md). */
+:root[data-design="klassisch"] .tl-run__list:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* The phone's recap: one line, „Rückblick <Monat Jahr>", that opens the same
+   section in place — Der Tisch's entry (views-period-recap.js). Above 520px
+   the line is gone and the panel is the section it always was. */
+:root[data-design="klassisch"] .precap__entry { display: none; }
+@media (max-width: 520px) {
+  :root[data-design="klassisch"] .precap__entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--text-md);
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+  }
+  :root[data-design="klassisch"] .precap__entry-label { flex: 1; min-width: 0; }
+  :root[data-design="klassisch"] .precap--entry:not(.is-open) > .precap__panel { display: none; }
+  :root[data-design="klassisch"] .precap--entry.is-open > .precap__panel { margin-top: 14px; }
+  :root[data-design="klassisch"] .precap--entry.is-open .precap__entry-chev { transform: rotate(180deg); }
+}
+
+/* Desktop: the recap becomes a 400px column right of the timeline, as Ocean's
+   does (ocean.css O13.1). It is first in the DOM, so the reading order — recap,
+   then history — is the phone's. The tiles stack: three across in 400px would
+   break their labels. */
+@media (min-width: 1280px) {
+  :root[data-design="klassisch"] .app:has(> .rail):has(> .precap) {
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) 400px;
+  }
+  :root[data-design="klassisch"] .app:has(> .rail) > .precap {
+    grid-column: 3;
+    grid-row: 1 / span 999;
+    align-self: start;
+  }
+  :root[data-design="klassisch"] .app > .precap .pokale-cards { grid-template-columns: minmax(0, 1fr); }
+}
 /* The favourite tile anchors on its game's cover (#695), like the Chronik
    session cards, the results podium and the Regal — the one section of the app
    that carried none of its personality. Compounded to (0,2,0) so it outranks

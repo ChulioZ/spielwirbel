@@ -495,11 +495,11 @@ function renderChronikTab(round, activities) {
     return card;
   }
 
-  /* Shelf changes recede under Der Tisch (#1271): a run of two or more
+  /* Shelf changes recede (#1271, every design since #1573): a run of two or more
      consecutive changes inside one month folds behind ONE quiet disclosure
      („5 Regal-Änderungen"), so the sessions carry the page. Nothing is hidden
      for good — the button expands the same rows, delete buttons and links the
-     Klassisch timeline shows. A lone change stays in place as a light row:
+     „Regal-Änderungen" filter shows unfolded. A lone change stays in place as a light row:
      folding a single line behind a button would cost a tap to read one line. */
   function buildChangeRun(run) {
     const id = `tl-run-${++chronikRunSeq}`;
@@ -598,7 +598,8 @@ function renderChronikTab(round, activities) {
     // Das Programmheft too (#1379): P13.1 prints the editions, a lone change
     // between them stays a line of its own.
     // Forest too (#1473): F13.1 walks the sessions, a run of changes folds.
-    const fold = (tisch || ocean || bruecke || programmheft || forest) && chronikFilter === 'all';
+    // And Klassisch since #1573, which makes it every design.
+    const fold = chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];
