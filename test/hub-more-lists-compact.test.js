@@ -121,6 +121,13 @@ test('Das Programmheft: one strip at every width, spanning the bottom strip from
   assert.ok(list, 'no unconditional Programmheft strip rule');
   assert.match(list, /flex-direction:\s*row/);
   assert.match(list, /flex-wrap:\s*wrap/);
+  // Text tabs, not cards: the row's card chrome and its chevron are reset.
+  const row = bodyOf(':root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row', rulesOf(topLevel(css)));
+  assert.ok(row, 'no Programmheft row reset');
+  assert.match(row, /border:\s*0/);
+  assert.match(row, /background:\s*none/);
+  const meta = bodyOf(':root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row .ds-row__meta', rulesOf(topLevel(css)));
+  assert.match(meta || '', /display:\s*none/);
   const wide = mediaBlocks(css).filter(([q]) => /min-width:\s*1280px/.test(q)).map(([, c]) => c).join('\n');
   assert.match(bodyOf(':root[data-design="programmheft"] .ph-hub__strip > .hub-offshelf', rulesOf(wide)) || '',
     /grid-column:\s*1\s*\/\s*-1/);
