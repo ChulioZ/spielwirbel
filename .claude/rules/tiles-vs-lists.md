@@ -38,7 +38,11 @@ down column 1 and then down column 2, which scrambles a chronology outright.
 side. So an ordered container may be a row-major `grid`; it may never be
 `columns:`, however similar the two look in a screenshot. A RANKING stays a list
 either way, because the eye has to compare adjacent ranks rather than merely
-read them in order.
+read them in order — **unless each entry PRINTS its rank.** The recommendations
+(#1576, operator decision) tile from 1280px in every design with a numeral on
+each card, because there the reader picks one game rather than comparing
+neighbours; the numeral is what keeps rank 5 legible once it wraps under rank 1.
+Session results stay a list: comparing neighbours is that screen's whole job.
 
 The Chronik keeps the list form for a different reason than the ban: it is a
 month-grouped timeline whose rows are rich, so the richness half decides it.

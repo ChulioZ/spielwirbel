@@ -202,7 +202,8 @@ What the app does, in detail. For a short overview see the
   Category, mechanic and designer
   names stay in BGG's English in every language: the data may not be modified.
   Beside those three lists the shelf offers **„Das könnte euch auch
-  gefallen"** — games the round does *not* own, ranked against its own taste.
+  gefallen"** — games the round does *not* own, ranked against its own taste
+  (each card carries its place, and on a wide screen they stand as tiles).
   The profile comes from the three things BoardGameGeek cannot know: which games
   this group actually rated well, which ones it keeps putting on the table, and
   how many people really sit at their table (seats, so a team sharing one hand
