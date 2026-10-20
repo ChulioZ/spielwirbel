@@ -36,11 +36,13 @@ r.cssRules.length     // 0
 ## The fix: recurse on LENGTH, collect on `selectorText`
 
 ```js
-const walk = (list, out) => { for (const r of list) {
-  if (r.selectorText) out.push(r);
-  if (r.cssRules && r.cssRules.length) walk(r.cssRules, out);
+const walk = (list, out) => {
+  for (const r of list) {
+    if (r.selectorText) out.push(r);
+    if (r.cssRules && r.cssRules.length) walk(r.cssRules, out);
+  }
   return out;
-} };
+};
 ```
 
 Both halves changed: a rule may now legitimately be *both* a selector-bearing

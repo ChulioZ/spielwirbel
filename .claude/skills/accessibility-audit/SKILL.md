@@ -104,6 +104,11 @@ Two probing traps specific to this domain:
 - **`el.focus()` does not set `:focus-visible`** in Chrome. Checking focus
   indicators requires real Tab keypresses (`computer {action:"key", text:"Tab"}`),
   not scripted focus. Scripted focus produces phantom A-007 findings.
+  But the pane does not reliably deliver Tab either: run the capture-phase
+  `keydown` spy first and trust an A-007 or A-004 result only when the Tab
+  keydown was seen. Otherwise use headless Chrome over CDP (the
+  `browser-verification` skill), where `Input.dispatchKeyEvent` sends a real key
+  (`.claude/skills/browser-verification/escape-keypresses-never-reach-the-preview-pane.md`).
 - **A synthetic click ignores modifier keys** for an anchor's default action, so
   it navigates instead of opening a tab and tears the page down. To check A-009,
   probe the *decision* (`e.defaultPrevented` on a document-level listener that
