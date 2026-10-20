@@ -56,8 +56,9 @@ function activeDesign() {
 // (#1262 and its sibling Tisch structure issues): "is this design worn right
 // now?". Every branch in a view goes through here rather than reading
 // <html data-design> itself, so there is one place that answers it and one
-// grep that finds every screen a design restructures. Klassisch is never
-// branched on — its DOM is the default path, untouched.
+// grep that finds every screen a design restructures. Klassisch's DOM is the
+// default path; where it adopts another design's composition (#1573 and its
+// siblings) it is named as designIs(CLASSIC_DESIGN), so the same grep finds it.
 function designIs(id) {
   return activeDesign().id === id;
 }

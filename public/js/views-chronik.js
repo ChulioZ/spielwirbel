@@ -16,6 +16,12 @@ const CHRONIK_MILESTONES = ['game_retired', 'game_completed', 'game_restored', '
 const chronikTier = (type) =>
   CHRONIK_MILESTONES.includes(type) ? 'milestone' : type === 'game_added' ? 'add' : '';
 
+// What the fold may gather and the „Regal-Änderungen" chip lists (#1573): a SHELF change — every `game_*` and
+// `games_*` entry, expansions included. A member joining or leaving, a rename
+// or a storefront clean-up is not one, and folding it behind „N Regal-
+// Änderungen" would hide a person's arrival under a label that does not name it.
+const isShelfChange = (type) => /^games?_/.test(type);
+
 const CHRONIK_FILTERS = ['all', 'sessions', 'changes'];
 
 /* Der Tisch lays the Chronik out as the SESSIONS (#1271, T13.1/T13.5): each is
@@ -495,11 +501,11 @@ function renderChronikTab(round, activities) {
     return card;
   }
 
-  /* Shelf changes recede under Der Tisch (#1271): a run of two or more
-     consecutive changes inside one month folds behind ONE quiet disclosure
+  /* Shelf changes recede (#1271, every design since #1573): a run of two or more
+     consecutive shelf changes (isShelfChange) inside one month folds behind ONE quiet disclosure
      („5 Regal-Änderungen"), so the sessions carry the page. Nothing is hidden
      for good — the button expands the same rows, delete buttons and links the
-     Klassisch timeline shows. A lone change stays in place as a light row:
+     „Regal-Änderungen" filter shows unfolded. A lone change stays in place as a light row:
      folding a single line behind a button would cost a tap to read one line. */
   function buildChangeRun(run) {
     const id = `tl-run-${++chronikRunSeq}`;
@@ -574,11 +580,14 @@ function renderChronikTab(round, activities) {
     return row;
   }
 
-  // Month-grouped timeline, newest first.
+  // Month-grouped timeline, newest first. „Regal-Änderungen" lists exactly what
+  // the fold gathers (isShelfChange, #1573); member events and renames are under
+  // „Alles" only.
   function renderTimeline() {
     tl.innerHTML = '';
     const visible = entries.filter((e) =>
-      chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session' : e.kind === 'activity'
+      chronikFilter === 'all' ? true : chronikFilter === 'sessions' ? e.kind === 'session'
+        : e.kind === 'activity' && isShelfChange(e.type)
     );
     if (visible.length === 0) {
       const empty = tl.appendChild(emptyState({ icon: 'ti-history', title: t('chronik.emptyTitle'), text: t('chronik.empty') }));
@@ -598,7 +607,8 @@ function renderChronikTab(round, activities) {
     // Das Programmheft too (#1379): P13.1 prints the editions, a lone change
     // between them stays a line of its own.
     // Forest too (#1473): F13.1 walks the sessions, a run of changes folds.
-    const fold = (tisch || ocean || bruecke || programmheft || forest) && chronikFilter === 'all';
+    // And Klassisch since #1573, which makes it every design.
+    const fold = chronikFilter === 'all';
     let lastMonth = '';
     for (let i = 0; i < visible.length;) {
       const e = visible[i];
@@ -611,9 +621,9 @@ function renderChronikTab(round, activities) {
         const played = ocean ? visible.filter((v) => v.kind === 'session' && fmtMonth(v.at) === month).length : 0;
         tl.appendChild(h(`<div class="tl-month">${ocean ? `<span class="tl-month__name">${esc(month)}</span>${played ? `<span class="tl-month__count">${esc(tn(played, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>` : ''}` : esc(month)}</div>`));
       }
-      if (fold && e.kind === 'activity') {
+      if (fold && e.kind === 'activity' && isShelfChange(e.type)) {
         let j = i + 1;
-        while (j < visible.length && visible[j].kind === 'activity' && fmtMonth(visible[j].at) === month) j++;
+        while (j < visible.length && visible[j].kind === 'activity' && isShelfChange(visible[j].type) && fmtMonth(visible[j].at) === month) j++;
         if (j - i > 1) {
           tl.appendChild(buildChangeRun(visible.slice(i, j)));
           i = j;

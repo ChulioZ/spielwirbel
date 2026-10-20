@@ -40,10 +40,12 @@ function renderPeriodRecapSection(round, activities) {
      of the Chronik — „Rückblick September 2026" — that opens the full section
      in place. The same section, not a second copy of it: the line is a
      disclosure over the panel below it, and from 521px up tisch.css hides the
-     line and shows the panel as always (the desktop column is T13.1's). */
+     line and shows the panel as always (the desktop column is T13.1's).
+     Klassisch took the same entry in #1573 (styles.css); the other four
+     designs compact their recap card on a phone instead. */
   let panel = sec;
   let entryLabel = null;
-  if (designIs('tisch')) {
+  if (designIs('tisch') || designIs(CLASSIC_DESIGN)) {
     sec.classList.add('precap--entry');
     const entry = h(`<button type="button" class="precap__entry" aria-expanded="false" aria-controls="precap-panel">
          <i class="ti ti-history" aria-hidden="true"></i>
