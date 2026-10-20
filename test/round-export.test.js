@@ -172,6 +172,8 @@ test('votes.csv and points.csv carry one row per rating and per score (#1702)', 
     session_id: 's1', date: '', person_id: 'gu1', person: 'Gast, Eva', guest: 'true',
     game_id: 'g1', game: 'Catan', rating: '3',
   });
+  assert.ok(votes.filter((v) => v.person_id !== 'gu1').every((v) => v.guest === 'false'),
+    'a member row says false, not an empty cell — the column filters the same in both tables');
   const points = parseCsv(all['points.csv']);
   assert.deepEqual(points.map((p) => [p.person, p.points]),
     [['지민', '42'], ['Ben, "der Große"', '-3'], ['Gast, Eva', '40']],

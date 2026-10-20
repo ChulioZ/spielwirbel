@@ -56,11 +56,13 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 - Feedback ist kontounabhängig gespeichert; nur bei angegebener E-Mail
   zuordenbar — dann mit exportieren.
 - **Selbstbedienungs-Export je Runde** (#1702) — eine **Ergänzung**, kein
-  Ersatz: Wer Zugriff auf eine Runde hat (Eigentümer, Mitverwaltung,
-  Mitspielende), lädt sie unter Runde → Einstellungen → „Daten exportieren"
+  Ersatz: Jedes Konto mit Zugriff auf eine Runde (Eigentümer sowie
+  eingeladene Konten mit der Rolle „Mitverwaltung" oder „Mitspielen"; reine
+  Namensplätze ohne Konto haben keinen eigenen Zugriff) lädt sie unter Runde → Einstellungen → „Daten exportieren"
   jederzeit selbst herunter (ZIP mit CSV-Tabellen + `round.json`, im Browser
-  aus dem ohnehin lesbaren Runden-Abruf erzeugt; kein neuer Empfänger, keine
-  Speicherung). Bei einer Art-20-Anfrage, die nur Rundendaten betrifft, darf
+  aus dem ohnehin lesbaren Runden-Abruf erzeugt und nur auf dem Gerät der
+  Person gespeichert; kein neuer Empfänger, keine zusätzliche Speicherung auf
+  dem Server). Bei einer Art-20-Anfrage, die nur Rundendaten betrifft, darf
   darauf **hingewiesen** werden; die Pflicht zur Antwort bleibt, und der
   Betreiber-Export oben bleibt der Weg für Kontodaten und für alles, was die
   Person nicht selbst abrufen kann.

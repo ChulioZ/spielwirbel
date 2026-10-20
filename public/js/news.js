@@ -56,39 +56,39 @@ const NEWS = [
     kind: 'new',
     de: {
       title: 'Eure Daten zum Mitnehmen',
-      body: 'In den Einstellungen einer Runde lädt „Daten exportieren“ jetzt alles als ZIP herunter: Spiele, Sessions, Bewertungen, Punkte, Mitspielende und Tags als Tabellen für Excel & Co., dazu die ganze Runde als JSON. Das geht für alle, die in der Runde sind.',
+      body: 'In den Einstellungen einer Runde lädt „Daten exportieren“ jetzt alles als ZIP herunter: Spiele, Sessions, Bewertungen, Punkte, Mitspielende und Tags als Tabellen für Excel & Co., dazu die ganze Runde als JSON. Das geht für alle mit Zugriff auf die Runde.',
     },
     en: {
       title: 'Take your data with you',
-      body: 'In a round’s settings, “Export data” now downloads everything as a zip: games, sessions, ratings, points, members and tags as spreadsheet tables, plus the whole round as JSON. Anyone in the round can do it.',
+      body: 'In a round’s settings, “Export data” now downloads everything as a zip: games, sessions, ratings, points, members and tags as spreadsheet tables, plus the whole round as JSON. Anyone with access to the round can do it.',
     },
     es: {
       title: 'Llevaos vuestros datos',
-      body: 'En los ajustes de un grupo, «Exportar datos» descarga ahora todo en un zip: juegos, sesiones, valoraciones, puntos, participantes y etiquetas como tablas para hojas de cálculo, más el grupo entero en JSON. Puede hacerlo cualquiera del grupo.',
+      body: 'En los ajustes de un grupo, «Exportar datos» descarga ahora todo en un zip: juegos, sesiones, valoraciones, puntos, participantes y etiquetas como tablas para hojas de cálculo, más el grupo entero en JSON. Puede hacerlo cualquiera con acceso al grupo.',
     },
     fr: {
       title: 'Vos données, à emporter',
-      body: 'Dans les réglages d’un groupe, « Exporter les données » télécharge désormais tout dans un zip : jeux, sessions, notes, points, participants et tags sous forme de tableaux pour tableur, plus le groupe entier en JSON. Tout membre du groupe peut le faire.',
+      body: 'Dans les réglages d’un groupe, « Exporter les données » télécharge désormais tout dans un zip : jeux, sessions, notes, points, participants et tags sous forme de tableaux pour tableur, plus le groupe entier en JSON. Toute personne ayant accès au groupe peut le faire.',
     },
     it: {
       title: 'I vostri dati, da portare via',
-      body: 'Nelle impostazioni di un gruppo, «Esporta i dati» ora scarica tutto in uno zip: giochi, sessioni, valutazioni, punti, partecipanti e tag come tabelle per fogli di calcolo, più l’intero gruppo in JSON. Può farlo chiunque nel gruppo.',
+      body: 'Nelle impostazioni di un gruppo, «Esporta i dati» ora scarica tutto in uno zip: giochi, sessioni, valutazioni, punti, partecipanti e tag come tabelle per fogli di calcolo, più l’intero gruppo in JSON. Può farlo chiunque abbia accesso al gruppo.',
     },
     nl: {
       title: 'Jullie gegevens om mee te nemen',
-      body: 'In de instellingen van een groep downloadt ‘Gegevens exporteren’ nu alles als zip: spellen, sessies, beoordelingen, punten, spelers en tags als tabellen voor spreadsheets, plus de hele groep als JSON. Iedereen in de groep kan dat.',
+      body: 'In de instellingen van een groep downloadt ‘Gegevens exporteren’ nu alles als zip: spellen, sessies, beoordelingen, punten, spelers en tags als tabellen voor spreadsheets, plus de hele groep als JSON. Iedereen met toegang tot de groep kan dat.',
     },
     pt: {
       title: 'Seus dados, para levar',
-      body: 'Nas configurações de um grupo, “Exportar dados” agora baixa tudo em um zip: jogos, sessões, avaliações, pontos, participantes e tags como tabelas para planilhas, mais o grupo inteiro em JSON. Qualquer pessoa do grupo pode fazer isso.',
+      body: 'Nas configurações de um grupo, “Exportar dados” agora baixa tudo em um zip: jogos, sessões, avaliações, pontos, participantes e tags como tabelas para planilhas, mais o grupo inteiro em JSON. Qualquer pessoa com acesso ao grupo pode fazer isso.',
     },
     fi: {
       title: 'Tiedot mukaan',
-      body: 'Porukan asetuksissa ”Vie tiedot” lataa nyt kaiken zip-tiedostona: pelit, sessiot, arviot, pisteet, pelaajat ja tagit taulukoina taulukkolaskentaan sekä koko porukan JSON-muodossa. Sen voi tehdä kuka tahansa porukasta.',
+      body: 'Porukan asetuksissa ”Vie tiedot” lataa nyt kaiken zip-tiedostona: pelit, sessiot, arviot, pisteet, pelaajat ja tagit taulukoina taulukkolaskentaan sekä koko porukan JSON-muodossa. Sen voi tehdä kuka tahansa, jolla on pääsy porukkaan.',
     },
     ko: {
       title: '데이터를 직접 가져가세요',
-      body: '모임 설정의 “데이터 내보내기”로 이제 모든 것을 ZIP으로 내려받을 수 있어요. 게임, 세션, 평가, 점수, 참가자, 태그가 스프레드시트용 표로, 모임 전체는 JSON으로 들어 있어요. 모임에 있는 사람이라면 누구나 할 수 있어요.',
+      body: '모임 설정의 “데이터 내보내기”로 이제 모든 것을 ZIP으로 내려받을 수 있어요. 게임, 세션, 평가, 점수, 참가자, 태그가 스프레드시트용 표로, 모임 전체는 JSON으로 들어 있어요. 모임에 접근할 수 있는 사람이라면 누구나 할 수 있어요.',
     },
   },
   /*
