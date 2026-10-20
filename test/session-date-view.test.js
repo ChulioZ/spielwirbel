@@ -62,6 +62,19 @@ function setDay(input, value) {
   input.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
 }
 
+/* The foot's „Mehr" item matching `re` (#1575 moved Klassisch's link row into
+   it), or undefined. The menu is closed again when nothing matched, so a later
+   test does not find a stale popover. */
+function mehrItem(re) {
+  const more = dom.app.querySelector('.result-foot__more');
+  if (!more) return undefined;
+  more.click();
+  const pops = dom.document.querySelectorAll('.popover--menu');
+  const opt = [...pops[pops.length - 1].querySelectorAll('.popover__opt')].find((b) => re.test(b.textContent));
+  if (!opt) dom.run('closePopover()');
+  return opt;
+}
+
 test('the direct-play sheet carries „Wann?" set to today, and today sends no playedOn', async () => {
   const round = roundFixture();
   const opened = [];
@@ -164,11 +177,10 @@ test('a finished session offers „Datum ändern" and PATCHes the new day', asyn
   dom.set('fetchRoundFresh', async () => round);
   recordApi(() => ({}));
   await dom.call('showResults', round, session, round.games);
-  // The area also holds „Punkte eintragen" since #1630.
-  const btn = [...dom.app.querySelectorAll('.date-area button')].filter((b) => /Datum ändern/.test(b.textContent));
-  assert.equal(btn.length, 1, 'the footer offers the change');
+  const btn = mehrItem(/Datum ändern/);
+  assert.ok(btn, '„Mehr" offers the change');
 
-  btn[0].click();
+  btn.click();
   const sheet = dom.document.querySelector('.sheet');
   const input = sheet.querySelector('.played-on__input');
   assert.equal(input.value, dom.run(`localDayKey(new Date('${session.createdAt}'))`), 'opens on the session\'s own day');
@@ -196,7 +208,7 @@ test('a session that is not finished offers no date change', async () => {
   const round = roundFixture({ sessions: [session] });
   dom.set('showResults', realShowResults);
   await dom.call('showResults', round, session, round.games);
-  assert.equal(dom.app.querySelectorAll('.date-area button').length, 0);
+  assert.equal(mehrItem(/Datum ändern/), undefined);
 });
 
 // ---- The optional time (#1629) ----
@@ -329,7 +341,7 @@ test('„Datum ändern" on a date-only session opens with NO time and keeps it d
   dom.set('fetchRoundFresh', async () => round);
   recordApi(() => ({}));
   await dom.call('showResults', round, session, round.games);
-  [...dom.app.querySelectorAll('.date-area button')].find((b) => /Datum ändern/.test(b.textContent)).click();
+  mehrItem(/Datum ändern/).click();
   const sheet = dom.document.querySelector('.sheet');
   assert.equal(sheet.querySelector('.played-on__time').value, '', 'no stand-in 20:00 in the field');
 

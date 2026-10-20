@@ -96,21 +96,22 @@ const rowByTitle = (dom, title) => [...dom.app.querySelectorAll('.trow')]
   .find((r) => text(r.querySelector('.trow__title')).startsWith(title));
 const kids = (el) => [...el.children].map((c) => c.className);
 
-/* ------------------------------ Klassisch, unchanged ------------------------------ */
+/* ------------------------------ Klassisch ------------------------------ */
 
-test('Klassisch keeps its blocks, its row cells and its footer exactly as before', async (t) => {
+test('Klassisch keeps its blocks and its row cells, and ends on the shared foot', async (t) => {
   const { dom } = await show(t, 'klassisch');
-  // The screen's blocks, in order. Der Tisch moves the people into the head and
-  // replaces the footer; none of that may reach this path.
-  assert.deepEqual(kids(screen(dom)), [
-    // `.badge-moment` (#1388) sits before the table, hidden while it is empty.
-    'page-head page-head--result', 'result-people', 'badge-moment', 'tisch-slot', 'tafel', 'tisch-bar',
-    'section result-footer',
-  ]);
-  // The head keeps „Teilen" as its second child, as it has since #526.
+  // Two columns since #1575 (composeKlassischResult): the head, the people, the
+  // band and the foot beside the ranking. Der Tisch's people-in-the-head does
+  // not reach this path; the foot is the one thing they share.
+  assert.deepEqual(kids(screen(dom)), ['klassisch-result__side', 'klassisch-result__tafel']);
+  const [side, list] = screen(dom).children;
+  // `.badge-moment` (#1388) sits before the table, hidden while it is empty.
+  assert.deepEqual(kids(side), ['page-head page-head--result', 'result-people', 'badge-moment', 'tisch-slot', 'result-foot']);
+  assert.deepEqual(kids(list), ['tafel', 'tisch-bar']);
+  // „Teilen" left the head for the foot.
   const head = screen(dom).querySelector('.page-head--result');
-  assert.equal(head.children.length, 2);
-  assert.match(text(head.children[1]), /Teilen/);
+  assert.equal(head.children.length, 1);
+  assert.match(text(side.querySelector('.result-foot')), /Teilen/);
   // One row's cells, in DOM order — the distribution BETWEEN the title and the
   // score, and the score a number over its name.
   const catan = rowByTitle(dom, 'Catan');
@@ -123,7 +124,7 @@ test('Klassisch keeps its blocks, its row cells and its footer exactly as before
   assert.equal(catan.querySelector('.trow__bars').hidden, false, 'the distribution is always shown');
   // Nothing of Der Tisch's structure leaks into the default path.
   assert.equal(dom.app.querySelector(
-    '.tafel__cols, .trow__votes, .trow__pill, .result-foot, .result-people__crown, [data-pid]'), null);
+    '.tafel__cols, .trow__votes, .trow__pill, .result-people__crown, [data-pid]'), null);
   // The people carry no crown and no piece id.
   assert.equal(dom.app.querySelectorAll('.result-people__person').length, 3);
 });
@@ -238,7 +239,7 @@ test('a settled session ends on „Noch eine Session" · „Teilen" · „Mehr"'
   assert.ok(foot.compareDocumentPosition(screen(dom).querySelector('.tafel')) & 4, 'the foot comes before the Tafel');
   assert.equal(foot.hidden, false);
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
-  assert.equal(screen(dom).querySelector('.result-footer'), null, 'Klassisch’s footer row is replaced');
+  assert.equal(screen(dom).querySelector('.result-footer'), null, 'no link-row footer');
   assert.equal(screen(dom).querySelector('.page-head--result').children.length, 1, '„Teilen" left the head');
 });
 
@@ -272,7 +273,7 @@ test('while the evening runs there is no next one yet — and „Mehr" holds the
   assert.deepEqual([...menu.querySelectorAll('.popover__opt')].map(text), ['Personen verwalten', 'Session abbrechen', 'Session löschen']);
 });
 
-test('„Mehr" runs the same delete Klassisch’s footer does', async (t) => {
+test('„Mehr" runs the session delete', async (t) => {
   const { dom, sent } = await show(t, 'tisch');
   dom.set('confirmDialog', async () => true);
   dom.set('showRound', () => {});

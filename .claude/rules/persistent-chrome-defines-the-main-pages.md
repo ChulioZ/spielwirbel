@@ -87,7 +87,9 @@ it: the session-cancel control joined the delete in a dedicated
 `.section.result-footer` row, and `class="section center"` now appears **nowhere**
 in `public/js`. So the destructive action finally has its own class, exactly like
 `.back-row` — and the guard in `content-width.test.js` is retargeted at
-`.result-footer`.
+`.result-footer`. (#1575 then moved the ranking's delete behind the foot's
+„Mehr" in every design, so that guard watches `.result-foot` too; the split
+summary is what still renders `.result-footer`.)
 
 **Its anti-vacuous floor had to change with it, and that is the transferable
 part.** The floor asserted that the stylesheet still *declares* `.section` and

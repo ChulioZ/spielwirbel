@@ -239,8 +239,9 @@ test('a direct-play session offers neither way to clear the choice', async (t) =
   assert.ok(!opts.some((o) => /Auswahl aufheben/.test(o)),
     `„Auswahl aufheben" is still offered: ${opts.join(' | ')}`);
 
-  assert.ok([...dom.app.querySelectorAll('.result-footer button')]
-    .some((b) => /Session löschen/.test(b.textContent)), 'the escape hatch is still there');
+  dom.app.querySelector('.result-foot__more').click();
+  assert.ok([...dom.document.querySelectorAll('.popover--menu .popover__opt')]
+    .some((b) => /Session löschen/.test(b.textContent)), 'the escape hatch is still there, behind „Mehr"');
 });
 
 test('the band carries the archived badge, in the row\'s own classes', async (t) => {

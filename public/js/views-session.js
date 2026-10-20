@@ -1431,13 +1431,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // this screen shows it, read off the node paintForestFacts keeps current.
     ...(forestLook ? forestCardEdition(session, forestFacts) : {}),
   });
-  // Der Tisch carries „Teilen" in the foot instead, beside the next evening
-  // (T2.5, T4.4 — see fillComposedResultFoot).
-  if (shareNow && !tischLook) {
-    const shareBtn = h(`<button class="btn btn--ghost">${iconText('ti-share', t('share.button'))}</button>`);
-    shareBtn.addEventListener('click', shareNow);
-    head.appendChild(shareBtn);
-  }
+  // „Teilen" rides in the foot, beside the next evening, in every design
+  // (T2.5, T4.4 — see fillComposedResultFoot; Klassisch since #1575).
 
   // Who took part in this session — the people whose votes make up the result.
   let peopleEl = null;
@@ -1519,23 +1514,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   tischSlot.appendChild(tisch);
   screen.appendChild(tischSlot);
 
-  // Cancel session (the alternative to choosing a game; see resultRenderCancel).
-  // Created here because resultUpdateChosen() -> resultRenderCancel() runs below while the
-  // footer that holds it is built later still; only the appendChild moves down
-  // (#614). Writing into a detached node is fine — it is in the document by the
-  // time anything can click it.
-  const cancelWrap = h('<div class="cancel-area"></div>');
-  // „Datum ändern" (#1616), Klassisch's footer only — the composed designs carry
-  // it behind „Mehr" (resultRenderFoot). Refilled with the cancel area, since
-  // the session can become finished after render.
-  const dateWrap = h('<div class="date-area"></div>');
-  // Der Tisch's foot takes the place of that footer row (#1275); built here for
-  // the same reason, and filled by resultRenderFoot.
-  const tischFoot = tischLook ? h('<div class="result-foot" hidden></div>') : null;
+  /* The foot (#1275): „Noch eine Session", „Teilen" and „Mehr", which holds
+     cancelling, deleting and the other corrections. Every design, Klassisch
+     included since #1575 — its old link row under the log offered no next
+     evening at all. Built here because resultUpdateChosen() below fills it
+     (resultRenderFoot) before it is placed at the end. */
+  const resultFoot = h('<div class="result-foot" hidden></div>');
 
   // The ranked rows (#1056) and their gold top group, appended to the screen.
   Object.assign(rs, { screen, titleEl, forestFacts, peopleEl, shareNow, when,
-    badgeMoment, tischSlot, tisch, cancelWrap, dateWrap, tischFoot });
+    badgeMoment, tischSlot, tisch, resultFoot });
   buildResultTafel(rs);
 
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
@@ -1579,47 +1567,17 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const installOffer = buildInstallOffer(reveal);
   if (installOffer) screen.appendChild(installOffer);
 
-  // The two ways to get rid of this session, together and last on the screen:
-  // cancel (reversible, destroys nothing) before delete (permanent). Both sit
-  // below the games and the log so reading the results never means scrolling
-  // past the way to throw them away (#614). It sat above the terminal "Zurück"
-  // row until #623 moved that control to the top of the content, so this is now
-  // simply the final block; the #561 constraint it was phrased against
-  // ("nothing belongs after a back link") is satisfied by construction.
-  // Der Tisch ends on its own foot instead, which carries the same two actions
-  // behind „Mehr" (resultRenderFoot) — still the last block on the screen, except
-  // under Ocean and Forest, whose composers move it into the side column ahead
-  // of the Tafel (#1430, #1568): there the destructive pair is one more tap
-  // away behind „Mehr", and „Noch eine Session" is what the screen is for next.
-  if (tischFoot) {
-    // Der Tisch's own foot sits under the box, inside its slot (#1430): the
-    // slot is ONE grid item, so the foot travels with the pinned box beside the
-    // Tafel instead of opening a row the Tafel spans, and on a phone the actions
-    // follow the box ahead of the ranking — Ocean's order. Ocean and Die Brücke
-    // compose their own sides from a foot that is a child of the screen.
-    if (oceanLook || brueckeLook || forestLook) screen.appendChild(tischFoot);
-    else tischSlot.appendChild(tischFoot);
-    if (oceanLook) composeOceanResult(screen, head, peopleEl);
-    if (forestLook) composeForestResult(screen, head, peopleEl, forestFacts);
-    if (brueckeLook) composeBrueckeResult(screen);
-    return;
-  }
-  const footer = h('<div class="section result-footer"></div>');
-  // Taking someone out (#1538) — a correction, so first and before the two
-  // ways to throw the session away.
-  const removeEntry = removePersonEntry(round, session, rs.reopen);
-  if (removeEntry) footer.appendChild(removeEntry);
-  footer.appendChild(dateWrap);
-  footer.appendChild(cancelWrap);
-  // #137: deleting a played evening destroys its votes, result and winners for
-  // everyone, so it is co-owner and up. Cancelling (above) stays an ordinary
-  // write — it is reversible and is part of running the session.
-  if (roundCan(round, 'session.delete')) {
-    const delBtn = h(`<button class="link-btn" style="color:var(--danger)">${esc(t('result.deleteSession'))}</button>`);
-    delBtn.addEventListener('click', () => resultDeleteSession(rs));
-    footer.appendChild(delBtn);
-  }
-  screen.appendChild(footer);
+  // The foot sits under the table band, ahead of the ranking (#1430): the next
+  // evening is what this screen is for once it is settled, and the destructive
+  // pair is one tap away behind „Mehr". Der Tisch and Das Programmheft keep it
+  // inside the slot, the one grid item that travels beside the Tafel; the rest
+  // compose their own side column from a foot that is a child of the screen.
+  if (tischLook && !(oceanLook || brueckeLook || forestLook)) tischSlot.appendChild(resultFoot);
+  else screen.appendChild(resultFoot);
+  if (oceanLook) composeOceanResult(screen, head, peopleEl);
+  if (forestLook) composeForestResult(screen, head, peopleEl, forestFacts);
+  if (brueckeLook) composeBrueckeResult(screen);
+  if (!tischLook) composeKlassischResult(screen);
 }
 
 /* The one post-session install offer (#616), or null.

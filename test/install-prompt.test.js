@@ -201,13 +201,13 @@ test('finishing a session offers the install once, below the results', async (t)
   assert.ok(card, 'no install offer after a finished session');
   assert.ok(card.textContent.includes(translator('de')('install.offer.title')));
 
-  // Below the games, and above the footer: „Session abbrechen"/„löschen" must
-  // stay the last thing on the screen (#614), so a promo may not follow them.
+  // Below the games, and never between the table band and its foot („Noch eine
+  // Session" · „Teilen" · „Mehr", #1575): the promo follows the ranking.
   const FOLLOWING = dom.window.Node.DOCUMENT_POSITION_FOLLOWING;
-  const firstRow = dom.app.querySelector('.trow');
-  const footer = dom.app.querySelector('.result-footer');
-  assert.ok(firstRow.compareDocumentPosition(card) & FOLLOWING, 'the offer interrupts the results');
-  assert.ok(card.compareDocumentPosition(footer) & FOLLOWING, 'the offer landed after the destructive footer');
+  const rows = [...dom.app.querySelectorAll('.trow')];
+  const foot = dom.app.querySelector('.result-foot');
+  assert.ok(rows[rows.length - 1].compareDocumentPosition(card) & FOLLOWING, 'the offer interrupts the results');
+  assert.ok(foot.compareDocumentPosition(card) & FOLLOWING, 'the offer landed ahead of the foot');
 });
 
 /* `reveal` is passed only by the three "the session just closed here" callers
