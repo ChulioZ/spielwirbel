@@ -99,7 +99,7 @@ happened on, and the fit that replaced it),
 `.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md` (the other #1039
 measurement, and the same "a number chosen against the viewport is the wrong
 number" shape),
-`.claude/rules/browser-pane-is-chromium-only.md` (the probe that found it — run
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the probe that found it — run
 for `100dvh` and sticky-in-grid, both of which turned out FINE; this was the
 unrelated thing the control exposed),
 `.claude/rules/break-the-code-on-purpose.md` (the `static` control).

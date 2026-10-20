@@ -166,7 +166,7 @@ for (let n = 3; n <= 7; n++) {
 ```
 
 Two practical notes. **`resize_window` to a real viewport first**, or every rect
-is 0 (`.claude/rules/preview-pane-paint-artifacts.md`), and **cache-bust the
+is 0 (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`), and **cache-bust the
 stylesheet** or you are measuring the cached one
 (`.claude/rules/pwa-service-worker.md`, "Verifying a shell-asset change"). And
 build the stage synthetically rather than cloning a real one when you need

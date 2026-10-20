@@ -63,7 +63,7 @@ no gutter" and prescribed the `max-width` alone. That reads correctly, the fix
 looks complete, and the CSS-text test asserting the cap exists passes — while the
 rendered toast is unchanged. Only a real browser measurement separated them.
 Measure the box, don't reason about it (`resize_window` first, or `vw` resolves
-to 0 — `.claude/rules/preview-pane-paint-artifacts.md`).
+to 0 — `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`).
 
 **Related:** `.claude/rules/css-text-assertions-strip-comments.md` (a CSS-text
 assertion can only see the declaration, never its effect — which is exactly how

@@ -111,7 +111,7 @@ Note the issue that filed this named two of them wrongly (`.cover-grid`,
 The Browser pane is the wrong instrument for the *gesture*. For the geometry,
 **resize first**: a freshly opened tab reports `innerWidth === 0`, and #622 read
 that as permanent — but #722 measured an explicit `resize_window` clearing it, and
-`.claude/rules/preview-pane-paint-artifacts.md` is the canonical account. So take
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` is the canonical account. So take
 the reading rather than assuming: while the viewport is degenerate the
 scrollbar-gutter compensation and every rect are unmeasurable, and once it is not,
 they are. What the pane answers honestly either way:
@@ -136,7 +136,7 @@ cached stylesheet.
 `.claude/rules/accessibility-contrast-and-modals.md` §2 (the focus trap — the
 other thing `openSheet` exists to make impossible to forget),
 `.claude/rules/popover-vs-sheet-editors.md` (the presentation split, and why the
-popover is exempt), `.claude/rules/preview-pane-paint-artifacts.md` (the
+popover is exempt), `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the
 `innerWidth === 0` family),
 `.claude/rules/token-friendly-source-files.md` ("Moving or renaming code…" — the
 pre-#678 `.sheet` cap was cited as a premise both here and in

@@ -46,10 +46,10 @@ headings/paragraphs, keep the outermost, and measure the gap to the next box bel
 that overlaps the column by more than half. Report "a box above a much wider band"
 separately: that is end-of-column whitespace, which #1496 accepts. Pixel
 hit-testing reads column gutters and short text lines as holes. In a hidden pane,
-wait with `MessageChannel` (`.claude/rules/hidden-pane-throttles-timers.md`).
+wait with `MessageChannel` (`.claude/skills/browser-verification/hidden-pane-throttles-timers.md`).
 Visibility-hidden or opacity-0 iframes do not hit-test or never finish rendering,
 so keep them on top.
 
 **Related:** `.claude/rules/css-multicolumn-card-flows.md` (the other way to pack
 uneven cards), `.claude/rules/tiles-vs-lists.md`,
-`.claude/rules/browser-pane-is-chromium-only.md` (the WebKit probe used here).
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the WebKit probe used here).

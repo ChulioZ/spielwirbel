@@ -83,6 +83,8 @@ that measures stale bytes reports fixed problems as live ones.
 The Browser pane misreports in ways that mimic real defects. All of these are
 documented and none of them are app bugs:
 
+**Invoke the `browser-verification` skill first** — it indexes every way the pane (and headless Chrome, Playwright, WebKit) misreports, with the probe for each. The four that bite this audit most:
+
 - `window.innerWidth`/`innerHeight` can be `0` after a navigation, so every
   element measures `width: 0`. `resize_window` to a real size and re-probe.
 - Screenshots go blank after any programmatic scroll; capture only right after a
@@ -94,7 +96,7 @@ documented and none of them are app bugs:
 
 So: **measure with `javascript_tool` probes** (`getComputedStyle`, element rects,
 `getAttribute`, `document.activeElement`), not pixels. See
-`.claude/rules/preview-pane-paint-artifacts.md` and
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` and
 `.claude/rules/provider-cover-sizing.md`.
 
 Two probing traps specific to this domain:
@@ -102,6 +104,11 @@ Two probing traps specific to this domain:
 - **`el.focus()` does not set `:focus-visible`** in Chrome. Checking focus
   indicators requires real Tab keypresses (`computer {action:"key", text:"Tab"}`),
   not scripted focus. Scripted focus produces phantom A-007 findings.
+  But the pane does not reliably deliver Tab either: run the capture-phase
+  `keydown` spy first and trust an A-007 or A-004 result only when the Tab
+  keydown was seen. Otherwise use headless Chrome over CDP (the
+  `browser-verification` skill), where `Input.dispatchKeyEvent` sends a real key
+  (`.claude/skills/browser-verification/escape-keypresses-never-reach-the-preview-pane.md`).
 - **A synthetic click ignores modifier keys** for an anchor's default action, so
   it navigates instead of opening a tab and tears the page down. To check A-009,
   probe the *decision* (`e.defaultPrevented` on a document-level listener that

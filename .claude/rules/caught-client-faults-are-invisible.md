@@ -28,7 +28,7 @@ believing itself safe, and three properties kept it that way:
   the share sheet. Deleting it would be a regression; the defect is that it is
   silent in the other direction too.
 - **The Browser pane is Chromium**, so the pre-merge check could not reproduce
-  it (`.claude/rules/browser-pane-is-chromium-only.md`).
+  it (`.claude/skills/browser-verification/browser-pane-is-chromium-only.md`).
 - **The user sees a plausible failure**, so nobody reports it as a bug. A toast
   saying "that didn't work" reads as the feature being flaky.
 
@@ -94,7 +94,7 @@ report gets its OWN ring buffer and must never reach the instance one),
 `.claude/rules/logging-a-caught-fault.md` (#1148, the server-side half of the
 same audit, and the message-carries-the-payload trap),
 `.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md` (the fault this is
-written from), `.claude/rules/browser-pane-is-chromium-only.md` (why it could not
+written from), `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (why it could not
 be reproduced before release),
 `.claude/rules/admin-moderation-surface.md` (the panel that renders the card, and
 why every field is `textContent`).

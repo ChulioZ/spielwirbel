@@ -131,7 +131,7 @@ handover border to 3px and watching the arithmetic assertion demand `+1.5px`.
 ## Verifying this without a real press
 
 `:active` cannot be forced from `javascript_tool`, and the Browser pane's input
-pipeline is unreliable anyway (`.claude/rules/preview-pane-paint-artifacts.md`).
+pipeline is unreliable anyway (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`).
 Apply the state rule's declarations **inline** instead — inline styles outrank
 every rule, so this exercises real layout — and measure what must not move:
 

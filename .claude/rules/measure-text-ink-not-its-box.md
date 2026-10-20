@@ -100,7 +100,7 @@ that gives the label its room, plus a data assertion over the strings
 `score.name`). The pixels stay a hand measurement, so write the numbers into the
 CSS comment beside the rule where the next reader will find them.
 
-**Related:** `.claude/rules/browser-pane-is-chromium-only.md` (this was measured
+**Related:** `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (this was measured
 in Chromium only — the wrap opportunities involved are not engine-divergent, but
 say so), `.claude/rules/hangul-locale-typography.md` (the `break-word` hatch,
 which is correct and was not the bug), `.claude/rules/css-text-assertions-strip-comments.md`.

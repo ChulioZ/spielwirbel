@@ -556,7 +556,7 @@ got stronger. But editing `styles.css` or `views-landing.js` **does** require th
 `CACHE` bump (`.claude/rules/pwa-service-worker.md`), since both *are* in `SHELL`.
 
 **Related:** `.claude/rules/provider-cover-hotlinking.md` (why no real cover art),
-`.claude/rules/preview-pane-paint-artifacts.md` (why the Browser pane is the
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (why the Browser pane is the
 wrong instrument — a fresh tab reports a 0×0 viewport until `resize_window`, and
 its observers never fire at any size; CDP with an exact viewport is the
 trustworthy path),

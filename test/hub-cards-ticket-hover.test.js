@@ -6,7 +6,7 @@
    things combine: the base hover's rotate(), and .hub-cards being a multicol
    container. Giving the flow its own stacking context keeps it painted.
    Measured with the headless WebKit probe
-   (.claude/rules/browser-pane-is-chromium-only.md); the fix lives on the
+   (.claude/skills/browser-verification/browser-pane-is-chromium-only.md); the fix lives on the
    container, so the ticket keeps its tilt in every design.
 
    jsdom paints nothing and the Browser pane is Chromium, so neither can see the

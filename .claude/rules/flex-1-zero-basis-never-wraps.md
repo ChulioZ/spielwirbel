@@ -56,4 +56,4 @@ by dropping the back key's word below 360px.
 **Related:** `.claude/rules/flex-none-cancels-flex-wrap.md` (the other way a
 flex declaration silently cancels `flex-wrap`),
 `.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md` (the grid half),
-`.claude/rules/browser-pane-is-chromium-only.md` (measured in Chromium only).
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (measured in Chromium only).

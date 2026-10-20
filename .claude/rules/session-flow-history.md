@@ -93,7 +93,7 @@ the second on its own.
 ## Verifying a change here
 
 The Browser pane reports `innerWidth/innerHeight === 0`, so `read_page` is empty
-and clicks are unusable (`.claude/rules/preview-pane-paint-artifacts.md`). Drive
+and clicks are unusable (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`). Drive
 it with `element.click()` and `history.back()/forward()` from `javascript_tool`
 instead — those fire the real listeners and real `popstate`, so they test the
 actual code path — and stub `window.confirm` to exercise both the accept and the

@@ -6586,7 +6586,7 @@
    A wrapping row, not a grid of eight: a card is never narrower than its
    longest name (`min-width: min-content`), so „Sormustinkukka" keeps its line
    in Finnish and simply takes the row a card earlier — there is no
-   hyphenation to rely on (.claude/rules/browser-pane-has-no-hyphenation.md). */
+   hyphenation to rely on (.claude/skills/browser-verification/browser-pane-has-no-hyphenation.md). */
 :root[data-design="forest"]:not([data-scheme="dark"]) .marker-cards {
   display: flex;
   flex-wrap: wrap;

@@ -49,7 +49,7 @@ const roundFixture = () => ({
 /* Scope every query to a root, because the direct-play sheet opens OVER the
    setup screen and both carry a ring — an unscoped `.nr-seat--add` would find
    the screen's one and the sheet's spec would silently drive the wrong table
-   (.claude/rules/blur-events-never-fire-in-the-preview-pane.md names the same
+   (.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md names the same
    accumulation trap for the preview pane). */
 const memberSeats = (root = dom.app) => [...root.querySelectorAll('.nr-seat[aria-pressed]')];
 const guestSeats = (root = dom.app) => [...root.querySelectorAll('.nr-seat--guest')];

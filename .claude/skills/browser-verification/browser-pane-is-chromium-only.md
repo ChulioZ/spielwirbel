@@ -1,7 +1,5 @@
 # The Browser pane is Chromium — a layout claim verified there is a Chromium claim
 
-<!-- scope: global — the trap is a property of the verification tool, not of any file it is pointed at -->
-
 Every in-browser check in this repo runs in the Claude Code Browser pane, which
 is Chromium (148 at the time of writing). Roughly half the app's traffic is
 WebKit — Safari on macOS, and **every** browser on iOS, where the PWA is
@@ -154,7 +152,7 @@ it is the difference between a finding and an hour.
 this file exists because of),
 `.claude/rules/webkit-taints-a-canvas-on-an-svg-pattern.md` (the second claim,
 found the same way — a canvas export that worked in the pane and threw on every
-WebKit browser), `.claude/rules/preview-pane-paint-artifacts.md`
-and `.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (the other
+WebKit browser), `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`
+and `.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` (the other
 half of "the pane is lying to you" — those are about the pane not being a real
 browsing context; this one is about it not being the only engine).

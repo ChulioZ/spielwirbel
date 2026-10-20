@@ -122,5 +122,5 @@ ends up measuring the text beside it).
 and the half-viewport ceiling this defers to),
 `.claude/rules/popover-vs-sheet-editors.md` §4 (which card rules stay
 popover-only, and why they are compounded with `.popover`),
-`.claude/rules/preview-pane-paint-artifacts.md` ("`resize_window` DOES clear the
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` ("`resize_window` DOES clear the
 0x0 viewport" — the measurement above is only possible because of it).

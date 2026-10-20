@@ -10,7 +10,7 @@
 
    The *soft keyboard* half stays unobservable from Node, and the Browser pane
    can't reproduce it either (it reports `innerWidth === 0` and has no keyboard,
-   see `.claude/rules/preview-pane-paint-artifacts.md`). But the routing itself
+   see `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`). But the routing itself
    is plain DOM, and since #602 it is tested by RENDERING the game-detail screen
    under a stubbed `matchMedia` and clicking the real triggers — so what is
    asserted is which container actually appears, not which identifier appears in

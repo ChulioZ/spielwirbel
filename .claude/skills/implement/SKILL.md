@@ -126,7 +126,7 @@ None of this trades away rigour — it changes *how* you look, never *whether*:
 - **Prefer text probes to screenshots.** `read_page`, `get_page_text` and
   `javascript_tool` answer layout and state questions precisely and cheaply; a
   screenshot costs ~1.5k tokens and, per
-  `.claude/rules/preview-pane-paint-artifacts.md`, is the *less* reliable
+  `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`, is the *less* reliable
   instrument in this pane. Screenshot once, at the end, as evidence for the user
   — not as a per-step check.
 - **Don't re-read what you already have.** A file you just wrote, or output you
@@ -290,10 +290,11 @@ four green; on a failure, re-run that one command alone for its full output.
   state, anything easy to get visibly wrong), verify in a real browser via the
   preview workflow (the `run` skill / preview tools), not tests alone — launched
   as `preview_start {name: "dev-temp-data"}`, never a bare `npm start`, which
-  serves the production `data/` (`.claude/rules/no-reading-production-data.md`). Drive that
+  serves the production `data/` (`.claude/rules/no-reading-production-data.md`). Invoke
+  the `browser-verification` skill first (how the pane misreports). Drive that
   check with `read_page` / `javascript_tool` probes and take **one** screenshot at
   the end as evidence — per-step screenshots are both the expensive instrument and
-  the unreliable one (`.claude/rules/preview-pane-paint-artifacts.md`). For
+  the unreliable one (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`). For
   small, straightforward, low-risk UI tweaks (copy, a class, an icon, a spacing
   value), it's enough to confirm the diff looks correct — a human does the visual
   review. Use judgement; when unsure, verify.

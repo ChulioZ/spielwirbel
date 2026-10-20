@@ -135,7 +135,7 @@ measuring a 0×0 viewport against the previous stylesheet.
 **That sweep is Chromium-only, and point 5 is what it cost.** The Browser pane
 cannot see a fragmentation difference between engines, so a claim about column
 breaks needs the headless WebKit probe in
-`.claude/rules/browser-pane-is-chromium-only.md` as well — and the sweep must
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` as well — and the sweep must
 run with the **tallest column not last**, at two *and* three columns, because
 the offset only appears when the column setting the container's height has a
 successor.

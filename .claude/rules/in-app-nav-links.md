@@ -128,7 +128,7 @@ clicks that need excluding.
   feedback, support, the rating faces, retire/complete. If it has no URL the
   router resolves, it is not a link.
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (the other family
+**Related:** `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the other family
 of "the pane is lying to you" verification traps),
 `.claude/rules/frontend-helper-modules-and-coverage.md` (why `nav-link.js` is
 its own file), `.claude/rules/session-flow-history.md` (the `popstate`/flow

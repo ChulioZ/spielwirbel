@@ -8,7 +8,7 @@ paths:
 #1571: hovering the live ticket on the round hub blanked every card in
 `.hub-cards` (the recommendations teaser among them) for as long as the hover
 lasted, in Safari and every iOS browser. Chromium paints it correctly, so the
-Browser pane cannot see it (`.claude/rules/browser-pane-is-chromium-only.md`).
+Browser pane cannot see it (`.claude/skills/browser-verification/browser-pane-is-chromium-only.md`).
 
 Two things together trigger it, and neither one alone does:
 
@@ -49,4 +49,4 @@ route. Report the design the page actually wore, and run the
 `isolation: auto !important` control beside every fix reading.
 
 **Related:** `.claude/rules/css-multicolumn-card-flows.md` (the flows this
-binds), `.claude/rules/browser-pane-is-chromium-only.md` (the probe).
+binds), `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the probe).

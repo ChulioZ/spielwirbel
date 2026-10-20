@@ -81,5 +81,5 @@ games with the longest names.
 **Related:** `.claude/rules/aspect-ratio-transfers-back-to-width.md` (how the
 elastic element in the vote card is sized, and the trap in doing it),
 `.claude/rules/responsive-hub-tabs.md` (where 520/860 come from),
-`.claude/rules/preview-pane-paint-artifacts.md` (why the pane's own viewport
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (why the pane's own viewport
 numbers cannot be trusted).

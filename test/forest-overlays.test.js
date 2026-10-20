@@ -88,7 +88,7 @@ for (const editor of Object.keys(OPENERS)) {
 
 test('Forest: Escape and Back both close the phone sheet, and focus goes back to the trigger', async (t) => {
   // Escape, dispatched from the focused element — the Browser pane never
-  // delivers the key (.claude/rules/escape-keypresses-never-reach-the-preview-pane.md),
+  // delivers the key (.claude/skills/browser-verification/escape-keypresses-never-reach-the-preview-pane.md),
   // so this is also how the PR's in-browser check drove it.
   const a = open(t, { design: 'forest', wide: false, editor: 'players' });
   a.dom.document.activeElement.dispatchEvent(new a.dom.window.KeyboardEvent('keydown',

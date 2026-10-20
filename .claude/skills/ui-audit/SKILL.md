@@ -103,7 +103,9 @@ all of them, on Konto or via `?design=<id>`), never just one.
 
 ### 2. The Browser pane lies in ways that look like design bugs
 
-All documented, none are app defects (`preview-pane-paint-artifacts.md`):
+**Invoke the `browser-verification` skill first** — it indexes every way the pane (and headless Chrome, Playwright, WebKit) misreports, with the probe for each.
+
+All documented, none are app defects (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`):
 
 - `innerWidth`/`innerHeight` can be `0` after a navigation → everything measures
   `width: 0`. `resize_window` to a real size and re-probe.

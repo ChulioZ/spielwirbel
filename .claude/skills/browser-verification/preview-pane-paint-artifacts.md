@@ -1,9 +1,5 @@
 # Preview-pane blank screenshots & scroll timeouts are (often) not app bugs
 
-<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
-
-<!-- scope: global — a Browser-pane artifact — it surfaces while verifying, whatever file is under test -->
-
 Discovered verifying #198 (lazy covers + `content-visibility`): in the Claude
 Code Browser pane, the app's Regal grid produced **blank screenshots after any
 programmatic scroll** (`scrollTo`/`scrollBy`), and `computer` **scroll/input
@@ -142,7 +138,7 @@ a single dark reading proves nothing about which branch produced it.
 permanently false there, so `element.blur()` moves `document.activeElement`
 without dispatching any `blur`/`focusout` event — which makes every
 commit-on-blur inline editor look completely dead. See
-`.claude/rules/blur-events-never-fire-in-the-preview-pane.md`.
+`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md`.
 
 **And a phone-width emulation widens itself on overflow**, while `resize_window`
-fires no `resize`: `.claude/rules/emulated-viewport-widens-on-overflow.md`.
+fires no `resize`: `.claude/skills/browser-verification/emulated-viewport-widens-on-overflow.md`.

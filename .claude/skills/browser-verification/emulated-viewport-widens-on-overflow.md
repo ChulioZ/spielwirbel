@@ -1,7 +1,5 @@
 # Under `resize_window`'s phone emulation, ONE overflow widens the viewport for every later reading
 
-<!-- scope: global — the trap surfaces through the Browser pane's resize_window tool, not through any one file -->
-
 Found verifying #1460 (the top bar's „…" fold). At a 390px emulated width a
 probe measured five designs in one call and came back with **`innerWidth` 512**
 and a bar 394–512px wide, i.e. "the fix overflows in every design". It did not.
@@ -33,7 +31,7 @@ and a bar 394–512px wide, i.e. "the fix overflows in every design". It did not
   is wider than the viewport (`getBoundingClientRect().right > innerWidth`)
   before blaming the change.
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (the `resize_window`
+**Related:** `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the `resize_window`
 section and the pane's other falsehoods),
-`.claude/rules/browser-pane-is-chromium-only.md` (the WebKit probe, which has a
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the WebKit probe, which has a
 real viewport and was the cleaner instrument here).

@@ -44,7 +44,7 @@ The bug is invisible to the obvious checks, and two separate probes said so:
   stopped being one. Read `display` on the **row itself**, which is the element
   the competing rule targets.
 - **The rects were all `width: 0`.** The Browser pane was in its
-  `innerWidth === 0` state (`.claude/rules/preview-pane-paint-artifacts.md`), so
+  `innerWidth === 0` state (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`), so
   `getBoundingClientRect()` returned zero widths for everything and the
   "is the checkbox to the right of the title?" probe answered a meaningless
   `false`. `resize_window` did not clear it *that day* — #722 later measured it

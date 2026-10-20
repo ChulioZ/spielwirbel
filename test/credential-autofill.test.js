@@ -11,7 +11,7 @@
 
    This is a shape guard, and it is deliberately NOT the acceptance test — only
    real Safari with a Keychain entry can answer whether the offer is gone (the
-   Browser pane is Chromium, .claude/rules/browser-pane-is-chromium-only.md).
+   Browser pane is Chromium, .claude/skills/browser-verification/browser-pane-is-chromium-only.md).
    What it pins is that the mitigations stay applied: the ids stop looking like
    credential fields, no `name` lands on either input, no credential
    `autocomplete` token appears, and the three password-manager opt-outs are

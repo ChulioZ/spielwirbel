@@ -91,5 +91,5 @@ exactly as written, and all three are invisible to the DOM.
 **Related:** `.claude/rules/multi-table-sessions.md` (the screen these were found
 on), `.claude/rules/tabler-icon-codepoints.md` (the third defect of that same
 browser pass — an undeclared glyph renders nothing at all),
-`.claude/rules/preview-pane-paint-artifacts.md` (when a blank capture is the pane
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (when a blank capture is the pane
 rather than the app — run its controls before trusting a screenshot either way).

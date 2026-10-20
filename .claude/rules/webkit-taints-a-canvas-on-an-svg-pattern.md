@@ -30,7 +30,7 @@ g.fillRect(0, 0, w, h);
 ```
 
 Measured in a headless `WKWebView` (the probe in
-`.claude/rules/browser-pane-is-chromium-only.md`), one minimal canvas per row:
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md`), one minimal canvas per row:
 
 | What touched the canvas | WebKit | Chromium |
 |---|---|---|
@@ -120,7 +120,7 @@ rounded rects, `ellipse()` crowns, the marker band as a plain polygon path (the
 sheet's `clip-path`), a canvas `shadowBlur` under the cover stand-in, the crown
 and whirl as `Path2D`, and the fireflies as radial-gradient discs — no pattern
 anywhere. Exported clean in headless Chromium; **no WebKit run** — the probe in
-`browser-pane-is-chromium-only.md` needs a Mac, and the slice was built on Linux.
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` needs a Mac, and the slice was built on Linux.
 
 **Klassisch's session card (#1628, `public/js/result-card.js`) and Die
 Brücke's session variant** take the same shape — flat fills, rounded rects, the
@@ -132,7 +132,7 @@ A spec can only stand in for the engine by asserting the **mechanism** against a
 recording context — jsdom has no 2d context and Node has no WebKit — so it
 cannot see the taint itself; say so rather than reading it as engine coverage.
 
-**Related:** `.claude/rules/browser-pane-is-chromium-only.md` (the probe, and the
+**Related:** `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the probe, and the
 general form of this trap — a claim proved on the engine that was never in
 doubt), `.claude/rules/caught-client-faults-are-invisible.md` (the reporting this
 bug is the worked example for), `.claude/rules/provider-cover-hotlinking.md` (the *other* reason this

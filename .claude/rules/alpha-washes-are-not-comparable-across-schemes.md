@@ -133,5 +133,5 @@ sibling: a *derived* neutral mixed at the light percentage lands somewhere else
 on dark — that one moves, this one arrives where you asked and still cannot be
 seen), `.claude/rules/theme-derived-colors.md` (the constraints that outlived the worlds),
 `.claude/rules/color-mix-interpolation-space.md` (where oklab *is* the right
-space), `.claude/rules/browser-pane-is-chromium-only.md` (this was verified in
+space), `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (this was verified in
 the pane only — nothing here is engine-dependent).

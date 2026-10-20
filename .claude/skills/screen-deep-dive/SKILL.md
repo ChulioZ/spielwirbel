@@ -105,6 +105,9 @@ Procedure, per width: `resize_window` → fresh `navigate` → reach the screen
 through its **real entry point** → JS probe → one screenshot. Details that cost
 a cycle each when skipped:
 
+- Invoke the `browser-verification` skill before the first probe — the pane
+  misreports in ways that look like layout bugs, and it maps each symptom to
+  its control.
 - `preview_start {name: "dev-temp-data"}`, never production data
   (`.claude/rules/no-reading-production-data.md`). The landing page's demo
   button seeds rounds with tags, owners and BGG metadata; pick the richest one so
@@ -121,8 +124,8 @@ a cycle each when skipped:
   each block, `gridTemplateColumns`, and whether the primary button's bottom
   is below `innerHeight`. Screenshot only right after the fresh navigate —
   captures after a programmatic or hash scroll come back blank
-  (`.claude/rules/preview-pane-paint-artifacts.md`), and the pane is
-  Chromium only (`.claude/rules/browser-pane-is-chromium-only.md`).
+  (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`), and the pane is
+  Chromium only (`.claude/skills/browser-verification/browser-pane-is-chromium-only.md`).
 - Measure a second dataset when the screen scales with data (a six-member
   round, a long shelf): the defect may only exist at one size.
 
@@ -233,8 +236,8 @@ scrolling to a screenshot.
 ## Traps, in one place
 
 The pane never delivers Escape and fires no blur
-(`.claude/rules/escape-keypresses-never-reach-the-preview-pane.md`,
-`.claude/rules/blur-events-never-fire-in-the-preview-pane.md`); a freshly
+(`.claude/skills/browser-verification/escape-keypresses-never-reach-the-preview-pane.md`,
+`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md`); a freshly
 opened tab can report a 0 × 0 viewport until `resize_window`; a claim about
 sticky, `dvh`, `scroll-snap` or multicolumn needs WebKit too; and the operator
 judges from what they can click, so a static mockup is the weaker deliverable

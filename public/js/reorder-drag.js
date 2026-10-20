@@ -33,7 +33,7 @@
    - `forceFallback` — Sortable's own pointer-driven clone instead of the HTML5
      drag-and-drop API, whose ghost is an unstyleable OS image that differs per
      engine. This way Chromium and WebKit run the SAME code path
-     (.claude/rules/browser-pane-is-chromium-only.md).
+     (.claude/skills/browser-verification/browser-pane-is-chromium-only.md).
    - `animation` — the neighbours sliding aside is watched motion, so it stays,
      except under `prefers-reduced-motion: reduce`, where it is 0. */
 function reorderOptions({ itemSelector, filterSelector, reducedMotion }) {

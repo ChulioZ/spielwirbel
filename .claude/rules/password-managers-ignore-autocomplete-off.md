@@ -60,7 +60,7 @@ measured sufficient.
 ## Why this cannot be verified here
 
 The Browser pane is Chromium
-(`.claude/rules/browser-pane-is-chromium-only.md`), and a headless `WKWebView`
+(`.claude/skills/browser-verification/browser-pane-is-chromium-only.md`), and a headless `WKWebView`
 has no Keychain, so **nothing in this repo can observe the offer**. The only
 verification is real Safari on macOS and iOS with a saved login for the origin —
 i.e. the operator, after a deploy. Treat a claim that the AutoFill offer is gone
@@ -73,7 +73,7 @@ id matches no credential word, no `name` lands on either input, no credential
 accessible name survives and the invite field still takes focus on open. That is
 the part a later edit would quietly undo; it is not evidence the offer stopped.
 
-**Related:** `.claude/rules/browser-pane-is-chromium-only.md` (why the check
+**Related:** `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (why the check
 cannot run here), `.claude/rules/native-button-vs-focusable-span.md` and
 `.claude/rules/label-rows-lose-to-field-label.md` (the other two rules about what
 a form control's markup promises), `public/js/views-auth.js` above `#regUser`

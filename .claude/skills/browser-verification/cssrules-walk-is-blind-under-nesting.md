@@ -1,7 +1,5 @@
 # A `document.styleSheets` walk that recurses on `r.cssRules` sees NOTHING — CSS nesting broke the idiom
 
-<!-- scope: global — the trap is in a PROBE rather than in a file, so it surfaces whenever a session asks the browser which rules match an element, which can happen while verifying any UI change. -->
-
 The standard way to ask the browser *"which rules match this element?"* — the
 question no CSS-text test can answer, because it is about the **cascade** rather
 than about the file — is to walk `document.styleSheets` and test each
@@ -38,11 +36,13 @@ r.cssRules.length     // 0
 ## The fix: recurse on LENGTH, collect on `selectorText`
 
 ```js
-const walk = (list, out) => { for (const r of list) {
-  if (r.selectorText) out.push(r);
-  if (r.cssRules && r.cssRules.length) walk(r.cssRules, out);
+const walk = (list, out) => {
+  for (const r of list) {
+    if (r.selectorText) out.push(r);
+    if (r.cssRules && r.cssRules.length) walk(r.cssRules, out);
+  }
   return out;
-} };
+};
 ```
 
 Both halves changed: a rule may now legitimately be *both* a selector-bearing
@@ -78,8 +78,8 @@ CSSOM only for the question text cannot answer: *which rule wins*.
 
 **Related:** `.claude/rules/measure-text-ink-not-its-box.md` (the same shape one
 instrument over — a probe that answers a different question and agrees with every
-implementation), `.claude/rules/preview-pane-paint-artifacts.md` and
-`.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (the pane's own
+implementation), `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` and
+`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` (the pane's own
 falsehoods; this one is not the pane's fault — it is Chrome, and it would happen
 in any browser), `.claude/rules/css-rule-lookup-answers-with-the-media-reset.md`
 (the text-side lookup trap, where the match is real but is the wrong rule).

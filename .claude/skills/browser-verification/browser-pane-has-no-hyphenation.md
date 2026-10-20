@@ -1,7 +1,5 @@
 # The Browser pane cannot hyphenate — `hyphens: auto` looks broken there and works everywhere else
 
-<!-- scope: global — the trap surfaces through the Browser pane, not through editing a file -->
-
 Found verifying the Tisch rail's round name (#1197): with
 `overflow-wrap: break-word; hyphens: auto` on a `lang="de"` page, the pane split
 „Donnerstagsrund / e" with no hyphen, i.e. exactly the mid-word break the rule
@@ -19,7 +17,7 @@ Real engines do hyphenate. The same minimal page (a 221px `<h1>`,
 | WebKit (WKWebView probe) | „Donnerstags- / spielerunde" | „Donnerstagsspi / elerunde" |
 
 **Rule:** judge hyphenation in real Chrome (`--headless=new --screenshot`) or
-WebKit (the probe in `.claude/rules/browser-pane-is-chromium-only.md`), never in
+WebKit (the probe in `.claude/skills/browser-verification/browser-pane-is-chromium-only.md`), never in
 the pane, and run the control without `hyphens` beside it. Hyphenation also
 needs `<html lang>`, which `public/js/i18n.js` keeps on the active locale.
 
@@ -41,5 +39,5 @@ instead: Forest's phone design picker is a wrapping flex row whose cards carry
 so it must be explicit), and a card whose longest word does not fit takes the
 row to itself.
 
-**Related:** `.claude/rules/browser-pane-is-chromium-only.md`,
-`.claude/rules/preview-pane-paint-artifacts.md` (the pane's other falsehoods).
+**Related:** `.claude/skills/browser-verification/browser-pane-is-chromium-only.md`,
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the pane's other falsehoods).

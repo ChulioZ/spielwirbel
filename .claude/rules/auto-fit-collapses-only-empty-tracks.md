@@ -76,7 +76,7 @@ getComputedStyle(el).gridTemplateColumns   // "693px 693px 0px"  ✅ collapsed
 ```
 
 **`resize_window` FIRST**, or every viewport-dependent read is 0
-(`.claude/rules/preview-pane-paint-artifacts.md`).
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`).
 
 ## `.home-dash` no longer uses `auto-fit` at all — the guarantee moved (#942, #948)
 

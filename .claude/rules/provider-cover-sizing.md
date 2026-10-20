@@ -129,7 +129,7 @@ The Regal grid's covers are lazy (`createCoverLoader`, #198), and in the Claude
 Code Browser pane the IntersectionObserver **never fires**, so every grid cover
 stays blank no matter how you scroll. That looks exactly like a broken lazy
 loader. It isn't — it is the pane artifact family documented in
-`.claude/rules/preview-pane-paint-artifacts.md`.
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`.
 
 **A real viewport does not fix it, and the degenerate `innerHeight === 0` is not
 the reason.** This paragraph used to give that as the cause, which reads as

@@ -15,7 +15,7 @@
  *
  * The pane's two lies do not apply here — jsdom dispatches a real click and the
  * popover is a real element — but Escape is still worth nothing to check in this
- * harness (.claude/rules/escape-keypresses-never-reach-the-preview-pane.md is
+ * harness (.claude/skills/browser-verification/escape-keypresses-never-reach-the-preview-pane.md is
  * about the browser pane, not jsdom).
  */
 

@@ -64,7 +64,7 @@ until #744 removed them). `.tag-row { flex-direction: column }` compounds it: ea
 column, so "row" in the markup, "column" in the layout and "grid" in the
 container are three different words for one thing.
 
-**Related:** `.claude/rules/browser-pane-is-chromium-only.md` (the other class of
+**Related:** `.claude/skills/browser-verification/browser-pane-is-chromium-only.md` (the other class of
 layout claim that is true only where you measured it),
 `.claude/rules/testing-views-under-jsdom.md` (why no view spec can catch this —
 jsdom has no stylesheet, so a grid and a list are indistinguishable there).

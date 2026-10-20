@@ -111,7 +111,7 @@ same" screenshot.
 
 ## Two more ways the Browser pane lies
 
-Same family as `.claude/rules/preview-pane-paint-artifacts.md`, both cost time here:
+Same family as `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`, both cost time here:
 
 - **A CSS transition's computed value can stay pinned at its start value.** The
   cover's `.gd-img--edit:focus-visible .gd-img__edit { opacity: 1 }` reported

@@ -164,7 +164,9 @@ npm test && npm run lint && npm run check:syntax
 For UI-affecting changes, verify in a browser (see the preview workflow), not
 just tests — launched as `preview_start {name: "dev-temp-data"}`, never a bare
 `npm start`, which serves the production `data/`
-(`.claude/rules/no-reading-production-data.md`). Return to the base branch afterward (`git checkout main`).
+(`.claude/rules/no-reading-production-data.md`). Invoke the
+`browser-verification` skill first — the pane misreports in ways that look like
+bugs in the PR. Return to the base branch afterward (`git checkout main`).
 
 ## 7. Deliver the verdict
 

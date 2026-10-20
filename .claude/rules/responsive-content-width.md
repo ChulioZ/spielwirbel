@@ -273,7 +273,7 @@ silently restoring one column; only the column count notices.
   standing check for any future shell change.
 - Probe with `getComputedStyle(el).gridTemplateColumns`, element rects and
   `document.scrollHeight` rather than pixels
-  (`.claude/rules/preview-pane-paint-artifacts.md`); screenshot only right after
+  (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`); screenshot only right after
   a fresh `navigate`; clear the service worker before believing any
   `styles.css` edit (`.claude/rules/pwa-service-worker.md`); and drive it
   against a generated dataset in a temp `DATA_DIR` — use the committed

@@ -143,5 +143,5 @@ the circularity is directly readable: 102px of track against a 41px cap.
 **Related:** `.claude/rules/popover-width-is-shrink-to-fit.md` (the same
 shrink-to-fit sizing one container over, where a `max-width` clamps nothing),
 `.claude/rules/flex-none-cancels-flex-wrap.md` (the other `min-width: 0` trap),
-`.claude/rules/preview-pane-paint-artifacts.md` (`resize_window` first — a `%`
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (`resize_window` first — a `%`
 resolves against a 0×0 viewport otherwise).

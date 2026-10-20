@@ -209,7 +209,7 @@ function requestedDesign() {
    try/catch on BOTH sides: localStorage throws outright in a Safari private
    window and wherever site data is blocked, and a design preference is not worth
    a boot that dies before the first render
-   (.claude/rules/preview-pane-paint-artifacts.md's family — the browser lying
+   (.claude/skills/browser-verification/preview-pane-paint-artifacts.md's family — the browser lying
    about storage rather than about pixels). A value this build has never heard of
    reads as nothing, so a retired design leaves the page on the face rather than
    unpainted. */

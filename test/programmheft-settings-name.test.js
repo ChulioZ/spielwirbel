@@ -7,7 +7,7 @@
  * so both editors are driven here — the refactor moved the heading's logic.
  *
  * jsdom fires real blur events (unlike the Browser pane,
- * .claude/rules/blur-events-never-fire-in-the-preview-pane.md), so `blur()` on
+ * .claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md), so `blur()` on
  * a focused field is the real path; a dispatched FocusEvent is used where the
  * field is not focused, which is what Enter → blur() does in a focused page. */
 

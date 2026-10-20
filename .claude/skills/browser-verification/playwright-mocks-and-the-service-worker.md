@@ -1,6 +1,4 @@
 # Headless Playwright: block the service worker, or `route()` mocks never fire
-<!-- scope: global — the trap surfaces through a verification tool (a scratch Playwright script), not through any repo file -->
-
 When verifying a screen with headless Playwright against a local server (the
 batch builders' substitute for the Browser pane), the natural way to show an
 empty or young state is to mock the API: `context.route(/\/api\/rounds/, …)`.
@@ -27,4 +25,4 @@ Control first: assert one mocked value is on screen before trusting any
 screenshot of a mocked state.
 
 **Related:** `.claude/rules/pwa-service-worker.md` (the same worker serving
-stale shell assets in the Browser pane), `.claude/rules/browser-pane-is-chromium-only.md`.
+stale shell assets in the Browser pane), `.claude/skills/browser-verification/browser-pane-is-chromium-only.md`.
