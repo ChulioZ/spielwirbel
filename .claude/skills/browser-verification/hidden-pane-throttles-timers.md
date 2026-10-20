@@ -1,7 +1,5 @@
 # A HIDDEN Browser pane throttles `setTimeout` — a probe that sleeps between steps hangs
 
-<!-- scope: global — the trap surfaces through the Browser pane tool, not through any file being edited -->
-
 Measured on #1327. With the pane not displayed (another builder's tab in front,
 or the pane collapsed), a `javascript_tool` probe that walked three winner-chip
 taps with `await new Promise(r => setTimeout(r, 700))` between them **timed out
@@ -38,6 +36,6 @@ Condition-waiting is better anyway: a fixed sleep either wastes time or races th
 request. Screenshots are unavailable while the pane is hidden ("not compositing
 frames"), so a hidden-pane check is DOM probes only — say so in the PR.
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (the pane's other
+**Related:** `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the pane's other
 falsehoods, including the paint-driven animation clock),
-`.claude/rules/blur-events-never-fire-in-the-preview-pane.md`.
+`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md`.

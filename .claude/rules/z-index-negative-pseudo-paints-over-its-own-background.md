@@ -58,5 +58,5 @@ fill, `.vote__img`'s blur layer).
 
 **Related:** `.claude/rules/inline-custom-properties-cannot-be-overridden.md`
 (the other override that looked right and did nothing, same slice),
-`.claude/rules/preview-pane-paint-artifacts.md` (when the computed value and the
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (when the computed value and the
 pixels disagree for the pane's own reasons instead).

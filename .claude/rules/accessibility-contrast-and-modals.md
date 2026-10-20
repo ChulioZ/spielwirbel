@@ -150,7 +150,7 @@ Drive it against a generated dataset in a temp `DATA_DIR`, never the real
 launch config (`preview_start {name: "dev-temp-data"}`), not `production-data`. The
 Browser pane can report `innerWidth === 0`/`innerHeight === 0` after
 navigations, making every element measure `width: 0` — that's the pane
-artifact family in `preview-pane-paint-artifacts.md`; `resize_window` to a
+artifact family in `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`; `resize_window` to a
 real size and re-probe before believing a regression. And clear the service
 worker after every CSS edit (snippet in `pwa-service-worker.md`, "Verifying a
 shell-asset change") or the cache-first shell serves the old `styles.css` and

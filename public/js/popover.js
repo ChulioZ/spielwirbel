@@ -142,7 +142,7 @@ function openPopover(anchor, build, onClose) {
   // Browser pane never fires one at all — measured on a plain div whose height
   // was changed 50px -> 200px, zero callbacks — the same dead-observer artifact
   // that stops IntersectionObserver working there
-  // (.claude/rules/preview-pane-paint-artifacts.md). An explicit call is
+  // (.claude/skills/browser-verification/preview-pane-paint-artifacts.md). An explicit call is
   // deterministic and testable; an untestable mechanism is not worth its silence.
   function place() {
     // A top-bar button folded into „…" (#1460) is not rendered, so its own box

@@ -83,6 +83,8 @@ that measures stale bytes reports fixed problems as live ones.
 The Browser pane misreports in ways that mimic real defects. All of these are
 documented and none of them are app bugs:
 
+**Invoke the `browser-verification` skill first** — it indexes every way the pane (and headless Chrome, Playwright, WebKit) misreports, with the probe for each. The four that bite this audit most:
+
 - `window.innerWidth`/`innerHeight` can be `0` after a navigation, so every
   element measures `width: 0`. `resize_window` to a real size and re-probe.
 - Screenshots go blank after any programmatic scroll; capture only right after a
@@ -94,7 +96,7 @@ documented and none of them are app bugs:
 
 So: **measure with `javascript_tool` probes** (`getComputedStyle`, element rects,
 `getAttribute`, `document.activeElement`), not pixels. See
-`.claude/rules/preview-pane-paint-artifacts.md` and
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` and
 `.claude/rules/provider-cover-sizing.md`.
 
 Two probing traps specific to this domain:

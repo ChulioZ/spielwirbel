@@ -141,7 +141,7 @@ Three pane traps met doing exactly that:
 
 - **`loading="lazy"` images never load** — the pane never fires an
   IntersectionObserver, at any viewport size; its 0×0 viewport is a symptom, not
-  the cause (`.claude/rules/preview-pane-paint-artifacts.md`).
+  the cause (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`).
   Set `loading="eager"` on the tiles before judging whether CSP and the hotlinks
   work. They do: all tiles resolve to 123×150.
 - **`gridTemplateColumns` reports a single column** on an un-resized pane — the

@@ -102,6 +102,6 @@ dom.window.history.state           // {sheet:true} means the marker is still up
 **Related:** `.claude/rules/testing-views-under-jsdom.md` (the harness, and what
 `flush()` is for), `.claude/rules/sheet-history-back-dismissal.md` (why the close
 goes through history at all, and why `next` must be passed to `closeSheet` rather
-than called on the line after it), `.claude/rules/blur-events-never-fire-in-the-preview-pane.md`
+than called on the line after it), `.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md`
 (the same shape in the Browser pane — an environment that reports the state
 changing while dispatching no event).

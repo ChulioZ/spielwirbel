@@ -202,12 +202,12 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
   review conversation resolved, so its threads gate the merge — triage them with
   the `triage-ai-review` skill.
 - API smoke tests: `curl` against `http://localhost:3000/api/...`.
-- For UI changes, verify in a real browser. Note: a non-painted/headless preview
-  tab may not flush `requestAnimationFrame`, so grid contents that render via
-  rAF can appear empty until a paint (e.g. a screenshot) occurs — this is a
-  preview artifact, not a bug. The Browser pane is **Chromium**, so a claim
+- For UI changes, verify in a real browser. **Invoke the `browser-verification`
+  skill first**: the pane misreports (blank captures, unflushed
+  `requestAnimationFrame`, swallowed keys) in ways that look like app bugs.
+  The Browser pane is **Chromium**, so a claim
   about an engine-dependent behaviour (CSS fragmentation, a recent feature)
-  needs WebKit too — `.claude/rules/browser-pane-is-chromium-only.md`.
+  needs WebKit too — `.claude/skills/browser-verification/browser-pane-is-chromium-only.md`.
 
 ## Capturing learnings → `.claude/rules/`
 

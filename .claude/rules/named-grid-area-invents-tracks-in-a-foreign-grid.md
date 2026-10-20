@@ -48,5 +48,5 @@ section of the sheet than the one you are editing.
 
 **Related:** `.claude/rules/absolutely-positioned-components-escape-a-new-host.md`
 (the same family — a component's placement rule following it into a host it was
-never written for), `.claude/rules/cssrules-walk-is-blind-under-nesting.md` (the
+never written for), `.claude/skills/browser-verification/cssrules-walk-is-blind-under-nesting.md` (the
 CSSOM walk that found which rule matched).

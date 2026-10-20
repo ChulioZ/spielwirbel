@@ -91,5 +91,5 @@ appears together on screen.
 **Related:** `.claude/rules/theme-derived-colors.md` (why `.cover-ph` derives from
 `--brand` in the first place), `.claude/rules/dark-designs-and-the-on-accent-flip.md`
 §4 (the rendered-page sweep, and the `.result-people__label` finding the stray
-number came from), `.claude/rules/preview-pane-paint-artifacts.md` (the general
+number came from), `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the general
 case: the pane answering a question you did not ask).

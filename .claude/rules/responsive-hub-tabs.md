@@ -113,7 +113,7 @@ than pixels — `getComputedStyle(dock).position`, the element's rect, `.app` an
 `.site-footer` `paddingBottom` at 390 and 1280 — because the Browser pane
 produces blank captures after synthetic scrolls and can report
 `innerWidth === 0` after a navigation
-(`.claude/rules/preview-pane-paint-artifacts.md`); `resize_window` then a fresh
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`); `resize_window` then a fresh
 `navigate` is what gives a trustworthy screenshot. For the inert-vs-live tab
 distinction, count `history.pushState` rather than wrapping the view functions —
 they are lexically scoped consts, not `window` properties

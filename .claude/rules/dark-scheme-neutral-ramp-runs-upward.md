@@ -71,7 +71,7 @@ every state that was tuned against the old one.
 ## Verifying it in the pane
 
 Do **not** toggle `data-scheme` at runtime; the pane updates the custom property
-and not the used value (`.claude/rules/preview-pane-paint-artifacts.md`). Wear a
+and not the used value (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`). Wear a
 dark design before the page renders and `navigate`, as that file's recipe says:
 `<html>` is the only scheme carrier left since the picker's
 `.theme-card[data-scheme="dark"]` went at #1202, so a subtree built under that

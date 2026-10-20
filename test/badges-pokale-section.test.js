@@ -229,7 +229,7 @@ test('showBadges lands on the member’s row, opened and focused', async (t) => 
    `overflow-wrap: anywhere` breaks wherever it must. `hyphens: auto` makes it
    break at a syllable with a hyphen instead („Gründungs- / mitglied"), checked in
    real Chrome; the Browser pane has no hyphenation dictionaries and cannot show
-   it (.claude/rules/browser-pane-has-no-hyphenation.md). `<html lang>` follows
+   it (.claude/skills/browser-verification/browser-pane-has-no-hyphenation.md). `<html lang>` follows
    the locale (i18n.js), which hyphenation needs. */
 test('a badge name hyphenates rather than splitting a word anywhere (#1464)', () => {
   const { rulesOf, topLevel } = require('./support/css');

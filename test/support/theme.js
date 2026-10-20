@@ -163,7 +163,7 @@ for (const design of DESIGN_REGISTRY) {
      that is not there, and falling through to :root would resolve every token
      to Klassisch's value — a complete, plausible answer to the wrong question,
      which is the failure shape in
-     `.claude/rules/cssrules-walk-is-blind-under-nesting.md`. A design that ships
+     `.claude/skills/browser-verification/cssrules-walk-is-blind-under-nesting.md`. A design that ships
      a stylesheet declares at least one of these; say so loudly if it stops. */
   assert.ok(root || scheme || light,
     `${design.stylesheet} declares no :root[data-design="${design.id}"] block — has the hook moved?`);

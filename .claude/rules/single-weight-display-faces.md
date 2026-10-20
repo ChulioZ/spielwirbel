@@ -54,7 +54,7 @@ animation's clock waits for the first frame — so interleave a paint with every
 sample, and treat `document.getAnimations()` listing the keyframes' names as the
 proof they parsed (an unparseable `@keyframes` produces no animation at all).
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (the compositor and
+**Related:** `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the compositor and
 capture half of the pane's lies — this timeline note is the third),
 `.claude/rules/theme-derived-colors.md` (colours a design's artwork must take
 from tokens), `.claude/rules/tabler-icon-codepoints.md`.

@@ -10366,7 +10366,7 @@ kbd {
      The max() floor here is load-bearing: `dvh` computes to 0 in a degenerate
      viewport, which is what the Browser pane reports on a freshly opened tab,
      so without it the panel collapses to nothing exactly where it is being
-     measured (.claude/rules/preview-pane-paint-artifacts.md). */
+     measured (.claude/skills/browser-verification/preview-pane-paint-artifacts.md). */
   max-height: max(300px, calc(100dvh - 500px));
   overflow-y: auto;
   /* Room for the hover lift. `overflow-y: auto` computes `overflow-x` to `auto`
@@ -11043,7 +11043,7 @@ kbd {
    short neighbours. A multi-word rung („helemaal niet", „en lainkaan") wraps
    at its space. No `hyphens`: a phone without that language's dictionary
    breaks nothing, so the layout must hold without it
-   (.claude/rules/browser-pane-has-no-hyphenation.md). */
+   (.claude/skills/browser-verification/browser-pane-has-no-hyphenation.md). */
 /* The two-ended row under the faces used to be the card's last line and gave it
    its bottom margin; with it gone the faces sat 2px off the card's edge. */
 .vote:not(.vote--composed) .rating { padding-bottom: 18px; }

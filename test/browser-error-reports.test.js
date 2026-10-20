@@ -439,7 +439,7 @@ test('GET /api/admin/logs/client serves the buffer to the operator only', async 
 // 'error' for it — so the event is dispatched. That the browser fires these two
 // events at all is platform behaviour (it is what every `window.onerror`
 // reporter on the web rides on), and the same reasoning
-// .claude/rules/blur-events-never-fire-in-the-preview-pane.md applies to a
+// .claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md applies to a
 // dispatched blur: what needs proving is our handler, its payload and its
 // bounds.
 test('the installed window handlers report and the endpoint accepts what they send', async (t) => {

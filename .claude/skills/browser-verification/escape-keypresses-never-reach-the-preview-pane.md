@@ -1,7 +1,5 @@
 # The Browser pane never delivers Escape — every sheet looks like Escape-to-close is broken
 
-<!-- scope: global — a Browser-pane artifact; it surfaces while verifying, whatever file is under test -->
-
 Every sheet in this app closes on Escape: `openSheet(backdrop, onKey)` registers
 `onKey` on `document` in the capture phase, and it calls `dismiss()`. Verifying
 that in the Claude Code Browser pane produces a perfect false negative — the
@@ -108,12 +106,12 @@ A failed Escape leaves the sheet **open**, so the next probe's
 you just opened, and a loop over several sheets silently measures the first one
 every time. Re-`navigate` (or call `closeSheet()` explicitly) between attempts,
 and assert the sheet count before and after opening one — the same accumulation
-trap `.claude/rules/blur-events-never-fire-in-the-preview-pane.md` describes for
+trap `.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` describes for
 stale inline editors.
 
-**Related:** `.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (the
+**Related:** `.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` (the
 same family — the pane reports focus moving while dispatching no event),
-`.claude/rules/preview-pane-paint-artifacts.md` (blank captures, wedged input,
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (blank captures, wedged input,
 dead observers, and the `resize_window` correction),
 `.claude/rules/sheet-history-back-dismissal.md` and
 `.claude/rules/popover-vs-sheet-editors.md` (the Escape paths this makes

@@ -240,7 +240,7 @@ cleared (`.claude/rules/pwa-service-worker.md`). Two things cost time:
   (`.claude/rules/in-app-nav-links.md` §1).
 - **A screenshot taken after a programmatic `scrollIntoView` comes back blank**
   while every DOM probe stays healthy — the artifact family in
-  `.claude/rules/preview-pane-paint-artifacts.md`. Resize to a viewport tall
+  `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`. Resize to a viewport tall
   enough to hold the whole screen and capture right after a fresh `navigate`
   instead of scrolling to the field.
 

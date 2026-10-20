@@ -93,7 +93,7 @@ regression in the change you just made. With fonts settled, five consecutive
 renders agreed to the tenth of a pixel.
 
 `resize_window` first, or `--w-read`-relative widths mean nothing
-(`.claude/rules/preview-pane-paint-artifacts.md`), and re-bust the stylesheet
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`), and re-bust the stylesheet
 `<link>` after **every** resize (`.claude/rules/pwa-service-worker.md`).
 
 ## The guard is arithmetic, not a literal

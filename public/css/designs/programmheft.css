@@ -6463,7 +6463,7 @@
    gets the break first in a real engine. The headless Chromium these were
    checked in has no hyphenation dictionaries and still splits „Gründungs-
    mitglied" mid-word in the 4-up phone grid — judge that in real Chrome or
-   WebKit (.claude/rules/browser-pane-has-no-hyphenation.md). */
+   WebKit (.claude/skills/browser-verification/browser-pane-has-no-hyphenation.md). */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge__name {
   font-size: 13px;
   font-weight: 700;

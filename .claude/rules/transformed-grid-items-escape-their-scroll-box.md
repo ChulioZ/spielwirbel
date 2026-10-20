@@ -76,7 +76,7 @@ escaped, `scrollWidth − clientWidth` was 3 at `padding: …2px` — and it is 
 here. The tilt was dropped on review for design reasons; the hover scale that
 remains is enough to reproduce everything above, so the padding stayed.
 
-**Related:** `.claude/rules/preview-pane-paint-artifacts.md` (why this had to be a
+**Related:** `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (why this had to be a
 rect probe rather than a screenshot),
 `.claude/rules/setup-screens-two-column-layout.md` §3 (the panel this was found
 in, and the bounded scroll box it must keep).

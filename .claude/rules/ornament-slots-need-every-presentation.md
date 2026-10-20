@@ -66,5 +66,5 @@ presentations, and why they are CSS-picked),
 `.claude/rules/transformed-grid-items-escape-their-scroll-box.md` (the other way
 this same scroll box surprises you),
 `.claude/rules/theme-derived-colors.md` (the constraints that outlived the worlds),
-`.claude/rules/preview-pane-paint-artifacts.md` (why the probe above is a DOM
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (why the probe above is a DOM
 measurement rather than a screenshot).

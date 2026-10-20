@@ -28,7 +28,7 @@
    layout. Without ResizeObserver (jsdom) nothing runs and every item stays
    hidden, which is the honest answer for an engine with no layout. NOTE the
    Browser pane fires no ResizeObserver either
-   (.claude/rules/preview-pane-paint-artifacts.md), so the fill looks dead
+   (.claude/skills/browser-verification/preview-pane-paint-artifacts.md), so the fill looks dead
    there: verify it in headless Chrome or the WebKit probe.
 
    Dependency-free with the module.exports guard, so the fitting rule is

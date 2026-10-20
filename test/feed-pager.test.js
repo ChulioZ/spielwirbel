@@ -4,7 +4,7 @@
    half, run under jsdom (.claude/rules/testing-views-under-jsdom.md).
 
    The Browser pane fires no IntersectionObserver at all
-   (.claude/rules/preview-pane-paint-artifacts.md), so this is where the scroll
+   (.claude/skills/browser-verification/preview-pane-paint-artifacts.md), so this is where the scroll
    trigger is proved: a fake observer the spec fires by hand. The guarantees:
    - the sentinel is a real <button> („Mehr laden"), usable without the observer;
    - a page APPENDS to the same grid, and the button leaves at nextCursor null;

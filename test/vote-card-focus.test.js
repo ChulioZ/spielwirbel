@@ -13,7 +13,7 @@
    (`.claude/rules/testing-views-under-jsdom.md`). jsdom is also the RIGHT place
    for it: the Claude Code Browser pane's `document.hasFocus()` is permanently
    false and it dispatches no blur at all
-   (`.claude/rules/blur-events-never-fire-in-the-preview-pane.md`), while jsdom
+   (`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md`), while jsdom
    tracks activeElement properly. */
 
 const { test } = require('node:test');

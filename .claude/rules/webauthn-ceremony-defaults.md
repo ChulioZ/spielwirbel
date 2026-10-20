@@ -155,5 +155,5 @@ and the anti-enumeration invariants the login pair must not regress),
 cookie, or every cover image 401s),
 `.claude/rules/tabler-icon-codepoints.md` (`ti-fingerprint` is `\ebd1` in this
 bundle — read from its own cmap, and confirmed by eye),
-`.claude/rules/blur-events-never-fire-in-the-preview-pane.md` (how the inline
+`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` (how the inline
 rename editor was verified).

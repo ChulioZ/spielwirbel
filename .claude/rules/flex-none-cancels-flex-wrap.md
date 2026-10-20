@@ -83,7 +83,7 @@ for `.mood` and for every override in the vote card's own phone block; the share
 ## Verifying overflow: `clientWidth` is honest, `window.innerWidth` is not
 
 The Browser pane is known to report `innerWidth === 0`
-(`.claude/rules/preview-pane-paint-artifacts.md`). **On an overflowing page it
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`). **On an overflowing page it
 fails the other way**: measured 390px viewport, `window.innerWidth` reported
 **621** — the overflowed width — while `documentElement.clientWidth` correctly
 said 390. So every rect comparison against `innerWidth` reports *no overflow* on

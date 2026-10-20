@@ -135,7 +135,7 @@ holding it: `assert.deepEqual([...sent.body.memberIds], ['m1'])`.
 ## The pane's falsehoods do NOT apply here
 
 jsdom is not the Claude Code Browser pane. `blur`/`focusout` **do** fire
-(`.claude/rules/blur-events-never-fire-in-the-preview-pane.md` is about the
+(`.claude/skills/browser-verification/blur-events-never-fire-in-the-preview-pane.md` is about the
 pane), `document.activeElement` tracks properly, and focus restoration is
 directly assertable. What jsdom still cannot answer is paint, layout, and
 whether a glyph looks like a flag (`.claude/rules/tabler-icon-codepoints.md`),

@@ -57,7 +57,7 @@ that a too-narrow box needs, with none of `anywhere`'s sizing side effect.
 
 Both tables come from a headless Chrome probe over a synthetic page that
 `<link>`s the real `public/styles.css`, the shape
-`.claude/rules/browser-pane-is-chromium-only.md` describes. Re-measure the same
+`.claude/skills/browser-verification/browser-pane-is-chromium-only.md` describes. Re-measure the same
 way if this rule is ever retuned; jsdom applies no external stylesheet, so no
 view spec can see any of it.
 

@@ -81,5 +81,5 @@ arrive part-way down the screen it sits at the top of),
 `.claude/rules/session-flow-history.md` (the wizard whose hand-rolled resets this
 replaced, and why its steps go through `syncUrl`),
 `.claude/rules/testing-views-under-jsdom.md` (the harness),
-`.claude/rules/preview-pane-paint-artifacts.md` (why a scroll claim is verified
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (why a scroll claim is verified
 with JS probes rather than screenshots).

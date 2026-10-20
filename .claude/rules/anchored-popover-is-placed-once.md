@@ -212,7 +212,7 @@ function under test. Grow the card with **real content** (append chips) instead.
 ## The pane never fires a ResizeObserver at all
 
 New member of the artifact family in
-`.claude/rules/preview-pane-paint-artifacts.md`, and it costs an hour if you
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`, and it costs an hour if you
 assume your wiring is wrong. Measured on a **plain div** with no app code
 involved:
 
@@ -228,7 +228,7 @@ el.style.height = '200px';
 
 Same family as the dead IntersectionObserver, and **not** a viewport problem:
 `resize_window` to a real size does not revive either observer (measured on
-#979 — `.claude/rules/preview-pane-paint-artifacts.md` has the control). The tell
+#979 — `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` has the control). The tell
 is that the *initial* placement is right and only the update is missing, which
 reads exactly like a mis-wired callback.
 
@@ -258,7 +258,7 @@ then renders zero covers with nothing to explain why, which reads as a broken
 feature rather than a bad number. It is `max(160px, min(264px, 38vh))` now.
 
 A freshly opened pane tab reports `innerHeight === 0` until a `resize_window`
-(`.claude/rules/preview-pane-paint-artifacts.md`), so this floor is also what
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`), so this floor is also what
 keeps the layout measurable in an unresized pane — but it is warranted on its
 own: one row is always better than none.
 
@@ -267,5 +267,5 @@ why a `max-width` here can be a no-op, and why widening a card is the cheaper
 answer to "this editor is cramped" than raising the cap above),
 `.claude/rules/popover-vs-sheet-editors.md` (the two presentations
 `openEditor` picks between, and why an input-bearing popover must become a sheet
-on a phone), `.claude/rules/preview-pane-paint-artifacts.md` (the artifact family
+on a phone), `.claude/skills/browser-verification/preview-pane-paint-artifacts.md` (the artifact family
 this joins), `.claude/rules/bgg-edition-covers.md` (the picker that surfaced it).

@@ -186,7 +186,7 @@ function openLangMenu(anchor) {
    label after a language switch. So one MutationObserver on the bar catches
    them all, rather than a call in each of those places. ResizeObserver is
    deliberately not used: the Browser pane fires none
-   (.claude/rules/preview-pane-paint-artifacts.md), and a window `resize`
+   (.claude/skills/browser-verification/preview-pane-paint-artifacts.md), and a window `resize`
    covers every real case. Three more triggers change widths without touching
    the bar's DOM: a design (the attribute, then its stylesheet arriving), a
    screen's body class (the auth screens hide the home link), and fonts loading

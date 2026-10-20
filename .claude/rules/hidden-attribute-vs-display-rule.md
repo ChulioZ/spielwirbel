@@ -96,5 +96,5 @@ not the attribute, decides painting. **Probe `getComputedStyle(el).display`, not
 `el.hidden`,** when checking whether something is actually hidden. Only the
 on-screen screenshot caught it here — which is why a substantial UI change gets a
 real browser pass, not just green DOM assertions
-(`.claude/rules/preview-pane-paint-artifacts.md` is the sibling "the probe is
+(`.claude/skills/browser-verification/preview-pane-paint-artifacts.md` is the sibling "the probe is
 lying to you" family).

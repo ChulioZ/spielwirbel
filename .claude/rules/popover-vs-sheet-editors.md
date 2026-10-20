@@ -210,7 +210,7 @@ a split — but the guard is unchanged and the trap it catches is the live one f
 The pane **cannot reproduce the bug** — it has no soft keyboard, and a freshly
 opened tab reports `innerWidth === 0`. That 0 has a useful consequence and one
 trap (**but resize first**: an explicit `resize_window` *does* clear it, measured
-on #722 — see `.claude/rules/preview-pane-paint-artifacts.md`, which supersedes
+on #722 — see `.claude/skills/browser-verification/preview-pane-paint-artifacts.md`, which supersedes
 the "does not clear it" claim this paragraph used to make):
 
 - `matchMedia('(min-width: 860px)').matches` is **false**, so the pane always
@@ -233,4 +233,4 @@ survived, Escape/backdrop/× closing, and focus restoration to the opener.
 is the dock/strip breakpoint, reused deliberately),
 `.claude/rules/sheet-history-back-dismissal.md`,
 `.claude/rules/accessibility-contrast-and-modals.md` §2,
-`.claude/rules/preview-pane-paint-artifacts.md`.
+`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`.

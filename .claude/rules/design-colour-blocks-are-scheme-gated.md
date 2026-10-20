@@ -133,7 +133,7 @@ the scheme-qualified block, then the unconditional one, then `styles.css`'s dark
 block, then `:root`. A resolver that looked up only the bare selector would find
 the fonts and **silently fall through to Klassisch for every colour** — the
 plausible-empty-answer shape in
-`.claude/rules/cssrules-walk-is-blind-under-nesting.md`. It asserts that at
+`.claude/skills/browser-verification/cssrules-walk-is-blind-under-nesting.md`. It asserts that at
 least one of the two blocks exists, so a moved hook fails loudly.
 
 **Related:** `.claude/rules/design-stylesheets-are-shell-assets.md` (the file's

@@ -15,7 +15,7 @@
  * screen. What is left here is the cover, which the press never touched.
  *
  * Everything is a CSS-TEXT assertion: the pane omits an animating layer from
- * screenshots (`.claude/rules/preview-pane-paint-artifacts.md`) and jsdom applies
+ * screenshots (`.claude/skills/browser-verification/preview-pane-paint-artifacts.md`) and jsdom applies
  * no external stylesheet at all. The parsing traps are in `test/support/css.js`
  * (`.claude/rules/css-text-assertions-strip-comments.md`).
  */
