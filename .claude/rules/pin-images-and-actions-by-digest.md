@@ -61,7 +61,8 @@ load-bearing rather than decorative. Drop it and the pin freezes forever.
 `major.minor.patch`, identical across both stages, not below `NODE_FLOOR`; a
 40-hex ref plus a version comment in every workflow. **`NODE_FLOOR` rises with the
 pinned major**, by design: it names the security release on the line currently
-ridden (22.23.2 on v22, 26.5.1 on v26 — both 2026-07-28), so crossing a major
+ridden (22.23.2 on v22, 26.5.1 on v26 — both 2026-07-28; on v26 since raised to
+26.12.1, 2026-10-21, the Brotli-decoder RCE), so crossing a major
 raises it in the same change, and a downgrade has to edit it. Neither test can
 check:
 
