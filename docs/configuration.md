@@ -384,8 +384,10 @@ themselves from their own limits. Unset (the default) nothing is excluded.
 
 `ADMIN_PASSWORD` must be a **separate** secret from `AUTH_PASSWORD`: the latter
 is shared with everyone using the instance, while these powers cross tenant
-boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the admin cookie
-(otherwise `SESSION_SECRET`, then the password itself). Leave `ADMIN_PASSWORD`
+boundaries. Optionally set `ADMIN_SESSION_SECRET` to sign the login's password step
+(otherwise `SESSION_SECRET`, then the password itself). The session itself is a
+random id stored server-side, so no secret can mint one, and logging out or
+removing a passkey ends it. Leave `ADMIN_PASSWORD`
 unset — the default — and the entire surface `404`s.
 
 **The panel login takes two factors (#1670): the password, then a passkey**

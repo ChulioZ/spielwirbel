@@ -196,7 +196,7 @@ test('the operator panel\'s two sends log a failure without the notifier\'s or r
   // four sites outside lib/routes/admin/ and named these two as still open; both
   // mail an address the operator was given in confidence.
   const repo = require('../lib/repo');
-  const cookie = adminSessionCookie();
+  const cookie = await adminSessionCookie();
 
   const notifier = 'decision.canary@example.com';
   const notice = await repo.createContactNotice({

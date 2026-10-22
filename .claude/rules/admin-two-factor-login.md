@@ -11,7 +11,8 @@ paths:
 ---
 # The operator panel's login is two factors — password, then passkey (#1670)
 
-`POST /api/admin/login` no longer sets `aid`. It returns a **password-step
+`POST /api/admin/login` no longer sets `aid`, and since 2026-10-22 no secret can
+mint one either (§6). It returns a **password-step
 token** plus WebAuthn options; only `POST /api/admin/login/passkey` with a
 verified assertion (user verification **required**) mints the session. Every
 trap below either reopens single-factor access or locks the operator out, and
@@ -35,9 +36,9 @@ through `webauthn.signChallengeWith`. Three properties, each load-bearing:
   easy to forget and invisible when missing.
 
 `test/admin-passkeys.test.js` crosses every token kind against every verifier
-(step, enroll challenge, account login/registration challenge, `aid`), each with
-an anti-vacuous "verifies as itself" beside it. Add a new token kind → add it to
-that matrix.
+(step, enroll challenge, account login/registration challenge, and each of them
+sent as `aid`), each with an anti-vacuous "verifies as itself" beside it. Add a
+new token kind → add it to that matrix.
 
 ## 2. Enrollment is NEVER reachable from a session
 
@@ -69,8 +70,33 @@ env-token path, never an empty list. The check-then-delete is not atomic
 assertions, so `@simplewebauthn/server` actually runs. That is the only way to
 prove `requireUserVerification: true` and the counter check: with the library
 stubbed, a test can only assert what the route *passed in*. Other specs that need
-an operator session mint `aid` directly with `adminSessionCookie()` from
-`test/helpers.js` — they are about what the panel does, not about the login.
+an operator session get one from `adminSessionCookie()` in `test/helpers.js`,
+which writes the session row straight into the repo — they are about what the
+panel does, not about the login. It is async; a call without `await` sends
+`[object Promise]` and reads as a 401 from the gate.
+
+## 6. The session is SERVER-SIDE — no secret may be able to mint it
+
+Two factors protect the *login*; they protected nothing while `aid` was a
+stateless HMAC over its own expiry. Whoever held the signing secret
+(`ADMIN_SESSION_SECRET`, or `SESSION_SECRET` as its fallback, both in the deploy
+environment) could sign a valid cookie and skip the password AND the passkey.
+That is what the 2026-10-22 Railway env-var leak exposed.
+
+So `aid` is a random 256-bit id, and `requireAdmin` admits a request only while
+a row for its SHA-256 exists and has not expired (`createAdminSession` & co.,
+both backends). Three properties, each pinned by one named test:
+
+- **Only the passkey step writes a row**, keyed to the credential that opened
+  it. A cookie of any signed shape is refused, the old `a2` format included.
+- **Logout deletes the row**, so a copy of the cookie taken earlier dies too.
+- **Removing a passkey deletes every session it opened.** A key is removed
+  because it is lost, so its sessions must not outlive it by up to 12 hours.
+
+The step token and the enrollment challenge are still signed with
+`signingSecret()`. Forging one skips only the password, never the passkey; keep
+it that way. Rotating that secret ends no session; logging out or removing the
+key does (`docs/legal/breach-process.md`).
 
 **Related:** `.claude/rules/admin-moderation-surface.md` (the surface and its
 password gate), `lib/routes/passkeys.js` (account passkeys, #418 — `preferred`

@@ -144,9 +144,12 @@ list; on 2026-10-04 it was:
 - **Standalone pages** (outside the SPA and its i18n): `login.html`,
   `kontakt.html` (feedback lands here too), `admin.html` (needs `ADMIN_PASSWORD`;
   its login also needs a passkey since #1670, which the Browser pane cannot
-  provide — on the throwaway instance only, mint the cookie with
-  `node -e "const a=require('./lib/admin');console.log(a.mintToken(a.signingSecret()))"`
-  run under that instance's env, and set it as `document.cookie = 'aid=…'`),
+  provide — on the throwaway instance only, with its server STOPPED (a running
+  JSON server overwrites external writes, `data-json-external-edits.md`), write a
+  session row and print its id:
+  `node -e "const a=require('./lib/admin'),r=require('./lib/repo'),id=a.newSessionId();r.createAdminSession({idHash:a.hashSessionId(id),credentialId:'audit',createdAt:new Date().toISOString(),expiresAt:new Date(Date.now()+a.TOKEN_TTL_MS).toISOString()}).then(()=>console.log(id))"`
+  run under that instance's env, start it, and set `document.cookie = 'aid=…'`.
+  No secret can mint the cookie since 2026-10-22),
   `/faq`, the guide pages, and the legal pages, which 404 until
   `IMPRESSUM_ADDRESS` + `IMPRESSUM_EMAIL` are set.
 

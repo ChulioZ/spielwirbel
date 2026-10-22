@@ -64,10 +64,20 @@ async function createRound(request, over = {}) {
 
 // An operator session WITHOUT the two-factor login (#1670). Specs about what the
 // panel does mint the `aid` cookie directly; the login itself — password step
-// plus passkey — is test/admin-passkeys.test.js's subject.
-function adminSessionCookie() {
+// plus passkey — is test/admin-passkeys.test.js's subject. It writes the
+// session row straight into the repo, since no secret can mint one.
+async function adminSessionCookie() {
   const admin = require('../lib/admin');
-  return [`aid=${admin.mintToken(admin.signingSecret())}`];
+  const repo = require('../lib/repo');
+  const id = admin.newSessionId();
+  const now = Date.now();
+  await repo.createAdminSession({
+    idHash: admin.hashSessionId(id),
+    credentialId: 'test-session',
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + admin.TOKEN_TTL_MS).toISOString(),
+  });
+  return [`aid=${id}`];
 }
 
 module.exports = { app, store, DATA_DIR, createRound, adminSessionCookie };

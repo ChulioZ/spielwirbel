@@ -1,17 +1,15 @@
 'use strict';
 
 /*
- * `lib/auth.js` and `lib/admin.js` each carry their own copy of the same four
- * signed-token primitives, and `lib/accounts.js` a third copy of one of them:
+ * `lib/auth.js` and `lib/admin.js` each carry their own copy of the same two
+ * cookie-handling primitives, and `lib/accounts.js` a third copy of one of them:
  *
  *   safeEqual    auth == admin == accounts   (timing-safe compare)
- *   mintToken    auth == admin
- *   verifyToken  auth == admin
  *   readCookie   auth == admin
  *
- * All byte-identical today, and all correct — constant-time compare, signature
- * verified before `exp`, domain-separated. `sign` differs only by the `admin.`
- * prefix, which is the point of the separation and is not asserted here.
+ * All byte-identical today, and all correct. (`mintToken`/`verifyToken` were
+ * shared too until 2026-10-22, when the admin cookie stopped being a signed
+ * token and became a server-side session — lib/admin.js.)
  *
  * The finding is the DRIFT SURFACE, not a live defect: `lib/admin.js` carries
  * the "same as lib/auth.js" comment that
@@ -67,8 +65,6 @@ const norm = (s) => s.replace(/\s+/g, ' ').trim();
 
 const SHARED = [
   { fn: 'safeEqual', files: ['lib/auth.js', 'lib/admin.js', 'lib/accounts.js'] },
-  { fn: 'mintToken', files: ['lib/auth.js', 'lib/admin.js'] },
-  { fn: 'verifyToken', files: ['lib/auth.js', 'lib/admin.js'] },
   { fn: 'readCookie', files: ['lib/auth.js', 'lib/admin.js'] },
 ];
 

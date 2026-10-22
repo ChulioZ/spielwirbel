@@ -92,9 +92,9 @@ test('the admin gate refuses everything without a valid operator session', async
   });
 
   // The security property the separate secret exists for: an ordinary app
-  // session must NOT authenticate the admin surface. lib/auth.js signs "v1.<exp>"
-  // while lib/admin.js signs a domain-separated "admin.a2.<exp>" under a
-  // different cookie name, so neither token can stand in for the other.
+  // session must NOT authenticate the admin surface. lib/auth.js signs "v1.<exp>",
+  // while the admin session is a random id that must name a server-side row
+  // (lib/admin.js), so no signed token of any kind stands in for it.
   await t.test('an app session cookie is not an admin session', async () => {
     const auth = require('../lib/auth');
     const appToken = auth.mintToken(auth.sessionSecret());

@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-10-18
+**Stand:** 2026-10-22
 
 ## Verschlüsselung & Transport
 
@@ -26,7 +26,10 @@ list nothing that is not actually in place.
   ein für den Betreiber registrierter Passkey mit Nutzerverifikation (PIN/
   Biometrie). Das Passwort allein meldet nicht an. Neue Passkeys nur mit einem
   einmaligen `ADMIN_ENROLL_TOKEN` aus der Server-Umgebung, nie aus einer
-  laufenden Panel-Sitzung; ohne Passkey bleibt das Panel geschlossen.
+  laufenden Panel-Sitzung; ohne Passkey bleibt das Panel geschlossen. Die
+  Panel-Sitzung ist serverseitig gespeichert (nur als Hash): Auch wer die
+  Signier-Secrets der Server-Umgebung kennt, kann keine Sitzung erzeugen, und
+  Abmelden oder das Entfernen eines Passkeys beendet sie sofort.
 - Uploads sind zugriffsgeschützt (Cookie/Bearer-Gate auf `/uploads`); kein
   öffentlicher Bucket-Zugriff (Read-through-Proxy, #128). Seit #955 prüft
   `lib/upload-access.js` zusätzlich die **Eigentümerschaft** am angefragten

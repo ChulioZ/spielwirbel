@@ -97,7 +97,7 @@ async function fullAccount() {
 
 async function exportOf(uid) {
   const res = await request(app).post(`/api/admin/users/${uid}/export`)
-    .set('Cookie', adminSessionCookie()).send({ reason: 'Art. 15 field coverage' });
+    .set('Cookie', await adminSessionCookie()).send({ reason: 'Art. 15 field coverage' });
   assert.equal(res.status, 200, JSON.stringify(res.body));
   return res.body.export.account;
 }
