@@ -52,7 +52,7 @@ async function runMain(t, index, extra = {}) {
   const calls = [];
   t.mock.method(globalThis, 'fetch', async (url, opts = {}) => {
     calls.push(`${opts.method || 'GET'} ${url}`);
-    if (url.includes('nodejs.org')) return { ok: true, json: async () => index };
+    if (url === 'https://nodejs.org/dist/index.json') return { ok: true, json: async () => index };
     return { ok: true, json: async () => [] };
   });
   t.mock.method(console, 'log', () => {});
