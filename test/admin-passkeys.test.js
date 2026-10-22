@@ -55,6 +55,10 @@ async function enroll(auth, { uv = true, name = 'YubiKey' } = {}) {
 
 const startLogin = () => request(app).post('/api/admin/login').send({ password: PW });
 
+// The session cookie of a successful login, as the browser would send it back.
+const sessionOf = (res) => (res.headers['set-cookie'] || []).find((c) => c.startsWith('aid=')).split(';')[0];
+const me = (cookie) => request(app).get('/api/admin/me').set('Cookie', [cookie]);
+
 async function login(auth, assertOpts) {
   const step = await startLogin();
   assert.equal(step.status, 200, JSON.stringify(step.body));
@@ -76,7 +80,7 @@ test('enrollment 404s while ADMIN_ENROLL_TOKEN is unset — for a signed-in oper
   for (const path of ['/api/admin/enroll/options', '/api/admin/enroll']) {
     const anon = await request(app).post(path).send({ password: PW, enrollToken: ENROLL });
     assert.equal(anon.status, 404, path);
-    const signedIn = await request(app).post(path).set('Cookie', adminSessionCookie())
+    const signedIn = await request(app).post(path).set('Cookie', await adminSessionCookie())
       .send({ password: PW, enrollToken: ENROLL });
     assert.equal(signedIn.status, 404, `${path} with an aid session`);
     assert.equal(signedIn.body.error, 'admin_enroll_disabled');
@@ -169,7 +173,11 @@ test('password + a verified passkey mints the session and advances the counter',
   const res = await login(key);
   assert.equal(res.status, 200, JSON.stringify(res.body));
   const cookie = res.headers['set-cookie'][0];
-  assert.match(cookie, /^aid=a2\./);
+  // A bare 256-bit random id — nothing signed, nothing to forge.
+  const [, id] = cookie.match(/^aid=([A-Za-z0-9_-]{43});/);
+  // Only the hash is stored, so a read of the table hands out no live cookie.
+  assert.equal(await repo.getAdminSession(id), null);
+  assert.ok(await repo.getAdminSession(admin.hashSessionId(id)));
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=Strict/i);
 
@@ -215,7 +223,7 @@ test('the passkey step needs a valid password-step token', async (t) => {
     'an admin enrollment challenge': adminPasskeys.signEnrollChallenge(challenge),
     'an account login challenge': webauthn.signChallenge(webauthn.SCOPE_LOGIN, challenge),
     'an account registration challenge': webauthn.signChallenge(webauthn.SCOPE_REGISTER, challenge),
-    'an aid session token': admin.mintToken(secret),
+    'an aid session id': admin.newSessionId(),
   };
   for (const [name, token] of Object.entries(cases)) {
     await t.test(name, async () => {
@@ -233,10 +241,10 @@ test('no admin token verifies as another kind, in either direction', () => {
   const challenge = webauthn.encodeChallenge(webauthn.newChallenge());
   const step = adminPasskeys.signLoginStep(challenge);
   const enrollChallenge = adminPasskeys.signEnrollChallenge(challenge);
-  const aid = admin.mintToken(admin.signingSecret());
+  // `aid` is no longer a signed token at all (it is a random id looked up on
+  // the server), so the only crossing left to check is aid -> step token.
+  const aid = admin.newSessionId();
 
-  assert.equal(admin.verifyToken(step, admin.signingSecret()), false, 'step token as aid');
-  assert.equal(admin.verifyToken(enrollChallenge, admin.signingSecret()), false, 'enroll challenge as aid');
   assert.equal(webauthn.verifyChallenge(webauthn.SCOPE_LOGIN, step), null, 'step token as account login challenge');
   assert.equal(webauthn.verifyChallenge(webauthn.SCOPE_REGISTER, enrollChallenge), null, 'enroll as account registration');
   assert.equal(adminPasskeys.verifyLoginStep(aid), null, 'aid as step token');
@@ -245,19 +253,60 @@ test('no admin token verifies as another kind, in either direction', () => {
   // Anti-vacuous: each verifies as itself.
   assert.equal(adminPasskeys.verifyLoginStep(step), challenge);
   assert.equal(adminPasskeys.verifyEnrollChallenge(enrollChallenge), challenge);
-  assert.equal(admin.verifyToken(aid, admin.signingSecret()), true);
 });
 
-test('a session cookie minted under the password-only login (a1) is rejected', async () => {
+test('a step token or an enrollment challenge is not a session', async () => {
+  const step = (await startLogin()).body.step;
+  const enrollChallenge = adminPasskeys.signEnrollChallenge(webauthn.encodeChallenge(webauthn.newChallenge()));
+  assert.equal((await me(`aid=${step}`)).status, 401, 'step token as aid');
+  assert.equal((await me(`aid=${enrollChallenge}`)).status, 401, 'enroll challenge as aid');
+});
+
+test('the signing secret alone cannot mint a session — every signed cookie shape is refused', async () => {
+  // The 2026-10-22 Railway leak: a stateless HMAC cookie made ADMIN_SESSION_SECRET
+  // (or SESSION_SECRET, its fallback) a key to the panel that skipped the passkey.
   const secret = admin.signingSecret();
-  const payload = `a1.${Date.now() + 60 * 60 * 1000}`;
-  const sig = crypto.createHmac('sha256', secret).update(`admin.${payload}`).digest('base64url');
-  const res = await request(app).get('/api/admin/me').set('Cookie', [`aid=${payload}.${sig}`]);
-  assert.equal(res.status, 401);
-  // Anti-vacuous: the same construction under the current version is accepted.
-  const current = `a2.${Date.now() + 60 * 60 * 1000}`;
-  const ok = crypto.createHmac('sha256', secret).update(`admin.${current}`).digest('base64url');
-  assert.equal((await request(app).get('/api/admin/me').set('Cookie', [`aid=${current}.${ok}`])).status, 200);
+  for (const ver of ['a1', 'a2', 'a3']) {
+    const payload = `${ver}.${Date.now() + 60 * 60 * 1000}`;
+    const sig = crypto.createHmac('sha256', secret).update(`admin.${payload}`).digest('base64url');
+    assert.equal((await me(`aid=${payload}.${sig}`)).status, 401, `${ver} forged with the secret`);
+  }
+  // Anti-vacuous: a session the passkey step opened is accepted.
+  const res = await login(key);
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  assert.equal((await me(sessionOf(res))).status, 200);
+});
+
+test('logging out ends the session on the server, not only in the browser', async () => {
+  const cookie = sessionOf(await login(key));
+  assert.equal((await me(cookie)).status, 200);
+  assert.equal((await request(app).post('/api/admin/logout').set('Cookie', [cookie])).status, 200);
+  // The replayed cookie — a copy taken before logout — is dead too.
+  assert.equal((await me(cookie)).status, 401);
+});
+
+test('an expired session record is refused even though its cookie is still sent', async () => {
+  const id = 'expired-session-id';
+  await repo.createAdminSession({
+    idHash: admin.hashSessionId(id),
+    credentialId: key.id,
+    createdAt: new Date(Date.now() - 2 * admin.TOKEN_TTL_MS).toISOString(),
+    expiresAt: new Date(Date.now() - 1000).toISOString(),
+  });
+  assert.equal((await me(`aid=${id}`)).status, 401);
+});
+
+test('removing a passkey ends every session it opened, and only those', async () => {
+  const other = createAuthenticator();
+  assert.equal((await enroll(other, { name: 'Spare' })).status, 201);
+  const viaOther = sessionOf(await login(other));
+  const viaKey = sessionOf(await login(key));
+  assert.equal((await me(viaOther)).status, 200);
+
+  const removed = await request(app).delete(`/api/admin/passkeys/${other.id}`).set('Cookie', [viaKey]);
+  assert.equal(removed.status, 200);
+  assert.equal((await me(viaOther)).status, 401, 'a lost key takes its sessions with it');
+  assert.equal((await me(viaKey)).status, 200, 'the other key\'s session survives');
 });
 
 test('the admin factor works without SESSION_SECRET (the panel is not an account feature)', async () => {
@@ -274,7 +323,7 @@ test('the admin factor works without SESSION_SECRET (the panel is not an account
 /* ------------------------------- management -------------------------------- */
 
 test('the panel lists the keys and refuses to remove the last one', async () => {
-  const cookie = adminSessionCookie();
+  const cookie = await adminSessionCookie();
   const unauth = await request(app).get('/api/admin/passkeys');
   assert.equal(unauth.status, 401);
 

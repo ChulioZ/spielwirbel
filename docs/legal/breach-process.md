@@ -3,7 +3,7 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-10-18
+**Stand:** 2026-10-22
 
 ## 1. Erkennen & Eindämmen (sofort)
 
@@ -17,15 +17,17 @@ stress by one person.
     Sitzungen **überleben** die Rotation, weil die Refresh-Token nicht davon
     abhängen (gespeichert als SHA-256-Hash); wer gestohlene Sitzungen beenden
     muss, sperrt die betroffenen Konten im Admin-Panel.
-  - `ADMIN_PASSWORD` **und `ADMIN_SESSION_SECRET`, falls gesetzt** — das
-    Betreiber-Cookie wird mit `ADMIN_SESSION_SECRET || SESSION_SECRET ||
-    ADMIN_PASSWORD` signiert (`lib/admin.js`). Ist `ADMIN_SESSION_SECRET`
-    gesetzt, macht das Rotieren der beiden anderen ein gestohlenes, bis zu
-    12 Stunden gültiges Betreiber-Cookie **nicht** ungültig — dann dieses
-    mitrotieren.
+  - `ADMIN_PASSWORD` **und `ADMIN_SESSION_SECRET`, falls gesetzt** — der
+    erste Anmeldefaktor und der Schlüssel, der den Passwort-Schritt der
+    Anmeldung signiert. Seit dem 2026-10-22 ist die Betreiber-Sitzung
+    serverseitig (`lib/admin.js`): Kein Secret kann ein gültiges
+    Betreiber-Cookie erzeugen, und das Rotieren beendet laufende Sitzungen
+    **nicht**. Das tun Abmelden (für die eigene Sitzung) und das Entfernen
+    des Passkeys, der sie geöffnet hat (unten).
   - **Admin-Passkeys** (#1670) — der zweite Anmeldefaktor des Panels. Bei
     Verdacht auf einen verlorenen oder kompromittierten Schlüssel den Passkey in
-    der Karte „Admin-Passkeys" entfernen; ist es der letzte, zuerst über
+    der Karte „Admin-Passkeys" entfernen — das beendet zugleich jede Sitzung,
+    die mit ihm geöffnet wurde; ist es der letzte, zuerst über
     `ADMIN_ENROLL_TOKEN` einen neuen registrieren (`docs/deploy-railway.md`,
     „Operator passkeys"), dann den alten entfernen und die Variable wieder
     löschen. Ein gestohlenes Passwort allein öffnet das Panel nicht mehr —

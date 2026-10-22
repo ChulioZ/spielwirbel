@@ -7419,4 +7419,33 @@ module.exports = function repoContract(repo) {
     assert.deepEqual((await repo.listAdminPasskeys()).map((p) => p.credentialId), ['cred-b']);
     await repo.removeAdminPasskey('cred-b');
   });
+
+  // The operator's sessions (2026-10-22): global, keyed by the id's hash.
+  test('admin sessions: create, look up, delete one, delete a passkey\'s, purge the expired', async () => {
+    const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const past = new Date(Date.now() - 1000).toISOString();
+    const entry = (idHash, credentialId, expiresAt = future) => ({
+      idHash, credentialId, createdAt: '2026-10-22T21:00:00.000Z', expiresAt,
+    });
+    assert.equal(await repo.getAdminSession('h-a'), null);
+    assert.deepEqual(await repo.createAdminSession(entry('h-a', 'cred-a')), entry('h-a', 'cred-a'));
+    await repo.createAdminSession(entry('h-b', 'cred-a'));
+    await repo.createAdminSession(entry('h-c', 'cred-b'));
+    assert.deepEqual(await repo.getAdminSession('h-a'), entry('h-a', 'cred-a'));
+
+    assert.equal(await repo.deleteAdminSession('h-a'), true);
+    assert.equal(await repo.deleteAdminSession('h-a'), false);
+    assert.equal(await repo.getAdminSession('h-a'), null);
+
+    assert.equal(await repo.deleteAdminSessionsForPasskey('cred-a'), 1);
+    assert.equal(await repo.getAdminSession('h-b'), null);
+    assert.deepEqual(await repo.getAdminSession('h-c'), entry('h-c', 'cred-b'), 'another key\'s session survives');
+
+    // An expired row is swept by the next create; a live one is not.
+    await repo.createAdminSession(entry('h-old', 'cred-b', past));
+    await repo.createAdminSession(entry('h-new', 'cred-b'));
+    assert.equal(await repo.getAdminSession('h-old'), null, 'expired rows are purged on create');
+    assert.ok(await repo.getAdminSession('h-c'));
+    await repo.deleteAdminSessionsForPasskey('cred-b');
+  });
 };

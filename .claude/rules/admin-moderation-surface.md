@@ -58,11 +58,10 @@ file set and changed independently of the rest:
 
 `AUTH_PASSWORD` is known to the whole group; these powers are cross-tenant, so
 sharing the value is privilege escalation for every member (same call
-`user-accounts.md` made for `SESSION_SECRET`). And since the *signing* secret
-may legitimately be a shared `SESSION_SECRET`, the admin HMAC payload is
-**domain-separated** (`admin.` prefix, own token version — `a2` since #1670 —, own cookie
-`aid`, `sameSite=strict`). Drop the prefix and an app `sid` token becomes a
-valid admin token whenever `SESSION_SECRET` is set. `test/admin.test.js`
+`user-accounts.md` made for `SESSION_SECRET`). The session is its own cookie
+(`aid`, `sameSite=strict`) and, since 2026-10-22, **server-side**: a random id
+whose hash must name a live row, never a token signed with a secret that may be
+a shared `SESSION_SECRET` (`admin-two-factor-login.md` §6). `test/admin.test.js`
 asserts an app token is rejected.
 
 **The login is two-factor since #1670** — password, then a passkey with

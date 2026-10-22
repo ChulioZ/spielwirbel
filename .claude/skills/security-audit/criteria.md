@@ -129,13 +129,17 @@ that a generic scanner does not know about.
 - **Source:** `lib/accounts.js`, `lib/auth.js`, `lib/admin.js` · `admin-moderation-surface.md` §1
 - **Check:** `httpOnly: true`, `secure: req.secure` (Secure once TLS terminates in front),
   `path: '/'`. App session/access cookies are `sameSite=lax`; the admin `aid` cookie is
-  `sameSite=strict` **and** its HMAC payload is prefixed `admin.` with its own token
-  version — so an app `sid` token can never be replayed as an admin token even when both
-  share `SESSION_SECRET`. `ADMIN_PASSWORD` must never equal `AUTH_PASSWORD`. Since #1670
-  the password alone mints no `aid`: a passkey assertion (UV required) does, and passkey
-  enrollment needs `ADMIN_ENROLL_TOKEN`, never a session (`admin-two-factor-login.md`).
+  `sameSite=strict` **and** is not a signed token at all since 2026-10-22: a random id
+  whose SHA-256 must name a live server-side row, which only the passkey step writes — so
+  neither an app `sid` token nor anything signed with a leaked `ADMIN_SESSION_SECRET` /
+  `SESSION_SECRET` is a session. `ADMIN_PASSWORD` must never equal `AUTH_PASSWORD`. Since
+  #1670 the password alone mints no `aid`: a passkey assertion (UV required) does, and
+  passkey enrollment needs `ADMIN_ENROLL_TOKEN`, never a session
+  (`admin-two-factor-login.md`). A finding here is any path that makes a valid `aid` from
+  configuration rather than from the passkey step.
 - **Enforced by:** `test/admin.test.js` (app token rejected as admin),
-  `test/admin-passkeys.test.js` (password alone, every cross-token pair, enrollment gate)
+  `test/admin-passkeys.test.js` (password alone, signed-cookie forgery, logout and key
+  removal end sessions, every cross-token pair, enrollment gate)
 
 ### S-011 — Security headers and CSP stay tight; no directive weakened without a documented reason
 - **Status:** adopted · 2026-07-24

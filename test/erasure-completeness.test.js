@@ -96,6 +96,13 @@ const GLOBAL_DISPOSITION = {
       + 'keyed by credential id, with no user id or tenant — no account\'s data, so '
       + 'nothing an account erasure or export could reach',
   },
+  admin_sessions: {
+    erase: false,
+    export: false,
+    why: 'the OPERATOR\'s own panel sessions (2026-10-22): a session-id hash, the '
+      + 'admin credential id and two timestamps, with no user id or tenant — no '
+      + 'account\'s data, and expired rows are swept on the next login',
+  },
   moderation_log: {
     erase: false,
     export: false,
