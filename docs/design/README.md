@@ -2,8 +2,8 @@
 
 Spielwirbel moved from **per-round** colour schemes and worlds to **per-user
 designs**: every account picks one look for the whole app, and a round keeps only
-a colour marker. Seven looks are planned — Klassisch (the original look), Der
-Tisch, Das Programmheft, Die Brücke, Der Run, Forest, Ocean — and Der Tisch is
+a colour marker. There are six looks — Klassisch (the original look), Der
+Tisch, Das Programmheft, Die Brücke, Forest, Ocean — and Der Tisch is
 also the *face*: what logged-out visitors see. This folder holds everything that
 decides how that works. The code follows it; this file is the map.
 
@@ -13,8 +13,9 @@ once by the first-start chooser; the round palettes and worlds
 are gone from the code, and a round that wore one shows the colour marker it maps
 to (`public/js/round-marker.js`). Live designs (the rows `public/js/designs.js`
 marks `enabled: true`): **Klassisch, Der Tisch, Ocean, Die Brücke, Das
-Programmheft, Forest** (Forest's go-live was #1478). Der Run (#1205) is a
-placeholder epic.
+Programmheft, Forest** (Forest's go-live was #1478). A seventh, Der Run, was
+planned and dropped (#1205, closed 2026-10-23): the six are enough. The handover
+documents below still describe it (X1–X15); read those parts as history.
 
 ## The documents
 
