@@ -350,6 +350,26 @@ If you do configure one later:
   POST. Don't route it through `lib/mail.js`: an error loop would burn the daily
   send budget that `MAIL_DAILY_MAX` protects for *registration* mail.
 
+### Node security releases
+
+GitHub raises no alert for the Node runtime inside the Docker base image, and
+Dependabot bumps it only weekly. The **Node Security Watch** workflow
+(`.github/workflows/node-security-watch.yml`, daily 06:17 UTC) checks
+`nodejs.org/dist/index.json` for a release on the pinned major that is newer
+than the `Dockerfile` pin and marked `security: true`, and files a **private
+draft security advisory** (Security → Advisories) when it finds one. It never
+opens an issue and its public log never says what it found, because this repo
+is public (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
+
+It needs the repo secret **`GH_ADVISORY_TOKEN`**: a fine-grained PAT scoped to
+this repository only, with **Repository security advisories: Read and write**
+(GitHub adds Metadata: Read automatically) and nothing else. `GITHUB_TOKEN`
+cannot create advisories. When the PAT expires, the run fails with
+`GitHub API GET answered 401`, and GitHub mails the failure to the account that
+last edited the cron. Renew the token then. Run it once by hand with **test**
+ticked to check the token and the notification end to end, then close the TEST
+draft.
+
 ## Operator passkeys: enrollment and recovery (#1670)
 
 The panel login is the password **and** a passkey. Registration is gated by a

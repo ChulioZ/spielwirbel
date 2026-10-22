@@ -1163,6 +1163,10 @@ scripts/
                      that run's one desktop capture — the round hub at 1440 wide
                      for the band under the landing hero (#1199) — its viewport,
                      probe and crop
+  node-security-watch.js
+                     daily (Node Security Watch workflow): files a PRIVATE draft
+                     security advisory when nodejs.org marks a release newer
+                     than the Dockerfile's pin as a security release
   cdp.js             the dependency-free Chrome DevTools Protocol client both
                      image scripts drive headless Chrome with
   render-design-marks.js
@@ -1196,7 +1200,8 @@ docker-compose.yml   one-command run with a persistent /data volume
 knexfile.js          Knex config (Postgres) shared by the app + the migrate CLI
 railway.json         Railway build/deploy config (see docs/deploy-railway.md)
 .coderabbit.yaml     CodeRabbit AI review config (trial; not a required check)
-.github/workflows/   CI: tests, lint, secret scan, Docker image build + publish
+.github/workflows/   CI: tests, lint, secret scan, Docker image build + publish,
+                     daily Node security-release watch
 .github/             dependabot.yml, FUNDING.yml, and the contributor-facing
                      ISSUE_TEMPLATE/ forms + PULL_REQUEST_TEMPLATE.md
 ```
