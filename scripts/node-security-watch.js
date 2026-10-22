@@ -15,6 +15,13 @@
  * reports). For the same reason the job's log — public, like every Actions log
  * here — never says what was found: no versions, no "created a draft".
  *
+ * The draft alone notifies nobody: it is created with the operator's own token,
+ * and GitHub does not notify you of your own actions (measured 2026-10-22). So
+ * while a security release is pending the run FAILS, every day until the bump
+ * lands, and GitHub's failed-workflow mail is the alert. A red run says only
+ * "action required", a bit anyone can already derive from the public pin and
+ * index.json; the details stay in the draft.
+ *
  * Needs GH_ADVISORY_TOKEN, a fine-grained PAT with "Repository security
  * advisories: read and write" on this repo; GITHUB_TOKEN cannot create one.
  */
@@ -109,11 +116,19 @@ async function main({ env = process.env, root = path.join(__dirname, '..') } = {
       await gh('POST', `/repos/${repo}/security-advisories`, token, body);
     }
   }
+  if (release) {
+    console.log('Node security watch: action required — see Security → Advisories.');
+    return true;
+  }
   console.log('Node security watch: check complete.');
+  return false;
 }
 
 module.exports = { pinnedVersion, pendingSecurityReleases, advisoryBody, main };
 
 if (require.main === module) {
-  main().catch((err) => { console.error(err.message); process.exit(1); });
+  main().then(
+    (actionRequired) => { if (actionRequired) process.exitCode = 1; },
+    (err) => { console.error(err.message); process.exitCode = 1; },
+  );
 }

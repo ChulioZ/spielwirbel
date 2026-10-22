@@ -358,17 +358,24 @@ Dependabot bumps it only weekly. The **Node Security Watch** workflow
 `nodejs.org/dist/index.json` for a release on the pinned major that is newer
 than the `Dockerfile` pin and marked `security: true`, and files a **private
 draft security advisory** (Security → Advisories) when it finds one. It never
-opens an issue and its public log never says what it found, because this repo
-is public (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
+opens an issue, and its public log says only "action required", because this
+repo is public (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
 
 It needs the repo secret **`GH_ADVISORY_TOKEN`**: a fine-grained PAT scoped to
 this repository only, with **Repository security advisories: Read and write**
 (GitHub adds Metadata: Read automatically) and nothing else. `GITHUB_TOKEN`
-cannot create advisories. When the PAT expires, the run fails with
-`GitHub API GET answered 401`, and GitHub mails the failure to the account that
-last edited the cron. Renew the token then. Run it once by hand with **test**
-ticked to check the token and the notification end to end, then close the TEST
-draft.
+cannot create advisories.
+
+**The alert is the failed run, not the draft.** The draft is created with your
+own token, and GitHub does not notify you of your own actions. So while a
+security release is pending, the run fails every day until the bump is live,
+and GitHub mails the failure to the account that last edited the cron. That
+needs **Settings → Notifications → Actions → Email**, "failed workflows only"
+is enough; it was "Don't notify" until 2026-10-22. An expired PAT fails the run
+too (`GitHub API GET answered 401`): renew it then. A private one-shot reminder
+for 2027-10-08 exists for the current token's 2027-10-22 expiry. Run the
+workflow by hand with **test** ticked to check the whole path: it files a TEST
+draft and fails on purpose. Close the TEST draft afterwards.
 
 ## Operator passkeys: enrollment and recovery (#1670)
 
