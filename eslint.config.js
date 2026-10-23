@@ -179,9 +179,9 @@ const frontendGlobals = {
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
   tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
   SHRINK_M: 'readonly', PRIOR_DEFAULT: 'readonly',
-  PLAY_LIFT: 'readonly', PLAY_HALF: 'readonly',
-  playCredit: 'readonly', gamePrior: 'readonly',
-  shrinkScore: 'readonly', shelfScore: 'readonly', playCounts: 'readonly',
+  PRIOR_EVENINGS: 'readonly', PICK_VALUE: 'readonly',
+  shrinkScore: 'readonly', eveningEvidence: 'readonly',
+  shelfScore: 'readonly', playCounts: 'readonly',
   // rating-faces.js (issues #890, #909) — frontend only, by design; it also
   // holds the vote scale's own bounds since #909 folded vote-scale.js away
   MOODS: 'readonly', ratingFace: 'readonly', ratingRung: 'readonly',

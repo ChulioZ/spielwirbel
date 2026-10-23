@@ -831,12 +831,15 @@ What the app does, in detail. For a short overview see the
   for more than its numeric distance
   suggests: two games with the same average are *not* the same recommendation
   when one of them has somebody at the table who does not want to play. Where it
-  diverges the screen says why. At **shelf** scope the score is additionally
-  shrunk toward a fixed neutral expectation in proportion to how thin the
-  evidence is, so a game three people rated 5,5,5 on its one evening stops
-  outranking a staple forty votes agree on — and a game the group keeps choosing
-  lifts that expectation, which is what finally gives a round that runs its
-  evenings by direct pick a ranked shelf at all (those sessions write no votes).
+  diverges the screen says why. At **shelf** scope the unit of evidence is the
+  **evening**: each session that rated a game counts once with that evening's
+  score, each time the group chose it counts as a pick worth „somebody wanted
+  this" (4,5, or the game's own average if higher, so another pick can never
+  lower it), and the whole is shrunk toward a fixed neutral expectation worth
+  one evening. So a game three people rated 5,5,5 on its one evening stops
+  outranking a staple the round keeps playing, a six-person evening weighs the
+  same as a four-person one, and a round that runs its evenings by direct pick
+  still gets a ranked shelf (those sessions write no votes).
   Nothing about the *other* games on a shelf enters the number, so the same votes
   and plays on a game read the same in every round and on /entdecken. Tonight's podium
   and every other per-session number are deliberately **not** shrunk: there `n`

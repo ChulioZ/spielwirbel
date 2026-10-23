@@ -169,7 +169,7 @@ function scoreTally(tiles) {
   return { score: sum / count, count, low, vetoes };
 }
 
-/* ------------------------------------------------------------------ #894 --
+/* ------------------------------------------------------------- #894 / #1721 --
    SHELF SCOPE: how much of its own score a game has actually earned.
 
    Everything above answers "what are these votes worth". This half answers a
@@ -182,12 +182,47 @@ function scoreTally(tiles) {
    tile numerals to 8/n (it was 10/n under #893's original `[-5, 1, 3, 4, 5]`,
    until #1706), so a single vote's leverage on a thin-data game doubles.
 
+   THE UNIT OF EVIDENCE IS AN EVENING (#1721). For one game, over the round's
+   sessions:
+
+   - a RATED evening is a session in which the game received at least one
+     rating; it contributes that evening's own score R_s (the curve above, over
+     that session's ratings);
+   - a PLAY is what `playCounts` below counts; it contributes `pick`, the value
+     of "somebody chose this game on purpose";
+   - a voted-and-chosen evening counts as BOTH (operator decision, 2026-10-23).
+
+     pick  = max(PICK_VALUE, mean of the R_s)     (PICK_VALUE when none)
+     score = (PRIOR_DEFAULT · PRIOR_EVENINGS + Σ R_s + plays · pick)
+             / (PRIOR_EVENINGS + ratedEvenings + plays)
+
+   Until #1721 the unit was a VOTE: `(n·score + 4·prior) / (n + 4)` over the
+   individual ratings, with plays only lifting the prior. Three things followed,
+   all measured against the shipped code. One voting evening outweighed many
+   plays: a game rated once 5-5-4-1 and then picked four more times read 3,34,
+   below a never-rated game played once (3,67), and no value of the play dials
+   could fix that without softening every rating everywhere. Votes counted per
+   person and plays per evening, so a six-person evening weighed 1,5× a
+   four-person one. And winning the vote counted twice, as votes plus a lift on
+   a prior the votes then diluted. Counting evenings answers all three, and for
+   a four-player round that always votes and never chose the game the number is
+   EXACTLY the old one: four votes were one evening's weight then too.
+
+   `pick = max(PICK_VALUE, own mean)` IS LOAD-BEARING. It keeps the property the
+   shelf has promised since #894 — more plays can only raise a score — because
+   every input to the weighted mean is then at most `pick`, so adding one more
+   pick can never pull the mean down. A fixed 4,5 would: {5,5,5,5} chosen ten
+   times reads 4,667 and would fall to 4,659 after one more pick, below the same
+   votes that lost all ten draws. That is also what separates this from the
+   pseudo-vote form rejected in #894 (a fixed play value in the numerator and
+   denominator), whose flaw was exactly that drag on a game above the value.
+
    THE PRIOR IS FIXED, AND THAT IS THE WHOLE POINT (#928). Every input to a
-   game's shelf score is a fact about THAT game — its own votes, its own plays —
-   so two rounds holding identical votes and plays print the identical number,
-   by construction rather than by discipline. `shelfScore` takes no prior
-   parameter for exactly that reason: "which prior did this screen use" is not a
-   question the code can express, so it cannot drift into two answers.
+   game's shelf score is a fact about THAT game — its own evenings, its own
+   plays — so two rounds holding identical histories print the identical
+   number, by construction rather than by discipline. `shelfScore` takes no
+   prior parameter for exactly that reason: "which prior did this screen use" is
+   not a question the code can express, so it cannot drift into two answers.
 
    IT SHIPPED SHELF-RELATIVE FIRST, AND THAT WAS WRONG TWICE OVER. #894 shrank
    toward a prior computed from the round's own shelf, reasoning that "what does
@@ -211,36 +246,28 @@ function scoreTally(tiles) {
       the game it was printed on. `/entdecken` printed a third quantity again on
       the same 0–5 ring. A label used in five places must denote one thing.
 
-   Note the curve itself was NOT the defect and is unchanged at both scopes: the
-   vote card asks about tonight („Wie gern möchtest du das spielen?") and #893's
-   anchor is a decision rule for one table, which remains right. Fixing the
-   prior recovers the numbers without touching it.
-
    SESSION SCOPE IS DELIBERATELY UNTOUCHED. Tonight's podium reads
-   `gameStatsForSession`, and none of this applies there for two independent
-   reasons: `n` is the whole electorate rather than a sample (the vote card
-   refuses to advance until everyone present has rated every drawn game), and
-   shrinking equal-`n` values toward a common prior is order-preserving anyway,
-   so it would move every number on the podium and none of its ranking.
+   `gameStatsForSession`, and none of this applies there: it IS one evening, so
+   the whole electorate is in and there is nothing to shrink.
 
-   ACCEPTED CONSEQUENCE: shrinkage softens a veto on thin data. `{5,5,1}` played
-   once reads 3,1 rather than 2,3. That is intended, not a bug to fix later —
-   one person's veto on one evening should not permanently sink a game the round
-   has otherwise formed no view on, and the veto keeps its full force exactly
-   where it decides something, on tonight's unshrunk podium.
+   ACCEPTED CONSEQUENCE: shrinkage softens a veto on thin data. `{5,5,1}` rated
+   once and never chosen reads 2,7 rather than 2,3. That is intended, not a bug
+   to fix later — one person's veto on one evening should not permanently sink a
+   game the round has otherwise formed no view on, and the veto keeps its full
+   force exactly where it decides something, on tonight's unshrunk podium.
 
    A FLOOR (`max(shrunk, prior)`) was considered and REJECTED. It reads well
    („plays set a floor, ratings only exceed it") and it destroys the veto signal
-   #893 exists to surface: a game everybody rates 1 and the group still plays
-   weekly would read 3,9. Do not reintroduce it without solving that. */
+   #893 exists to surface: a game everybody rates 1 would read 3,0 on every
+   shelf. The pick value does lift such a game the more it is chosen — {1,1,1,1}
+   rated once and picked twelve times reads 3,9 — and that is the revealed
+   preference speaking, not a floor: they keep choosing it. */
 
-// How much evidence a game needs before its own score outweighs the prior —
-// roughly one table's worth of votes, so a game earns its place on the shelf
-// after about one full evening of ratings. A STARTING VALUE, expected to be
-// retuned from real use like TILE_VALUE above. Deliberately left at 4 by #928:
-// the recovery there came from fixing the prior, not from trusting thin data
-// more, and those are separate dials that must not be conflated.
-const SHRINK_M = 4;
+// How much evidence the prior is worth, in EVENINGS: a game earns its place on
+// the shelf after about one evening of its own. A STARTING VALUE, expected to be
+// retuned from real use like TILE_VALUE above. It replaced `SHRINK_M = 4` votes
+// at the shelf (#1721) with the same intent, minus the group size.
+const PRIOR_EVENINGS = 1;
 
 // What we assume about a game before its own evidence speaks. It is the neutral
 // face's value under TILE_VALUE, so „wir wissen es noch nicht" and „keiner hat
@@ -249,80 +276,60 @@ const SHRINK_M = 4;
 // rounds (#928, and the unit mismatch in §1 of the header above).
 const PRIOR_DEFAULT = 3;
 
-// Full play credit is worth TWO TILES of prior: a game the group keeps choosing
-// is presumed 🤩 „wir lieben das" rather than 😐 „keiner hat was dagegen".
-// Direct plays are the round's revealed preference and count heavily — a family
-// that put a game on the table twelve times has said something at least as
-// strong as four ratings.
-//
-// #894 shipped 1,0 and asserted a ceiling with it („plays alone can never make
-// a game read as 🤩"); #928 raised it and dropped that claim KNOWINGLY. A
-// never-rated game played 12× now reads ≈ 4,7 and outranks one rated {5,5,5,5}
-// (4,0). What survives is the weaker property that still bounds the dial:
-// `gamePrior` is strictly below PRIOR_DEFAULT + PLAY_LIFT = 5,0, so plays alone
-// can never reach a full 5,0 however often a game is played.
-const PLAY_LIFT = 2.0;
+// What one play is worth: somebody chose this game on purpose, so it sits
+// between „gern" and „unbedingt". A game with plays and no ratings therefore
+// stays strictly below 4,5 however often it is played — the bound that replaced
+// #928's "strictly below 5,0" for plays alone.
+const PICK_VALUE = 4.5;
 
-// Plays at which half the lift is earned. A SATURATING curve, never a clamp: it
-// is strictly increasing forever, so twelve plays still outrank six on an active
-// shelf. And it is ABSOLUTE rather than relative-to-the-most-played (which is
-// what lib/recommend.js's own play bonus uses), because a displayed number must
-// not move because a DIFFERENT game got played.
-const PLAY_HALF = 2;
+// The vote-weighted shrink the RECOMMENDER still uses (lib/recommend.js): its
+// taste profile weighs ratings, not evenings, and the shelf's evening unit is a
+// display decision that does not transfer (#1721 left it out of scope).
+// Roughly one four-player table of votes.
+const SHRINK_M = 4;
 
-// How much of the play lift `plays` nights have earned: 1 -> 0,33 · 2 -> 0,50 ·
-// 3 -> 0,60 · 10 -> 0,83 · 20 -> 0,91. Zero for a game never put on the table,
-// which is what keeps a never-played, never-rated game scoreless below.
-function playCredit(plays) {
-  const n = Number.isFinite(plays) && plays > 0 ? plays : 0;
-  return n ? n / (n + PLAY_HALF) : 0;
-}
-
-/* The prior for ONE game: the neutral expectation, raised by how often the
-   group actually chose it. Takes no shelf and no round — see the header.
-
-   A play does not add points to a score — it raises the expectation the score is
-   shrunk TOWARD, which is what makes it strictly one-directional:
-   d(shrunk)/d(prior) = m/(n+m) > 0, so more plays can only ever raise a number
-   and never lower one.
-
-   The pseudo-vote form (play credit in the numerator AND denominator at a fixed
-   tile value) was rejected for exactly that: it lowers any game already scoring
-   above the play value, so a beloved staple played weekly would score below a
-   beloved game played once. */
-function gamePrior(plays) {
-  return PRIOR_DEFAULT + PLAY_LIFT * playCredit(plays);
-}
-
-/* The shrinkage itself: (n·score + m·prior) / (n + m). With no votes the answer
-   is the prior — the caller decides whether that is a number worth showing.
-
-   This one still TAKES its prior, unlike `shelfScore` and `gamePrior` above: it
-   is the arithmetic, not the policy, and lib/recommend.js legitimately shrinks
-   without the play lift (the play signal already reaches its profile through
-   `W_PLAYS`, and applying both would count it twice). Callers pass
+/* The shrinkage itself, per VOTE: (n·score + m·prior) / (n + m). With no votes
+   the answer is the prior. Only lib/recommend.js calls this since #1721 — the
+   shelf counts evenings through `shelfScore` below. Callers pass
    `PRIOR_DEFAULT`; nobody derives one. */
 function shrinkScore(score, n, prior) {
   if (!Number.isFinite(n) || n <= 0 || !Number.isFinite(score)) return prior;
   return (n * score + SHRINK_M * prior) / (n + SHRINK_M);
 }
 
-/* The number the shelf shows: a game's own score, shrunk toward a fixed prior
-   its own plays have lifted.
+/* Fold a list of per-evening scores into the two numbers `shelfScore` takes.
+   Each entry is what `scoreRatings` / `scoreTally` returned for ONE session's
+   ratings of the game; a `null` (nobody rated it that evening) is not a rated
+   evening and is skipped. Shared so the Regal, the Chronik's period card and
+   the Discover podium count evenings the one same way. */
+function eveningEvidence(perEvening) {
+  let sum = 0;
+  let evenings = 0;
+  (Array.isArray(perEvening) ? perEvening : []).forEach((sc) => {
+    if (!sc || !Number.isFinite(sc.score)) return;
+    sum += sc.score;
+    evenings += 1;
+  });
+  return { sum, evenings };
+}
 
-   The null contract is the load-bearing part. A game with neither ratings nor
-   plays has NO evidence at all, so it stays null and every `score !== null`
-   guard already on screen keeps hiding it. A game with plays but no ratings —
-   the direct-pick round, which writes `votes: {}` and can never collect a rating
-   afterwards — gets the lifted prior, and that is the whole reason §7 exists:
-   without it such a round has a shelf where nothing is ranked and nothing ever
-   will be, however often they play. */
-function shelfScore(score, n, plays) {
-  const c = gamePrior(plays);
-  if (!Number.isFinite(n) || n <= 0 || !Number.isFinite(score)) {
-    return playCredit(plays) > 0 ? c : null;
-  }
-  return shrinkScore(score, n, c);
+/* The number the shelf shows (#1721): a game's rated evenings and its plays,
+   shrunk toward a fixed prior worth one evening.
+
+   The null contract is the load-bearing part. A game with neither rated
+   evenings nor plays has NO evidence at all, so it stays null and every
+   `score !== null` guard already on screen keeps hiding it. A game with plays
+   but no ratings — the direct-pick round, which writes `votes: {}` and can never
+   collect a rating afterwards — still gets a number, which is what gives such a
+   round a ranked shelf at all. */
+function shelfScore(eveningSum, ratedEvenings, plays) {
+  const rated = Number.isInteger(ratedEvenings) && ratedEvenings > 0 && Number.isFinite(eveningSum)
+    ? ratedEvenings : 0;
+  const picks = Number.isFinite(plays) && plays > 0 ? plays : 0;
+  if (!rated && !picks) return null;
+  const sum = rated ? eveningSum : 0;
+  const pick = rated ? Math.max(PICK_VALUE, sum / rated) : PICK_VALUE;
+  return (PRIOR_DEFAULT * PRIOR_EVENINGS + sum + picks * pick) / (PRIOR_EVENINGS + rated + picks);
 }
 
 /* How often each game was actually put on the table, over the round's own
@@ -358,7 +365,7 @@ function playCounts(round) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreTally,
-    SHRINK_M, PRIOR_DEFAULT, PLAY_LIFT, PLAY_HALF,
-    playCredit, gamePrior, shrinkScore, shelfScore, playCounts,
+    SHRINK_M, PRIOR_DEFAULT, PRIOR_EVENINGS, PICK_VALUE,
+    shrinkScore, eveningEvidence, shelfScore, playCounts,
   };
 }

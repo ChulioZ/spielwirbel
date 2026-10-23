@@ -9,14 +9,14 @@ const { periodsOf, periodRecap, periodKeyOf, dayIndexOf, monthsBetween } = requi
 // fake would test the wrong rules.
 const { sessionPeople } = require('../public/js/session-people');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
-const { scoreRatings, shelfScore, playCounts } = require('../public/js/vote-score');
+const { scoreRatings, eveningEvidence, shelfScore, playCounts } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
 
 const deps = {
   peopleOf: sessionPeople, scoreOf: scoreRatings,
   // The shelf half (#894): the real ones, never a stub — a substituted shrinkage
   // is exactly the drift this file's injection discipline exists to prevent.
-  shelfOf: shelfScore, playsOf: playCounts,
+  shelfOf: shelfScore, eveningsOf: eveningEvidence, playsOf: playCounts,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
 };
 
@@ -273,16 +273,14 @@ test('three „gar nicht" votes print their own shrunk score — a stale retire 
       },
     ],
   });
-  /* TILE_VALUE[1] is −3 since #1706, so the game's own score is exactly that —
-     and since #894 the card prints it shrunk: the prior is `PRIOR_DEFAULT`
-     (fixed since #928) and nothing was played, so no lift, giving
-     (3·−3 + 4·3) / 7 = +3/7. That is POSITIVE now — under the −5 curve it was
-     −3/7, and this test was named for staying negative — but it is still the
-     lowest number the card holds, and it still discriminates against the flag
-     winning: on #797's precedence the first vote would have been the −6 trash
-     tile and the printed value 0. */
+  /* TILE_VALUE[1] is −3 since #1706, so the evening's own score is exactly
+     that — and the card prints it shrunk: one rated evening against a prior of
+     `PRIOR_DEFAULT` worth one evening (#1721), nothing played, giving
+     (3 + −3) / 2 = 0. It still discriminates against the flag winning: on
+     #797's precedence the first vote would have been the −6 trash tile, the
+     evening −4 and the printed value −0,5. */
   const top = periodRecap(r, [], month('2026-07'), deps).topRated;
-  assert.equal(Number(top.score.toFixed(4)), Number((3 / 7).toFixed(4)));
+  assert.equal(top.score, 0);
 });
 
 test('a tie on best-rated names every tied game', () => {

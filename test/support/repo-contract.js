@@ -6621,6 +6621,12 @@ module.exports = function repoContract(repo) {
           'stray-1': { [g2.id]: { rating: 0 } },
         },
       });
+      // An evening that drew the game and admitted NO rating for it (#1721):
+      // it must not become a rated evening, in either backend.
+      await repo.createSession(t1, r1.id, {
+        gameIds: [g1.id], createdAt: daysAgo(1),
+        votes: { [bo.id]: { [g1.id]: { rating: null } } },
+      });
 
       const row = await rowFor(id);
       assert.equal(row.ratings.count, 3, 'a vote with no rating is not a vote');
@@ -6638,6 +6644,13 @@ module.exports = function repoContract(repo) {
          the logged-out landing page and nowhere else. */
       // The 2 is worth 0 on the curve since #1706 (it was 1).
       assert.equal(scoreTally(row.ratings.tiles).score, (0 + 4 + 5) / 3);
+      /* One histogram per RATED evening (#1721), in the shared canonical order:
+         Ann's 5 alone, then Cy's 2 + Dee's 4 together — they rated on one
+         evening, so they are ONE entry, not two. The unrated third evening
+         contributes nothing. The shelf score folds these, so a backend that
+         grouped by game instead of by session would print a different number on
+         the landing page with every count above still right. */
+      assert.deepEqual(row.ratings.evenings, [[0, 0, 0, 0, 0, 1], [0, 0, 1, 0, 1, 0]]);
     });
 
     await t.test('a vote naming a game in ANOTHER round is ignored, not credited', async () => {
@@ -6718,6 +6731,14 @@ module.exports = function repoContract(repo) {
       // dropped cast would empty the public podium rather than throw.
       assert.equal(row.ratings.tiles.length, 6);
       row.ratings.tiles.forEach((n, i) => assert.equal(typeof n, 'number', `ratings.tiles[${i}]`));
+      // The per-evening histograms carry the same six casts (#1721). This
+      // fixture rates nothing, so it only pins the array; the strict deepEqual
+      // in "ratings bin into tiles" is what rejects a string bucket there.
+      assert.ok(Array.isArray(row.ratings.evenings));
+      row.ratings.evenings.forEach((h, e) => {
+        assert.equal(h.length, 6);
+        h.forEach((n, i) => assert.equal(typeof n, 'number', `ratings.evenings[${e}][${i}]`));
+      });
       assert.equal(typeof row.owners, 'number');
     });
   });

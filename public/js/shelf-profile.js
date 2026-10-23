@@ -120,7 +120,7 @@ function shelfDimension(games, keys, bandsOf) {
 // Only games with a score count, for the value AND for `n`: an unscored box
 // says nothing about taste, so it must neither drag a mean down nor pad the
 // count shown beside it. "Scored" is exactly what the Regal shows a score for
-// (shelfScore: rated, or played often enough to earn the prior) — the list and
+// (shelfScore: rated on some evening, or played at least once) — the list and
 // the shelf must never disagree about which games have a number. A name needs
 // two scored games to lead anything; on a small shelf the top five would
 // otherwise be five singletons riding one game's score.

@@ -74,7 +74,9 @@ anything an ordinary user would not notice.
 **The one exception: a change that MOVES NUMBERS PEOPLE HAVE ALREADY SEEN.**
 #1706 retuned the Spielwirbel-Score curve — not a capability, so by the bar
 above it got no entry — and every score on the Regal, in the Pokale and the
-Chronik shifted overnight, in every round, with nothing anywhere saying why. An
+Chronik shifted overnight, in every round, with nothing anywhere saying why.
+(#1721 then changed the shelf's unit to evenings; the two share one entry,
+because one explanation of "why did our scores move" is what a user needs.) An
 unexplained change to a displayed figure reads as a bug or as lost data, so it
 gets an `improved` entry that says what moved and why (operator, 2026-10-23,
 added the same day). The test is "does a user see a number they knew change

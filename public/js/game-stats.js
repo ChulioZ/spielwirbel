@@ -76,23 +76,33 @@ function gameStatsForSession(round, session, gameId) {
 // Nothing renders this directly — every shelf surface goes through `gameStats`
 // or `roundScoreIndex` below, which is what stops one screen showing a game's
 // raw score beside another showing its shrunk one.
+//
+// The same pass folds the per-EVENING evidence the shelf score counts (#1721):
+// each session's own ratings scored on their own, so `eveningSum` /
+// `ratedEvenings` come out of the walk that already exists rather than a
+// second one per game (the O(n²) note on roundScoreIndex below).
 function rawGameStats(round, gameId) {
   const ratings = [];
+  const evenings = [];
   let sessions = 0;
   round.sessions.forEach((s) => {
     if (!s.gameIds.includes(gameId)) return;
     sessions++;
+    const tonight = [];
     // Guests included, for the same reason as gameStatsForSession above (#458).
     // `sessionRaters`, NOT `sessionPeople`: someone removed from the session
     // after rating (#1538) is out of that session, but their ratings still count
     // for the shelf — see its header in session-people.js.
     sessionRaters(round, s).forEach((p) => {
       const v = (s.votes[p.id] || {})[gameId];
-      if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
+      if (v && Number.isFinite(v.rating)) tonight.push(v.rating);
     });
+    ratings.push(...tonight);
+    evenings.push(scoreRatings(tonight));
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
-  return { avg, ...scoreFields(ratings), count: ratings.length, sessions };
+  const { sum: eveningSum, evenings: ratedEvenings } = eveningEvidence(evenings);
+  return { avg, ...scoreFields(ratings), count: ratings.length, sessions, eveningSum, ratedEvenings };
 }
 
 /* WHO rated this game, and how they rate it on average (#1190) — the
@@ -156,7 +166,7 @@ function shelveStats(raw, plays) {
     ...raw,
     plays,
     rawScore: raw.score,
-    score: shelfScore(raw.score, raw.count, plays),
+    score: shelfScore(raw.eveningSum, raw.ratedEvenings, plays),
   };
 }
 
@@ -254,9 +264,9 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   //   shrinks to 2,00 at four votes and 1,18 at forty, so the bar would be
   //   reached by how many people voted rather than by how the game was received
   //   — which is exactly the defect #922 fixed one divisor over.
-  // - The play lift moves it too. A game the round keeps putting on the table
-  //   is shrunk toward a higher prior, so „dieses Spiel zieht das Regal runter"
-  //   would get quieter the more often they play it. (Before #928 the same
+  // - Plays move it too. Every play adds a pick worth at least 4,5 to the shelf
+  //   score (#1721; a lift on the prior before that), so „dieses Spiel zieht
+  //   das Regal runter" would get quieter the more often they play it. (Before #928 the same
   //   objection had a second, larger form: the prior was the round's own shelf,
   //   so a good shelf made a bad game harder to propose.)
   //

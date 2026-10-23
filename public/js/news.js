@@ -32,8 +32,8 @@
 
    THE BAR FOR ADDING AN ENTRY IS HIGH, and it is stated in
    .claude/rules/keep-readme-current.md: a genuinely new user-facing CAPABILITY,
-   nothing else — or a change that moves numbers people have already seen (a
-   retuned score, #1706), which would otherwise read as a bug. Every entry
+   nothing else — or a change that moves numbers people have already seen (the
+   score rework, #1706 + #1721), which would otherwise read as a bug. Every entry
    spends attention the Nutzungsbedingungen §11 terms notice also needs, so
    this list is a budget, not a log.
 
@@ -50,52 +50,53 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
-   * #1706, the Spielwirbel-Score curve retune. Not a new capability, so by the
-   * bar in the header it would get no entry — but every score already on the
-   * Regal, in the Pokale and the Chronik moved overnight, for every round, and
-   * an unexplained change to a number people have already seen reads as a bug.
-   * That is the case for an 'improved' entry (operator, 2026-10-23). No numbers
-   * in the text: voters never see any (#1530), and the score's ⓘ sheet
+   * #1706 + #1721, the Spielwirbel-Score rework: a softer veto on the curve and
+   * evenings instead of votes as the shelf's unit, shipped together so users get
+   * one explanation. Not a new capability, so by the bar in the header it would
+   * get no entry — but every score already on the Regal, in the Pokale and the
+   * Chronik moved overnight, for every round, and an unexplained change to a
+   * number people have already seen reads as a bug (operator, 2026-10-23). No
+   * numbers in the text: voters never see any (#1530), and the score's ⓘ sheet
    * describes the principle the same way.
    */
   {
-    revision: '2026-10-23',
+    revision: '2026-10-24',
     kind: 'improved',
     de: {
-      title: 'Ein „gar nicht“ entscheidet nicht mehr allein',
-      body: 'Der Spielwirbel-Score gewichtet die Gesichter neu: „gar nicht“ zählt weniger schwer als bisher, „eher nicht“ dafür mehr. So kippt ein einzelnes „gar nicht“ ein Spiel nicht mehr, das alle anderen gern spielen würden. Das gilt auch für alle bisherigen Bewertungen — deshalb haben sich Scores im Regal, in den Pokalen und in der Chronik verschoben. Aussortier-Vorschläge kommen dadurch seltener.',
+      title: 'Der Spielwirbel-Score rechnet jetzt fairer',
+      body: 'Zwei Dinge haben sich geändert. Ein einzelnes „gar nicht“ zählt weniger schwer als bisher, „eher nicht“ dafür mehr — so kippt eine Stimme kein Spiel mehr, das alle anderen gern spielen würden. Und der Score zählt jetzt Sessions statt einzelner Stimmen: Jede Session, in der ihr ein Spiel bewertet habt, zählt einmal, egal wie viele dabei waren, und jedes Mal, wenn ihr ein Spiel ausgewählt habt, zählt mit. Das gilt auch rückwirkend für alles, was ihr schon gespielt habt — deshalb haben sich Scores im Regal, in den Pokalen und in der Chronik verschoben. Aussortier-Vorschläge kommen dadurch seltener.',
     },
     en: {
-      title: 'One “not at all” no longer decides on its own',
-      body: 'The Spielwirbel score weighs the faces differently now: “not at all” counts for less than before, and “not really” for more. A single “not at all” no longer sinks a game everyone else would happily play. This applies to all past ratings too — which is why scores on the Shelf, in Trophies and in History have moved. Suggestions to retire a game come up less often as a result.',
+      title: 'The Spielwirbel score is fairer now',
+      body: 'Two things changed. A single “not at all” counts for less than before, and “not really” for more — so one vote no longer sinks a game everyone else would happily play. And the score now counts sessions instead of individual votes: every session in which you rated a game counts once, however many people were there, and every time you picked a game counts too. This applies to everything you have already played — which is why scores on the Shelf, in Trophies and in History have moved. Suggestions to retire a game come up less often as a result.',
     },
     es: {
-      title: 'Un «nada» ya no decide por sí solo',
-      body: 'La Puntuación Spielwirbel pondera ahora las caras de otra forma: «nada» pesa menos que antes y «más bien no», más. Un solo «nada» ya no hunde un juego al que todos los demás jugarían con gusto. Esto vale también para todas las valoraciones anteriores, por eso las puntuaciones de la Estantería, los Trofeos y el Historial han cambiado. Las propuestas de retirar un juego aparecen con menos frecuencia.',
+      title: 'La Puntuación Spielwirbel ahora es más justa',
+      body: 'Han cambiado dos cosas. Un solo «nada» pesa menos que antes y «más bien no», más: así un voto ya no hunde un juego al que todos los demás jugarían con gusto. Y la puntuación cuenta ahora sesiones en lugar de votos sueltos: cada sesión en la que valorasteis un juego cuenta una vez, da igual cuántos fuerais, y cada vez que elegisteis un juego también cuenta. Esto vale también para todo lo que ya habéis jugado, por eso las puntuaciones de la Estantería, los Trofeos y el Historial han cambiado. Las propuestas de retirar un juego aparecen con menos frecuencia.',
     },
     fr: {
-      title: 'Un « pas du tout » ne décide plus à lui seul',
-      body: 'Le Score Spielwirbel pondère désormais les visages autrement : « pas du tout » compte moins qu’avant, « plutôt pas » davantage. Un seul « pas du tout » ne fait plus couler un jeu auquel tous les autres joueraient volontiers. Cela vaut aussi pour toutes les notes passées — c’est pourquoi les scores de l’Étagère, des Trophées et de l’Historique ont bougé. Les propositions de retirer un jeu apparaissent moins souvent.',
+      title: 'Le Score Spielwirbel est plus juste',
+      body: 'Deux choses ont changé. Un seul « pas du tout » compte moins qu’avant, « plutôt pas » davantage : une voix ne fait plus couler un jeu auquel tous les autres joueraient volontiers. Et le score compte désormais des sessions plutôt que des voix isolées : chaque session où vous avez noté un jeu compte une fois, quel que soit le nombre de personnes, et chaque fois que vous avez choisi un jeu compte aussi. Cela vaut aussi pour tout ce que vous avez déjà joué — c’est pourquoi les scores de l’Étagère, des Trophées et de l’Historique ont bougé. Les propositions de retirer un jeu apparaissent moins souvent.',
     },
     it: {
-      title: 'Un «per niente» non decide più da solo',
-      body: 'Il Punteggio Spielwirbel ora pesa le facce in modo diverso: «per niente» conta meno di prima, «non molto» di più. Un solo «per niente» non affossa più un gioco a cui tutti gli altri giocherebbero volentieri. Vale anche per tutte le valutazioni passate: per questo i punteggi nello Scaffale, nei Trofei e nella Cronologia sono cambiati. Le proposte di ritirare un gioco compaiono meno spesso.',
+      title: 'Il Punteggio Spielwirbel ora è più equo',
+      body: 'Sono cambiate due cose. Un solo «per niente» conta meno di prima, «non molto» di più: così un voto non affossa più un gioco a cui tutti gli altri giocherebbero volentieri. E il punteggio ora conta le sessioni invece dei singoli voti: ogni sessione in cui avete valutato un gioco conta una volta, comunque foste in tanti, e ogni volta che avete scelto un gioco conta anche quella. Vale anche per tutto ciò che avete già giocato: per questo i punteggi nello Scaffale, nei Trofei e nella Cronologia sono cambiati. Le proposte di ritirare un gioco compaiono meno spesso.',
     },
     nl: {
-      title: 'Eén ‘helemaal niet’ beslist niet meer alleen',
-      body: 'De Spielwirbel-score weegt de gezichten nu anders: ‘helemaal niet’ telt minder zwaar dan voorheen, ‘liever niet’ juist zwaarder. Eén enkel ‘helemaal niet’ laat een spel waar alle anderen graag aan zouden beginnen niet meer zinken. Dit geldt ook voor alle eerdere beoordelingen — daarom zijn de scores in de Kast, bij de Trofeeën en in de Geschiedenis verschoven. Voorstellen om een spel opzij te leggen komen daardoor minder vaak.',
+      title: 'De Spielwirbel-score rekent nu eerlijker',
+      body: 'Er zijn twee dingen veranderd. Eén enkel ‘helemaal niet’ telt minder zwaar dan voorheen, ‘liever niet’ juist zwaarder — zo laat één stem een spel waar alle anderen graag aan zouden beginnen niet meer zinken. En de score telt nu sessies in plaats van losse stemmen: elke sessie waarin jullie een spel beoordeelden telt één keer, hoeveel mensen er ook waren, en elke keer dat jullie een spel kozen telt ook mee. Dit geldt ook voor alles wat jullie al gespeeld hebben — daarom zijn de scores in de Kast, bij de Trofeeën en in de Geschiedenis verschoven. Voorstellen om een spel opzij te leggen komen daardoor minder vaak.',
     },
     pt: {
-      title: 'Um «nenhuma» já não decide sozinho',
-      body: 'A Pontuação Spielwirbel pesa agora as caras de outra forma: «nenhuma» conta menos do que antes e «pouca» conta mais. Um único «nenhuma» já não afunda um jogo que todos os outros jogariam com gosto. Isto aplica-se também a todas as avaliações anteriores — por isso as pontuações na Estante, nos Troféus e no Histórico mudaram. As sugestões para aposentar um jogo aparecem com menos frequência.',
+      title: 'A Pontuação Spielwirbel está mais justa',
+      body: 'Mudaram duas coisas. Um único «nenhuma» conta menos do que antes e «pouca» conta mais: assim um voto já não afunda um jogo que todos os outros jogariam com gosto. E a pontuação conta agora sessões em vez de votos isolados: cada sessão em que avaliaram um jogo conta uma vez, seja quantas pessoas forem, e cada vez que escolheram um jogo também conta. Isto aplica-se também a tudo o que já jogaram — por isso as pontuações na Estante, nos Troféus e no Histórico mudaram. As sugestões para aposentar um jogo aparecem com menos frequência.',
     },
     fi: {
-      title: 'Yksi ”en lainkaan” ei enää ratkaise yksin',
-      body: 'Spielwirbel-pisteet painottavat kasvoja nyt toisin: ”en lainkaan” painaa vähemmän kuin ennen ja ”en oikein” enemmän. Yksittäinen ”en lainkaan” ei enää upota peliä, jota kaikki muut pelaisivat mielellään. Muutos koskee myös kaikkia aiempia arvioita, joten Hyllyn, Palkintojen ja Historian pisteet ovat muuttuneet. Ehdotuksia pelin karsimisesta tulee siksi harvemmin.',
+      title: 'Spielwirbel-pisteet ovat nyt reilummat',
+      body: 'Kaksi asiaa muuttui. Yksittäinen ”en lainkaan” painaa vähemmän kuin ennen ja ”en oikein” enemmän, joten yksi ääni ei enää upota peliä, jota kaikki muut pelaisivat mielellään. Lisäksi pisteet laskevat nyt sessioita yksittäisten äänten sijaan: jokainen sessio, jossa arvioitte pelin, lasketaan kerran riippumatta siitä, montako teitä oli, ja jokainen kerta, kun valitsitte pelin, lasketaan myös. Muutos koskee myös kaikkea, mitä olette jo pelanneet, joten Hyllyn, Palkintojen ja Historian pisteet ovat muuttuneet. Ehdotuksia pelin karsimisesta tulee siksi harvemmin.',
     },
     ko: {
-      title: '‘전혀’ 하나가 더 이상 혼자 결정하지 않습니다',
-      body: 'Spielwirbel 점수가 얼굴 표정을 새로 가중합니다. ‘전혀’는 이전보다 덜, ‘별로’는 더 무겁게 반영됩니다. 이제 ‘전혀’ 하나만으로 다른 모두가 기꺼이 할 게임이 밀려나지 않습니다. 이 변경은 지난 모든 평가에도 적용되므로 선반, 트로피, 기록의 점수가 바뀌었습니다. 그 결과 게임을 정리하자는 제안도 덜 자주 나타납니다.',
+      title: 'Spielwirbel 점수가 더 공정해졌습니다',
+      body: '두 가지가 바뀌었습니다. ‘전혀’ 하나는 이전보다 덜, ‘별로’는 더 무겁게 반영되어, 이제 한 표만으로 다른 모두가 기꺼이 할 게임이 밀려나지 않습니다. 또한 점수는 이제 개별 표가 아니라 세션을 셉니다. 게임을 평가한 세션은 몇 명이 있었든 한 번씩 반영되고, 게임을 고른 횟수도 함께 반영됩니다. 이미 플레이한 모든 기록에도 적용되므로 선반, 트로피, 기록의 점수가 바뀌었습니다. 그 결과 게임을 정리하자는 제안도 덜 자주 나타납니다.',
     },
   },
   /*

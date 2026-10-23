@@ -10,7 +10,7 @@
    reason recap.js's header sets out: a public/js file cannot require() a
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
-   copy of any rule. `deps` is { peopleOf, scoreOf, shelfOf, playsOf,
+   copy of any rule. `deps` is { peopleOf, scoreOf, eveningsOf, shelfOf, playsOf,
    minRatings,
    isActive } — sessionPeople (session-people.js), scoreRatings
    (vote-score.js) and RECAP_MIN_RATINGS
@@ -201,8 +201,12 @@ function playTally(round, sessions) {
 function bestRated(round, sessions, deps) {
   const known = new Set((round.games || []).filter(deps.isActive).map((g) => g.id));
   const ratings = new Map();
+  // The same ratings, grouped by EVENING (#1721): the shelf score counts a
+  // session once, so the card has to hand it one score per session per game.
+  const byEvening = new Map();
   sessions.forEach((session) => {
     const votes = session.votes || {};
+    const tonight = new Map();
     deps.peopleOf(round, session).forEach((person) => {
       const own = votes[person.id] || {};
       Object.keys(own).forEach((gid) => {
@@ -213,7 +217,15 @@ function bestRated(round, sessions, deps) {
         const list = ratings.get(gid) || [];
         list.push(rating);
         ratings.set(gid, list);
+        const mine = tonight.get(gid) || [];
+        mine.push(rating);
+        tonight.set(gid, mine);
       });
+    });
+    tonight.forEach((list, gid) => {
+      const all = byEvening.get(gid) || [];
+      all.push(deps.scoreOf(list));
+      byEvening.set(gid, all);
     });
   });
   // Ranked on the Spielwirbel-Score (#893), not the raw mean (#914) — injected
@@ -238,7 +250,7 @@ function bestRated(round, sessions, deps) {
   const raw = new Map();
   ratings.forEach((list, gid) => {
     const sc = deps.scoreOf(list);
-    if (sc) raw.set(gid, { score: sc.score, count: list.length });
+    if (sc) raw.set(gid, { count: list.length, ...deps.eveningsOf(byEvening.get(gid)) });
   });
   let top = null;
   const scores = new Map();
@@ -247,7 +259,7 @@ function bestRated(round, sessions, deps) {
     // Since #928 the shelf score takes no prior: a game's number is a function
     // of its own votes and plays, so the period card and the all-time card
     // cannot disagree even though they read different slices of history.
-    const score = deps.shelfOf(r.score, r.count, plays.get(gid) || 0);
+    const score = deps.shelfOf(r.sum, r.evenings, plays.get(gid) || 0);
     if (score === null) return;
     scores.set(gid, score);
     if (top === null || score > top) top = score;
