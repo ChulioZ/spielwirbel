@@ -137,3 +137,38 @@ test('#928 identical votes and plays print the identical number in any round', a
   assert.equal(here.plays, there.plays);
   assert.equal(here.score, there.score, 'and so is the number the shelf prints');
 });
+
+/* A SPLIT EVENING, through the real view code (#1721). The parent holds the
+   votes and no `chosenGameId`; each child table is a play with `votes: {}`
+   (lib/session-split.js). So the parent must count as ONE rated evening for
+   every game it rated, each child as ONE play of its own game, and nothing
+   twice — a child read as a second rated evening, or the parent as a play,
+   would each move the number. */
+test('#1721 a split evening: the parent is one rated evening, each table one play', async (t) => {
+  const dom = boot(t);
+  const ids = members.map((m) => m.id);
+  dom.context.SPLIT = {
+    ...ROUND,
+    id: 'r3',
+    sessions: [
+      {
+        id: 'p', createdAt: '2026-09-01T20:00:00.000Z', gameIds: ['g1', 'g2'], memberIds: ids,
+        votes: Object.fromEntries(ids.map((id) => [id, { g1: { rating: 5 }, g2: { rating: 3 } }])),
+        childSessionIds: ['c1', 'c2'], done: true,
+      },
+      { id: 'c1', parentSessionId: 'p', createdAt: '2026-09-01T20:00:00.000Z', gameIds: ['g1'],
+        memberIds: ids.slice(0, 2), votes: {}, chosenGameId: 'g1', done: true },
+      { id: 'c2', parentSessionId: 'p', createdAt: '2026-09-01T20:00:00.000Z', gameIds: ['g2'],
+        memberIds: ids.slice(2), votes: {}, chosenGameId: 'g2', done: true },
+    ],
+  };
+  const g1 = dom.run('gameStats(SPLIT, "g1")');
+  const g2 = dom.run('gameStats(SPLIT, "g2")');
+  assert.equal(g1.ratedEvenings, 1, 'the child table is not a second rated evening');
+  assert.equal(g1.plays, 1, 'the parent is not a play');
+  assert.equal(g2.ratedEvenings, 1);
+  assert.equal(g2.plays, 1);
+  // A pick is worth 5: (3 + 5 + 5) / 3 and (3 + 3 + 5) / 3.
+  assert.equal(g1.score, 13 / 3);
+  assert.equal(g2.score, 11 / 3);
+});

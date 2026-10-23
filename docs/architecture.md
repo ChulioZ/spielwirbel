@@ -104,6 +104,8 @@ lib/
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
+    tile-histograms.js  one sort order for the Discover aggregate's per-evening
+                     histograms (#1721), so both backends fold the same sum
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
                      file under DATA_DIR, never data.json, because store.js
                      rewrites that whole file on every mutation

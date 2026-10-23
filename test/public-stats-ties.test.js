@@ -56,16 +56,21 @@ function stubProvider({ links = {}, unnamed = [] } = {}) {
 const window = (count = 0, lastAt = null) => ({ count, tenants: count ? 2 : 0, lastAt });
 
 // One aggregate row, shaped like both backends' `publicGameAggregates`.
-function row(externalId, { shelves = 0, owners = 0, week, all, tiles, lift = 0 } = {}) {
-  const t = tiles || [0, 0, 0, 0, 0, 0];
+// `evenings` defaults to ALL of the row's votes cast on one evening (#1721) —
+// pass a list of per-evening histograms to spread them out.
+function row(externalId, { shelves = 0, owners = 0, week, all, tiles, evenings, lift = 0 } = {}) {
+  const t = tiles || (evenings
+    ? evenings.reduce((acc, h) => acc.map((n, i) => n + h[i]), [0, 0, 0, 0, 0, 0])
+    : [0, 0, 0, 0, 0, 0]);
   const count = t.reduce((a, b) => a + b, 0);
+  const nights = evenings || (count ? [t] : []);
   return {
     provider: 'bgg', externalId, shelves, owners,
     plays: {
       week: week || window(), month: window(), year: window(), all: all || week || window(),
       lift: { count: lift, tenants: lift ? 2 : 0 },
     },
-    ratings: { tiles: t, count, tenants: count ? 2 : 0 },
+    ratings: { tiles: t, count, tenants: count ? 2 : 0, evenings: nights },
   };
 }
 
@@ -175,10 +180,11 @@ test('a play-card tie goes to the game whose latest counted play came first', as
 test('„Bestbewertet" ties on the score it SHOWS, and orders the tie by the raw score', async () => {
   openFloors();
   stubProvider();
-  const sc = (tiles) => { const t = scoreTally(tiles); return shelfScore(t.score, t.count, 0); };
+  // One evening each, as `row` seeds them: the shelf score is (prior + R) / 2.
+  const sc = (tiles) => shelfScore(scoreTally(tiles).score, 1, 0);
   const shown = (tiles) => Math.round(Math.max(SCORE_MIN, sc(tiles)) * 10) / 10;
   const hi = [0, 0, 0, 0, 0, 5];
-  const lo = [0, 0, 0, 0, 1, 5];
+  const lo = [0, 0, 0, 0, 1, 19];
   const third = [0, 0, 0, 0, 5, 0];
   // The precondition that makes this discriminating: one displayed number, two raw ones.
   assert.equal(shown(hi), shown(lo));
@@ -195,13 +201,19 @@ test('two scores clamped to the display floor tie; an exact raw tie goes to more
   openFloors();
   stubProvider();
   // Both far below SCORE_MIN and different raw — the card shows the floor twice.
-  const payload = await build([row('bad', { tiles: [0, 9, 0, 0, 0, 0] }), row('worse', { tiles: [0, 20, 0, 0, 0, 0] })]);
+  // Several evenings each: one all-„gar nicht" evening shrinks only to 0,0
+  // under the evening unit (#1721), so it takes repeated ones to go below it.
+  const vetoNight = [0, 3, 0, 0, 0, 0];
+  const payload = await build([
+    row('bad', { evenings: Array.from({ length: 3 }, () => vetoNight) }),
+    row('worse', { evenings: Array.from({ length: 6 }, () => vetoNight) }),
+  ]);
   assert.deepEqual(places(payload.games.bestRated), [['bad', 1], ['worse', 1]]);
   assert.equal(payload.games.bestRated[1].score, SCORE_MIN);
 
   // A neutral verdict scores exactly the prior however much evidence stands
   // behind it, so the raw scores tie too and the evidence decides.
-  assert.equal(shelfScore(scoreTally([0, 0, 0, 2, 0, 0]).score, 2, 0), shelfScore(scoreTally([0, 0, 0, 6, 0, 0]).score, 6, 0));
+  assert.equal(shelfScore(scoreTally([0, 0, 0, 2, 0, 0]).score, 1, 0), shelfScore(scoreTally([0, 0, 0, 6, 0, 0]).score, 1, 0));
   const order = publicStats.orderFor('bestRated', [
     row('a-thin', { tiles: [0, 0, 0, 2, 0, 0] }), row('b-deep', { tiles: [0, 0, 0, 6, 0, 0] }),
   ]).map((r) => r.externalId);
@@ -229,13 +241,13 @@ test('the same rows in any order publish the identical payload', async () => {
 
 test('favourite names tie on the mean they SHOW', async () => {
   openFloors();
-  // One game per designer. Bo's and Ada's games SHOW the same score (4,1) from
+  // One game per designer. Bo's and Ada's games SHOW the same score (4,0) from
   // different raw ones, so a tie on the raw mean would number them 1 and 2.
   stubProvider({ links: { g1: { designers: ['Ada'] }, g2: { designers: ['Bo'] }, g3: { designers: ['Cy'] } } });
   const payload = await build([
     row('g2', { tiles: [0, 0, 0, 0, 0, 5] }),
     row('g3', { tiles: [0, 0, 0, 0, 5, 0] }),
-    row('g1', { tiles: [0, 0, 0, 0, 1, 5] }),
+    row('g1', { tiles: [0, 0, 0, 0, 1, 19] }),
   ]);
   const fav = payload.names.favDesigner.map((e) => [e.name, e.rank]);
   assert.deepEqual(fav, [['Bo', 1], ['Ada', 1], ['Cy', 3]], 'the raw mean still orders inside the tie');

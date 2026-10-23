@@ -352,15 +352,16 @@ pass just as well against a SQL copy.
 `playCounts`, which is the plainest instance in this whole inventory.** That
 function counts how often each game was put on the table; it was written in
 `lib/recommend.js` (#778) and now lives here because the Regal's shelf score
-lifts a game's prior by its plays and the recommender's `W_PLAYS` bonus divides
+counts a game's plays (as picks, since #1721) and the recommender's `W_PLAYS` bonus divides
 by the round's most-played. Nothing validates that across the boundary and
 neither side 400s, so a drifted copy would simply make the shelf and the
 recommender disagree about how often a game was played — a number one of them
 prints. `lib/recommend.js` re-exports it so every existing caller and spec is
 untouched.
 
-The shrinkage half (`SHRINK_M`, `PRIOR_DEFAULT`, `PLAY_LIFT`, `PLAY_HALF`,
-`playCredit`, `gamePrior`, `shrinkScore`, `shelfScore`) is the `draw-pool.js`
+The shrinkage half (`PRIOR_DEFAULT`, `PRIOR_EVENINGS`, `PICK_VALUE`,
+`eveningEvidence`, `shelfScore`, plus the recommender's per-vote `SHRINK_M` /
+`shrinkScore`) is the `draw-pool.js`
 direction — shared logic — and it reaches **six** consumers, which is why it had
 to be one file rather than a rule people remember: `game-stats.js`'s
 `roundScoreIndex` (the Regal pill and sort, the detail ring, the retirement
@@ -376,9 +377,9 @@ rather than trusting either.
 
 **#928 removed the shelf-relative prior entirely, and the shape of the fix is
 this rule's own argument taken one step further.** `roundPrior` and
-`PRIOR_MIN_GAMES` are gone, and `shelfScore`/`gamePrior` no longer take a prior
-at all: it is the constant `PRIOR_DEFAULT`, lifted only by that game's own
-plays. Sharing a *function* while each caller supplied its own prior — which
+`PRIOR_MIN_GAMES` are gone, and `shelfScore` no longer takes a prior at all: it
+is the constant `PRIOR_DEFAULT`, worth one evening since #1721, against that
+game's own evenings and plays. Sharing a *function* while each caller supplied its own prior — which
 this paragraph used to defend — still let two surfaces print one label
 („Spielwirbel-Score", on the same 0–5 ring) for two different quantities, and
 they did: the Regal shrank toward its own shelf while `/entdecken` applied the
@@ -401,18 +402,26 @@ constant 3 is above that break-even by construction.
 The Discover podium is the sharpest instance in this file of the trap named
 under `vote-score.js`'s curve half, one layer over: `lib/public-stats.js` can
 `require()` the shared module, but the Postgres aggregate feeding it cannot —
-so the play lift needed an **all-time** play count the aggregate did not carry
+so the play term needed an **all-time** play count the aggregate did not carry
 (`plays.week/month/year` only — renamed from `d7/d30/d365` in #964, when the
 three became calendar periods rather than rolling day counts). Rather than
 restate the lift in SQL, the aggregate
-grew a `plays.all` column in both backends and the lift stays in JS. Same move
+grew a `plays.all` column in both backends and the arithmetic stays in JS. Same move
 as `scoreTally`'s histogram: when a boundary cannot take the shared function,
 push the boundary **down** to something the function still owns.
+
+**#1721 pushed it down once more, to the EVENING.** The shelf score counts
+rated evenings, so the aggregate also returns one per-tile histogram per
+(game, session) — `ratings.evenings` — and `lib/public-stats.js` scores each
+through `scoreTally` and folds them with `eveningEvidence`, exactly as the
+Regal does. Both backends sort the list through `lib/repo/tile-histograms.js`,
+so the floating sum is bit-identical whichever one built it; the repo contract
+pins that two votes cast on one evening are ONE entry.
 
 **What the SQL still restates is the definition of a play, and it drifted once**
 (#1329). `plays.all` counted *finished* sessions — right for the „Dauerbrenner"
 card — while the Regal's `playCounts` counts every **non-cancelled** session with
-a `chosenGameId`, finished or not. So the lift now reads its own `plays.lift`
+a `chosenGameId`, finished or not. So the score now reads its own `plays.lift`
 column, and the one thing guarding the two spellings is the repo contract's
 fixture with an **open** evening in it (`publicGameAggregates`, the calendar case
 and the lift case). A fixture of finished plays only is green against either

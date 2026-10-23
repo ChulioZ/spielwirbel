@@ -9,7 +9,7 @@ const publicStats = require('../lib/public-stats');
 const bgg = require('../lib/providers/bgg');
 const scheduler = require('../lib/scheduler');
 const repo = require('../lib/repo');
-const { playCounts, scoreRatings, shelfScore, SCORE_MIN } = require('../public/js/vote-score');
+const { playCounts, scoreRatings, eveningEvidence, shelfScore, SCORE_MIN } = require('../public/js/vote-score');
 const { periodBoundaries } = require('../lib/calendar-periods');
 
 /*
@@ -538,10 +538,12 @@ test('#928 deep evidence outranks a thin unanimous verdict — the podium is shr
   const built = await rebuild();
   assert.equal(built.games.bestRated[0].ratings, 12, 'the deep game won');
   assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-deep');
-  // 12 votes at Ø 4,5 shrink to 4,1; 3 votes at 5,0 shrink to 3,9. Unshrunk the
-  // order is 5,0 against 4,5 — i.e. exactly reversed, which is what makes the
-  // winner here evidence about the shrinkage rather than about the fixture.
-  assert.equal(built.games.bestRated[0].score, 4.1);
+  // Four evenings averaging 4,5 shrink to (3 + 18) / 5 = 4,2; one evening at
+  // 5,0 shrinks to (3 + 5) / 2 = 4,0 (#1721 counts evenings, not votes).
+  // Unshrunk the order is 5,0 against 4,5 — i.e. exactly reversed, which is
+  // what makes the winner here evidence about the shrinkage rather than about
+  // the fixture.
+  assert.equal(built.games.bestRated[0].score, 4.2);
 });
 
 /* Five vetoes score −3, and a negative on a public front door reads as a broken
@@ -726,9 +728,10 @@ test('#928 plays lift the published score, using the all-time count', async () =
   const built = await rebuild();
   assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-staple',
     'without the play lift the better-rated but unplayed game would win');
-  // {3,3,3} shrunk toward a prior six plays lifted to 4,5 -> 3,9. The quiet
-  // game's {4,4,4} shrinks to 3,4, which is what it would have won with.
-  assert.equal(built.games.bestRated[0].score, 3.9);
+  // One rated evening of {3,3,3} plus six picks at 5, over one evening of
+  // prior (#1721): (3 + 3 + 6·5) / 8 = 4,5. The quiet game's one evening of
+  // {4,4,4} reads (3 + 4) / 2 = 3,5, which is what it would have won with.
+  assert.equal(built.games.bestRated[0].score, 4.5);
   assert.equal(built.games.bestRated[0].ratings, 3);
 });
 
@@ -784,13 +787,14 @@ test('#1329 the podium score equals the Regal score when some plays are unfinish
   const fresh = (await request(app).get(`/api/rounds/${round.id}`)).body;
   const plays = playCounts(fresh).get(game.id);
   assert.equal(plays, 6, 'the fixture really has six plays on the shelf');
-  const ratings = [];
-  fresh.sessions.forEach((s) => Object.values(s.votes || {}).forEach((pv) => {
-    const v = (pv || {})[game.id];
-    if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
-  }));
-  const sc = scoreRatings(ratings);
-  const regal = Math.round(Math.max(SCORE_MIN, shelfScore(sc.score, sc.count, plays)) * 10) / 10;
+  // Per EVENING, the Regal's unit since #1721: each session's ratings scored
+  // on their own, then folded by the shared helper.
+  const perEvening = fresh.sessions.map((s) => scoreRatings(Object.values(s.votes || {})
+    .map((pv) => (pv || {})[game.id])
+    .filter((v) => v && Number.isFinite(v.rating))
+    .map((v) => v.rating)));
+  const { sum, evenings } = eveningEvidence(perEvening);
+  const regal = Math.round(Math.max(SCORE_MIN, shelfScore(sum, evenings, plays)) * 10) / 10;
 
   const built = await rebuild();
   assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-open');

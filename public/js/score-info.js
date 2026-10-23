@@ -62,7 +62,8 @@ const INFO_SHEETS = {
     title: 'score.infoTitle',
     open: 'score.infoOpen',
     // Principle, never formula — see the header. The two #894 sentences state
-    // the ramp and the play lift in the same register: what happens, not how.
+    // thin evidence and plays in the same register: what happens, not how
+    // (re-checked against #1721's evening unit — both still true).
     body: ['score.infoBody', 'score.infoThin', 'score.infoPlays'],
   },
   // The `win` topic explained the Siegwertung and went with it on 2026-09-22 —
