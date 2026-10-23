@@ -71,6 +71,16 @@ the BGG collection import (#481), owned expansions (#653) or shared vote links
 refactors, dependency bumps, small adjustments to an existing feature, or
 anything an ordinary user would not notice.
 
+**The one exception: a change that MOVES NUMBERS PEOPLE HAVE ALREADY SEEN.**
+#1706 retuned the Spielwirbel-Score curve — not a capability, so by the bar
+above it got no entry — and every score on the Regal, in the Pokale and the
+Chronik shifted overnight, in every round, with nothing anywhere saying why. An
+unexplained change to a displayed figure reads as a bug or as lost data, so it
+gets an `improved` entry that says what moved and why (operator, 2026-10-23,
+added the same day). The test is "does a user see a number they knew change
+without having done anything" — a retuned curve, a changed aggregation, a
+re-ranked list — not the size of the diff.
+
 **Why the bar, rather than "log what shipped":** every entry lights a dot on the
 account button, and that dot spends the same attention the Nutzungsbedingungen
 §11 terms notice needs — `lib/legal.js`'s own comment names the failure mode
