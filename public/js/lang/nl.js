@@ -979,7 +979,7 @@ I18N.nl = {
   'member.pointsBetteredOne': '{n} persoonlijk record verbeterd',
   'member.pointsBettered': '{n} persoonlijke records verbeterd',
   'member.pointsRecord': 'Groepsrecord',
-  'member.bestGameNone': 'Nog geen spel vaak genoeg gespeeld',
+  'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
   'member.ownedTitleOne': '{n} spel van {name}',

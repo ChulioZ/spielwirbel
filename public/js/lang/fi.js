@@ -953,7 +953,7 @@ I18N.fi = {
   'member.pointsBetteredOne': '{n} oma ennätys parannettu',
   'member.pointsBettered': '{n} omaa ennätystä parannettu',
   'member.pointsRecord': 'Ryhmän ennätys',
-  'member.bestGameNone': 'Mitään peliä ei ole pelattu tarpeeksi usein',
+  'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
   'member.favoriteNone': 'Ei vielä arvioita',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',

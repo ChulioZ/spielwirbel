@@ -348,7 +348,8 @@ What the app does, in detail. For a short overview see the
   member's own colour** carrying the whole record — wins, sessions joined, win
   rate, how they usually rate (their average rating, drawn as the scale's face
   and word rather than a number), their strongest game (the one they win most often
-  when they play it, over at least three contested evenings) and their favorite
+  when they play it, ranked so one lucky win cannot outweigh a solid record;
+  a never-won game is never named) and their favorite
   game. The card wears that colour rather than merely being tinted by it: the
   **win rate is the ring around the avatar**, sweeping into place once when the
   page opens; the member's **initials stand as a watermark** in the card's

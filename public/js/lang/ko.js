@@ -942,7 +942,7 @@ I18N.ko = {
   'member.pointsBetteredOne': '개인 최고 기록 {n}회 경신',
   'member.pointsBettered': '개인 최고 기록 {n}회 경신',
   'member.pointsRecord': '그룹 기록',
-  'member.bestGameNone': '아직 충분히 플레이한 게임이 없어요',
+  'member.bestGameNone': '아직 이긴 게임이 없어요',
   'member.favorite': '가장 좋아하는 게임',
   'member.favoriteNone': '아직 평가가 없어요',
   'member.ownedTitleOne': '{name}의 게임 {n}개',

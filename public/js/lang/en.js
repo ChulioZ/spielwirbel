@@ -998,7 +998,7 @@ I18N.en = {
   'member.pointsBetteredOne': '{n} personal best beaten',
   'member.pointsBettered': '{n} personal bests beaten',
   'member.pointsRecord': 'Round record',
-  'member.bestGameNone': 'No game played often enough yet',
+  'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
   'member.ownedTitleOne': '{n} game owned by {name}',

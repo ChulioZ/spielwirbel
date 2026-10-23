@@ -282,9 +282,8 @@ function renderProfileCard(p, reload) {
      stay plain text (.claude/rules/in-app-nav-links.md). */
   const cards = h('<div class="pokale-cards member-card__games"></div>');
   const loadCover = createCoverLoader();
-  /* Ties share the tile, as on the member page. `bestScore === null` is the only
-     empty state — 0 is a real win RATE (a game played often and never won), and
-     a game below BEST_GAME_MIN_PLAYS is unranked rather than zero. */
+  /* Ties share the tile, as on the member page. `bestScore === null` („no game
+     won yet") is the only empty state — a never-won game is never named. */
   cards.appendChild(profileGameTile('ti-sword', t('member.bestGame'), st.bestGames,
     esc(st.bestScore === null ? t('member.bestGameNone') : bestGameSub(st)), t('member.ribbonBest'), loadCover));
   cards.appendChild(profileGameTile('ti-heart', t('member.favorite'), st.favorite,

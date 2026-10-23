@@ -983,7 +983,7 @@ I18N.it = {
   'member.pointsBetteredOne': '{n} record personale migliorato',
   'member.pointsBettered': '{n} record personali migliorati',
   'member.pointsRecord': 'Record del gruppo',
-  'member.bestGameNone': 'Nessun gioco giocato abbastanza spesso',
+  'member.bestGameNone': 'Nessun gioco ancora vinto',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
   'member.ownedTitleOne': '{n} gioco di {name}',

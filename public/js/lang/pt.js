@@ -981,7 +981,7 @@ I18N.pt = {
   'member.pointsBetteredOne': '{n} recorde pessoal superado',
   'member.pointsBettered': '{n} recordes pessoais superados',
   'member.pointsRecord': 'Recorde do grupo',
-  'member.bestGameNone': 'Nenhum jogo jogado vezes suficientes',
+  'member.bestGameNone': 'Nenhum jogo ganho ainda',
   'member.favorite': 'Jogo favorito',
   'member.favoriteNone': 'Nenhuma avaliação ainda',
   'member.ownedTitleOne': '{n} jogo de {name}',
