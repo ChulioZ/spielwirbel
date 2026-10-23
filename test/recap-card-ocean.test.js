@@ -157,6 +157,68 @@ test('session spec: first names only, the date without the time, nobody who did 
   } finally { dom.close(); }
 });
 
+// Five rated rows with a tie on second place, plus one nobody rated (#1705).
+const RANKED = {
+  ...SESSION,
+  rows: [
+    { title: 'Nordlichter', score: 4.8, count: 5, place: 1 },
+    { title: 'Kartographen', score: 4.1, count: 5, place: 2 },
+    { title: 'Azul', score: 4.1, count: 4, place: 2 },
+    { title: 'Codenames', score: 3.2, count: 5, place: 4 },
+    { title: 'Ungeliebt', score: 0, count: 0, place: null },
+  ],
+};
+
+test('session spec: the top three rows of the ranking, tie-aware, in both proportions (#1705)', () => {
+  const dom = boot();
+  try {
+    for (const kind of ['session', 'landscape']) {
+      const s = spec(dom, kind, RANKED);
+      assert.deepEqual(s.rows.map((r) => [r.place, r.title]),
+        [['1', 'Nordlichter'], ['2', 'Kartographen'], ['2', 'Azul']],
+        `${kind}: capped at three rows, and a tie repeats its place`);
+      assert.deepEqual(s.rows[1].score, { text: '4,1', stop: rampStop(4.1, dom) });
+    }
+    // No game chosen: the ranking still names the rated games.
+    const undecided = spec(dom, 'session', { ...RANKED, playedTitle: null, winnerNames: [], people: [] });
+    assert.deepEqual(undecided.rows.map((r) => r.title), ['Nordlichter', 'Kartographen', 'Azul']);
+    // Nothing rated: no rows at all, so no empty block is drawn.
+    const none = spec(dom, 'session', { ...SESSION, rows: [{ title: 'X', score: 0, count: 0, place: null }] });
+    assert.deepEqual(none.rows, []);
+    const split = spec(dom, 'session', { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul' }] });
+    assert.equal(split.rows, undefined, 'a split names its tables, not a ranking');
+    assert.equal(spec(dom, 'period', PERIOD).rows, undefined, 'the period card is unchanged');
+  } finally { dom.close(); }
+});
+
+// The page's own rampStop, so the expectation is not a hand-copied ramp.
+function rampStop(score, dom) { return JSON.parse(dom.run(`JSON.stringify(rampStop(${score}))`)); }
+
+test('drawing: the ranking rows reach the canvas in both session formats, in measured inks (#1705)', async () => {
+  const dom = boot();
+  try {
+    const inks = JSON.parse(dom.run('JSON.stringify([...new Set(OCEAN_CARD_TEXT.map((p) => OCEAN_CARD_TOKENS[p.ink]))])'));
+    const long = 'Die unglaublich lange Reise durch das Nordmeer der vergessenen Inseln';
+    const model = { ...RANKED, playedTitle: null, winnerNames: [], people: [], bringers: null,
+      rows: [{ title: long, score: 4.8, count: 5, place: 1 }, ...RANKED.rows.slice(1)] };
+    for (const kind of ['session', 'landscape']) {
+      dom.run('__calls.length = 0; __canvases.length = 0');
+      dom.context.__model = model;
+      await dom.run(`oceanCardBlob(${JSON.stringify(kind)}, __model)`);
+      const drawn = texts(dom);
+      for (const title of ['Kartographen', 'Azul']) {
+        assert.ok(drawn.some((d) => d.text === title), `${kind}: „${title}" is drawn`);
+      }
+      assert.ok(!drawn.some((d) => d.text === 'Codenames'), `${kind}: the fourth place is not`);
+      assert.ok(drawn.some((d) => d.text.startsWith('Die unglaublich') && d.text.endsWith('…')),
+        `${kind}: a long title is fitted, not overflowing`);
+      for (const { text, fill } of drawn) {
+        assert.ok(inks.includes(fill), `${kind}: „${text}" is drawn in ${fill}, which OCEAN_CARD_TEXT does not measure`);
+      }
+    }
+  } finally { dom.close(); }
+});
+
 test('period spec: the numbers, then the named rows, a zero shelf figure dropped', () => {
   const dom = boot();
   try {
