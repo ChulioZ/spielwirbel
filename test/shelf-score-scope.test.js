@@ -168,7 +168,7 @@ test('#1721 a split evening: the parent is one rated evening, each table one pla
   assert.equal(g1.plays, 1, 'the parent is not a play');
   assert.equal(g2.ratedEvenings, 1);
   assert.equal(g2.plays, 1);
-  // pick = max(4,5, own mean): (3 + 5 + 5) / 3 and (3 + 3 + 4,5) / 3.
+  // A pick is worth 5: (3 + 5 + 5) / 3 and (3 + 3 + 5) / 3.
   assert.equal(g1.score, 13 / 3);
-  assert.equal(g2.score, 3.5);
+  assert.equal(g2.score, 11 / 3);
 });

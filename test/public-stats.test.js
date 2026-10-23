@@ -728,10 +728,10 @@ test('#928 plays lift the published score, using the all-time count', async () =
   const built = await rebuild();
   assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-staple',
     'without the play lift the better-rated but unplayed game would win');
-  // One rated evening of {3,3,3} plus six picks at 4,5, over one evening of
-  // prior (#1721): (3 + 3 + 6·4,5) / 8 = 4,1. The quiet game's one evening of
+  // One rated evening of {3,3,3} plus six picks at 5, over one evening of
+  // prior (#1721): (3 + 3 + 6·5) / 8 = 4,5. The quiet game's one evening of
   // {4,4,4} reads (3 + 4) / 2 = 3,5, which is what it would have won with.
-  assert.equal(built.games.bestRated[0].score, 4.1);
+  assert.equal(built.games.bestRated[0].score, 4.5);
   assert.equal(built.games.bestRated[0].ratings, 3);
 });
 

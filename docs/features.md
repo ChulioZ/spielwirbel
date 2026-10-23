@@ -833,10 +833,10 @@ What the app does, in detail. For a short overview see the
   when one of them has somebody at the table who does not want to play. Where it
   diverges the screen says why. At **shelf** scope the unit of evidence is the
   **evening**: each session that rated a game counts once with that evening's
-  score, each time the group chose it counts as a pick worth „somebody wanted
-  this" (4,5, or the game's own average if higher, so another pick can never
-  lower it), and the whole is shrunk toward a fixed neutral expectation worth
-  one evening. So a game three people rated 5,5,5 on its one evening stops
+  score, each time the group chose it counts as a pick worth the top of the scale
+  (being chosen reads like „unbedingt" from the table, so another pick can never
+  lower a score), and the whole is shrunk toward a fixed neutral expectation
+  worth one evening. So a game three people rated 5,5,5 on its one evening stops
   outranking a staple the round keeps playing, a six-person evening weighs the
   same as a four-person one, and a round that runs its evenings by direct pick
   still gets a ranked shelf (those sessions write no votes).

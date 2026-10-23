@@ -230,12 +230,12 @@ test('the per-period and all-time Bestbewertet cards print the SAME number, in t
   assert.equal(periodValue, allTime.querySelector('.pokale-card__sub').textContent);
   /* Named as well as compared, so a change breaking BOTH cards the same way
      cannot satisfy this by making them equally wrong. All five candidate values
-     are distinct here, which is what keeps the guard discriminating: 3,3 is the
+     are distinct here, which is what keeps the guard discriminating: 3,4 is the
      shelf score (#1721: one rated evening of {5,5,1} on #1706's curve plus one
-     play at 4,5, over one evening of prior — (3 + 2,33 + 4,5) / 3), 3,1 the
+     play at 5, over one evening of prior — (3 + 2,33 + 5) / 3), 3,1 the
      vote-unit shelf score it replaced, 2,3 the unshrunk Spielwirbel-Score, 3,7
      the raw mean, and „Ø 2,3" the old typography. */
-  assert.equal(periodValue, '3,3');
+  assert.equal(periodValue, '3,4');
 });
 
 test('the picker drives only the recap cards — the timeline below is untouched', async (t) => {

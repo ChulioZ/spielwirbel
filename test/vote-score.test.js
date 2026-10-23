@@ -239,9 +239,10 @@ test('a malformed bucket is treated as empty, never trusted into the divisor', (
    Shelf scope: how much of its own score a game has actually earned.
 
    Since #1721 the unit of evidence is an EVENING: each session that rated the
-   game contributes its own score, each play a pick worth max(PICK_VALUE, own
-   mean), and the fixed prior weighs one evening. The worked rows are #1721's
-   acceptance table (four voters unless stated, under #1706's curve), pinned row
+   game contributes its own score, each play a pick worth PICK_VALUE (5, the top
+   of the scale — operator, 2026-10-24; #1721 proposed 4,5), and the fixed prior
+   weighs one evening. The worked rows are #1721's acceptance table re-derived
+   at a pick of 5 (four voters unless stated, under #1706's curve), pinned row
    by row for the reason the curve's are: `PRIOR_EVENINGS` and `PICK_VALUE` are
    starting values, and only a row tells a retune that shifts a magnitude apart
    from one that breaks a property (the null contract, plays only raising, the
@@ -263,19 +264,19 @@ const times = (n, votes) => Array.from({ length: n }, () => votes);
 const FIVES = [5, 5, 5, 5];
 
 const WORKED = [
-  { history: 'A · unrated, 1 play', evenings: [], plays: 1, score: 3.75 },
-  { history: 'B · 5-5-4-1 chosen + 4 picks', evenings: [[5, 5, 4, 1]], plays: 5, score: 4.04 },
-  { history: '3-3-3-3 chosen once', evenings: [[3, 3, 3, 3]], plays: 1, score: 3.5 },
+  { history: 'A · unrated, 1 play', evenings: [], plays: 1, score: 4.0 },
+  { history: 'B · 5-5-4-1 chosen + 4 picks', evenings: [[5, 5, 4, 1]], plays: 5, score: 4.39 },
+  { history: '3-3-3-3 chosen once', evenings: [[3, 3, 3, 3]], plays: 1, score: 3.67 },
   { history: '5-5-5-5 chosen once', evenings: [FIVES], plays: 1, score: 4.33 },
   { history: '5-5-5-5 drawn once, lost', evenings: [FIVES], plays: 0, score: 4.0 },
   { history: '5-5-5-5 chosen twice', evenings: times(2, FIVES), plays: 2, score: 4.6 },
   { history: '6×5 (six voters) chosen once', evenings: [[5, 5, 5, 5, 5, 5]], plays: 1, score: 4.33 },
-  { history: 'unrated, 3 plays', evenings: [], plays: 3, score: 4.13 },
-  { history: 'unrated, 12 plays', evenings: [], plays: 12, score: 4.38 },
-  { history: '5-5-4-4 chosen + 5 picks', evenings: [[5, 5, 4, 4]], plays: 6, score: 4.31 },
+  { history: 'unrated, 3 plays', evenings: [], plays: 3, score: 4.5 },
+  { history: 'unrated, 12 plays', evenings: [], plays: 12, score: 4.85 },
+  { history: '5-5-4-4 chosen + 5 picks', evenings: [[5, 5, 4, 4]], plays: 6, score: 4.69 },
   { history: '4-4-3-3 drawn 3×, never chosen', evenings: times(3, [4, 4, 3, 3]), plays: 0, score: 3.38 },
   { history: '5-5-1-1 drawn once, lost', evenings: [[5, 5, 1, 1]], plays: 0, score: 2.0 },
-  { history: '1-1-1-1 once, then 12 picks', evenings: [[1, 1, 1, 1]], plays: 12, score: 3.86 },
+  { history: '1-1-1-1 once, then 12 picks', evenings: [[1, 1, 1, 1]], plays: 12, score: 4.29 },
 ];
 
 for (const row of WORKED) {
@@ -293,15 +294,18 @@ test('#1721 worked rows at three decimals: the top of the shelf, and one more pi
 
 test('#1721 B beats A: a rated, often-picked game outranks one played once and never rated', () => {
   // The operator's example, and the defect: under the vote unit A read 3,67
-  // and B 3,34, and no play dial could flip them.
+  // and B 3,34, and no play dial could flip them. (4,0 against 4,39 now.)
   assert.ok(shelfExact([[5, 5, 4, 1]], 5) > shelfExact([], 1));
 });
 
-test('#1721 plays only RAISE — including for a game rated above the pick value', () => {
-  /* The property the max() exists for. A fixed pick of 4,5 would pull every
-     game rated above it DOWN with each play ({5,5,5,5} ×10 chosen falls from
-     4,667 to 4,659 after one more pick); max(PICK_VALUE, own mean) makes every
-     input to the weighted mean at most `pick`, so adding one cannot lower it. */
+test('#1721 plays only RAISE — including for a game everybody rated 5', () => {
+  /* Holds because the pick is the TOP of the scale: no evening scores above 5,
+     so every input to the weighted mean is at most the pick and adding one
+     cannot lower it. A pick below 5 breaks this for every game rated above it
+     ({5,5,5,5} ×10 chosen fell from 4,667 to 4,659 after one more pick at a
+     fixed 4,5) — so the next assertion pins the value, and lowering it means
+     restoring max(PICK_VALUE, own mean) first. */
+  assert.equal(PICK_VALUE, 5, 'a pick below the top of the scale needs the max() back');
   const histories = [[], [[1, 1, 1, 1]], [[3, 3, 3, 3]], [[5, 5, 4, 1]], [FIVES], times(3, FIVES),
     [[5, 5, 5, 4]], [[5, 5]], times(10, FIVES)];
   let checked = 0;
@@ -346,7 +350,7 @@ test('#1721 confined change: an all-voted, never-chosen four-voter history is th
   }
 });
 
-test('#1721 unrated games rise with every play and stay strictly below the pick value', () => {
+test('#1721 unrated games rise with every play and never reach the pick value', () => {
   let prev = shelfScore(0, 0, 1);
   for (let plays = 2; plays <= 200; plays++) {
     const cur = shelfScore(0, 0, plays);
@@ -354,7 +358,6 @@ test('#1721 unrated games rise with every play and stay strictly below the pick 
     assert.ok(cur < PICK_VALUE, `${plays} plays reached ${cur}`);
     prev = cur;
   }
-  assert.equal(PICK_VALUE, 4.5);
 });
 
 test('#894 no evidence at all means NO NUMBER — never rated and never played', () => {

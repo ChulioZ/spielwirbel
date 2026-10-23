@@ -188,12 +188,11 @@ function scoreTally(tiles) {
    - a RATED evening is a session in which the game received at least one
      rating; it contributes that evening's own score R_s (the curve above, over
      that session's ratings);
-   - a PLAY is what `playCounts` below counts; it contributes `pick`, the value
-     of "somebody chose this game on purpose";
+   - a PLAY is what `playCounts` below counts; it contributes `PICK_VALUE`, the
+     value of "the group chose this game";
    - a voted-and-chosen evening counts as BOTH (operator decision, 2026-10-23).
 
-     pick  = max(PICK_VALUE, mean of the R_s)     (PICK_VALUE when none)
-     score = (PRIOR_DEFAULT · PRIOR_EVENINGS + Σ R_s + plays · pick)
+     score = (PRIOR_DEFAULT · PRIOR_EVENINGS + Σ R_s + plays · PICK_VALUE)
              / (PRIOR_EVENINGS + ratedEvenings + plays)
 
    Until #1721 the unit was a VOTE: `(n·score + 4·prior) / (n + 4)` over the
@@ -208,14 +207,19 @@ function scoreTally(tiles) {
    a four-player round that always votes and never chose the game the number is
    EXACTLY the old one: four votes were one evening's weight then too.
 
-   `pick = max(PICK_VALUE, own mean)` IS LOAD-BEARING. It keeps the property the
-   shelf has promised since #894 — more plays can only raise a score — because
-   every input to the weighted mean is then at most `pick`, so adding one more
-   pick can never pull the mean down. A fixed 4,5 would: {5,5,5,5} chosen ten
-   times reads 4,667 and would fall to 4,659 after one more pick, below the same
-   votes that lost all ten draws. That is also what separates this from the
-   pseudo-vote form rejected in #894 (a fixed play value in the numerator and
-   denominator), whose flaw was exactly that drag on a game above the value.
+   A PICK IS WORTH THE TOP OF THE SCALE, and that is what keeps the property the
+   shelf has promised since #894 — more plays can only raise a score. No
+   evening can score above 5, so every input to the weighted mean is at most
+   the pick, and adding one more can never pull the mean down. #1721 specified
+   4,5 with `pick = max(4,5, own mean)` to get the same guarantee; the operator
+   raised it to 5 before it shipped (2026-10-24: being chosen counts like
+   „unbedingt" from the table), at which point the max() could never fire and
+   was deleted rather than kept as a guard nobody can reach
+   (.claude/rules/redundant-guards-make-each-other-untestable.md). LOWER the
+   value again and the max() has to come back: a fixed pick below 5 pulls every
+   game rated above it DOWN with each play ({5,5,5,5} chosen ten times read
+   4,667 at 4,5 and fell to 4,659 after one more pick). That drag is also what
+   separated the rejected #894 pseudo-vote form from this one.
 
    THE PRIOR IS FIXED, AND THAT IS THE WHOLE POINT (#928). Every input to a
    game's shelf score is a fact about THAT game — its own evenings, its own
@@ -256,11 +260,16 @@ function scoreTally(tiles) {
    game the round has otherwise formed no view on, and the veto keeps its full
    force exactly where it decides something, on tonight's unshrunk podium.
 
+   ACCEPTED CONSEQUENCE of a pick worth 5: plays alone approach a full 5,0, so a
+   never-rated game the round plays all the time can outrank one everybody rated
+   5 but chose less often (unrated ×12 reads 4,85; {5,5,5,5} chosen twice 4,60).
+   That is the revealed preference outweighing the stated one, on purpose.
+
    A FLOOR (`max(shrunk, prior)`) was considered and REJECTED. It reads well
    („plays set a floor, ratings only exceed it") and it destroys the veto signal
    #893 exists to surface: a game everybody rates 1 would read 3,0 on every
    shelf. The pick value does lift such a game the more it is chosen — {1,1,1,1}
-   rated once and picked twelve times reads 3,9 — and that is the revealed
+   rated once and picked twelve times reads 4,3 — and that is the revealed
    preference speaking, not a floor: they keep choosing it. */
 
 // How much evidence the prior is worth, in EVENINGS: a game earns its place on
@@ -276,11 +285,12 @@ const PRIOR_EVENINGS = 1;
 // rounds (#928, and the unit mismatch in §1 of the header above).
 const PRIOR_DEFAULT = 3;
 
-// What one play is worth: somebody chose this game on purpose, so it sits
-// between „gern" and „unbedingt". A game with plays and no ratings therefore
-// stays strictly below 4,5 however often it is played — the bound that replaced
-// #928's "strictly below 5,0" for plays alone.
-const PICK_VALUE = 4.5;
+// What one play is worth: the group chose this game, which counts like
+// „unbedingt" from the table (operator, 2026-10-24 — #1721 proposed 4,5). It
+// MUST stay the top of the scale for plays to only ever raise a score; see the
+// header before lowering it. A game with plays and no ratings approaches 5,0
+// and never reaches it.
+const PICK_VALUE = 5;
 
 // The vote-weighted shrink the RECOMMENDER still uses (lib/recommend.js): its
 // taste profile weighs ratings, not evenings, and the shelf's evening unit is a
@@ -328,8 +338,7 @@ function shelfScore(eveningSum, ratedEvenings, plays) {
   const picks = Number.isFinite(plays) && plays > 0 ? plays : 0;
   if (!rated && !picks) return null;
   const sum = rated ? eveningSum : 0;
-  const pick = rated ? Math.max(PICK_VALUE, sum / rated) : PICK_VALUE;
-  return (PRIOR_DEFAULT * PRIOR_EVENINGS + sum + picks * pick) / (PRIOR_EVENINGS + rated + picks);
+  return (PRIOR_DEFAULT * PRIOR_EVENINGS + sum + picks * PICK_VALUE) / (PRIOR_EVENINGS + rated + picks);
 }
 
 /* How often each game was actually put on the table, over the round's own

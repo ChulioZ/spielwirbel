@@ -502,7 +502,7 @@ as hard as a staple forty votes agree on. (It was the round's OWN prior until
   discriminating at all. So the shelf DISPLAY counts plays and this file does
   not — two mechanisms, one argument, each where it works. (The display counted
   them as a lift on its prior then; since #1721 it counts EVENINGS, each play a
-  pick worth `max(4,5, own mean)`, which this file still leaves out.) Those two
+  pick worth 5, which this file still leaves out.) Those two
   figures were measured at #894's `PLAY_LIFT` of 1,0; #928 raised it to 2,0,
   which widens the inversion (1,15 against 1,83) rather than closing it, so the
   conclusion is unchanged and the argument is stronger than when it was made.
