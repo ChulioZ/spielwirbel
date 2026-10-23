@@ -1001,7 +1001,7 @@ I18N.de = {
   'member.pointsBetteredOne': '{n} Bestleistung verbessert',
   'member.pointsBettered': '{n} Bestleistungen verbessert',
   'member.pointsRecord': 'Rekord der Runde',
-  'member.bestGameNone': 'Noch kein Spiel oft genug gespielt',
+  'member.bestGameNone': 'Noch kein Spiel gewonnen',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
   'member.ownedTitleOne': '{n} Spiel von {name}',

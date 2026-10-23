@@ -5,8 +5,10 @@
  * It named the game with the highest summed per-game SIEGWERTUNG until
  * 2026-09-22, when that measure was withdrawn from the whole app (operator).
  * What replaces it is the game this member wins most OFTEN when they play it —
- * wins over contested plays — with a floor of BEST_GAME_MIN_PLAYS so one lucky
- * win cannot take the tile.
+ * wins over contested plays. Since #1715 it is RANKED by that rate adjusted
+ * toward the member's own overall win rate (`bestGameValue`, member-stats.js),
+ * so one lucky win cannot take the tile, and it no longer has a play floor —
+ * a floor named a 0 % game for a member whose every win sat below it.
  *
  * TWO PROPERTIES OF THE DENOMINATOR ARE LOAD-BEARING and are what the cases
  * below spend most of their effort on:
@@ -15,16 +17,16 @@
  *     is not a play. Counting solo nights would read 100 % for a pure solo
  *     logger, which is the naive rate that is worse than the count it replaced
  *     — the trap #895 was originally written to close;
- *   - the floor is on PLAYS, and a game below it is UNRANKED rather than
- *     ranked at zero: an unproven game is not a weak one.
+ *   - the adjustment only RANKS: the tile still prints the raw rate and plays
+ *     of the game it names, never the adjusted value.
  *
  * Plus everything the derivation deliberately leaves to its caller:
  *
  *   - which games may be NAMED (the `isNameableGame` bar — a retired game still
  *     counts toward the rate but may not be named by it),
  *   - the tie convention, broken by plays before sharing,
- *   - the empty state, whose trap is that 0 % is a real answer and must not be
- *     mistaken for "nothing",
+ *   - the empty state, which is "no game won yet" — a never-won game is never
+ *     named,
  *   - and that the named game actually LINKS.
  *
  * Run through the view rather than matched against its source
@@ -73,13 +75,16 @@ const roundWith = (games, sessions) => ({
 });
 
 // N contested nights at `gid`, `wins` of them won by `winner`. Written as a
-// helper because every case below needs at least BEST_GAME_MIN_PLAYS of them,
-// and spelling three nights out per game buries the case in fixture.
+// helper because spelling every night out per game buries the case in fixture.
 const nights = (gid, n, wins, winner = 'm1') =>
   Array.from({ length: n }, (_, i) => night(gid, i < wins ? winner : 'm2'));
 
 const CATAN = { id: 'g1', title: 'Catan', tagIds: [] };
 const AZUL = { id: 'g2', title: 'Azul', tagIds: [] };
+/* A RETIRED game, used only to set the member's overall rate — the prior the
+   adjustment pulls toward. It counts toward that rate but may never be named
+   (`isNameableGame`), so it moves the prior without competing for the tile. */
+const DIXIT = { id: 'g3', title: 'Dixit', tagIds: [], retired: true };
 
 function bootApp(t, round) {
   const dom = loadApp();
@@ -108,10 +113,9 @@ async function bestTile(t, round, mid = 'm1') {
   };
 }
 
-/* The floor, read from the implementation rather than restated: a case written
-   against "three" is only meaningful while three is the number, and a spec that
-   hard-codes it silently stops testing the boundary when it moves. */
-const dom0BestFloor = () => require('../public/js/member-stats').BEST_GAME_MIN_PLAYS;
+/* The adjusted value, read from the implementation so a case can state the
+   prior it was designed around rather than restating K. */
+const { bestGameValue, BEST_GAME_PRIOR_PLAYS } = require('../public/js/member-stats');
 
 // ---- the happy path --------------------------------------------------------
 
@@ -132,24 +136,57 @@ test('the tile names the game with the highest win RATE, and links it', async (t
   assert.match(link.getAttribute('href') || '', /g1/, 'and it must point at that game');
 });
 
-test('a game below the play floor is UNRANKED, not ranked low', async (t) => {
-  /* The whole point of the floor: at two plays a perfect record is a coin toss.
-     Azul is 2/2 — a higher rate than Catan's 2/3 — and must not take the tile.
-     An unproven game is not a weak one, so it is absent rather than last. */
-  const round = roundWith([CATAN, AZUL], [...nights('g1', 3, 2), ...nights('g2', 2, 2)]);
+test('the live shape: wins only in games under three plays still name a WON game', async (t) => {
+  /* #1715, seen live as „Castle Combo · 0% · 3×" beside 7 Siege. Every win sat
+     in a game with fewer than three contested plays, so under the old floor the
+     only rankable game was one the member had never won. Azul is 2/2, Catan 0/3. */
+  const round = roundWith([CATAN, AZUL], [...nights('g1', 3, 0), ...nights('g2', 2, 2)]);
   const { titles, sub } = await bestTile(t, round);
-  assert.equal(dom0BestFloor(), 3, 'this case is written against a floor of three');
-  assert.deepEqual(titles, ['Catan'], 'a 2/2 game outrates Catan and is still below the floor');
-  assert.match(sub, /67\s*%/);
+  assert.deepEqual(titles, ['Azul'], 'a won game takes the tile, not the 0 % one');
+  assert.match(sub, /100\s*%/, 'the sub-line prints the RAW rate, never the adjusted one');
+  assert.match(sub, /2/, 'and the raw plays it rests on');
+});
+
+test('4/5 ranks above 1/1 — one lucky win does not beat a solid record', async (t) => {
+  // Dixit (retired, 0/5) brings the member's rate to 5/11 ≈ 0.45, the case the
+  // issue specifies. 1/1 has the higher raw rate and must still lose.
+  const round = roundWith(
+    [CATAN, AZUL, DIXIT],
+    [...nights('g1', 5, 4), ...nights('g2', 1, 1), ...nights('g3', 5, 0)]
+  );
+  const prior = 5 / 11;
+  assert.ok(bestGameValue(4, 5, prior) > bestGameValue(1, 1, prior), 'the fixture is the case it names');
+  const { titles, sub } = await bestTile(t, round);
+  assert.deepEqual(titles, ['Catan']);
+  assert.match(sub, /80\s*%/);
+});
+
+test('1/1 ranks above 1/4', async (t) => {
+  // Dixit (retired, 3/6) puts the prior at 5/11 again.
+  const round = roundWith(
+    [CATAN, AZUL, DIXIT],
+    [...nights('g1', 4, 1), ...nights('g2', 1, 1), ...nights('g3', 6, 3)]
+  );
+  const { titles, sub } = await bestTile(t, round);
+  assert.deepEqual(titles, ['Azul']);
+  assert.match(sub, /100\s*%/);
 });
 
 test('ties are broken by PLAYS before the tile is shared', async (t) => {
-  // Both at 100 %, one off three nights and one off five. They are not equal
-  // evidence, and without the tie-break the tile would name both.
-  const round = roundWith([CATAN, AZUL], [...nights('g1', 5, 5), ...nights('g2', 3, 3)]);
+  /* Equal ADJUSTED values off different plays: the record is 3/6, a prior of
+     exactly 1/2, and a game AT the prior adjusts to the prior whatever its plays
+     — so 2/4 and 1/2 tie on the value. They are not equal evidence, and without
+     the tie-break the tile would name both.
+
+     Azul (the THINNER record) is played first on purpose: the ranking keeps the
+     first game it meets on a tie, so in the other order insertion would answer
+     for the tie-break and the test would pass with it deleted. */
+  const round = roundWith([CATAN, AZUL], [...nights('g2', 2, 1), ...nights('g1', 4, 2)]);
+  assert.equal(bestGameValue(2, 4, 0.5), bestGameValue(1, 2, 0.5), 'the fixture is a genuine tie on the adjusted value');
   const { titles, sub } = await bestTile(t, round);
   assert.deepEqual(titles, ['Catan'], 'the better-evidenced game takes the tile alone');
-  assert.match(sub, /5/);
+  assert.match(sub, /50\s*%/);
+  assert.match(sub, /4/);
 });
 
 test('every genuinely tied game shares the tile', async (t) => {
@@ -159,15 +196,24 @@ test('every genuinely tied game shares the tile', async (t) => {
   assert.deepEqual(titles.sort(), ['Azul', 'Catan']);
 });
 
-test('a 0 % best is shown, not hidden', async (t) => {
-  /* This is the member's own stats page, not a leaderboard. A member who has
-     only lost has a strongest game; it is simply their least bad one, and the
-     tile says so rather than pretending they have none. */
-  const round = roundWith([CATAN], nights('g1', 3, 0));
+test('a member with contested plays but no win sees the empty state', async (t) => {
+  /* A never-won game is never named (#1715). This used to show „Catan · 0 %" as
+     the member's strongest game, which is the live bug's shape with nothing else
+     beside it; the tile now says no game has been won yet. */
+  const round = roundWith([CATAN, AZUL], [...nights('g1', 3, 0), ...nights('g2', 1, 0)]);
   const { titles, sub, empty } = await bestTile(t, round);
-  assert.deepEqual(titles, ['Catan']);
-  assert.equal(empty, null, '0 % is an answer, not an empty state');
-  assert.match(sub, /0\s*%/);
+  assert.deepEqual(titles, []);
+  assert.ok(empty, 'the empty state must appear');
+  assert.equal(sub, '', 'and it carries no rate line');
+});
+
+test('bestGameValue pulls a rate toward the prior by BEST_GAME_PRIOR_PLAYS plays', () => {
+  assert.ok(Number.isFinite(BEST_GAME_PRIOR_PLAYS) && BEST_GAME_PRIOR_PLAYS > 0);
+  // K plays at the prior: the formula's own shape, pinned so a swapped
+  // argument order (plays before wins) cannot pass.
+  assert.equal(bestGameValue(0, 0, 0.5), 0.5, 'with no plays the value IS the prior');
+  assert.equal(bestGameValue(2, 4, 0.5), 0.5, 'a game AT the prior adjusts to the prior');
+  assert.ok(bestGameValue(3, 4, 0.5) < 0.75 && bestGameValue(3, 4, 0.5) > 0.5, 'and one above it is pulled toward it, not past it');
 });
 
 // ---- the denominator -------------------------------------------------------
@@ -176,7 +222,7 @@ test('a SOLO night is not a play — it can neither lift nor create a best game'
   /* The sharpest case in this file. Five solo nights at Azul are five wins, and
      counting them would make Azul a 100 % game off five plays and hand it the
      tile. The denominator is `contested`, so they are not plays at all and Azul
-     never reaches the floor. */
+     is never a candidate. */
   const solo = (gid) => night(gid, 'm1', { memberIds: ['m1'], winnerIds: ['m1'] });
   const round = roundWith(
     [CATAN, AZUL],

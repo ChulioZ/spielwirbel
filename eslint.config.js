@@ -637,7 +637,7 @@ const frontendGlobals = {
   // forest-tier2b.js (issue #1474): Forest's Einstellungen; the two settings helpers it shares
   composeForestSettings: 'readonly', forestNameCard: 'readonly', renderMarkerGrid: 'readonly', wireRoundNameField: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
-  memberStats: 'readonly', BEST_GAME_MIN_PLAYS: 'readonly', bestGameSub: 'readonly',
+  memberStats: 'readonly', bestGameValue: 'readonly', BEST_GAME_PRIOR_PLAYS: 'readonly', bestGameSub: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   // views-badges.js (#1388) — the Klassisch rendering every design skins.

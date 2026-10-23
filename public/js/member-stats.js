@@ -26,12 +26,20 @@
    here where `wireGameCardHead` refuses one: under Node the globals do not
    exist at all, so omitting `deps` throws a ReferenceError on the first call
    rather than quietly taking a second code path. */
-/* The floor „Stärkstes Spiel" ranks above. Three, because at two contested
-   plays a perfect record is a coin toss and the tile would name whichever game
-   the member happened to win first — and because a member has to be able to
-   REACH it: most rounds play a given box a handful of times a year, so a higher
-   floor would leave the tile empty for almost everybody. */
-const BEST_GAME_MIN_PLAYS = 3;
+/* How many plays' worth of the member's OWN overall win rate „Stärkstes Spiel"
+   mixes into each game's rate before ranking (#1715) — `shrinkScore`'s shape in
+   vote-score.js, with its own strength, because `SHRINK_M` belongs to the vote
+   scale. Three keeps what the play floor it replaced was for: a 1/1 game cannot
+   outrank a 4/5 one. */
+const BEST_GAME_PRIOR_PLAYS = 3;
+
+/* The value „Stärkstes Spiel" RANKS by — never printed. `prior` is the member's
+   contested win rate: per round on the member page, merged across rounds on the
+   profile (lib/user-stats.js), which is why this is shared rather than written
+   twice. */
+function bestGameValue(gameWins, plays, prior) {
+  return (gameWins + BEST_GAME_PRIOR_PLAYS * prior) / (plays + BEST_GAME_PRIOR_PLAYS);
+}
 
 function memberStats(round, mid, deps) {
   const d = deps || {
@@ -151,15 +159,21 @@ function memberStats(round, mid, deps) {
      the trap #895 was originally written to close, and a per-game rate walks
      straight into it unless it borrows the same denominator.
 
-     BEST_GAME_MIN_PLAYS is what stops one lucky win topping the tile: at two
-     plays a perfect record is a coin toss, and the tile would name whatever
-     game the member happened to win first. Below the floor a game is not
-     ranked at all rather than ranked low — an unproven game is not a weak one.
+     RANKED BY `bestGameValue`, the rate pulled toward the member's own
+     `winRate` by BEST_GAME_PRIOR_PLAYS plays (#1715), so one lucky win cannot
+     top the tile. It replaced a three-play floor, which was all-or-nothing: a
+     member whose every win sat in a game played under three times had only
+     never-won games left to rank, and the tile named one at 0 % beside 7 Siege.
+     The adjusted value only orders — `bestScore` is the RAW rate of the named
+     game, which is what the tile prints.
 
-     Ties are broken by PLAYS before sharing the tile: two games both at 100 %
-     are not equal evidence, and without this the tile would routinely show
-     three games nobody has played more than three times. Only a genuine tie in
-     both rate and plays shares.
+     A game the member never won is never named, so „no game won yet" is the
+     one empty state. With any win at all this skip changes nothing: a won game
+     always adjusts above a never-won one.
+
+     Ties are broken by PLAYS before sharing the tile: two games at the same
+     value are not equal evidence. Only a genuine tie in both shares — and then
+     wins and plays are equal too, so the raw rate is well-defined.
 
      Same nameability bar as the favourite, and deliberately so: a retired game
      may not be NAMED by a stat tile even though it still counts toward the
@@ -167,15 +181,17 @@ function memberStats(round, mid, deps) {
   let bestGames = [];
   let bestScore = null;
   let bestPlays = 0;
+  let bestValue = null;
   Object.keys(perGame).forEach((gid) => {
     const e = perGame[gid];
-    if (e.plays < BEST_GAME_MIN_PLAYS) return;
-    const rate = e.gameWins / e.plays;
-    if (bestScore === null || rate > bestScore || (rate === bestScore && e.plays > bestPlays)) {
-      bestScore = rate;
+    if (!e.gameWins) return;
+    const v = bestGameValue(e.gameWins, e.plays, winRate);
+    if (bestValue === null || v > bestValue || (v === bestValue && e.plays > bestPlays)) {
+      bestValue = v;
+      bestScore = e.gameWins / e.plays;
       bestPlays = e.plays;
       bestGames = [e.game];
-    } else if (rate === bestScore && e.plays === bestPlays) {
+    } else if (v === bestValue && e.plays === bestPlays) {
       bestGames.push(e.game);
     }
   });
@@ -208,5 +224,5 @@ function memberStats(round, mid, deps) {
    function rather than a second copy of the arithmetic.
    .claude/rules/shared-constants-inventory.md carries the entry. */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { memberStats, BEST_GAME_MIN_PLAYS };
+  module.exports = { memberStats, bestGameValue, BEST_GAME_PRIOR_PLAYS };
 }

@@ -478,12 +478,14 @@ across seats and a rating mean cannot be un-weighted, so the account-wide figure
 are recomputed from counts rather than from the per-seat rates, and the favourite
 game is picked once over the merged set rather than once per round.
 
-It also exports **`BEST_GAME_MIN_PLAYS`** (2026-09-22), the floor „Stärkstes
-Spiel" ranks above, and that one IS a plain shared value: the member page ranks
-per round against it and `lib/user-stats.js` ranks the MERGED per-game totals
-against it, so a hand-copied second number would make a game qualify on one
-screen and not the other with nothing red. The tile it gates replaced the
-per-game Siegwertung when that measure was withdrawn from the whole app.
+It also exports **`bestGameValue`** and its strength **`BEST_GAME_PRIOR_PLAYS`**
+(#1715, replacing the 2026-09-22 play floor `BEST_GAME_MIN_PLAYS`): what
+„Stärkstes Spiel" ranks by — a game's win rate pulled toward the member's own
+rate. The member page ranks per round with it and `lib/user-stats.js` ranks the
+MERGED per-game totals with it, so a hand-copied formula would let the two name
+different games with nothing red. The one input that differs is the PRIOR: the
+seat's rate on the member page, the merged account rate (never an average of
+seat rates) on the profile.
 
 **The seventeenth is `public/js/error-report.js`** (#1149): `CLIENT_ERROR_KINDS`,
 the fault kinds a browser may report, plus `CLIENT_ERROR_MESSAGE_MAX` and

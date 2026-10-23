@@ -315,10 +315,10 @@ async function showMember(rid, mid) {
 
      The sub-line is the win RATE plus the plays it rests on („67 % · 3×"), not
      the rate alone: a bare percentage invites the reading that 100 % means
-     unbeatable, and the count is what says how much to trust it. A 0 % best is
-     shown honestly — this is the member's own page, not a leaderboard — and
-     `bestScore === null` (no game at or above BEST_GAME_MIN_PLAYS) is the only
-     empty state. */
+     unbeatable, and the count is what says how much to trust it. Both are the
+     RAW figures of the named game; the adjusted value it was ranked by
+     (`bestGameValue`, member-stats.js) is never shown. `bestScore === null`
+     („no game won yet") is the only empty state. */
   cards.appendChild(
     gameCard(
       'member-stats__best',

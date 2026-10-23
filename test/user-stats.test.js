@@ -21,7 +21,6 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { store } = require('./helpers');
-const { BEST_GAME_MIN_PLAYS } = require('../public/js/member-stats');
 const { accountStats, gameKey } = require('../lib/user-stats');
 
 const UID = 'u-ada';
@@ -281,38 +280,71 @@ test('the account-tier Abzeichen read the same totals, plus the account age', as
 
 // --- empty and unknown ------------------------------------------------------
 
-test('the play floor is applied to the MERGED total, and a thin game is unranked', async () => {
-  /* „Stärkstes Spiel" is a win rate with a floor of BEST_GAME_MIN_PLAYS
-     (member-stats.js), and across rounds the floor has to be applied to the SUM
-     — a game played twice in each of two rounds is four plays of one game, and
-     `gameKey` merged it precisely so that it would be. Applying the floor
-     per seat would leave it unranked in both halves and therefore absent.
+// N sessions at `gid`, the first `wins` won by this account, the rest lost.
+const plays = (prefix, gid, n, wins) =>
+  Array.from({ length: n }, (_, i) => played(`${prefix}${i}`, gid, { winner: i < wins ? 'm-me' : 'm-other' }));
 
-     The floor is read from the implementation rather than restated: a case
-     written against "three" stops testing the boundary the day the number moves. */
+test('„Stärkstes Spiel" ranks the MERGED per-game totals', async () => {
+  /* Across rounds the ranking has to read the SUM — a game played twice in each
+     of two rounds is four plays of one game, and `gameKey` merged it precisely
+     so that it would be. Ranked per seat it would be two 2/2 entries sharing the
+     tile under one title. */
   reset();
   seatUser();
   // Two different game IDS with the same TITLE — that is what gameKey merges,
   // and using one id in both rounds would not exercise the merge at all.
-  const two = (prefix, gid) => [played(`${prefix}1`, gid), played(`${prefix}2`, gid)];
-  round({ games: [game('g1', 'Azul')], sessions: two('a', 'g1') });
-  round({ games: [game('g9', 'Azul')], sessions: two('b', 'g9') });
+  round({ games: [game('g1', 'Azul')], sessions: plays('a', 'g1', 2, 2) });
+  round({ games: [game('g9', 'Azul')], sessions: plays('b', 'g9', 2, 2) });
 
   const st = await accountStats(UID);
-  assert.ok(BEST_GAME_MIN_PLAYS > 2 && BEST_GAME_MIN_PLAYS <= 4,
-    `this case straddles the floor only while it is 3 or 4 — it is ${BEST_GAME_MIN_PLAYS}`);
   assert.deepEqual(st.bestGames.map((g) => g.title), ['Azul'],
     'two plays in each of two rounds is four plays of one game');
   assert.equal(st.bestPlays, 4, 'and the tile states the merged count');
-  assert.equal(st.bestScore, 1);
+  assert.equal(st.bestScore, 1, 'and the RAW rate, never the adjusted one');
 });
 
-test('a game below the merged floor is absent, not ranked at its rate', async () => {
+test('the live shape on the profile: wins only in thin games still name a WON game', async () => {
+  /* #1715: every win in a game with fewer than three plays, plus a three-play
+     game never won. The old floor named the 0 % game; spread over two rounds
+     here, so the merge cannot rescue it either. */
   reset();
   seatUser();
-  round({ games: [game('g1', 'Azul')], sessions: [played('s1', 'g1'), played('s2', 'g1')] });
+  round({ games: [game('g1', 'Castle Combo'), game('g2', 'Azul')], sessions: [...plays('a', 'g1', 3, 0), ...plays('b', 'g2', 1, 1)] });
+  round({ games: [game('g3', 'Patchwork')], sessions: plays('c', 'g3', 2, 2) });
+
   const st = await accountStats(UID);
-  assert.deepEqual(st.bestGames, [], 'two plays is under the floor — unproven is not weak');
+  assert.deepEqual(st.bestGames.map((g) => g.title), ['Patchwork'], '2/2 outranks 1/1, and the 0/3 game is never named');
+  assert.equal(st.bestScore, 1);
+  assert.equal(st.bestPlays, 2);
+});
+
+test('the prior is the MERGED account rate, not an average of per-round rates', async () => {
+  /* Azul 1/1 in one round (that seat's rate: 1); Catan 3/4 in another, beside a
+     retired 0/6 game that counts toward the rate but may not be named (that
+     seat's rate: 3/10). Merged: 4/11 ≈ 0.36, under which Catan's 3/4 outranks
+     Azul's 1/1. Averaged (0.65) — or each seat's own rate — Azul wins instead.
+     So this is the one fixture where the three readings name different games. */
+  reset();
+  seatUser();
+  round({ games: [game('g1', 'Azul')], sessions: plays('a', 'g1', 1, 1) });
+  round({
+    games: [game('g2', 'Catan'), game('g3', 'Dixit', { retired: true })],
+    sessions: [...plays('b', 'g2', 4, 3), ...plays('c', 'g3', 6, 0)],
+  });
+
+  const st = await accountStats(UID);
+  assert.equal(st.winRate, 4 / 11);
+  assert.deepEqual(st.bestGames.map((g) => g.title), ['Catan']);
+  assert.equal(st.bestPlays, 4);
+});
+
+test('an account with contested plays but no win has no strongest game', async () => {
+  reset();
+  seatUser();
+  round({ games: [game('g1', 'Azul')], sessions: plays('a', 'g1', 3, 0) });
+  const st = await accountStats(UID);
+  assert.equal(st.winRate, 0);
+  assert.deepEqual(st.bestGames, [], 'a never-won game is never named');
   assert.equal(st.bestScore, null);
 });
 
@@ -325,7 +357,7 @@ test('an account with no seat gets a real zero record; an unknown one gets null'
   // null rather than 0: "never been in a contest" is not "never wins" (#1075).
   assert.equal(st.winRate, null);
   assert.equal(st.avgGiven, null);
-  assert.equal(st.bestScore, null, '0 % is a real rate, so absence must not read as one');
+  assert.equal(st.bestScore, null, 'no contested play, so no strongest game');
 
   assert.equal(await accountStats('nobody-at-all'), null);
 });
