@@ -30,6 +30,9 @@ proposed, `{1,4,4,4}` scores 1.75 and is not. Same votes, same lone dissenter,
 opposite verdicts. Every shape the file pinned was n=4, and at n=4 the behaviour
 was correct, so it stayed green for months over a banner that was nagging
 three-person rounds about games they liked.
+(Those numbers are the #893 curve's. #1706 softened the veto to −3 and moved
+`LOW_SCORE` to 0, which put a lone dissenter above the bar at every n ≥ 3 and
+retired #922's guard; the shape of the lesson is unchanged.)
 
 ## Why the proxy is so convincing
 

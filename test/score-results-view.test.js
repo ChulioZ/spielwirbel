@@ -164,7 +164,7 @@ test('a session nobody voted in renders no ⓘ and does not throw', async (t) =>
 
 test('the score, not the mean, ranks the rows', async (t) => {
   // A lone „gar nicht" against a clean 3 and a clean 5. On the raw mean the 1
-  // and the 3 are just one apart; on the curve the veto is worth -5, so it
+  // and the 3 are just one apart; on the curve the veto is worth -3, so it
   // sorts last by a wide margin. This is the ordering the whole of #893 is
   // about, asserted where a user would see it.
   const dom = await show(t, session('s1', { g1: 1, g2: 3, g3: 5 }));

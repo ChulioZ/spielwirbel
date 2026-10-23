@@ -26,8 +26,9 @@
 // already on screen transfers as-is.
 //
 // `tiles` is the per-tile histogram, and it is part of the contract: it carries
-// "how many voted 2", which `vetoes` cannot express and which the
-// lone-dissenter guard in retireRecommendations() needs (#922). It is scored
+// "how many voted 2", which `vetoes` cannot express and which Die Brücke's
+// shelf bars read (bruecke-shelf.js). (It was added for retireRecommendations'
+// lone-dissenter guard, #922, which #1706 made unreachable.) It is scored
 // through `scoreTally` rather than `scoreRatings` — the two are the same
 // function over two input shapes, so this is behaviour-identical and leaves ONE
 // counting loop instead of a second one beside it. Admission goes through
@@ -206,10 +207,10 @@ function gameStats(round, gameId) {
    gone from the vote card — and it had already stopped deciding anything, which
    is the argument that retired it. With a trash vote worth -6 under #893's
    curve, half a game's votes being trash caps its best possible score at
-   (−6 + 5) / 2 = −0,5, far below the 1,0 bar below; so the share branch could
-   never fire without the score branch firing first. The score branch is in fact
-   the MORE sensitive of the two — two vetoes among five voters with the rest at
-   5 lands on exactly 1,0 and proposes the game at a 40 % share.
+   (−6 + 5) / 2 = −0,5, far below the 1,0 bar of the time; so the share branch
+   could never fire without the score branch firing first. The score branch was
+   in fact the MORE sensitive of the two — two vetoes among five voters with the
+   rest at 5 landed on exactly 1,0 and proposed the game at a 40 % share.
 
    What is knowingly given up with the tile: the 1 says „not tonight" and the
    trash said „off the shelf", so this is now purely inferential — a game the
@@ -220,25 +221,30 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   // (#797); the veto curve makes a 2,0 far easier to reach, so the threshold
   // came down with it (#893) rather than quietly widening what gets proposed.
   //
-  // 1.0 is not a magnitude, it is an ANCHOR: it is exactly what a flat 2 from
-  // everybody scores — „eher nicht" all round, the worst a game can be while
-  // still getting a real rating from every voter. That is the bar for saying
-  // "this one is dragging the shelf down", and reading it that way is what
-  // keeps a retune honest.
+  // The value is not a magnitude, it is an ANCHOR: it is exactly what a flat 2
+  // from everybody scores — „eher nicht" all round, the worst a game can be
+  // while still getting a real rating from every voter. That is the bar for
+  // saying "this one is dragging the shelf down", and reading it that way is
+  // what keeps a retune honest: #1706 moved the curve to [−3, 0, 3, 4, 5], a
+  // flat 2 now scores 0,0, so the bar moved from 1.0 to 0.0 with it.
   //
-  // The value 1.5 was tried first and is WRONG, for a reason worth recording:
-  // a game rated {1,4,5,3} — three of four people like it, one does not want to
-  // play it at all — scores exactly 1.5, and one dissenter must not retire a
-  // game on their own.
+  // HISTORY, under the #893 curve [−5, 1, 3, 4, 5] — kept because the reasoning
+  // still binds a retune. 1.5 was tried first and was wrong: {1,4,5,3} scored
+  // exactly 1.5, and one dissenter must not retire a game on their own. Then
+  // #922 found the anchor reached by GROUP SIZE: at n=3 one dissent weighed
+  // −5/3 and {1,4,4} landed on exactly 1.0, so {1,4,4} was proposed and
+  // {1,4,4,4} not. A lone-dissenter guard fixed that.
   //
-  // The SECOND correction (#922) is not to the number but to its DIVISOR. The
-  // 1.5-was-wrong analysis above was done entirely at n=4, where one dissenter
-  // weighs `TILE_VALUE[1] / 4`; at n=3 the same dissent weighs -5/3 and {1,4,4}
-  // lands on exactly 1.0. So the anchor was being reached by group size rather
-  // than by how the game was received — {1,4,4} proposed, {1,4,4,4} not. The
-  // threshold stayed at 1.0 and the rating branch grew the lone-dissenter guard
-  // below instead, which is group-size independent by construction.
-  // Pinned by test/retire-score-threshold.test.js, demo fixture included.
+  // THAT GUARD IS GONE SINCE #1706, because the curve made it unreachable.
+  // With exactly one 1 and everyone else at 3 or more, a game scores at least
+  // (TILE_VALUE[1] + 3·(n−1)) / n = 3 − 6/n, which is ≥ 1 > 0 for every n ≥ 3 —
+  // and the call site's `minVotes` is three per member, so n ≥ 3 whenever the
+  // round has anyone in it. A guard for a state the threshold can no longer
+  // reach is dead code wearing a safety label
+  // (.claude/rules/redundant-guards-make-each-other-untestable.md); the
+  // structural fact is pinned instead, in test/retire-score-threshold.test.js,
+  // demo fixture included. If a retune ever makes `3 − (3 − TILE_VALUE[1])/n`
+  // reach the bar again, that test goes red first.
   //
   // THE THIRD CORRECTION (#894) IS ABOUT WHICH SCORE IT READS. Everything the
   // shelf displays is shrunk, but this branch deliberately keeps reading
@@ -263,7 +269,7 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
   //
   // The number the banner PRINTS is still the shrunk one, so it agrees with the
   // pill and the ring rather than showing a second figure for the same game.
-  const LOW_SCORE = 1.0;
+  const LOW_SCORE = 0.0;
   const recs = [];
   activeGames.forEach((g) => {
     const st = statsByGame[g.id];
@@ -271,14 +277,7 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
     // separate `votesCast` (votes carrying a rating and/or the retire flag)
     // this used to gate on is the same number.
     if (!st || st.count < minVotes) return;
-    // Decline when the low score rests on a SINGLE voter (#922): exactly one
-    // vote below 2, and nobody at 2. Requiring nobody at 2 is what keeps the
-    // anchor intact — „eher nicht" from anyone else still leaves the game
-    // proposable, so this suppresses a dissenting minority of one and nothing
-    // wider. (It read `tiles[0] + tiles[1]` while the trash tile existed; tile 0
-    // is a permanent hole since #909, so only the 1 remains.)
-    const loneDissenter = st.tiles[1] === 1 && st.tiles[2] === 0;
-    if (st.rawScore === null || st.rawScore > LOW_SCORE || loneDissenter) return;
+    if (st.rawScore === null || st.rawScore > LOW_SCORE) return;
     const reasons = [t('rec.reasonAvg', { avg: fmtAvg(displayScore(st.score)) })];
     // Ranked on the raw score for the same reason the branch gates on it: this
     // orders "how badly is this game received", not "where does it sit on the
@@ -293,7 +292,7 @@ function retireRecommendations(activeGames, statsByGame, minVotes) {
 const minimizedRecs = new Set();
 
 // What a score PRINTS as. The curve can carry a score below zero — five vetoes
-// score −5 — and a negative reads as a broken app rather than as a bad game, so
+// score −3 — and a negative reads as a broken app rather than as a bad game, so
 // every display clamps at the floor. Ranking deliberately uses the unclamped
 // value, so two games at the floor still sort by how bad they actually are;
 // `computePlaces` then ties them on the displayed number, which is what makes

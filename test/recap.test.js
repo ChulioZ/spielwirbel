@@ -140,7 +140,7 @@ test('best and worst separate once a second game qualifies, and ties share a car
   });
   const rec = recapOf(r);
   assert.deepEqual(rec.best, { gameIds: ['g1'], score: 5 });
-  assert.deepEqual(rec.worst, { gameIds: ['g2', 'g3'], score: 1 }, 'a flat 2 is worth 1 on the curve');
+  assert.deepEqual(rec.worst, { gameIds: ['g2', 'g3'], score: 0 }, 'a flat 2 is worth 0 on the curve (#1706)');
 });
 
 test('archived games are out of the best/worst pair — it is about the shelf you still have', () => {
@@ -189,10 +189,11 @@ test("a guest's rating moves the average, so the recap cannot contradict the gam
   );
   const rec = recapOf(round({ sessions: [withGuest] }));
   assert.equal(rec.totals.ratings, 3, 'the guest vote counts');
-  // The Spielwirbel-Score, not the raw mean, since #893: (5 + 5 + 1) / 3, where
-  // the 2 is worth 1 on the curve. The point of the test is unchanged — the
-  // guest's vote MOVED the number, which is what the recap must not contradict.
-  assert.equal(rec.best.score, (5 + 5 + 1) / 3, 'the guest vote counts, on the curve');
+  // The Spielwirbel-Score, not the raw mean, since #893: (5 + 5 + 0) / 3, where
+  // the 2 is worth 0 on the curve (#1706). The point of the test is unchanged —
+  // the guest's vote MOVED the number, which is what the recap must not
+  // contradict.
+  assert.equal(rec.best.score, (5 + 5 + 0) / 3, 'the guest vote counts, on the curve');
 });
 
 // ---- what a taste stat may name -------------------------------------------

@@ -154,17 +154,18 @@ test('the banner and the suggestion card never name the same game', (t) => {
      deleted on purpose.
 
      What discriminates is the gap between the two scales the two features read.
-     The banner gates on the RAW score (`rawScore <= 1.0`, deliberately — see
-     retireRecommendations); the suggestion card ranks on the SHRUNK one, which
-     pulls a thin record back toward the prior. Six votes of {1,1,3,3,3,3} sit
-     at rawScore 0.33 — nagged — and shrink to 1.4, which beats every unrated
-     game on the shelf. So game 17 is simultaneously the banner's top proposal
+     The banner gates on the RAW score (`rawScore <= 0.0` since #1706,
+     deliberately — see retireRecommendations); the suggestion card ranks on the
+     SHRUNK one, which pulls a thin record back toward the prior. Six votes of
+     {1,1,2,2,3,3} sit at rawScore 0.0 — nagged — and shrink to 1.2, which beats
+     every unrated game on the shelf. (It was {1,1,3,3,3,3} under the −5 curve;
+     that now scores 1.0 raw and no longer trips the banner at all.) So game 17 is simultaneously the banner's top proposal
      and the suggestion card's top pick, which is exactly the collision.
 
      It is DRAWN but never chosen (`gameIds` without `chosenGameId`), so it also
      qualifies as never played — the state that carries votes without a play. */
   const r = busyRound();
-  const badNights = [[1, 1], [3, 3], [3, 3]].map(([a, b], i) =>
+  const badNights = [[1, 1], [2, 2], [3, 3]].map(([a, b], i) =>
     play(950 + i, 10, daysAgo(300 + i), {
       gameIds: [10, 17],
       votes: { 1: { 10: { rating: 5 }, 17: { rating: a } }, 2: { 10: { rating: 5 }, 17: { rating: b } } },
@@ -190,7 +191,7 @@ test('the banner\'s retire asks a neutral question with the archive icon', async
   t.after(() => dom.close());
   dom.set('api', noRecos());
   const r = busyRound();
-  r.sessions = [...r.sessions, ...[[1, 1], [3, 3], [3, 3]].map(([a, b], i) =>
+  r.sessions = [...r.sessions, ...[[1, 1], [2, 2], [3, 3]].map(([a, b], i) =>
     play(950 + i, 10, daysAgo(300 + i), {
       gameIds: [10, 17],
       votes: { 1: { 10: { rating: 5 }, 17: { rating: a } }, 2: { 10: { rating: 5 }, 17: { rating: b } } },
