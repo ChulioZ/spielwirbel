@@ -52,6 +52,10 @@ const OCEAN_CARD_SIZES = {
   period: [540, 675],
 };
 const OCEAN_CARD_PAD = 30;
+// The session's ranking rows (#1705) — the top three, like Forest's and
+// Programmheft's cards. A tie prints its place twice, so three rows can be
+// fewer than three places.
+const OCEAN_CARD_ROWS = 3;
 
 // Ocean's tokens, keyed by their name in ocean.css (see the header for why a
 // copy; the parity test is what keeps it one). `--brand` is the registry's
@@ -185,6 +189,11 @@ function oceanCardSpec(kind, model) {
     score: played ? { text: fmtAvg(played.score), stop: rampStop(played.score) } : null,
     // Who brings the box (#1628) — the results screen's „Gehört Anna".
     bringers: resultCardBringers(model),
+    // The ranking, in the results screen's tie-aware order; only rated rows,
+    // and the group's score, never anyone's vote (#1705).
+    rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, OCEAN_CARD_ROWS).map((r) => ({
+      place: String(r.place), title: r.title, score: { text: fmtAvg(r.score), stop: rampStop(r.score) },
+    })),
   };
 }
 
@@ -360,6 +369,30 @@ function oceanAvatars(ctx, winners, x, cy, r, p) {
   return shown.length ? r * 2 + (shown.length - 1) * step : 0;
 }
 
+// The ranking rows, on the band (never the water): a hairline above each, the
+// place in the accent, the title fitted beside it, the group's score pill at
+// the right. `h` is each row's height, which the landscape card may shrink.
+// Returns the height drawn.
+function oceanRows(ctx, rows, x, y, w, h, p) {
+  const size = Math.round(Math.min(18, h * 0.58));
+  const pillH = Math.round(h * 0.74);
+  const placeW = size * 1.7;
+  rows.forEach((r, i) => {
+    const top = y + i * h;
+    ctx.fillStyle = p['line-soft'];
+    ctx.fillRect(x, top, w, 1);
+    const pillW = oceanScorePill(ctx, r.score, x + w, top + (h - pillH) / 2 + 0.5, pillH, Math.round(size * 0.84), p);
+    const base = top + h / 2 + size * 0.36 + 0.5;
+    ctx.fillStyle = p.brand;
+    ctx.font = oceanFont(700, size, true);
+    ctx.fillText(r.place, x, base);
+    ctx.fillStyle = p.ink;
+    ctx.font = oceanFont(700, size);
+    ctx.fillText(recapFit(ctx, r.title, w - placeW - pillW - 12), x + placeW, base);
+  });
+  return rows.length * h;
+}
+
 // "Powered by BGG" — a licence requirement wherever BGG data appears, as on
 // Der Tisch's card. A same-origin PNG, so drawImage leaves the canvas clean.
 function oceanBadge(ctx, badge, right, baseline, width) {
@@ -401,12 +434,20 @@ function drawOceanSession(ctx, spec, p, badge) {
   const rowH = hasRow ? Math.max(50, rowText.length * rowLh + 4) : 0;
   // The bringers line grows the band, like a second line of the winner row.
   const bringH = spec.bringers ? 26 : 0;
-  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + bringH + 16 + 18 + 26;
+  // The ranking grows the band too; the water above gives up the height, so
+  // the canvas stays 1080x1350 (#1705).
+  const rows = spec.rows || [];
+  const rankH = rows.length ? 12 + rows.length * 32 : 0;
+  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + bringH + rankH + 16 + 18 + 26;
   const bandTop = H - bandH;
 
   oceanWater(ctx, W, H, 0.46, p);
   oceanPill(ctx, spec.pill, pad, pad, inner, p);
-  oceanCover(ctx, W / 2, 262, 284, 213, -4);
+  // The cover sits above the whale's back: full size on a short band, smaller
+  // (never under the pill) when the band has grown.
+  const coverBottom = bandTop - 22;
+  const coverH = Math.max(110, Math.min(213, coverBottom - 90));
+  oceanCover(ctx, W / 2, coverBottom - coverH / 2, coverH * 284 / 213, coverH, -4);
   oceanWhale(ctx, 185, bandTop - 38, 1, p);
 
   ctx.fillStyle = p.surface;
@@ -436,6 +477,10 @@ function drawOceanSession(ctx, spec, p, badge) {
     ctx.font = oceanFont(700, 17);
     ctx.fillText(recapFit(ctx, spec.bringers, inner), pad, y - 4);
   }
+  if (rankH) {
+    y += 12;
+    y += oceanRows(ctx, rows, pad, y, inner, 32, p);
+  }
   y += 16 + 16;
   ctx.fillStyle = p['ink-soft'];
   ctx.font = oceanFont(600, 16);
@@ -455,13 +500,26 @@ function drawOceanLandscape(ctx, spec, p, badge) {
   const pad = 30;
   const x = left + pad;
   const inner = W - left - pad * 2;
-  const title = oceanTitleLines(ctx, spec.sentence || spec.title, inner, 30, 22, 3);
+  let rows = spec.rows || [];
+  // With a ranking to fit, the sentence keeps to two lines (#1705).
+  const title = oceanTitleLines(ctx, spec.sentence || spec.title, inner, 30, rows.length ? 20 : 22, rows.length ? 2 : 3);
   const lh = Math.round(title.size * 1.14);
   ctx.font = oceanFont(700, 19);
   const said = [spec.winText, spec.score && spec.score.text].filter(Boolean).join(' · ');
   const line = said ? oceanLines(ctx, said, inner, 2) : [];
   const bringH = spec.bringers ? 22 : 0;
-  const blockH = 16 + 10 + lh * title.lines.length + (line.length ? 4 + 24 * line.length : 0) + bringH + 14 + 16;
+  const textH = 16 + 10 + lh * title.lines.length + (line.length ? 4 + 24 * line.length : 0) + bringH + 14 + 16;
+  // The rows take what is left of the band's height: each row shrinks before
+  // one is dropped, and two always stay.
+  let rowH = 0;
+  if (rows.length) {
+    const room = H - 2 * 16 - textH - 8;
+    rowH = Math.min(26, room / rows.length);
+    if (rowH < 18 && rows.length > 2) { rows = rows.slice(0, 2); rowH = Math.min(26, room / 2); }
+    rowH = Math.max(18, Math.floor(rowH));
+  }
+  const rankH = rows.length ? 8 + rows.length * rowH : 0;
+  const blockH = textH + rankH;
   let y = (H - blockH) / 2 + 14;
   ctx.fillStyle = p.brand;
   ctx.font = oceanFont(700, 14);
@@ -481,6 +539,10 @@ function drawOceanLandscape(ctx, spec, p, badge) {
     ctx.fillStyle = p['ink-soft'];
     ctx.font = oceanFont(700, 15);
     ctx.fillText(recapFit(ctx, spec.bringers, inner), x, y);
+  }
+  if (rankH) {
+    y += 8;
+    y += oceanRows(ctx, rows, x, y, inner, rowH, p);
   }
   y += 14 + 16;
   ctx.fillStyle = p['ink-soft'];
