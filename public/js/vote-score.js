@@ -42,26 +42,34 @@
    determinism argument ("two runs of the same search cannot disagree") rests on
    exact integer arithmetic. Keep them integers when retuning.
 
-     1 😢 gar nicht     -5     4 🙂  4
-     2 🙁                1     5 🤩  5
+     1 😢 gar nicht     -3     4 🙂  4
+     2 🙁                0     5 🤩  5
      3 😐                3
 
-   THREE PROPERTIES ARE DELIBERATE — preserve them when retuning:
+   THE SHAPE (#1706): every step below „wäre okay" costs 3, every step above it
+   earns 1. The cliff sits AT the neutral face, so both bottom faces are an
+   unhappy vote — the same line the table split already draws, whose
+   `VIOLATION_MAX = 2` (table-split.js) counts a 1 and a 2 alike as an unhappy
+   seating. Until #1706 the curve was `[-5, 1, 3, 4, 5]`, with the cliff between
+   1 and 2; field reports showed a „gar nicht" given where „eher nicht" was meant
+   deciding the evening on its own, so the bottom face got softer and the one
+   above it heavier.
+
+   FOUR PROPERTIES ARE DELIBERATE — preserve them when retuning:
 
    1. A game nobody rated below 3 scores exactly its raw average. The score only
       ever diverges from the familiar number when there is something to say.
    2. f(3) = 3 and f(5) = 5, so „alle 3en" still reads 3,0 and „alle 5en" 5,0.
-   3. THE CALIBRATION ANCHOR: four people at 5 and one at 1 scores exactly the
-      same as five people at 3 — „vier Leute, die es unbedingt wollen, heben
-      genau eine Person auf, die gar nicht will." That one sentence is the whole
-      value judgement, and `TILE_VALUE[1]` is the number to move if the family
-      disagrees with it.
+   3. THE CALIBRATION ANCHOR: three people at 5 and one at 1 scores exactly the
+      same as four people at 3 — „drei Leute, die es unbedingt wollen, heben
+      genau eine Person auf, die gar nicht will." In general f(1) = 3 − 2k, where
+      k is the number of 5s that cancel one 1; k = 3. That sentence is the value
+      judgement, and `TILE_VALUE[1]` is the number to move if a group disagrees.
+   4. ONE 1 WEIGHS EXACTLY TWO 2s against the neutral face (−6 = 2 × −3), which
+      is the shape above stated as an equation.
 
-   The cliff sits between 1 and 2 because the app itself calls the 1 „gar nicht".
-   It is the bottom of the scale since #909, which removed the trash tile that
-   used to sit one rung below it — a change that is behaviour-NEUTRAL for the
-   score, because every number above is untouched and the tile it dropped was
-   worth -6 against the 1's -5. All three anchors hold unchanged.
+   The 1 is the bottom of the scale since #909, which removed the trash tile
+   that used to sit one rung below it.
 
    These are starting values chosen to be retuned from real use. Changing a
    number is expected; changing the SHAPE (where the cliff sits, whether the top
@@ -75,10 +83,10 @@
    — just not of the tile numerals. Do not reintroduce separate λ terms; they
    cannot express anything this table cannot, and they make tuning and testing
    much harder. */
-const TILE_VALUE = [null, -5, 1, 3, 4, 5];
+const TILE_VALUE = [null, -3, 0, 3, 4, 5];
 
 // The displayed floor. The score can go negative — a game five people vetoed
-// scores −5 — and a negative reads as broken rather than as bad, so screens
+// scores −3 — and a negative reads as broken rather than as bad, so screens
 // clamp. Ranking uses the UNCLAMPED value, so two genuinely different disasters
 // still sort; only what is printed is floored.
 const SCORE_MIN = 0;
@@ -170,8 +178,9 @@ function scoreTally(tiles) {
    played used to sit above every staple the round had actually formed a view
    on — permanently, and at the top of the Regal, which is where it is most
    visible. #893 made that worse rather than neutral: the most one voter can
-   move a score is (top - bottom) / n, which the curve raises from 5/n to 11/n,
-   so a single vote's leverage on a thin-data game more than doubled.
+   move a score is (top - bottom) / n, which the curve raises from 4/n on the
+   tile numerals to 8/n (it was 10/n under #893's original `[-5, 1, 3, 4, 5]`,
+   until #1706), so a single vote's leverage on a thin-data game doubles.
 
    THE PRIOR IS FIXED, AND THAT IS THE WHOLE POINT (#928). Every input to a
    game's shelf score is a fact about THAT game — its own votes, its own plays —
@@ -187,8 +196,8 @@ function scoreTally(tiles) {
 
    1. THE UNITS DID NOT MATCH. `PRIOR_DEFAULT` is the value of one neutral VOTE;
       the shelf-relative prior was a mean over GAME SCORES, and #893's curve is
-      deeply asymmetric (`TILE_VALUE[1] = -5`). A game carrying one „gar nicht"
-      scores -5 and entered that mean as one full data point, weighing exactly
+      deeply asymmetric (`TILE_VALUE[1]` was -5 then). A game carrying one „gar
+      nicht" scored -5 and entered that mean as one full data point, weighing exactly
       as much as an established game at +4. On a real 85-game family shelf where
       most games have one or two votes, that thin low-voted tail WAS the prior:
       measured at ≈ 0,4 against a documented intent of 3,0, which pulled the
@@ -215,7 +224,7 @@ function scoreTally(tiles) {
    so it would move every number on the podium and none of its ranking.
 
    ACCEPTED CONSEQUENCE: shrinkage softens a veto on thin data. `{5,5,1}` played
-   once reads 2,8 rather than 1,7. That is intended, not a bug to fix later —
+   once reads 3,1 rather than 2,3. That is intended, not a bug to fix later —
    one person's veto on one evening should not permanently sink a game the round
    has otherwise formed no view on, and the veto keeps its full force exactly
    where it decides something, on tonight's unshrunk podium.

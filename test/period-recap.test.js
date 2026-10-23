@@ -262,7 +262,7 @@ test('votes for a game that has since been deleted are dropped', () => {
   assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated, null);
 });
 
-test('three „gar nicht" votes stay firmly negative', () => {
+test('three „gar nicht" votes print their own shrunk score — a stale retire flag is ignored', () => {
   const r = round({
     sessions: [
       {
@@ -273,14 +273,16 @@ test('three „gar nicht" votes stay firmly negative', () => {
       },
     ],
   });
-  /* TILE_VALUE[1] is −5, so the game's own score is exactly that — and since
-     #894 the card prints it shrunk: the prior is `PRIOR_DEFAULT` (fixed since
-     #928) and nothing was played, so no lift, giving (3·−5 + 4·3) / 7 = −3/7.
-     The number discriminates against the flag winning: on #797's precedence the
-     first vote would have scored −6 and the printed value −4/7. */
+  /* TILE_VALUE[1] is −3 since #1706, so the game's own score is exactly that —
+     and since #894 the card prints it shrunk: the prior is `PRIOR_DEFAULT`
+     (fixed since #928) and nothing was played, so no lift, giving
+     (3·−3 + 4·3) / 7 = +3/7. That is POSITIVE now — under the −5 curve it was
+     −3/7, and this test was named for staying negative — but it is still the
+     lowest number the card holds, and it still discriminates against the flag
+     winning: on #797's precedence the first vote would have been the −6 trash
+     tile and the printed value 0. */
   const top = periodRecap(r, [], month('2026-07'), deps).topRated;
-  assert.equal(Number(top.score.toFixed(4)), Number((-3 / 7).toFixed(4)));
-  assert.ok(top.score < 0, 'three vetoes must stay firmly negative');
+  assert.equal(Number(top.score.toFixed(4)), Number((3 / 7).toFixed(4)));
 });
 
 test('a tie on best-rated names every tied game', () => {

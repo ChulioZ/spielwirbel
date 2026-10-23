@@ -211,12 +211,13 @@ test('a game state outranks its ratings, and the ladder is retired < rated-low <
   assert.equal(aff(g('gr', { retired: true })), -1, 'retired -> -1.0, ahead of any rating');
   assert.equal(aff(g('ghigh')), 0.8, 'rated 5 by one voter -> shrunk to 3.4, so 0.6 + 0.2');
   assert.equal(aff(g('gmid')), 0.6, 'rated 3 by one voter -> exactly the prior, so exactly A_NEUTRAL');
-  // Since #893 a lone „gar nicht" scores −5; shrinkage lifts it to 1.4, which
-  // the #1227 anchor prices at 0.6 + (1.4 - 3) / 2. Negative, because the round
-  // said so — and still above `A_RETIRED`, which is the invariant the floor
-  // exists for: a game they own and dislike must not outrank-in-reverse one they
-  // actually threw out.
-  assert.equal(aff(g('glow')), -0.2, 'rated 1 by one voter -> shrunk to 1.4, so 0.6 - 0.8');
+  // Since #1706 a lone „gar nicht" scores −3; shrinkage lifts it to 1.8, which
+  // the #1227 anchor prices at 0.6 + (1.8 - 3) / 2 = 0 — one veto on one
+  // evening now lands exactly on „no pull either way" (it read −0.2 under the
+  // −5 curve). Still below the unrated rung and above `A_RETIRED`, which is the
+  // invariant the floor exists for: a game they own and dislike must not
+  // outrank-in-reverse one they actually threw out.
+  assert.equal(aff(g('glow')), 0, 'rated 1 by one voter -> shrunk to 1.8, so 0.6 - 0.6');
   // ONE evening of history, so the rung has already ticked off A_NEUTRAL:
   // 0.6 x 25/26. That it is not 0.6 here is the decay, visible at n = 1.
   assert.equal(aff(g('gnone')), 0.58, 'owned, unrated -> the round\'s effective rung, not the constant');
@@ -390,7 +391,7 @@ test('a verdict below the neutral tile is NEGATIVE once the evidence is in (#122
    * The defect this issue exists for. `gameAffinity` read `(score - 1) / 2`,
    * which was right while `ownRating` returned the raw mean of 1–5 ratings — 1
    * was unanimous „gar nicht" and therefore affinity 0. #893 moved it to the
-   * Spielwirbel-Score over `TILE_VALUE` ([-5, 1, 3, 4, 5]) and the formula
+   * Spielwirbel-Score over `TILE_VALUE` (then [-5, 1, 3, 4, 5]) and the formula
    * stayed, so the zero crossing silently became unanimous „nicht so":
    * `TILE_VALUE[2]` is exactly the 1 being subtracted. Measured on the old
    * anchor, twenty people agreeing they did not enjoy a game left it at +0,17 —
@@ -400,7 +401,10 @@ test('a verdict below the neutral tile is NEGATIVE once the evidence is in (#122
    * it, which is why this case is written at „nicht so" and not at the tile the
    * two scales happen to agree on.
    */
-  assert.equal(tileAffinity(2, 20), -0.23, 'twenty „nicht so" must pull AWAY — it read +0.17');
+  // Since #1706 („nicht so" worth 0) twenty of them reach RATED_FLOOR just as
+  // „gar nicht" does — accepted in the issue; the floor keeps both above
+  // A_RETIRED, which the sweep below asserts.
+  assert.equal(tileAffinity(2, 20), -0.5, 'twenty „nicht so" must pull AWAY — it read +0.17');
   assert.equal(tileAffinity(1, 20), -0.5, 'twenty „gar nicht" sit on RATED_FLOOR');
   assert.equal(tileAffinity(3, 20), 0.6, 'twenty „passt schon" land exactly on A_NEUTRAL');
   assert.equal(tileAffinity(4, 20), 1.02, 'twenty „gut"');
@@ -446,25 +450,25 @@ test('no rated verdict, at any evidence, ever reaches A_RETIRED (#1227)', () => 
 test('shrinkage still protects a single bad evening (#1227)', () => {
   /*
    * The property to CHECK rather than assume: re-anchoring the ladder must not
-   * turn one person's bad night into the round's verdict. One „gar nicht" reads
-   * −0,20 — negative, but well off the floor twenty of them reach — and one
-   * „nicht so" stays positive, below the rung a fresh round pays for no opinion
-   * at all.
+   * turn one person's bad night into the round's verdict. Under #1706's curve
+   * one „gar nicht" lands EXACTLY on zero — shrinkage puts −3 on 1,8, which the
+   * anchor prices at 0,6 − 0,6 — far off the floor twenty of them reach, and
+   * the second one turns it negative. One „nicht so" stays positive, below the
+   * rung a fresh round pays for no opinion at all.
    *
-   * A unanimous „nicht so" reaches EXACTLY zero at the sixth voter — shrinkage
-   * puts the score on 1,8 there, which the anchor prices at 0,6 − 0,6 — and
-   * turns negative at the seventh. (#1227 says "crosses zero at the sixth";
-   * measured, six is the zero itself, which is the sharper fact and the one
-   * worth pinning: it is where the round stops being merely unenthusiastic.)
+   * A unanimous „nicht so" now crosses zero between the second and third voter
+   * (it was the sixth under the −5/1 curve, when „nicht so" was still worth 1):
+   * shrinkage reaches 1,8 at n = 8/3, so no integer group lands on it exactly.
    */
-  assert.equal(tileAffinity(1, 1), -0.2, 'one „gar nicht" must not reach RATED_FLOOR');
+  assert.equal(tileAffinity(1, 1), 0, 'one „gar nicht" lands on zero, nowhere near RATED_FLOOR');
+  assert.ok(tileAffinity(1, 2) < 0, 'and a second one makes it a negative verdict');
+  assert.ok(tileAffinity(1, 2) > RATED_FLOOR, 'without reaching the floor');
   const oneMeh = tileAffinity(2, 1);
-  assert.equal(oneMeh, 0.4);
+  assert.equal(oneMeh, 0.3);
   assert.ok(oneMeh > 0, 'one „nicht so" is not yet a negative verdict');
   assert.ok(oneMeh < A_NEUTRAL, 'but it already ranks below never having been rated');
-  assert.ok(tileAffinity(2, 5) > 0, 'five „nicht so" are still a positive signal');
-  assert.equal(tileAffinity(2, 6), 0, 'the sixth lands exactly on zero');
-  assert.ok(tileAffinity(2, 7) < 0, 'and the seventh turns the verdict negative');
+  assert.ok(tileAffinity(2, 2) > 0, 'two „nicht so" are still a positive signal');
+  assert.ok(tileAffinity(2, 3) < 0, 'and the third turns the verdict negative');
 });
 
 /* ------------------- the unrated rung fades with history -------------------- */
@@ -1675,12 +1679,6 @@ test('a retired game is FILTERED OUT, not merely outranked, when a slot is free'
 // A shelf where exactly two owned games carry the candidate's mechanics, rated
 // so that the SECOND is the loved one — the natural stable order names Owned 1
 // first, so only a real affinity ranking can produce the expected list.
-// g1 sits at affinity 0.5 and g2 at 2.0 — the two rungs both tests below are
-// written around. Since #893 that takes TWO voters on g1: the Spielwirbel-Score
-// curve is worth 1 at the 2-tile, so a lone 2 would score 1.0 -> affinity 0.0,
-// and a zero-affinity game contributes nothing at all rather than contributing
-// weakly, which would leave these tests with a single contributor and nothing
-// to order. `{2, 3}` scores (1 + 3) / 2 = 2.0, i.e. exactly the old rung.
 /*
  * Two rated games with a WIDE affinity gap, which is what both reason-ordering
  * tests below need in order to demonstrate anything.
@@ -1698,7 +1696,11 @@ const ratedPairRound = () => shelfRound({
     gameIds: ['g1', 'g2'],
     memberIds: ['m1', 'm2', 'm3', 'm4'],
     votes: Object.fromEntries(
-      ['m1', 'm2', 'm3', 'm4'].map((m) => [m, { g1: { rating: 2 }, g2: { rating: 5 } }])
+      // g1 is {3,3,3,2}, not a flat 2: since #1706 the 2-tile is worth 0, so a
+      // flat 2 shrinks to 1,5 and a NEGATIVE affinity, and a non-positive game
+      // is dropped from the contributors outright — these tests would be left
+      // with one name and nothing to order. {3,3,3,2} keeps it weakly positive.
+      ['m1', 'm2', 'm3', 'm4'].map((m) => [m, { g1: { rating: m === 'm4' ? 2 : 3 }, g2: { rating: 5 } }])
     ),
   }],
 });
@@ -1714,7 +1716,7 @@ test('reason contributors sharing the SAME count are ranked by affinity', () => 
 
   // Both share the one mechanic, so `shared` alone cannot order them and the
   // pre-fix code fell back to shelf order. Owned 2 is rated 5 by everyone
-  // (shrunk to 4,0 -> affinity 1.5), Owned 1 rated 2 (shrunk to 2,0 -> 0.5).
+  // (shrunk to 4,0 -> affinity 1.1), Owned 1 {3,3,3,2} (shrunk to 2,625 -> 0.41).
   assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);
 });
 
@@ -1727,8 +1729,8 @@ test('a reason contributor sharing FEWER attributes can outrank one sharing more
   const mechanics = out.recommendations
     .find((r) => r.externalId === 'cand').reasons.find((r) => r.term === 'mechanics');
 
-  // Owned 1 shares BOTH mechanics but is rated 2 -> 2 x 0.5 = 1.0; Owned 2
-  // shares one and is rated 5 -> 1 x 1.5 = 1.5. So the ranking is the PRODUCT,
+  // Owned 1 shares BOTH mechanics but sits at 0.41 -> 2 x 0.41 = 0.83; Owned 2
+  // shares one and is rated 5 -> 1 x 1.1 = 1.1. So the ranking is the PRODUCT,
   // not `shared` with affinity as a tie-break — under a tie-break the shared
   // count would decide first and Owned 1 would still lead.
   assert.deepEqual(mechanics.games, ['Owned 2', 'Owned 1']);

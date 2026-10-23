@@ -733,6 +733,14 @@ against a scale that a later issue replaced** — has one tell, and it is the
 tell that hid this one: *the calibration point the two scales share stays
 correct*, so the ladder reads fine at exactly the value a reader spot-checks.
 
+**#1706 moved the curve again, to `[-3, 0, 3, 4, 5]`, and the anchor held** —
+which is the point of anchoring at the neutral tile rather than at a tile value:
+„passt schon" is still 3, so the zero crossing stays there. What moved is the
+spec's numbers: twenty unanimous „nicht so" now reach `RATED_FLOOR` (the 2-tile
+is worth 0), one „gar nicht" on thin data lands exactly on 0, and the table
+above is history. Still above `A_RETIRED` in every cell, which the sweep in
+`test/recommend.test.js` asserts.
+
 Two corollaries when you next touch either end:
 
 - **A comment naming a scale is a claim about another file.** `avg` and

@@ -23,12 +23,12 @@ const { designMarkers } = require('../public/js/designs');
 const MEMBERS = ['Anna', 'Ben', 'Dana', 'Eli', 'Frida', 'Georg'].map((name, i) => ({ id: 'm' + i, name }));
 const GAMES = [{ id: 'g1', title: 'Catan' }, { id: 'g2', title: 'Azul' }];
 
-/* Table 1 seats m0/m1/m2 and played g1. Their tiles are 1, 4 and 3
-   (TILE_VALUE[2], [4], [3]), so the table's score is 8/3 = 2,7 — and each wrong
-   source of ratings prints something else:
+/* Table 1 seats m0/m1/m2 and played g1. Their tiles are 0, 4 and 3
+   (TILE_VALUE[2], [4], [3] since #1706), so the table's score is 7/3 = 2,3 —
+   and each wrong source of ratings prints something else:
 
      raw mean of 2/4/3, no curve ........ 3,0
-     everybody's votes, not the seated .. 3,2   (m3's 5 on g1 is there for this)
+     everybody's votes, not the seated .. 3,0   (m3's 5 on g1 is there for this)
      the CHILD's own votes (always {}) ... 3,0   (every seat NEUTRAL_RATING) */
 const VOTES = {
   m0: { g1: { rating: 2 } },
@@ -118,10 +118,10 @@ test('the played table is scored on its OWN seats, through the tile curve', asyn
 
   const pill = played.querySelector('.spotlight__pill');
   assert.ok(pill, 'a played table carries the score pill');
-  // 1 + 4 + 3 over three seats. Measured against each wrong source in turn: the
-  // raw mean and the child's own (empty) votes both print 3,0, everybody's
-  // votes print 3,2. All four values are distinct from this one.
-  assert.equal(pill.textContent.trim(), '2,7');
+  // 0 + 4 + 3 over three seats. Measured against each wrong source in turn: the
+  // raw mean, the child's own (empty) votes and everybody's votes all print 3,0
+  // under #1706's curve. Every wrong source is distinct from this one.
+  assert.equal(pill.textContent.trim(), '2,3');
 });
 
 test('an unplayed table wears the same card without the celebration', async (t) => {

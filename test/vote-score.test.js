@@ -7,7 +7,7 @@
    The calibration table below is the whole issue's acceptance evidence, and it
    is pinned row by row on purpose. The five values are expected to be retuned
    from real use — what must NOT move silently is the SHAPE: where the cliff
-   sits, and the three anchors that make the number readable next to the raw
+   sits, and the four anchors that make the number readable next to the raw
    mean everyone already knows. A retune that breaks an anchor is a different
    decision than a retune that shifts a magnitude, and only these rows can tell
    the two apart. */
@@ -21,12 +21,19 @@ const { TILE_VALUE, tileValue, scoreRatings, scoreTally } = require('../public/j
 // asserts what a user actually reads rather than a float nobody sees.
 const scoreOf = (ratings) => Number(scoreRatings(ratings).score.toFixed(1));
 
-test('the curve is five integers with the cliff between 1 and 2', () => {
+test('the curve is five integers with the cliff at the neutral face', () => {
   // Slot 0 is a `null` hole, not a tile: the array is indexed by the RATING, so
   // dropping the retirement rung (#909) had to leave the index alone or every
   // consumer — both backends, the SQL aggregate and six screens — would need
   // re-basing. `tileValue` and `scoreTally` skip it.
-  assert.deepEqual(TILE_VALUE, [null, -5, 1, 3, 4, 5]);
+  assert.deepEqual(TILE_VALUE, [null, -3, 0, 3, 4, 5]);
+  // The SHAPE (#1706): every step below „wäre okay" costs 3, every step above
+  // it earns 1 — so the cliff sits at 3, the same line table-split.js's
+  // VIOLATION_MAX = 2 draws when it counts a 1 and a 2 alike as unhappy.
+  assert.equal(TILE_VALUE[3] - TILE_VALUE[2], 3, 'eher nicht -> wäre okay');
+  assert.equal(TILE_VALUE[2] - TILE_VALUE[1], 3, 'gar nicht -> eher nicht');
+  assert.equal(TILE_VALUE[4] - TILE_VALUE[3], 1, 'wäre okay -> gern');
+  assert.equal(TILE_VALUE[5] - TILE_VALUE[4], 1, 'gern -> unbedingt');
   // Integers are load-bearing: scoreSplit compares sums lexicographically and
   // its determinism argument (table-split.js) rests on exact arithmetic.
   TILE_VALUE.slice(1).forEach((v) => assert.ok(Number.isInteger(v), `${v} is not an integer`));
@@ -53,14 +60,30 @@ const CALIBRATION = [
   { votes: [4, 3, 3, 3, 4], raw: 3.4, score: 3.4, why: 'nobody below 3 -> unchanged' },
   { votes: [5, 5, 5, 5, 5], raw: 5.0, score: 5.0, why: 'top anchor' },
   { votes: [3, 3, 3, 3, 3], raw: 3.0, score: 3.0, why: 'middle anchor' },
-  { votes: [5, 5, 5, 5, 1], raw: 4.2, score: 3.0, why: 'calibration anchor - ties all-3s' },
-  { votes: [4, 4, 4, 4, 1], raw: 3.4, score: 2.2, why: '' },
-  { votes: [5, 5, 4, 3, 1], raw: 3.6, score: 2.4, why: '' },
-  { votes: [4, 4, 4, 2, 2], raw: 3.2, score: 2.8, why: 'two sad faces, no veto' },
-  { votes: [2, 2, 2, 2, 2], raw: 2.0, score: 1.0, why: '' },
+  { votes: [5, 5, 5, 5, 1], raw: 4.2, score: 3.4, why: 'four 5s now outweigh one 1' },
+  { votes: [4, 4, 4, 4, 1], raw: 3.4, score: 2.6, why: '' },
+  { votes: [5, 5, 4, 3, 1], raw: 3.6, score: 2.8, why: '' },
+  { votes: [4, 4, 4, 2, 2], raw: 3.2, score: 2.4, why: 'two sad faces, no veto' },
+  { votes: [2, 2, 2, 2, 2], raw: 2.0, score: 0.0, why: '' },
 ];
 
-for (const row of CALIBRATION) {
+// ---- the four-player rows (#1706's acceptance table) ----
+
+const FOUR_PLAYERS = [
+  { votes: [5, 5, 5, 5], raw: 5.0, score: 5.0, why: 'top anchor' },
+  { votes: [3, 3, 3, 3], raw: 3.0, score: 3.0, why: 'middle anchor' },
+  { votes: [5, 5, 5, 1], raw: 4.0, score: 3.0, why: 'calibration anchor - ties all-3s' },
+  { votes: [5, 5, 4, 1], raw: 3.8, score: 2.8, why: '' },
+  { votes: [4, 4, 4, 1], raw: 3.3, score: 2.3, why: '' },
+  { votes: [5, 5, 1, 1], raw: 3.0, score: 1.0, why: '' },
+  { votes: [5, 5, 5, 2], raw: 4.3, score: 3.8, why: '' },
+  { votes: [4, 4, 4, 2], raw: 3.5, score: 3.0, why: '' },
+  { votes: [5, 5, 2, 2], raw: 3.5, score: 2.5, why: '' },
+  { votes: [4, 4, 2, 2], raw: 3.0, score: 2.0, why: '' },
+  { votes: [2, 2, 2, 2], raw: 2.0, score: 0.0, why: '' },
+];
+
+for (const row of [...CALIBRATION, ...FOUR_PLAYERS]) {
   const label = `{${row.votes.join(',')}} scores ${row.score}${row.why ? ` (${row.why})` : ''}`;
   test(label, () => {
     // The raw mean is asserted too: it is what the row is a claim ABOUT, and a
@@ -94,11 +117,38 @@ test('the ordering flip that motivates the issue', () => {
   );
 });
 
-test('four people at 5 exactly cancel one at 1', () => {
+test('three people at 5 exactly cancel one at 1', () => {
   // The single sentence carrying the whole value judgement. `f(1)` is the
-  // number to move if the family disagrees; this is the assertion that says so.
-  assert.equal(scoreRatings([5, 5, 5, 5, 1]).score, scoreRatings([3, 3, 3, 3, 3]).score);
+  // number to move if a group disagrees; this is the assertion that says so.
+  // In general f(1) = 3 - 2k for k fives cancelling one 1, and k = 3 (#1706).
+  assert.equal(scoreRatings([5, 5, 5, 1]).score, scoreRatings([3, 3, 3, 3]).score);
 });
+
+test('one 1 weighs exactly two 2s against the neutral face', () => {
+  // The shape as an equation: each step below „wäre okay" costs the same.
+  assert.equal(scoreRatings([1, 3]).score, scoreRatings([2, 2]).score);
+  assert.equal(TILE_VALUE[1] - TILE_VALUE[3], 2 * (TILE_VALUE[2] - TILE_VALUE[3]));
+});
+
+/* Tonight's decision between two games, four players each (#1706). The last two
+   rows are the intended crossover: two „eher nicht" now lose to one „gar nicht"
+   when the „gar nicht" game carries more enthusiasm, because they weigh the same. */
+const HEAD_TO_HEAD = [
+  { a: [5, 5, 5, 1], b: [3, 3, 3, 3], winner: 'tie' },
+  { a: [5, 5, 4, 1], b: [4, 4, 3, 3], winner: 'b' },
+  { a: [4, 4, 4, 2], b: [5, 5, 4, 1], winner: 'a' },
+  { a: [5, 5, 2, 2], b: [5, 5, 5, 1], winner: 'b' },
+  { a: [4, 4, 2, 2], b: [5, 5, 4, 1], winner: 'b' },
+];
+
+for (const row of HEAD_TO_HEAD) {
+  test(`{${row.a.join(',')}} against {${row.b.join(',')}}: ${row.winner}`, () => {
+    const a = scoreRatings(row.a).score;
+    const b = scoreRatings(row.b).score;
+    const got = a === b ? 'tie' : a > b ? 'a' : 'b';
+    assert.equal(got, row.winner, `${a} vs ${b}`);
+  });
+}
 
 // ---- the reason line's inputs ----
 
@@ -139,11 +189,12 @@ test('a rating off the scale is ignored rather than poisoning the score', () => 
 test('the veto scales with group size, by construction', () => {
   // Documented behaviour, not a defect: one crying face is 25% of a four-person
   // vote and 10% of a ten-person one. Against a clean all-3s alternative the
-  // veto wins at five voters or fewer and starts losing at six.
+  // veto holds at four voters or fewer and starts losing at five (#1706; it was
+  // five and six under the old curve).
   const allThrees = 3;
   const withVeto = (n) => scoreRatings([...Array(n - 1).fill(5), 1]).score;
-  assert.ok(withVeto(5) <= allThrees, 'at five voters the veto still wins');
-  assert.ok(withVeto(6) > allThrees, 'at six voters it starts losing');
+  assert.ok(withVeto(4) <= allThrees, 'at four voters the veto still holds');
+  assert.ok(withVeto(5) > allThrees, 'at five voters it starts losing');
 });
 
 /* ---- the histogram shape (#914) -------------------------------------------- */
@@ -212,13 +263,13 @@ test('#894 the worked rows: shrinkage alone, no plays', () => {
   // A staple with deep data barely moves.
   assert.equal(d1(shrinkScore(4.3, 40, PRIOR_DEFAULT)), 4.2);
   // The accepted interaction: a lone veto on thin data is softened, on purpose.
-  assert.equal(shelf([5, 5, 1], 0), 2.4);
+  assert.equal(shelf([5, 5, 1], 0), 2.7);
 });
 
 test('#894 the worked rows: plays lift the prior a game is shrunk toward', () => {
   assert.equal(shelf([5, 5, 5], 1), 4.2);
   assert.equal(d1(shelfScore(4.3, 40, 10)), 4.3);
-  assert.equal(shelf([5, 5, 1], 1), 2.8);
+  assert.equal(shelf([5, 5, 1], 1), 3.1);
   // The direct-pick round: never rated, played four times. Before #894 it was
   // unrankable; the lift is what gives it a number at all.
   assert.equal(shelf([], 4), 4.3);
@@ -246,9 +297,9 @@ test('#928 the worked rows: the field cards read at or above their own average',
    information at all. These rows are what separate "one person said no once"
    from "the round has decided". */
 test('#928 the worked rows: a veto still costs, and a real dud still sinks', () => {
-  assert.equal(shelf([1], 0), 1.4, 'one lone veto is visibly low, not floored');
-  assert.equal(shelf([2], 0), 2.6);
-  assert.equal(shelf([1, 1, 2, 1], 1), 0.1, 'a real dud stays at the bottom');
+  assert.equal(shelf([1], 0), 1.8, 'one lone veto is visibly low, not floored');
+  assert.equal(shelf([2], 0), 2.4);
+  assert.equal(shelf([1, 1, 2, 1], 1), 0.7, 'a real dud stays at the bottom');
   // And the ordering between them is the point, not the magnitudes.
   assert.ok(shelf([1, 1, 2, 1], 1) < shelf([1], 0));
 });

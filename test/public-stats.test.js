@@ -544,21 +544,27 @@ test('#928 deep evidence outranks a thin unanimous verdict — the podium is shr
   assert.equal(built.games.bestRated[0].score, 4.1);
 });
 
-/* Five vetoes score −5, and a negative on a public front door reads as a broken
+/* Five vetoes score −3, and a negative on a public front door reads as a broken
    app rather than as a bad game — every other surface clamps for display, so
    this one must too (game-stats.js's `displayScore`).
 
    Both games here are disliked, so the winner is genuinely below the floor: the
-   raw mean would publish 1,0 and the score publishes the clamped 0,0. Ranking
-   stays UNCLAMPED, which is what keeps `thing-bad` (−5) above `thing-worse`
-   (−6) — two floored games must still sort, or the podium would name whichever
-   the aggregate happened to reach first. */
+   raw mean would publish 1,1 and the score publishes the clamped 0,0. Ranking
+   stays UNCLAMPED, which is what keeps `thing-bad` (≈ −0,9) above `thing-worse`
+   (≈ −1,2) — two floored games must still sort, or the podium would name
+   whichever the aggregate happened to reach first.
+
+   NINE votes each, over three seeded rounds, because shrinkage needs the
+   evidence: since #1706 a „gar nicht" is worth −3, so three of them shrink to
+   +0,4 against the fixed prior of 3 and never reach the floor at all. It takes
+   more than four („gar nicht" outweighing SHRINK_M neutral votes) to go
+   negative. */
 test('a published score is clamped at the display floor, but the RANKING is not', async () => {
   openContentFloors();
   stubProvider();
-  await seedRatedPair({
-    a: 'thing-bad', b: 'thing-worse', votesA: [1, 1, 1], votesB: [0, 0, 0],
-  });
+  for (const votesA of [[1, 1, 1], [1, 1, 1], [1, 1, 2]]) {
+    await seedRatedPair({ a: 'thing-bad', b: 'thing-worse', votesA, votesB: [1, 1, 1] });
+  }
 
   const built = await rebuild();
   assert.equal(built.games.bestRated[0].title, 'Provider-Titel thing-bad', 'the floor decided the ranking');
@@ -586,7 +592,7 @@ test('retuning TILE_VALUE moves the published score — the curve is not restate
   const { TILE_VALUE } = require('../public/js/vote-score');
   const original = TILE_VALUE.slice();
 
-  assert.equal((await rebuild()).games.bestRated[0].score, 2.4, 'the shipped curve');
+  assert.equal((await rebuild()).games.bestRated[0].score, 2.7, 'the shipped curve');
 
   try {
     // Forgive the veto entirely: `{5,5,1}` becomes the raw mean again.
@@ -595,7 +601,7 @@ test('retuning TILE_VALUE moves the published score — the curve is not restate
   } finally {
     original.forEach((v, i) => { TILE_VALUE[i] = v; });
   }
-  assert.equal((await rebuild()).games.bestRated[0].score, 2.4, 'the retune leaked out of the case');
+  assert.equal((await rebuild()).games.bestRated[0].score, 2.7, 'the retune leaked out of the case');
 });
 
 /* THE PODIUM MAY NOT CROWN AN UNRATED GAME — a regression #928 introduced and

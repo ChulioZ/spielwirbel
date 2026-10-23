@@ -59,6 +59,20 @@ test('a genuinely disliked game still trips it, as it did on the raw mean', () =
   }
 });
 
+test('the curve keeps one dissenter above the bar at three voters or more', () => {
+  /* An ANCHOR about the two constants, not about membership (that goes through
+     the real call below): with exactly one 1 and everyone else at 3, the worst
+     a single dissenter can do is (TILE_VALUE[1] + 3·(n−1)) / n = 3 − 6/n under
+     #1706's curve, above LOW_SCORE for every n ≥ 3 — which is why #922's
+     lone-dissenter guard is gone. A retune that reopens the gap fails here
+     first, naming the group size. */
+  const { TILE_VALUE } = require('../public/js/vote-score');
+  for (let n = 3; n <= 12; n++) {
+    const worst = (TILE_VALUE[1] + TILE_VALUE[3] * (n - 1)) / n;
+    assert.ok(worst > LOW_SCORE, `n=${n}: {1, 3×${n - 1}} scores ${worst}`);
+  }
+});
+
 test('the demo seed arrives with nothing proposed for retirement, in EVERY round', () => {
   // The seeded rounds are the first thing a visitor sees (#427/#953). The
   // landing round carries exactly one „gar nicht" on purpose — enough to show
@@ -99,17 +113,17 @@ test('the demo seed arrives with nothing proposed for retirement, in EVERY round
    is a statement about the number and not about what the banner does with it.
    That proxy is what let the bug through: the threshold is fine, and the
    proposal is still wrong, because the veto curve is divided by the VOTER COUNT
-   — one dissenter weighs `-5/n`, decisive at n=3 and harmless at n=5. So these
+   — one dissenter weighed `-5/n` under #893's curve, decisive at n=3 and
+   harmless at n=5. So these
    run the real `gameStats` -> `retireRecommendations` path under jsdom
    (`.claude/rules/testing-views-under-jsdom.md`) and ask the question the user
    sees: does this game get proposed?
 
-   NOTE which sizes actually discriminate. The single-dissenter shapes flip only
-   at n=3 and n=4; at n=5 a lone dissenter can never reach `LOW_SCORE` in the
-   first place ({1,3,3,3,3} scores 1.4), so those rows are CONTROLS — green
-   before the guard and green after. They are here because group-size
-   independence is the claim, and a sweep that only covered the sizes which
-   break is how the n=4-only coverage came to miss n=3. */
+   Since #1706 EVERY single-dissenter row below is a control: the curve keeps a
+   lone dissenter above `LOW_SCORE` at any n ≥ 3 on its own, so the guard #922
+   added is gone (see the anchor above, and the exhaustive sweep below). The rows stay because
+   group-size independence is still the claim, now held by the curve, and this
+   is the decision path the user sees. */
 
 const { loadApp } = require('./support/dom');
 
@@ -146,18 +160,24 @@ test('one dissenter cannot propose a game the rest of the group is fine with', a
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   // Exactly one voter below 2, everyone else at 3+. Until #922 the rating
-  // branch proposed these anyway at the smaller group sizes.
-  for (const votes of [
-    [1, 4, 4], [1, 3, 3],              // n=3 — both flipped here
-    [1, 3, 3, 3],                       // n=4
-    [1, 4, 4, 4], [1, 4, 5, 3],         // n=4 controls (already fine)
-    [1, 3, 3, 3, 3],                    // n=5 controls (already fine)
-  ]) {
-    assert.equal(
-      proposed(dom, votes), false,
-      `{${votes.join(',')}} must not be proposed — one dissenter, everyone else content`
-    );
+  // branch proposed these anyway at the smaller group sizes; since #1706 the
+  // curve itself declines them.
+  // Swept EXHAUSTIVELY at n = 3..5 through the real call, because the guard
+  // that used to decline these is gone (#1706) and the curve alone now has to:
+  // every arrangement of one 1 with the rest drawn from {3, 4, 5}.
+  const rest = (k, acc) => (k === 0 ? [acc] : [3, 4, 5].flatMap((r) => rest(k - 1, acc.concat(r))));
+  let checked = 0;
+  for (let n = 3; n <= 5; n++) {
+    for (const others of rest(n - 1, [])) {
+      const votes = [1, ...others];
+      assert.equal(
+        proposed(dom, votes), false,
+        `{${votes.join(',')}} must not be proposed — one dissenter, everyone else content`
+      );
+      checked += 1;
+    }
   }
+  assert.equal(checked, 9 + 27 + 81, 'the sweep covered every single-dissenter shape');
 });
 
 test('a genuinely disliked game is still proposed — the guard narrows nothing', async (t) => {
@@ -165,8 +185,9 @@ test('a genuinely disliked game is still proposed — the guard narrows nothing'
   t.after(() => dom.close());
   // The anchor, then four shapes that are NOT a lone dissenter: either somebody
   // sits at 2 (so "everyone else is content" is false) or more than one voter
-  // is below 2.
-  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [1, 1, 4, 4]]) {
+  // is below 2. ({1,1,4,4} sat here until #1706 and now scores 0.5 — the
+  // intended effect of a softer veto, so it was swapped for {1,2,2,2}.)
+  for (const votes of [[2, 2, 2, 2], [1, 2, 3, 2], [1, 1, 3, 3], [1, 2, 2, 2]]) {
     assert.equal(
       proposed(dom, votes), true,
       `{${votes.join(',')}} must still be proposed`

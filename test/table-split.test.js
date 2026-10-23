@@ -90,11 +90,12 @@ test('the bottom two rungs are violations; a stale retire flag is ignored', () =
 test('the per-table numbers are over the SEATED only', () => {
   const votes = { a: { g: { rating: 5 } }, b: { g: { rating: 1 } }, c: { g: { rating: 1 } } };
   const fb = tableFeedback({ gameId: 'g', personIds: ['a', 'b'] }, votes, tileValue);
-  // Scored through the Spielwirbel-Score curve since #893, so this is 0 rather
-  // than the raw mean's 3: `a`'s 5 and `b`'s „gar nicht" cancel exactly, which
-  // is the same value judgement the results screen now applies. `lowest` stays
-  // the RAW rating, which is why it is still 1 and not tileValue(1).
-  assert.equal(fb.avg, 0);
+  // Scored through the Spielwirbel-Score curve since #893, so this is
+  // (5 + −3) / 2 = 1 rather than the raw mean's 3 — the same value judgement the
+  // results screen applies (it was 0 under the −5 curve, until #1706). Counting
+  // the unseated `c` would give −1/3. `lowest` stays the RAW rating, which is
+  // why it is still 1 and not tileValue(1).
+  assert.equal(fb.avg, 1);
   assert.equal(fb.lowest, 1);
   assert.deepEqual(fb.violations, ['b'], 'c never sat down, so c is not this table\'s problem');
 });

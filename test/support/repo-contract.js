@@ -6636,7 +6636,8 @@ module.exports = function repoContract(repo) {
          computed from these buckets in JS (lib/public-stats.js) precisely so the
          curve is not restated in SQL, so a drifted bucket is a wrong number on
          the logged-out landing page and nowhere else. */
-      assert.equal(scoreTally(row.ratings.tiles).score, (1 + 4 + 5) / 3);
+      // The 2 is worth 0 on the curve since #1706 (it was 1).
+      assert.equal(scoreTally(row.ratings.tiles).score, (0 + 4 + 5) / 3);
     });
 
     await t.test('a vote naming a game in ANOTHER round is ignored, not credited', async () => {

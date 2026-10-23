@@ -146,12 +146,13 @@ test('moving a party rescores both tables live and names the unhappy seating', a
   assert.deepEqual(seatsOf(a), ['Anna', 'Dana']);
   assert.deepEqual(seatsOf(b), ['Eli', 'Frida', 'Georg', 'Ben']);
   // 4+4+4+1 over four people. The raw mean is 3,25; the Spielwirbel-Score is
-  // (4+4+4−5)/4 = 1,75, because Ben's „gar nicht" now weighs on the table the
+  // (4+4+4−3)/4 = 2,25 (1,75 under the −5 curve, until #1706), because Ben's
+  // „gar nicht" now weighs on the table the
   // way it already weighed on the split objective that proposed it (#893).
   // This is the whole point of the change, seen from the builder screen: the
   // number the group reads while dragging people around finally agrees that
   // one person at a game they refuse is not a table averaging a 3.
-  assert.match(metaOf(b), /(^|\s)1,8/);
+  assert.match(metaOf(b), /(^|\s)2,3/);
   assertRatingMark(lowOf(b), 'ti-mood-cry', 'gar nicht', 'lowest after Ben moved');
   assert.match(dom.app.querySelector('.tables-notice').textContent, /Ben.*Azul/);
   assert.ok(b.querySelector('.tables-seat.is-hurt'), 'the chip to move is findable without reading the list');
