@@ -8,6 +8,8 @@ paths:
   - "lib/web-manifest.js"
   - "scripts/render-design-marks.js"
   - "test/design-marks.test.js"
+  - "test/face-marks-heads.test.js"
+  - "public/admin.html"
 ---
 # A design's marks: three readers, one registry row — and the static head belongs to the FACE
 
@@ -33,6 +35,15 @@ the standalone pages' icons. The bare manifest URL answers with the face's
 derived manifest; Klassisch's static file answers `?design=klassisch`. That is the whole point; don't
 "fix" the test by reading the head from the registry at runtime (scrapers run no
 script, `.claude/rules/link-preview-card.md` §1).
+
+**Every OTHER head carries the face's marks too, and so do the root icon paths**
+(#1703) — `login.html`, `kontakt.html`, `admin.html` (favicon only), `/faq`,
+`/guide` and the legal pages, plus `/favicon.ico` and `/apple-touch-icon(-precomposed).png`,
+which `lib/app.js` answers with the face's PNGs ahead of every gate instead of
+letting the SPA fallback serve them HTML. The server-rendered heads interpolate
+`designMarks(FACE_DESIGN)`; the static ones hard-code it.
+`test/face-marks-heads.test.js` walks them all — the flip left four of them on
+Klassisch's orange die because only `index.html` was pinned.
 
 ## 2. The account's design reaches the manifest through the URL, never a cookie
 

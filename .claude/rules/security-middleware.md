@@ -88,7 +88,8 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   is the whole lesson.** `assetPathSet(ASSET_DIR)` walks the asset tree once per
   `createApp()`; the skip is `assetPaths.has(req.path)` — plus, since #1171,
   `guidePaths.has(req.path)`, the nine guide pages' exact paths (`GUIDE_PATHS`,
-  `lib/guide.js`), for GET/HEAD only. The obvious
+  `lib/guide.js`), and since #1703 the three root icon paths (`rootIconPaths()`),
+  for GET/HEAD only. The obvious
   implementation — "does the path end in `.js`/`.css`/`.woff2`" — is wrong in a
   way that is *worse than the bug it fixes*, and nothing about it looks wrong:
 
