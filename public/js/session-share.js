@@ -46,6 +46,71 @@ const SHARE_ENDING_TITLES = {
   ongoing: 'result.titleOngoing',
 };
 
+// The one-line account of how a night ended without a winner (#1038), for a
+// table of a split evening — the `line` half of `ENDING_LABELS`, duplicated for
+// the same reason as the titles above and pinned to it by the same spec.
+const SHARE_ENDING_LINES = {
+  lost: 'result.endedLost',
+  noWinner: 'result.endedNoWinner',
+  ongoing: 'result.endedOngoing',
+};
+
+/* Which of the two messages this is (#1726). Before a game is chosen the group
+   is still deciding, so the share is the vote ranking; once one is chosen —
+   played or about to be — it is only about that game, and the ranking that led
+   to it is dropped. A cancelled session never played one, so it keeps the
+   ranking; a split evening is about its tables, which is an outcome. */
+function shareStage(result) {
+  if (result.outcome === 'split') return 'outcome';
+  return result.playedTitle && !result.cancelled ? 'outcome' : 'ranking';
+}
+
+// How a game was rated, as counts per vote-card value, best first:
+// „3× Unbedingt · 1× Gern". `dist` is [{ n, count, word }], the word being the
+// one the voter pressed (voteSaidWord) — resolved by the caller, which owns the
+// design. Counts only: nothing here can say who gave which rating, because
+// nothing here knows (the issue's standing constraint).
+function shareDistLine(dist, t) {
+  return (dist || [])
+    .filter((d) => d.count > 0)
+    .sort((a, b) => b.n - a.n)
+    .map((d) => t('share.dist', { count: d.count, word: d.word }))
+    .join(' · ');
+}
+
+// The points, best first, as „Anna: 42" — `points` is
+// [{ name, text, winner, automa }], `text` already formatted by the caller
+// (fmtCount). The automa (#1672) closes the list, and without points it is
+// named alone: it is what the table played against, as the screen lists it.
+function sharePointLines(points, t) {
+  return (points || []).map((pt) =>
+    (pt.text ? t('points.top', { name: pt.name, points: pt.text }) : pt.name));
+}
+
+// The points a card has room for: the best `n`, but the automa always stays if
+// it is in the list, since it is what the people's numbers are measured against.
+function sharePointsFit(points, n) {
+  const list = points || [];
+  if (list.length <= n) return list;
+  if (n <= 0) return [];
+  const automa = list.find((pt) => pt.automa);
+  if (!automa) return list.slice(0, n);
+  return list.filter((pt) => !pt.automa).slice(0, n - 1).concat([automa]);
+}
+
+// One table of a split evening, in a line: who won (or how it ended), then the
+// points. '' when the table recorded nothing, so a caller prints no empty line.
+function shareTableResult(tb, t, join, tn) {
+  const parts = [];
+  const names = tb.winnerNames || [];
+  if (names.length) {
+    parts.push(tn(names.length, 'chronik.wonOne', 'chronik.won', { names: (join || ((xs) => xs.join(', ')))(names) }));
+  } else if (SHARE_ENDING_LINES[tb.ending]) {
+    parts.push(t(SHARE_ENDING_LINES[tb.ending]));
+  }
+  return parts.concat(sharePointLines(tb.points, t)).join(' · ');
+}
+
 // One line per rated game, in the screen's order: "🥇 Catan · Ø 4.5".
 //
 // Unrated games are skipped rather than rendered as the screen's "–": a bare
@@ -101,6 +166,10 @@ function shareHeadline(result, t, join, tn) {
   if (result.outcome === 'split') return t('result.titleSplit');
   if (result.cancelled) return t('result.titleCancelled');
   if (!result.playedTitle) return null;
+  // Chosen but not played yet (#1726): the screen still reads „Ergebnis", and
+  // „wurde gespielt" would claim an evening that has not happened. An absent
+  // flag reads as finished, so a caller predating it keeps its sentence.
+  if (result.finished === false) return t('share.chosen', { game: result.playedTitle });
   const names = result.winnerNames || [];
   if (!names.length) {
     // How it ended when nobody won (#1038). The key is passed IN, already
@@ -117,8 +186,10 @@ function shareHeadline(result, t, join, tn) {
 }
 
 // The full message. `result` is
-// { roundName, when, outcome, cancelled, playedTitle, winnerNames, ending,
-//   tables: [{ title, names }], rows: [{ title, score, count, place }] }.
+// { roundName, when, outcome, cancelled, finished, playedTitle, winnerNames,
+//   ending, points: [{ name, text, winner, automa }],
+//   tables: [{ title, names, winnerNames, ending, points }],
+//   rows: [{ title, score, count, place, dist: [{ n, count, word }] }] }.
 // `score` is the DISPLAYED Spielwirbel-Score (#893), already clamped by the
 // caller — this text lands in a group chat where non-users see it and there is
 // no UI around it, so `share.row` spells the name out in full rather than
@@ -132,11 +203,25 @@ function sessionShareText(result, t, join, tn, fmtAvg) {
   // session, so nothing else gains a block.
   const tables = result.tables || [];
   if (tables.length) {
-    blocks.push([t('share.tables')].concat(
-      tables.map((tb) => t('share.table', { title: tb.title, names: tb.names }))
-    ).join('\n'));
+    blocks.push([t('share.tables')].concat(...tables.map((tb) => {
+      const said = shareTableResult(tb, t, join, tn);
+      const line = t('share.table', { title: tb.title, names: tb.names });
+      return said ? [line, '  ' + said] : [line];
+    })).join('\n'));
   }
-  const lines = shareRatingLines(result.rows || [], t, fmtAvg);
+  // Once a game is chosen the message is about that game only (#1726): its
+  // points, if anyone counted, and no ranking.
+  if (shareStage(result) === 'outcome') {
+    const points = sharePointLines(result.points, t);
+    if (points.length) blocks.push([t('share.points')].concat(points).join('\n'));
+    return blocks.join('\n\n');
+  }
+  // Before a pick each game carries how it was rated, under its line.
+  const rated = (result.rows || []).filter((r) => r.place && r.count);
+  const lines = shareRatingLines(rated, t, fmtAvg).flatMap((line, i) => {
+    const dist = shareDistLine(rated[i].dist, t);
+    return dist ? [line, '  ' + dist] : [line];
+  });
   // A cancelled session still carries ratings — the group rated the games, they
   // just did not play one — so the block is dropped only when there is nothing
   // rated at all, never because of the session's state.
@@ -147,5 +232,6 @@ function sessionShareText(result, t, join, tn, fmtAvg) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     sessionShareText, shareRatingLines, shareHeadline, SHARE_MEDALS, SHARE_TROPHY, SHARE_ENDING_TITLES,
+    SHARE_ENDING_LINES, shareStage, shareDistLine, sharePointLines, sharePointsFit, shareTableResult,
   };
 }

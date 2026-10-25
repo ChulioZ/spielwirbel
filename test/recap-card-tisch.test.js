@@ -141,11 +141,16 @@ test('session spec: the screen’s own sentence, winners in gold, the Tafel’s 
     assert.equal(s.kicker, 'Donnerstagsrunde · 20.09.2026');
     assert.equal(s.feature.big, '4,8', 'the played game’s score, in the reader’s notation');
     assert.match(s.feature.sub, /Spielwirbel-Score · 5 Wertungen/);
-    assert.deepEqual(s.rows.map((r) => r.title), ['Nordlichter', 'Kartographen', 'Zugvögel'],
-      'at most three rows, unrated ones never');
-    assert.deepEqual(s.rows.map((r) => r.stop), ['5', '4', 'veto']);
-    assert.deepEqual(s.rows.map((r) => r.gold), [true, false, false]);
+    assert.deepEqual(s.rows, [], 'once a game is played the Tafel is dropped (#1726)');
     assert.equal(s.people.length, 3);
+
+    // Before the pick: the Tafel's rated rows, with their distributions.
+    const r = spec(dom, 'session', { ...SESSION, playedTitle: null, winnerNames: [] });
+    assert.equal(r.feature, null);
+    assert.deepEqual(r.rows.map((x) => x.title), ['Nordlichter', 'Kartographen', 'Zugvögel'],
+      'at most three rows, unrated ones never');
+    assert.deepEqual(r.rows.map((x) => x.stop), ['5', '4', 'veto']);
+    assert.deepEqual(r.rows.map((x) => x.gold), [true, false, false]);
   } finally { dom.close(); }
 });
 
@@ -175,7 +180,9 @@ test('split and period specs carry what their screens share, and nothing new', (
 test('drawing: no pattern, no icon font, and the only image is the same-origin badge', async () => {
   const dom = boot();
   try {
-    for (const [kind, model] of [['session', SESSION], ['split', SPLIT], ['period', PERIOD]]) {
+    const ranking = { ...SESSION, playedTitle: null, winnerNames: [] };
+    const points = { ...SESSION, finished: true, points: [{ name: 'Jonas', text: '42', winner: true }, { name: 'Automa', text: '3', automa: true }] };
+    for (const [kind, model] of [['session', SESSION], ['session', ranking], ['session', points], ['split', SPLIT], ['period', PERIOD]]) {
       dom.run('__calls.length = 0; __canvases.length = 0');
       dom.context.__model = model;
       await dom.run(`tischCardBlob(${JSON.stringify(kind)}, __model)`);

@@ -760,10 +760,15 @@ What the app does, in detail. For a short overview see the
   other corrections sit behind „Mehr" — and from 1280px it lays out in two
   columns, the chosen game and those actions beside the ranking. „Teilen" hands
   the result to the device's share sheet as a message **and an image** in every
-  design — the round, the date, the screen's own sentence, the played game's
-  score and who brings the box, and the ranking with its ties, drawn on the
-  device (no cover art, no per-person votes); where the browser cannot share
-  files, the message goes alone (issue #1628). A single game
+  design — the round, the date and the screen's own sentence, then by stage
+  (issue #1726): before a game is chosen, the ranking with its ties and each
+  game's rating distribution (how many votes per vote-card value); once one is
+  chosen, only that game with its score and who brings the box, plus the
+  winners or the ending and every player's points when they were counted
+  (teams and the automa as the result lists them); for a split evening, each
+  table's game and that table's result. Drawn on the device (no cover art, no
+  per-person votes); where the browser cannot share files, the message goes
+  alone (issue #1628). A single game
   can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks
   **„Mehrere Tische"** before the draw. The pool then admits any game that seats

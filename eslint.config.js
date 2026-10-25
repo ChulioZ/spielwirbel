@@ -402,6 +402,7 @@ const frontendGlobals = {
   RESULT_CARD_GAP: 'readonly', RESULT_CARD_ROW_H: 'readonly', RESULT_CARD_FOOT_H: 'readonly',
   RESULT_CARD_LINE_H: 'readonly', RESULT_CARD_MAX_ROWS: 'readonly', RESULT_CARD_MAX_LINES: 'readonly',
   resultCardBringers: 'readonly', resultCardSentence: 'readonly', resultCardSpec: 'readonly',
+  drawShareDist: 'readonly', drawSharePoints: 'readonly', shareCardContent: 'readonly', shareCardTables: 'readonly',
   resultCardWrap: 'readonly', resultPlayedH: 'readonly', resultRowsH: 'readonly',
   resultCardHeight: 'readonly', resultPill: 'readonly', drawResultPlayed: 'readonly',
   drawResultRows: 'readonly', drawResultCard: 'readonly', resultCardBlob: 'readonly',
@@ -418,6 +419,8 @@ const frontendGlobals = {
   accountRecapGame: 'readonly', accountRecapByTitle: 'readonly',
   // session-share.js (issue #526) — internal helpers listed for the same reason.
   sessionShareText: 'readonly', shareRatingLines: 'readonly', shareHeadline: 'readonly',
+  shareStage: 'readonly', shareDistLine: 'readonly', sharePointLines: 'readonly', sharePointsFit: 'readonly',
+  shareTableResult: 'readonly',
   SHARE_MEDALS: 'readonly', SHARE_TROPHY: 'readonly', SHARE_ENDING_TITLES: 'readonly',
   // bgstats.js (issue #485) — internal helpers listed for the same reason.
   BGSTATS_SOURCE: 'readonly', BGSTATS_CREATE_PLAY: 'readonly', BGSTATS_URL_MAX: 'readonly',
@@ -613,7 +616,7 @@ const frontendGlobals = {
   // views-member-points.js (#1631)
   memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
-  renderSessionPoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
+  renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
   importScore: 'readonly', importDayInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',

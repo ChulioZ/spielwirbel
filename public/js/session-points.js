@@ -170,6 +170,31 @@ function renderSessionPoints(round, session) {
     </div>`);
 }
 
+// The points block as plain data, for the share (#1726): the same lines in the
+// same order as renderSessionPoints, the automa last, each marked as a winner
+// when anyone in its party won. [] when nothing was counted.
+function sessionSharePoints(round, session, winnerIds) {
+  const won = new Set(winnerIds || []);
+  const parties = new Map(sessionParties(round, session).map((p) => [p.id, p]));
+  const lines = sessionPointLines(round, session).map((l) => {
+    const party = parties.get(l.party.id) || l.party;
+    return {
+      name: party.name || '',
+      // Each person's own label, for a card that prints first names only
+      // (Ocean, O8.3) and so cannot cut a team's joined name apart.
+      members: (party.people || []).map(personLabel),
+      text: fmtCount(l.points),
+      winner: (party.people || []).some((p) => won.has(p.id)),
+      automa: false,
+    };
+  });
+  const automa = parseAutoma(session.automa);
+  if (automa) {
+    lines.push({ name: automa.name, text: Number.isInteger(automa.points) ? fmtCount(automa.points) : '', winner: false, automa: true });
+  }
+  return lines;
+}
+
 // The best line of one scored play, for the game page's play history —
 // „Anna 42". The TOP score rather than the viewer's own: a stamp is the same
 // for everyone who opens the page, and the viewer may hold no seat at all.

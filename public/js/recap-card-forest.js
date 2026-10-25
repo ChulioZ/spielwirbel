@@ -162,7 +162,12 @@ function forestCardSpec(kind, model) {
       kind, kicker, cover: false,
       headline: [{ text: t('result.titleSplit'), gold: false }],
       winner: null,
-      rows: (model.tables || []).slice(0, FOREST_CARD_ROWS).map((tb, i) => ({ place: String(i + 1), title: tb.title || '', score: '', stop: null })),
+      // Each table with its result line under the game (#1726) — who won, not
+      // who sat there, which this card never names.
+      rows: shareCardTables(model).slice(0, FOREST_CARD_ROWS).map((tb, i) => ({
+        place: String(i + 1), title: tb.title || '', score: '', stop: null, sub: tb.said,
+      })),
+      points: [],
       factLine: '',
     };
   }
@@ -191,8 +196,9 @@ function forestCardSpec(kind, model) {
     if (headline.startsWith(SHARE_TROPHY)) headline = headline.slice(SHARE_TROPHY.length).trimStart();
   }
 
-  // Who brings the box (#1628) — the results screen's „Gehört Anna". The card
-  // is a fixed 675 with the Tafel already filling it, so the line costs a row.
+  // Who brings the box (#1628) — the results screen's „Gehört Anna". Only a
+  // chosen game has one, and then the Tafel is gone (#1726), so the line no
+  // longer costs a row.
   const bringers = model.playedTitle && !model.cancelled ? resultCardBringers(model) : '';
   return {
     kind: 'session',
@@ -200,10 +206,12 @@ function forestCardSpec(kind, model) {
     cover: !!model.playedTitle && !model.cancelled,
     headline: [{ text: headline, gold: false }],
     winner,
-    rows: (model.rows || []).filter((r) => r.place && r.count)
-      .slice(0, FOREST_CARD_ROWS - (bringers ? 1 : 0)).map((r) => ({
-        place: String(r.place), title: r.title, score: fmtAvg(r.score), stop: rampStop(r.score),
+    // By stage (#1726): the Tafel with each game's distribution before a
+    // pick; after it the played game alone, and its points.
+    rows: shareCardContent(model).rows.slice(0, FOREST_CARD_ROWS).map((r) => ({
+        place: String(r.place), title: r.title, score: fmtAvg(r.score), stop: rampStop(r.score), dist: r.dist || [],
       })),
+    points: shareCardContent(model).points,
     factLine: model.factLine || '',
     bringers,
   };
@@ -395,20 +403,41 @@ function forestWinner(ctx, winner, y, p) {
 function forestRows(ctx, rows, y, p) {
   const pad = FOREST_CARD_PAD;
   const inner = FOREST_CARD_W - pad * 2;
-  const h = 30;
+  // A second line — the distribution strip or a table's result (#1726) —
+  // makes the row taller; the first line keeps its 30px.
+  const extra = rows.some((r) => r.sub) ? 16 : rows.some((r) => r.dist && r.dist.length) ? 6 : 0;
+  const h = 30 + extra;
   rows.forEach((r, i) => {
     const top = y + i * h;
     ctx.fillStyle = p.line;
     ctx.fillRect(pad, top, inner, 1);
-    const mid = top + h / 2 + 1;
+    const mid = top + 15 + 1;
     const pillW = forestScorePill(ctx, r.score, r.stop, pad + inner, mid, 15, p);
     ctx.fillStyle = p.ink;
     ctx.font = forestCardFont(800, 15);
     ctx.fillText(r.place, pad, mid + 5);
     ctx.font = forestCardFont(700, 15);
-    ctx.fillText(recapFit(ctx, r.title, inner - 28 - (pillW ? pillW + 10 : 0)), pad + 28, mid + 5);
+    const textW = inner - 28 - (pillW ? pillW + 10 : 0);
+    ctx.fillText(recapFit(ctx, r.title, textW), pad + 28, mid + 5);
+    drawShareDist(ctx, r.dist, pad + 28, mid + 10, Math.min(textW, 200), 5, (n) => p[`score-${n}`]);
+    if (r.sub) {
+      ctx.fillStyle = p['ink-soft'];
+      ctx.font = forestCardFont(700, 13);
+      ctx.fillText(recapFit(ctx, r.sub, inner - 28), pad + 28, mid + 22);
+    }
   });
   return rows.length * h;
+}
+
+// The points (#1726): hairlines like the Tafel's, the winner crowned in gold-
+// deep, as many as fit above the lines under them and the foot.
+function forestPoints(ctx, points, y, below, p) {
+  const pad = FOREST_CARD_PAD;
+  const fit = sharePointsFit(points, Math.floor((FOREST_CARD_H - 56 - below - y) / 28));
+  return drawSharePoints(ctx, fit, {
+    x: pad, y, w: FOREST_CARD_W - pad * 2, rowH: 28, size: 15,
+    font: (weight, size) => forestCardFont(weight, size), ink: p.ink, soft: p['ink-soft'], accent: p['gold-deep'], rule: p.line,
+  });
 }
 
 // The period's facts: up to three tiles to a row on the page ground — a Young
@@ -518,6 +547,7 @@ function drawForestCard(ctx, spec, badge) {
     if (spec.winner) y += forestWinner(ctx, spec.winner, y, p) + 6;
     y += forestRows(ctx, spec.rows, y, p) + 4;
     const lines = [spec.factLine, spec.bringers].filter(Boolean);
+    if (spec.points.length) y += forestPoints(ctx, spec.points, y, lines.length * 20 + 8, p) + 4;
     if (lines.length) {
       ctx.fillStyle = p.line;
       ctx.fillRect(FOREST_CARD_PAD, y, W - FOREST_CARD_PAD * 2, 1);

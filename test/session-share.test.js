@@ -57,12 +57,11 @@ const model = (over = {}) => ({
   ...over,
 });
 
-test('the summary carries the headline and every rated game, in screen order', () => {
-  const text = sessionShareText(model(), translator('de'));
+test('before a pick the summary carries every rated game, in screen order', () => {
+  const text = sessionShareText(model({ playedTitle: null, winnerNames: [] }), translator('de'));
   assert.equal(
     text,
     'Donnerstagsrunde · 29.07.2026, 20:00\n' +
-      '🏆 „Catan“ wurde gespielt. Anna hat gewonnen!\n' +
       '\n' +
       'Bewertungen:\n' +
       '🥇 Catan · Spielwirbel-Score 4,5\n' +
@@ -71,10 +70,19 @@ test('the summary carries the headline and every rated game, in screen order', (
   );
 });
 
+test('once a game is played the summary is about that game alone — no ranking (#1726)', () => {
+  const text = sessionShareText(model(), translator('de'));
+  assert.equal(
+    text,
+    'Donnerstagsrunde · 29.07.2026, 20:00\n' +
+      '🏆 „Catan“ wurde gespielt. Anna hat gewonnen!'
+  );
+});
+
 test('the summary is localized, not German with the numbers swapped', () => {
   const text = sessionShareText(model(), translator('en'));
   assert.match(text, /“Catan” was played\. Anna won!/);
-  assert.match(text, /^Ratings:$/m);
+  assert.match(sessionShareText(model({ playedTitle: null }), translator('en')), /^Ratings:$/m);
   // No stray German copy leaked through a missing English key. `t()` falls back
   // to English, so the reverse direction cannot be checked this way — but this
   // is the direction a half-added key actually fails in.
@@ -87,7 +95,7 @@ test('several winners take the plural headline; none takes the played-only one',
     sessionShareText(model({ winnerNames: ['Anna', 'Ben'] }), de, joinNames('de')),
     /Anna und Ben haben gewonnen!/
   );
-  assert.match(sessionShareText(model({ winnerNames: [] }), de), /„Catan“ wurde gespielt\.\n/);
+  assert.match(sessionShareText(model({ winnerNames: [] }), de), /„Catan“ wurde gespielt\.$/);
   assert.ok(!/gewonnen/.test(sessionShareText(model({ winnerNames: [] }), de)));
 });
 
@@ -123,7 +131,7 @@ test('a session with no outcome yet shares the ratings alone — no empty headli
 
 test('unrated games are omitted rather than shared as a bare dash', () => {
   const text = sessionShareText(
-    model({ rows: [...model().rows, { title: 'Ungespielt', score: 0, count: 0, place: null }] }),
+    model({ playedTitle: null, rows: [...model().rows, { title: 'Ungespielt', score: 0, count: 0, place: null }] }),
     translator('de')
   );
   assert.ok(!/Ungespielt/.test(text), text);
@@ -142,6 +150,7 @@ test('tied games share a place number, exactly as the screen prints it', () => {
   // computePlaces gives "1, 2, 2, 4"; the summary must not renumber them.
   const text = sessionShareText(
     model({
+      playedTitle: null,
       rows: [
         { title: 'Catan', score: 4.5, count: 3, place: 1 },
         { title: 'Azul', score: 4, count: 3, place: 2 },
@@ -158,6 +167,7 @@ test('places past bronze fall back to a plain number, as the screen does', () =>
   // bronze), so a fourth game must not invent a medal or drop out of the list.
   const text = sessionShareText(
     model({
+      playedTitle: null,
       rows: [
         { title: 'Catan', score: 4.5, count: 3, place: 1 },
         { title: 'Azul', score: 4, count: 3, place: 2 },
@@ -255,4 +265,92 @@ test('SHARE_ENDING_TITLES names exactly the endings the app can store', () => {
   ENDINGS.forEach((e) => {
     assert.equal(SHARE_ENDING_TITLES[e], ENDING_LABELS[e].title, `${e} shares one headline key`);
   });
+});
+
+test('SHARE_ENDING_LINES matches ENDING_LABELS\' line keys', () => {
+  const { ENDINGS, ENDING_LABELS } = require('../public/js/session-outcome');
+  const { SHARE_ENDING_LINES } = shareModule;
+  assert.deepEqual(Object.keys(SHARE_ENDING_LINES).sort(), [...ENDINGS].sort());
+  ENDINGS.forEach((e) => assert.equal(SHARE_ENDING_LINES[e], ENDING_LABELS[e].line, e));
+});
+
+// ---- the share follows the session's stage (#1726) ---------------------------
+
+const dist = (...counts) => counts.map((count, i) => ({ n: i + 1, count, word: `w${i + 1}` }));
+
+test('shareStage: ranking until a game is chosen, then the outcome', () => {
+  const { shareStage } = shareModule;
+  assert.equal(shareStage(model({ playedTitle: null })), 'ranking');
+  assert.equal(shareStage(model({ playedTitle: null, cancelled: true })), 'ranking');
+  assert.equal(shareStage(model({ cancelled: true })), 'ranking', 'a cancelled night played nothing');
+  assert.equal(shareStage(model()), 'outcome');
+  assert.equal(shareStage(model({ finished: false })), 'outcome', 'chosen, not played yet');
+  assert.equal(shareStage({ outcome: 'split', tables: [] }), 'outcome');
+});
+
+test('before a pick each game carries its rating distribution, best value first, zeros dropped', () => {
+  const rows = [
+    { title: 'Catan', score: 4.5, count: 4, place: 1, dist: dist(0, 0, 0, 1, 3) },
+    { title: 'Azul', score: 3, count: 2, place: 2, dist: dist(1, 0, 0, 0, 1) },
+  ];
+  const text = sessionShareText(model({ playedTitle: null, rows }), translator('de'));
+  assert.ok(text.includes('🥇 Catan · Spielwirbel-Score 4,5\n  3× w5 · 1× w4\n🥈 Azul'), text);
+  assert.ok(text.includes('🥈 Azul · Spielwirbel-Score 3,0\n  1× w5 · 1× w1'), text);
+});
+
+test('the distribution is counts and words only — never a voter', () => {
+  const { shareDistLine } = shareModule;
+  const line = shareDistLine(dist(2, 0, 1, 0, 0), translator('en'));
+  assert.equal(line, '1× w3 · 2× w1');
+  assert.equal(shareDistLine([], translator('en')), '');
+  assert.equal(shareDistLine(undefined, translator('en')), '');
+});
+
+test('a game chosen but not played yet is named alone, without „wurde gespielt"', () => {
+  const de = translator('de');
+  const text = sessionShareText(model({ finished: false, winnerNames: [] }), de);
+  assert.equal(text, 'Donnerstagsrunde · 29.07.2026, 20:00\n' + de('share.chosen', { game: 'Catan' }));
+  assert.ok(!/wurde gespielt|Bewertungen/.test(text), text);
+});
+
+test('a finished session shares its points best first, the automa closing the list', () => {
+  const points = [
+    { name: 'Anna', text: '42', winner: true },
+    { name: 'Ben und Clara', text: '37', winner: false },
+    { name: 'Automa', text: '30', automa: true },
+  ];
+  const text = sessionShareText(model({ points }), translator('de'));
+  assert.ok(text.endsWith('\n\nPunkte:\nAnna: 42\nBen und Clara: 37\nAutoma: 30'), text);
+  // An automa with no points is still named — it is what the table played against.
+  const bare = sessionShareText(model({ points: [{ name: 'Automa', text: '', automa: true }] }), translator('de'));
+  assert.ok(bare.endsWith('Punkte:\nAutoma'), bare);
+});
+
+test('without points the finished summary has no points block at all', () => {
+  const text = sessionShareText(model({ points: [] }), translator('en'));
+  assert.ok(!/Points/.test(text), text);
+});
+
+test('a split evening gives each table its result: the winner or ending, then points', () => {
+  const de = translator('de');
+  const text = sessionShareText({
+    roundName: 'R', when: 'heute', outcome: 'split',
+    tables: [
+      { title: 'Catan', names: 'Anna, Ben', winnerNames: ['Anna'], points: [{ name: 'Anna', text: '10' }, { name: 'Ben', text: '8' }] },
+      { title: 'Azul', names: 'Eli, Frida', winnerNames: [], ending: 'lost', points: [] },
+      { title: 'Splendor', names: 'Georg' },
+    ],
+  }, de, joinNames('de'));
+  assert.ok(text.includes('Catan: Anna, Ben\n  Anna hat gewonnen · Anna: 10 · Ben: 8\n'), text);
+  assert.ok(text.includes('Azul: Eli, Frida\n  ' + de('result.endedLost') + '\n'), text);
+  assert.ok(text.endsWith('Splendor: Georg'), 'a table with nothing recorded gets no empty line');
+});
+
+test('sharePointsFit keeps the best n and never drops the automa', () => {
+  const { sharePointsFit } = shareModule;
+  const list = ['a', 'b', 'c', 'd'].map((name) => ({ name })).concat([{ name: 'bot', automa: true }]);
+  assert.deepEqual(sharePointsFit(list, 3).map((p) => p.name), ['a', 'b', 'bot']);
+  assert.deepEqual(sharePointsFit(list, 9).map((p) => p.name), ['a', 'b', 'c', 'd', 'bot']);
+  assert.deepEqual(sharePointsFit(list.slice(0, 4), 2).map((p) => p.name), ['a', 'b']);
+  assert.deepEqual(sharePointsFit(list, 0), []);
 });

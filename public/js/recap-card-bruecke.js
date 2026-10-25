@@ -86,7 +86,8 @@ const brueckeFont = (weight, size, face) => {
   return `${weight} ${size}px "IBM Plex Sans", sans-serif`;
 };
 
-// A hex token with an alpha, for the dot grid and nothing else.
+// A hex token with an alpha, for the dot grid and the distribution strip —
+// never for text, which must be measured at full strength.
 function brueckeAlpha(hex, a) {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
@@ -400,6 +401,9 @@ function brueckeSessionSpec(model) {
   const rows = (model.rows || []).filter((r) => r.place && r.count);
   const played = model.playedTitle && !model.cancelled
     ? rows.find((r) => r.title === model.playedTitle) : null;
+  // By stage (#1726): the ranking with its distributions before a pick, after
+  // it the played game's plate and its points; a split evening its tables.
+  const content = shareCardContent(model);
   return {
     kicker: [model.roundName, model.day || model.when].filter(Boolean).join(' · '),
     title: resultCardSentence(model),
@@ -408,12 +412,14 @@ function brueckeSessionSpec(model) {
       label: `${t('score.name')} · ${tn(played.count, 'recap.ratingsOne', 'recap.ratings', { n: played.count })}`,
     } : null,
     bringers: model.playedTitle && !model.cancelled ? resultCardBringers(model) : '',
-    rows: rows.slice(0, BRUECKE_CARD_MAX_ROWS).map((r) => ({
+    rows: content.rows.slice(0, BRUECKE_CARD_MAX_ROWS).map((r) => ({
       place: String(r.place),
       title: r.title,
       score: fmtAvg(r.score),
-      chosen: !!model.playedTitle && r.title === model.playedTitle,
+      dist: r.dist || [],
     })),
+    points: content.points,
+    tables: model.outcome === 'split' ? shareCardTables(model) : [],
   };
 }
 
@@ -462,21 +468,55 @@ function drawBrueckeSession(ctx, spec, badge) {
   // each; the played game's place and score in the accent.
   const foot = W - pad;
   const footTop = foot - 24 - 3 - 14 - 14;
-  const fit = Math.max(0, Math.floor((footTop - 10 - y) / BRUECKE_CARD_ROW_H));
+  // A row with a distribution strip under its title is a little taller.
+  const rowH = BRUECKE_CARD_ROW_H + (spec.rows.some((r) => r.dist.length) ? 8 : 0);
+  const fit = Math.max(0, Math.floor((footTop - 10 - y) / rowH));
   spec.rows.slice(0, fit).forEach((r, i) => {
-    const top = y + i * BRUECKE_CARD_ROW_H;
+    const top = y + i * rowH;
     const base = top + 20;
-    ctx.fillStyle = r.chosen ? p.brand : p['ink-soft'];
+    ctx.fillStyle = p['ink-soft'];
     ctx.font = brueckeFont(500, 15, 'mono');
     ctx.fillText(r.place, pad, base);
     ctx.font = brueckeFont(500, 15, 'mono');
     const sw = ctx.measureText(r.score).width;
     ctx.fillText(r.score, pad + inner - sw, base);
     ctx.fillStyle = p.ink;
-    ctx.font = brueckeFont(r.chosen ? 700 : 500, 16);
-    ctx.fillText(recapFit(ctx, r.title, inner - 34 - sw - 14), pad + 34, base);
+    ctx.font = brueckeFont(500, 16);
+    const textW = inner - 34 - sw - 14;
+    ctx.fillText(recapFit(ctx, r.title, textW), pad + 34, base);
+    // The distribution in the accent's own intensity ramp (#1726) — the one
+    // colour this design reads in, brighter for a better value.
+    drawShareDist(ctx, r.dist, pad + 34, base + 7, Math.min(textW, 220), 4, (n) => brueckeAlpha(p.brand, 0.2 + n * 0.16));
     ctx.fillStyle = p.line;
-    ctx.fillRect(pad, top + BRUECKE_CARD_ROW_H - 1, inner, 1);
+    ctx.fillRect(pad, top + rowH - 1, inner, 1);
+  });
+  // The points once the session is finished, as many as fit (#1726).
+  if (spec.points.length) {
+    const pts = sharePointsFit(spec.points, Math.floor((footTop - 10 - y) / 28));
+    drawSharePoints(ctx, pts, {
+      x: pad, y, w: inner, rowH: 28, size: 15,
+      font: (weight, size) => brueckeFont(weight >= 700 ? 700 : 500, size), ink: p.ink, soft: p['ink-soft'],
+      accent: p.brand, rule: p.line,
+    });
+  }
+  // A split evening: one block per table — label, game, its result (#1726).
+  let ty = y;
+  spec.tables.forEach((tb) => {
+    if (ty + 56 > footTop - 6) return;
+    ctx.fillStyle = p.brand;
+    ctx.font = brueckeFont(500, 14, 'mono');
+    brueckeCaps(ctx, `${tb.label} · ${tb.names}`, pad, ty + 14, inner, 14, 0.1);
+    ctx.fillStyle = p.ink;
+    ctx.font = brueckeFont(700, 17);
+    ctx.fillText(recapFit(ctx, tb.title, inner), pad, ty + 34);
+    if (tb.said) {
+      ctx.fillStyle = p['ink-soft'];
+      ctx.font = brueckeFont(500, 14);
+      ctx.fillText(recapFit(ctx, tb.said, inner), pad, ty + 52);
+    }
+    ctx.fillStyle = p.line;
+    ctx.fillRect(pad, ty + 61, inner, 1);
+    ty += 64;
   });
 
   ctx.fillStyle = p.line;

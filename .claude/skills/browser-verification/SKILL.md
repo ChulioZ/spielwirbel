@@ -45,6 +45,7 @@ Before you start, always:
 | `hyphens: auto` splits a word with no hyphen | the pane (and Playwright's Chromium) has no hyphenation dictionaries — judge in real Chrome or WebKit | [browser-pane-has-no-hyphenation.md](browser-pane-has-no-hyphenation.md) |
 | A `document.styleSheets` walk finds zero matching rules | CSS nesting made every style rule a truthy `cssRules` container — recurse on `length` | [cssrules-walk-is-blind-under-nesting.md](cssrules-walk-is-blind-under-nesting.md) |
 | A layout/canvas claim verified in the pane — multicol, fragmentation, recent CSS, canvas export | the pane is Chromium; half the traffic is WebKit — run the WKWebView probe, with a control, in both engines | [browser-pane-is-chromium-only.md](browser-pane-is-chromium-only.md) |
+| An exported canvas shows as a broken image; `fetch(blobUrl)` fails | the app's CSP refuses `blob:` images and fetches (and a data-URL `<img>` failed too) — draw `createImageBitmap(blob)` onto a visible canvas | [canvas-export-previews-and-the-csp.md](canvas-export-previews-and-the-csp.md) |
 | Playwright `route()` mocks are ignored | the service worker issued the request and the SWR cache painted first — `serviceWorkers: 'block'`, clear `swr` keys | [playwright-mocks-and-the-service-worker.md](playwright-mocks-and-the-service-worker.md) |
 
 ## When the pane is unusable: headless Chrome over CDP

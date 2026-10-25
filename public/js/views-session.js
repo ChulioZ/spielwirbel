@@ -1447,6 +1447,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // O8.3 — „keine Uhrzeit"). `when` keeps the time for the text share.
     day: fmtDate(session.createdAt),
     cancelled: rs.cancelled,
+    // Chosen but not played yet shares the game alone, not „wurde gespielt"
+    // (#1726 — session-share.js, shareHeadline).
+    finished: rs.finished,
     playedTitle: rs.chosenId ? (games.find((g) => g.id === rs.chosenId) || {}).title || null : null,
     winnerNames: rs.winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean),
     // Who brings the chosen game's box (#1628), for the cards — the same
@@ -1456,7 +1459,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     // So the shared headline says „Verloren" where the screen does, instead
     // of the bare „wurde gespielt." every winnerless night used to get (#1038).
     ending: sessionEnding(session),
-    rows: rows.map((r) => ({ title: r.game.title, score: r.shown, count: r.count, place: r.place })),
+    // Each row's distribution as counts per vote-card value (#1726), from the
+    // same tally the Tafel draws — so the card cannot disagree with the screen —
+    // and named by the word the voter pressed. Counts, never voters.
+    rows: rows.map((r) => ({
+      title: r.game.title, score: r.shown, count: r.count, place: r.place,
+      dist: r.dist.slice(RATING_MIN).map((count, i) => ({ n: i + RATING_MIN, count, word: voteSaidWord(i + RATING_MIN) })),
+    })),
+    // The points, as the result's points block lists them (#1630, #1672).
+    points: rs.finished && !rs.cancelled ? sessionSharePoints(round, session, rs.winnerIds) : [],
     // Who sat at the table, for a design that shares a CARD (#1199) — the
     // same people this screen lists under the headline, with the member
     // colour it paints them in. The text share ignores it.

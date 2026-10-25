@@ -146,9 +146,11 @@ test('session spec: masthead number, long date, winner in vermilion, three facts
     assert.equal(s.cover, true);
     assert.deepEqual(s.headline.filter((r) => r.hot).map((r) => r.text), ['Jonas']);
     assert.deepEqual(facts(s), ['Score=4,8', 'Serie=2 in Folge', 'Dabei=4']);
-    assert.deepEqual(s.rows.map((r) => [r.place, r.title, r.win]),
-      [['1', 'Nordlichter', true], ['2', 'Kartographen', false], ['3', 'Azul', false]],
-      'three rows, the played game marked');
+    assert.deepEqual(s.rows, [], 'once a game is played the ranking is dropped (#1726)');
+    const r = spec(dom, 'session', { ...SESSION, playedTitle: null, winnerNames: [] });
+    assert.equal(r.cover, false);
+    assert.deepEqual(r.rows.map((x) => [x.place, x.title]),
+      [['1', 'Nordlichter'], ['2', 'Kartographen'], ['3', 'Azul']], 'three rows before a pick');
     assert.ok(!JSON.stringify(s).includes('21:47'));
   } finally { dom.close(); }
 });
@@ -182,6 +184,11 @@ test('session spec: a split session names its tables and states no facts', () =>
     assert.deepEqual(s.facts, []);
     assert.deepEqual(s.rows.map((r) => r.title), ['Nordlichter', 'Azul']);
     assert.ok(!JSON.stringify(s).includes('Jonas'), 'a split names its tables, not their people');
+    // Each table's result, when it has one (#1726).
+    const won = spec(dom, 'session', { roundName: 'R', day: 'd', outcome: 'split',
+      tables: [{ title: 'Nordlichter', names: 'Jonas, Lea', winnerNames: ['Lea'], points: [{ name: 'Lea', text: '9' }] }] });
+    assert.equal(won.rows[0].sub, 'Lea hat gewonnen · Lea: 9');
+    assert.ok(!JSON.stringify(won).includes('Jonas'), 'still not who merely sat there');
   } finally { dom.close(); }
 });
 
@@ -207,8 +214,14 @@ test('drawing: 1080×1350, no pattern, no icon font, one image, ≥12px, measure
     const displayOnly = new Set(pairs.filter((p) => p.display).map((p) => tokens[p.ink])
       .filter((ink) => !pairs.some((p) => !p.display && tokens[p.ink] === ink)));
     assert.ok(displayOnly.has('#e8451c'), 'the vermilion is display-only');
+    // Every stage (#1726): the ranking with its strips, the points, a split.
+    const ranking = { ...SESSION, playedTitle: null, winnerNames: [],
+      rows: SESSION.rows.map((r) => ({ ...r, dist: [1, 2, 3, 4, 5].map((n) => ({ n, count: n % 2, word: '' })) })) };
+    const points = { ...SESSION, finished: true, points: [{ name: 'Jonas', text: '42', winner: true }, { name: 'Automa', text: '3', automa: true }] };
+    const split = { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul', winnerNames: ['Ida'] }] };
     for (const [kind, model] of [['session', SESSION], ['period', PERIOD],
-      ['session', { ...SESSION, winnerNames: ['Jonas', 'Lea', 'Ida'] }]]) {
+      ['session', { ...SESSION, winnerNames: ['Jonas', 'Lea', 'Ida'] }],
+      ['session', ranking], ['session', points], ['session', split]]) {
       dom.run('__calls.length = 0; __canvases.length = 0');
       dom.context.__model = model;
       await dom.run(`programmheftCardBlob(${JSON.stringify(kind)}, __model)`);

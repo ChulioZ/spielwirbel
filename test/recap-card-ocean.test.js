@@ -150,10 +150,28 @@ test('session spec: first names only, the date without the time, nobody who did 
 
     const lost = spec(dom, 'session', { ...SESSION, winnerNames: [], people: [], ending: 'lost' });
     assert.equal(lost.winText, 'Verloren – das Spiel hat gewonnen');
+    // A split names its tables and each table's result by first names — never
+    // who merely sat there, never a surname (#1726).
     const split = spec(dom, 'session', { roundName: 'R', day: 'd', outcome: 'split',
-      tables: [{ title: 'Nordlichter', names: 'Jonas Albrecht, Lea' }, { title: 'Azul', names: 'Ida' }] });
-    assert.equal(split.winText, 'Nordlichter · Azul', 'a split names its tables, not their people');
+      tables: [
+        { title: 'Nordlichter', names: 'Jonas Albrecht, Lea', winnerNames: ['Jonas Albrecht'],
+          points: [{ name: 'Jonas Albrecht', members: ['Jonas Albrecht'], text: '40' }] },
+        { title: 'Azul', names: 'Ida' },
+      ] });
+    assert.deepEqual(split.rows.map((r) => [r.title, r.sub]),
+      [['Nordlichter', 'Jonas hat gewonnen · Jonas: 40'], ['Azul', '']]);
     assert.ok(!JSON.stringify(split).includes('Albrecht'));
+    assert.ok(!JSON.stringify(split).includes('Lea'), 'who sat at a table is not printed');
+
+    // The points list everyone by first name; a team by its members' (#1726).
+    const pts = spec(dom, 'session', { ...SESSION, finished: true, points: [
+      { name: 'Jonas Albrecht', members: ['Jonas Albrecht'], text: '42', winner: true },
+      { name: 'Lea Brandt und Mia (Gast)', members: ['Lea Brandt', 'Mia (Gast)'], text: '37' },
+      { name: 'Automa (schwer)', text: '30', automa: true },
+    ] });
+    assert.deepEqual(pts.points.map((p) => p.name), ['Jonas', 'Lea und Mia', 'Automa (schwer)']);
+    assert.ok(!JSON.stringify(pts).includes('Brandt'));
+    assert.deepEqual(pts.rows, [], 'no ranking once a game was played');
   } finally { dom.close(); }
 });
 
@@ -173,20 +191,18 @@ test('session spec: the top three rows of the ranking, tie-aware, in both propor
   const dom = boot();
   try {
     for (const kind of ['session', 'landscape']) {
-      const s = spec(dom, kind, RANKED);
+      assert.deepEqual(spec(dom, kind, RANKED).rows, [], `${kind}: no ranking once a game was played (#1726)`);
+      const s = spec(dom, kind, { ...RANKED, playedTitle: null, winnerNames: [], people: [] });
       assert.deepEqual(s.rows.map((r) => [r.place, r.title]),
         [['1', 'Nordlichter'], ['2', 'Kartographen'], ['2', 'Azul']],
         `${kind}: capped at three rows, and a tie repeats its place`);
       assert.deepEqual(s.rows[1].score, { text: '4,1', stop: rampStop(4.1, dom) });
     }
-    // No game chosen: the ranking still names the rated games.
-    const undecided = spec(dom, 'session', { ...RANKED, playedTitle: null, winnerNames: [], people: [] });
-    assert.deepEqual(undecided.rows.map((r) => r.title), ['Nordlichter', 'Kartographen', 'Azul']);
     // Nothing rated: no rows at all, so no empty block is drawn.
-    const none = spec(dom, 'session', { ...SESSION, rows: [{ title: 'X', score: 0, count: 0, place: null }] });
+    const none = spec(dom, 'session', { ...SESSION, playedTitle: null, rows: [{ title: 'X', score: 0, count: 0, place: null }] });
     assert.deepEqual(none.rows, []);
     const split = spec(dom, 'session', { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul' }] });
-    assert.equal(split.rows, undefined, 'a split names its tables, not a ranking');
+    assert.deepEqual(split.rows.map((r) => [r.title, r.score]), [['Azul', null]], 'a split lists its tables, not a ranking');
     assert.equal(spec(dom, 'period', PERIOD).rows, undefined, 'the period card is unchanged');
   } finally { dom.close(); }
 });
@@ -201,6 +217,22 @@ test('drawing: the ranking rows reach the canvas in both session formats, in mea
     const long = 'Die unglaublich lange Reise durch das Nordmeer der vergessenen Inseln';
     const model = { ...RANKED, playedTitle: null, winnerNames: [], people: [], bringers: null,
       rows: [{ title: long, score: 4.8, count: 5, place: 1 }, ...RANKED.rows.slice(1)] };
+    // The other stages through the same measured inks (#1726): the points and
+    // a split evening, in both proportions.
+    const others = [
+      { ...SESSION, finished: true, points: [{ name: 'Jonas', text: '42', winner: true }, { name: 'Automa', text: '3', automa: true }] },
+      { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul', names: 'A', winnerNames: ['Ida'] }] },
+    ];
+    for (const kind of ['session', 'landscape']) {
+      for (const other of others) {
+        dom.run('__calls.length = 0');
+        dom.context.__model = other;
+        await dom.run(`oceanCardBlob(${JSON.stringify(kind)}, __model)`);
+        for (const { text, fill } of texts(dom)) {
+          assert.ok(inks.includes(fill), `${kind}: „${text}" is drawn in ${fill}, which OCEAN_CARD_TEXT does not measure`);
+        }
+      }
+    }
     for (const kind of ['session', 'landscape']) {
       dom.run('__calls.length = 0; __canvases.length = 0');
       dom.context.__model = model;

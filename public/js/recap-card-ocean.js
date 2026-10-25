@@ -6,7 +6,7 @@
    - `session`   1080x1350, the results screen's „Teilen" on a phone.
    - `landscape` 1200x630, the same session at link-preview proportions — what
                  the results screen shares from a wide landscape screen, where
-                 a desktop chat lays an image out at 1.91:1 (oceanShareKind).
+                 a desktop chat lays an image out at 1.91:1 (oceanShareKind, result-card.js).
    - `period`    1080x1350, the Chronik's and the profile's period recap: the
                  same form, more numbers.
 
@@ -22,7 +22,9 @@
    printed by FIRST NAME only, with initials taken from that first name (the
    model's own initials carry the surname's letter); the date comes from the
    model's `day`, never its `when`, which carries the time of day; the score is
-   the group's; and nobody who did not win appears at all.
+   the group's; and nobody who did not win appears at all — except in the
+   points block, which lists everyone's points by first name (#1726, operator
+   decision: the points are what the group shares the card for).
 
    The constraints of recap-card.js and recap-card-tisch.js all hold: no cover
    art, no pattern (WebKit taints a canvas on a pattern from an SVG image —
@@ -108,6 +110,19 @@ function oceanFirstName(name) {
   return String(name == null ? '' : name).trim().split(/\s+/)[0] || '';
 }
 
+// The points by first name (#1726): a team as its members' first names, the
+// automa by the name the table gave it. Everyone who has points is listed —
+// the operator's decision when points joined the card (#1726), which relaxes
+// O8.3's „nobody who did not win" for this block alone; surnames, ratings and
+// the time of day still never appear.
+function oceanFirstPoints(points) {
+  // `members` (the full labels) is dropped, so no surname reaches the spec.
+  return (points || []).map(({ members, ...pt }) => (pt.automa ? pt : {
+    ...pt,
+    name: members && members.length ? joinNames(members.map(oceanFirstName)) : oceanFirstName(pt.name),
+  }));
+}
+
 // The round's marker as one of OCEAN's eight colours, or the accent. Matched
 // like tischCardFelts: a marker painted by another design's set is not an
 // Ocean colour, and the disc then falls back rather than wearing it.
@@ -145,11 +160,19 @@ function oceanCardSpec(kind, model) {
 
   // A session, in either proportion. The split session has no winner or score
   // of its own; it names its tables instead.
+  // Each table is a row (#1726): its game, and under it that table's result —
+  // or who sat there when nothing was recorded.
   if (model.outcome === 'split') {
     return {
       kind, pill: model.roundName || '', kicker: model.day || '', title: t('result.titleSplit'),
-      stats: [], named: [], winners: [], score: null,
-      winText: (model.tables || []).map((tb) => tb.title).filter(Boolean).join(' · '),
+      stats: [], named: [], winners: [], score: null, winText: '', points: [],
+      // Each table's result by first names, and never who merely sat there.
+      rows: (model.tables || []).slice(0, OCEAN_CARD_ROWS).map((tb, i) => ({
+        place: String(i + 1), title: tb.title, score: null,
+        sub: shareTableResult({
+          ...tb, winnerNames: (tb.winnerNames || []).map(oceanFirstName), points: oceanFirstPoints(tb.points),
+        }, t, joinNames, tn),
+      })),
     };
   }
   const people = Array.isArray(model.people) ? model.people : [];
@@ -181,7 +204,9 @@ function oceanCardSpec(kind, model) {
     kicker: model.day || '',
     title,
     // The landscape card says it as a sentence (O8.3: „Nordlichter wurde gespielt.").
-    sentence: model.playedTitle ? t('result.titlePlayed', { game: model.playedTitle }) : title,
+    // Chosen but not played yet says so (#1726), as the text share does.
+    sentence: model.playedTitle
+      ? t(model.finished === false ? 'share.chosen' : 'result.titlePlayed', { game: model.playedTitle }) : title,
     stats: [],
     named: [],
     winners,
@@ -189,11 +214,14 @@ function oceanCardSpec(kind, model) {
     score: played ? { text: fmtAvg(played.score), stop: rampStop(played.score) } : null,
     // Who brings the box (#1628) — the results screen's „Gehört Anna".
     bringers: resultCardBringers(model),
-    // The ranking, in the results screen's tie-aware order; only rated rows,
-    // and the group's score, never anyone's vote (#1705).
-    rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, OCEAN_CARD_ROWS).map((r) => ({
+    // The ranking before a pick (#1726), in the results screen's tie-aware
+    // order; only rated rows, the group's score and its distribution, never
+    // anyone's vote (#1705). Once a game is chosen, its points instead.
+    rows: shareCardContent(model).rows.slice(0, OCEAN_CARD_ROWS).map((r) => ({
       place: String(r.place), title: r.title, score: { text: fmtAvg(r.score), stop: rampStop(r.score) },
+      dist: r.dist || [],
     })),
+    points: oceanFirstPoints(shareCardContent(model).points),
   };
 }
 
@@ -373,24 +401,44 @@ function oceanAvatars(ctx, winners, x, cy, r, p) {
 // place in the accent, the title fitted beside it, the group's score pill at
 // the right. `h` is each row's height, which the landscape card may shrink.
 // Returns the height drawn.
+// A row's second line (#1726) — a distribution strip or a table's result —
+// takes the lower part of the row; `h` is the whole row.
+const oceanRowSecond = (rows) => rows.some((r) => (r.dist && r.dist.length) || r.sub);
 function oceanRows(ctx, rows, x, y, w, h, p) {
-  const size = Math.round(Math.min(18, h * 0.58));
-  const pillH = Math.round(h * 0.74);
+  const line = oceanRowSecond(rows) ? Math.round(h * 0.7) : h;
+  const size = Math.round(Math.min(18, line * 0.58));
+  const pillH = Math.round(line * 0.74);
   const placeW = size * 1.7;
   rows.forEach((r, i) => {
     const top = y + i * h;
     ctx.fillStyle = p['line-soft'];
     ctx.fillRect(x, top, w, 1);
-    const pillW = oceanScorePill(ctx, r.score, x + w, top + (h - pillH) / 2 + 0.5, pillH, Math.round(size * 0.84), p);
-    const base = top + h / 2 + size * 0.36 + 0.5;
+    const pillW = r.score ? oceanScorePill(ctx, r.score, x + w, top + (line - pillH) / 2 + 0.5, pillH, Math.round(size * 0.84), p) : 0;
+    const base = top + line / 2 + size * 0.36 + 0.5;
     ctx.fillStyle = p.brand;
     ctx.font = oceanFont(700, size, true);
     ctx.fillText(r.place, x, base);
     ctx.fillStyle = p.ink;
     ctx.font = oceanFont(700, size);
-    ctx.fillText(recapFit(ctx, r.title, w - placeW - pillW - 12), x + placeW, base);
+    const textW = w - placeW - pillW - 12;
+    ctx.fillText(recapFit(ctx, r.title, textW), x + placeW, base);
+    drawShareDist(ctx, r.dist, x + placeW, top + line, Math.min(textW, 200), Math.max(3, Math.round(h * 0.1)), (n) => p[`score-${n}`]);
+    if (r.sub) {
+      ctx.fillStyle = p['ink-soft'];
+      ctx.font = oceanFont(600, Math.round(size * 0.8));
+      ctx.fillText(recapFit(ctx, r.sub, w - placeW), x + placeW, top + line + Math.round(size * 0.6));
+    }
   });
   return rows.length * h;
+}
+
+// The points, best first (#1726), in the band's own ink.
+function oceanPoints(ctx, points, x, y, w, h, p) {
+  return drawSharePoints(ctx, points, {
+    x, y, w, rowH: h, size: Math.round(Math.min(18, h * 0.58)),
+    font: (weight, size) => oceanFont(weight >= 700 ? 700 : 600, size), ink: p.ink, soft: p['ink-soft'],
+    accent: p.brand, rule: p['line-soft'],
+  });
 }
 
 // "Powered by BGG" — a licence requirement wherever BGG data appears, as on
@@ -437,8 +485,12 @@ function drawOceanSession(ctx, spec, p, badge) {
   // The ranking grows the band too; the water above gives up the height, so
   // the canvas stays 1080x1350 (#1705).
   const rows = spec.rows || [];
-  const rankH = rows.length ? 12 + rows.length * 32 : 0;
-  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + bringH + rankH + 16 + 18 + 26;
+  const rankRowH = rows.some((r) => r.sub) ? 48 : oceanRowSecond(rows) ? 42 : 32;
+  const rankH = rows.length ? 12 + rows.length * rankRowH : 0;
+  // The points grow the band the same way; six is what the water can give up.
+  const points = sharePointsFit(spec.points || [], 6);
+  const pointsH = points.length ? 12 + points.length * 32 : 0;
+  const bandH = 28 + 18 + 12 + lh * title.lines.length + (rowH ? 10 + rowH : 0) + bringH + rankH + pointsH + 16 + 18 + 26;
   const bandTop = H - bandH;
 
   oceanWater(ctx, W, H, 0.46, p);
@@ -479,7 +531,11 @@ function drawOceanSession(ctx, spec, p, badge) {
   }
   if (rankH) {
     y += 12;
-    y += oceanRows(ctx, rows, pad, y, inner, 32, p);
+    y += oceanRows(ctx, rows, pad, y, inner, rankRowH, p);
+  }
+  if (pointsH) {
+    y += 12;
+    y += oceanPoints(ctx, points, pad, y, inner, 32, p);
   }
   y += 16 + 16;
   ctx.fillStyle = p['ink-soft'];
@@ -500,7 +556,10 @@ function drawOceanLandscape(ctx, spec, p, badge) {
   const pad = 30;
   const x = left + pad;
   const inner = W - left - pad * 2;
-  let rows = spec.rows || [];
+  // The points, once counted, take the rows' place (#1726): the same room,
+  // the same shrink-before-drop.
+  const pointsMode = !!(spec.points && spec.points.length);
+  let rows = pointsMode ? spec.points : (spec.rows || []);
   // With a ranking to fit, the sentence keeps to two lines (#1705).
   const title = oceanTitleLines(ctx, spec.sentence || spec.title, inner, 30, rows.length ? 20 : 22, rows.length ? 2 : 3);
   const lh = Math.round(title.size * 1.14);
@@ -514,8 +573,12 @@ function drawOceanLandscape(ctx, spec, p, badge) {
   let rowH = 0;
   if (rows.length) {
     const room = H - 2 * 16 - textH - 8;
-    rowH = Math.min(26, room / rows.length);
-    if (rowH < 18 && rows.length > 2) { rows = rows.slice(0, 2); rowH = Math.min(26, room / 2); }
+    const most = !pointsMode && oceanRowSecond(rows) ? 32 : 26;
+    rowH = Math.min(most, room / rows.length);
+    if (rowH < 18 && rows.length > 2) {
+      rows = pointsMode ? sharePointsFit(rows, Math.max(2, Math.floor(room / 18))) : rows.slice(0, 2);
+      rowH = Math.min(most, room / rows.length);
+    }
     rowH = Math.max(18, Math.floor(rowH));
   }
   const rankH = rows.length ? 8 + rows.length * rowH : 0;
@@ -542,7 +605,7 @@ function drawOceanLandscape(ctx, spec, p, badge) {
   }
   if (rankH) {
     y += 8;
-    y += oceanRows(ctx, rows, x, y, inner, rowH, p);
+    y += pointsMode ? oceanPoints(ctx, rows, x, y, inner, rowH, p) : oceanRows(ctx, rows, x, y, inner, rowH, p);
   }
   y += 14 + 16;
   ctx.fillStyle = p['ink-soft'];
@@ -646,14 +709,4 @@ async function oceanCardBlob(kind, model) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
   });
-}
-
-/* Which proportion the results screen shares. A phone shares the portrait card
-   into a chat or a story; a wide landscape screen — where a desktop chat lays
-   an image out at link-preview proportions — shares the 1.91:1 one. Read at
-   click time, like designCard(). */
-function oceanShareKind() {
-  const wide = typeof matchMedia === 'function'
-    && matchMedia('(min-width: 1024px) and (orientation: landscape)').matches;
-  return wide ? 'landscape' : 'session';
 }
