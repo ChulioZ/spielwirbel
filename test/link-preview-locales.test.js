@@ -82,8 +82,9 @@ test('German, no lang and unknown values serve the file byte for byte, reflectin
   for (const q of ['', '?lang=de', '?lang=xx', '?lang=%3Cscript%3E', '?lang=fr&lang=en', '?lang=__proto__']) {
     const res = await request(app).get(`/${q}`);
     assert.equal(res.status, 200, q);
+    // Byte equality with the file is also the no-reflection check: nothing of
+    // the query can be in a response identical to a file that predates it.
     assert.equal(res.text, INDEX, `${q || '/'} must be the static shell`);
-    assert.doesNotMatch(res.text, /<script>|xx_|__proto__/, q);
   }
 });
 
