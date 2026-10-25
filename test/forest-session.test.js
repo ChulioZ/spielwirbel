@@ -424,10 +424,27 @@ test('from 720px a Forest row is one line, the distribution between the title an
 });
 
 test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
-  const main = wideBody('.result-screen--forest .tafel .trow .trow__main');
-  assert.equal(declaredValue(main, 'display'), 'grid');
-  assert.equal(declaredValue(main, 'grid-template-columns'), 'minmax(0, max-content) minmax(0, 1fr)');
-  assert.equal(declaredValue(wideBody('.result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)'), 'grid-column'), '1 / -1');
+  // #1724: an inline flow, not a max-content | 1fr grid — the grid let a long
+  // title take the whole row and squeezed the owners into a sliver that broke
+  // word by word. As an inline-block the owners line drops under a long title
+  // in one piece, and still wraps inside itself when it alone exceeds the row.
+  assert.equal(declaredValue(wideBody('.result-screen--forest .tafel .trow .trow__main'), 'display'), 'block');
+  assert.equal(declaredValue(wideBody('.result-screen--forest .tafel .trow .trow__main .trow__title'), 'display'), 'inline');
+  const owners = wideBody('.result-screen--forest .tafel .trow .trow__main .trow__owners');
+  assert.equal(declaredValue(owners, 'display'), 'inline-block');
+  assert.equal(declaredValue(owners, 'max-width'), '100%');
+  assert.ok(!/white-space/.test(owners), 'nowrap would overflow a too-long owner list');
+  // The veto pill: a line of its own, but only as wide as its text.
+  const pill = wideBody('.result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)');
+  assert.equal(declaredValue(pill, 'display'), 'block');
+  assert.equal(declaredValue(pill, 'width'), 'fit-content');
+});
+
+test('from 1280px the Tafel column takes the rest of the screen — no cap leaving a dead strip on the right (#1724)', () => {
+  const desk = mediaBlocks(SECTION).filter(([q]) => /^\(min-width:\s*1280px\)$/.test(q.trim())).flatMap(([, css]) => rulesOf(css));
+  const hit = desk.find(([s]) => s === F + '.result-screen--forest');
+  assert.ok(hit, 'no 1280px rule for the result screen');
+  assert.equal(declaredValue(hit[1], 'grid-template-columns'), 'minmax(400px, 460px) minmax(0, 1fr)');
 });
 
 test('the side column is pinned only where it fits the viewport: sticky behind a min-height gate, never without', () => {
