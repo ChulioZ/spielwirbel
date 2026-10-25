@@ -3722,15 +3722,20 @@
   :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__pill { grid-column: 5; }
   :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__action { grid-column: 6; }
   /* „Gehört …" beside the title rather than under it (#1430, operator
-     decision); the veto pill keeps a line of its own under both. */
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main {
-    display: grid;
-    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: 12px;
+     decision); the veto pill keeps a line of its own under both.
+     An inline flow, not a max-content | 1fr grid (#1724): the grid let a long
+     title claim the whole row and left the owners a few dozen px, broken word
+     by word. As an inline-block the owners line sits beside a short title,
+     drops under a long one in ONE piece, and still wraps inside itself when it
+     alone exceeds the row (max-width, never nowrap). DOM order unchanged. */
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main { display: block; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main .trow__title { display: inline; margin-inline-end: 12px; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main .trow__owners {
+    display: inline-block;
+    max-width: 100%;
+    margin-top: 0;
   }
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
-  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__owners { margin-top: 0; }
+  :root[data-design="tisch"][data-scheme="dark"] .result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { display: block; width: fit-content; }
 }
 /* While the evening is still choosing, a phone row's action is a „Spielen"
    button or the „Auf dem Tisch" chip — ~100px that would leave the title ~60.

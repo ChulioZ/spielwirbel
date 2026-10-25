@@ -449,10 +449,18 @@ test('from 1280px the foot rides in the box column, under the box — the log ta
 
 test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
   const wide = blockRules('(min-width: 720px)');
+  // #1724: an inline flow, not a max-content | 1fr grid, so a long title can
+  // no longer squeeze the owners into a sliver that breaks word by word.
   const main = inBlock(wide, '.result-screen .tafel .trow .trow__main') || '';
-  assert.match(main, /display:\s*grid/);
-  assert.match(main, /grid-template-columns:\s*minmax\(0, max-content\) minmax\(0, 1fr\)/);
-  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)') || '', /grid-column:\s*1 \/ -1/);
+  assert.match(main, /display:\s*block/);
+  assert.match(inBlock(wide, '.result-screen .tafel .trow .trow__main .trow__title') || '', /display:\s*inline;/);
+  const owners = inBlock(wide, '.result-screen .tafel .trow .trow__main .trow__owners') || '';
+  assert.match(owners, /display:\s*inline-block/);
+  assert.match(owners, /max-width:\s*100%/);
+  assert.doesNotMatch(owners, /white-space/);
+  const pill = inBlock(wide, '.result-screen .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners)') || '';
+  assert.match(pill, /display:\s*block/);
+  assert.match(pill, /width:\s*fit-content/);
   // …and below 720 the owners line stays under the title.
   assert.doesNotMatch(body('.result-screen .tafel .trow .trow__main') || '', /display:\s*grid/);
 });

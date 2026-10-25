@@ -3372,14 +3372,16 @@
    1440×900): the Tafel was 500px wide and 1584px tall, the document 1972px,
    the people column stopped at 554 and the middle at 949, and „Noch eine
    Session" sat at y 1764, after the whole list. So the Tafel takes the wide
-   column (capped, so a row keeps a readable measure) and the side column pins
+   column (uncapped since #1724: a 760px cap left ~150px dead on the right,
+   and a ~900px row reads fine with the distribution and pill beside the
+   title, #1430) and the side column pins
    beside it. The foot sits under the headline rather than under the tree, as
    Ocean's does: after the ~520px scene it landed at y≈1150, under the fold of
    a 900px-tall screen (operator decision on #1568). */
 @media (min-width: 1280px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest {
     display: grid;
-    grid-template-columns: minmax(400px, 460px) minmax(0, 760px);
+    grid-template-columns: minmax(400px, 460px) minmax(0, 1fr);
     column-gap: 32px;
     align-items: start;
   }
@@ -3788,15 +3790,20 @@
   }
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .trow__bars { padding-top: 0; }
   /* „Gehört …" beside the title rather than under it (#1430's operator
-     decision, carried over); the veto pill keeps a line of its own under both. */
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main {
-    display: grid;
-    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: 12px;
+     decision, carried over); the veto pill keeps a line of its own under both.
+     An inline flow, not a max-content | 1fr grid (#1724): the grid let a long
+     title claim the whole row and left the owners a few dozen px, broken word
+     by word. As an inline-block the owners line sits beside a short title,
+     drops under a long one in ONE piece, and still wraps inside itself when it
+     alone exceeds the row (max-width, never nowrap). DOM order unchanged. */
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main { display: block; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main .trow__title { display: inline; margin-inline-end: 12px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main .trow__owners {
+    display: inline-block;
+    max-width: 100%;
+    margin-top: 0;
   }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { grid-column: 1 / -1; justify-self: start; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__owners { margin-top: 0; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow .trow__main > :not(.trow__title):not(.trow__owners) { display: block; width: fit-content; }
 }
 /* The veto line — „1× gar nicht" — with the veto's own word, on the veto ramp
    colour with its light ink (F1.5: the veto always with its word). */
