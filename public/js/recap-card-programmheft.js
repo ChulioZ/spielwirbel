@@ -144,6 +144,7 @@ function programmheftCardSpec(kind, model) {
         ...blocks.shelf.map((s) => ({ k: s.label, v: `${s.plus ? '+' : ''}${s.n}` })),
       ],
       rows: blocks.rows.map((r) => ({ label: r.label, title: r.value, score: r.sub || '', stop: null, win: false })),
+      points: [],
     };
   }
 
@@ -155,9 +156,12 @@ function programmheftCardSpec(kind, model) {
       kind, masthead, round: model.roundName || '', date, cover: false,
       headline: [{ text: t('result.titleSplit'), hot: false }],
       facts: [],
-      rows: (model.tables || []).slice(0, PROGRAMMHEFT_CARD_ROWS).map((tb, i) => ({
-        place: String(i + 1), title: tb.title || '', score: '', stop: null, win: false,
+      // Each table with its result line under the game (#1726) — who won, not
+      // who sat there, which this card never names.
+      rows: shareCardTables(model).slice(0, PROGRAMMHEFT_CARD_ROWS).map((tb, i) => ({
+        place: String(i + 1), title: tb.title || '', score: '', stop: null, win: false, sub: tb.said,
       })),
+      points: [],
     };
   }
 
@@ -189,13 +193,17 @@ function programmheftCardSpec(kind, model) {
     // Who brings the box (#1628) — the results screen's „Gehört Anna".
     bringers: resultCardBringers(model),
     facts: facts.slice(0, 3),
-    rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, PROGRAMMHEFT_CARD_ROWS).map((r) => ({
+    // By stage (#1726): the programme's table with each game's distribution
+    // before a pick; after it the played game alone, and its points.
+    rows: shareCardContent(model).rows.slice(0, PROGRAMMHEFT_CARD_ROWS).map((r) => ({
       place: String(r.place),
       title: r.title,
       score: fmtAvg(r.score),
       stop: rampStop(r.score),
-      win: !!model.playedTitle && r.title === model.playedTitle,
+      win: false,
+      dist: r.dist || [],
     })),
+    points: shareCardContent(model).points,
   };
 }
 
@@ -336,7 +344,8 @@ function programmheftScoreInk(stop, p) {
 function programmheftSessionRows(ctx, rows, y, p) {
   const pad = PROGRAMMHEFT_CARD_PAD;
   const inner = PROGRAMMHEFT_CARD_W - pad * 2;
-  const h = 34;
+  // A table's result line under its game makes the row taller (#1726).
+  const h = rows.some((r) => r.sub) ? 46 : 34;
   rows.forEach((r, i) => {
     const top = y + i * h;
     if (r.win) { ctx.fillStyle = p['gold-soft']; ctx.fillRect(pad, top, inner, h); }
@@ -352,9 +361,28 @@ function programmheftSessionRows(ctx, rows, y, p) {
     }
     ctx.fillStyle = p.ink;
     ctx.font = programmheftFont(700, 15);
-    ctx.fillText(recapFit(ctx, r.title, inner - 42 - scoreW - 16), pad + 42, top + 23);
+    const textW = inner - 42 - scoreW - 16;
+    ctx.fillText(recapFit(ctx, r.title, textW), pad + 42, top + 23);
+    // How the game was rated (#1726), in the programme's own ramp.
+    drawShareDist(ctx, r.dist, pad + 42, top + 27, Math.min(textW, 200), 4, (n) => p[`ramp-${n}`]);
+    if (r.sub) {
+      ctx.fillStyle = p['ink-soft'];
+      ctx.font = programmheftFont(700, 12);
+      ctx.fillText(recapFit(ctx, r.sub, inner - 42 - 6), pad + 42, top + 39);
+    }
   });
   return rows.length * h;
+}
+
+// The points (#1726): the table's rule under each line, the winner crowned in
+// vermilion's text-safe sibling, as many as fit above the foot.
+function programmheftPoints(ctx, points, y, p) {
+  const pad = PROGRAMMHEFT_CARD_PAD;
+  const fit = sharePointsFit(points, Math.floor((PROGRAMMHEFT_CARD_H - 56 - y) / 30));
+  return drawSharePoints(ctx, fit, {
+    x: pad, y, w: PROGRAMMHEFT_CARD_W - pad * 2, rowH: 30, size: 15,
+    font: (weight, size) => programmheftFont(700, size), ink: p.ink, soft: p['ink-soft'], accent: p.brand, rule: p.ink,
+  });
 }
 
 // The period card's named rows: a label over the title, the figure at right.
@@ -432,7 +460,8 @@ function drawProgrammheftCard(ctx, spec, badge) {
   y += programmheftFacts(ctx, spec.facts, y, p);
   y += 10;
   if (spec.kind === 'period') programmheftNamedRows(ctx, spec.rows, y, p);
-  else programmheftSessionRows(ctx, spec.rows, y, p);
+  else y += programmheftSessionRows(ctx, spec.rows, y, p);
+  if (spec.points.length) programmheftPoints(ctx, spec.points, y, p);
 
   programmheftFoot(ctx, badge, p);
   // The sheet's 1px ink frame, drawn last so nothing paints over it.

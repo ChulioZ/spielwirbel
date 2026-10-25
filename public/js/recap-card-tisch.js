@@ -162,16 +162,19 @@ function tischCardSpec(kind, model) {
       people: [],
       tables: [],
       rows,
+      points: [],
     };
   }
 
   const kicker = `${model.roundName} · ${model.when}`;
   if (kind === 'split') {
-    const tables = (model.tables || []).map((tb, i) => ({ label: t('tables.tableLabel', { n: i + 1 }), title: tb.title, names: tb.names }));
+    // Each table with its own result line (#1726) — who won there, or how it
+    // ended, and the points (shareCardTables, the text share's builder).
+    const tables = shareCardTables(model);
     return {
       kind, felts: Math.max(2, Math.min(tables.length, 3)), kicker,
       headline: [{ text: t('result.titleSplit'), gold: false }], subline: '',
-      feature: null, counters: [], people: [], tables, rows: [],
+      feature: null, counters: [], people: [], tables, rows: [], points: [],
     };
   }
 
@@ -182,6 +185,9 @@ function tischCardSpec(kind, model) {
   let sentence = shareHeadline(model, t, joinNames, tn) || t('result.title');
   if (sentence.startsWith(SHARE_TROPHY)) sentence = sentence.slice(SHARE_TROPHY.length).trimStart();
   const played = model.playedTitle ? (model.rows || []).find((r) => r.title === model.playedTitle && r.count) : null;
+  // By stage (#1726): the ranking with its distributions before a pick, and
+  // after it only the chosen game — the feature — with its points.
+  const content = shareCardContent(model);
   return {
     kind: 'session',
     felts: 1,
@@ -200,9 +206,11 @@ function tischCardSpec(kind, model) {
     counters: [],
     people: (model.people || []).map((p) => ({ ...p })),
     tables: [],
-    rows: (model.rows || []).filter((r) => r.place && r.count).slice(0, TISCH_CARD_MAX_ROWS).map((r) => ({
+    rows: content.rows.slice(0, TISCH_CARD_MAX_ROWS).map((r) => ({
       rank: String(r.place), title: r.title, pill: fmtAvg(r.score), stop: rampStop(r.score), gold: r.place === 1,
+      dist: r.dist || [],
     })),
+    points: content.points,
   };
 }
 
@@ -478,7 +486,10 @@ function drawTischTafel(ctx, spec, y, p) {
   const tableMode = spec.tables.length > 0;
   const rows = tableMode ? spec.tables.slice(0, 4) : spec.rows;
   if (!rows.length) return y;
-  const rowH = tableMode ? 52 : TISCH_CARD_ROW_H;
+  // A table's result line (#1726) and a game's distribution strip each give
+  // the row a second line.
+  const second = tableMode ? rows.some((r) => r.said) : rows.some((r) => r.dist && r.dist.length);
+  const rowH = (tableMode ? 52 : TISCH_CARD_ROW_H) + (second ? (tableMode ? 16 : 6) : 0);
   ctx.save();
   ctx.beginPath();
   ctx.roundRect(pad, y, w, rows.length * rowH, 4);
@@ -504,6 +515,11 @@ function drawTischTafel(ctx, spec, y, p) {
       ctx.fillStyle = p['paper-ink-soft'];
       ctx.font = tischFont(600, 12);
       ctx.fillText(recapFit(ctx, row.names, w - 60), pad + 48, ry + 41);
+      if (row.said) {
+        ctx.fillStyle = ink;
+        ctx.font = tischFont(700, 12);
+        ctx.fillText(recapFit(ctx, row.said, w - 60), pad + 48, ry + 58);
+      }
       return;
     }
     let x = pad + 14;
@@ -544,10 +560,30 @@ function drawTischTafel(ctx, spec, y, p) {
     }
     ctx.fillStyle = ink;
     ctx.font = tischFont(800, 15, true);
-    ctx.fillText(recapFit(ctx, row.title, pad + w - 24 - pillW - x), x, ry + 25);
+    const textW = pad + w - 24 - pillW - x;
+    ctx.fillText(recapFit(ctx, row.title, textW), x, ry + 25);
+    // How the game was rated (#1726): one flat strip in the design's own ramp.
+    drawShareDist(ctx, row.dist, x, ry + 31, Math.min(textW, 200), 5, (n) => p[`score-${n}`]);
   });
   ctx.restore();
   return y + rows.length * rowH;
+}
+
+// The finished session's points on the same paper (#1726), as many as fit
+// above the foot — the best first, the automa always kept (sharePointsFit).
+function drawTischPoints(ctx, points, y, p) {
+  const pad = TISCH_CARD_PAD;
+  const w = TISCH_CARD_W - pad * 2;
+  const rowH = 30;
+  const fit = sharePointsFit(points, Math.floor((TISCH_CARD_H - 76 - y - 12) / rowH));
+  if (!fit.length) return y;
+  tischRect(ctx, pad, y, w, fit.length * rowH + 12, 4, p.paper);
+  drawSharePoints(ctx, fit, {
+    x: pad + 14, y: y + 6, w: w - 28, rowH, size: 14,
+    font: (weight, size) => tischFont(weight, size), ink: p['paper-ink'], soft: p['paper-ink-soft'],
+    accent: p['paper-ink'], rule: 'rgba(47, 38, 32, 0.12)',
+  });
+  return y + fit.length * rowH + 12;
 }
 
 function drawTischFoot(ctx, p, badge) {
@@ -577,7 +613,8 @@ function drawTischCard(ctx, spec, badge) {
   if (spec.feature) y = drawTischFeature(ctx, spec.feature, y, p) + 14;
   if (spec.people.length) y = drawTischPeople(ctx, spec.people, y + 10, p) + 8;
   if (spec.counters.length) y = drawTischCounters(ctx, spec.counters, y, p) + 14;
-  drawTischTafel(ctx, spec, y, p);
+  y = drawTischTafel(ctx, spec, y, p);
+  if (spec.points.length) drawTischPoints(ctx, spec.points, y, p);
   drawTischFoot(ctx, p, badge);
 }
 
@@ -613,57 +650,4 @@ async function tischCardBlob(kind, model) {
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
   });
-}
-
-// Which card the worn design draws, or null for the classic one. Read at click
-// time: the design can change between rendering a button and pressing it.
-function designCard() {
-  const d = typeof activeDesign === 'function' ? activeDesign() : null;
-  return (d && d.card) || null;
-}
-
-/* The results screen's „Teilen", in every design (#1628 — Klassisch and Die
-   Brücke joined the four with a session card of their own): the card as a PNG, WITH the message text beside it, through the user's own share
-   sheet — the same trust shape as every other share here (nothing is sent by
-   us; the user picks the recipient).
-
-   Returns true when the share is DONE (sent or dismissed) and false when the
-   caller should run the text share it always had: no file sharing on this
-   browser (desktop Chrome has navigator.share without file support), a card
-   that failed to render, or a sheet that refused the call. A failed render is
-   REPORTED — nothing here touches the server, so otherwise the catch would be
-   the end of the story (.claude/rules/caught-client-faults-are-invisible.md) —
-   but the user still gets the text, rather than a toast about an image they
-   did not know they were getting. */
-async function shareResultCard(model, text) {
-  if (!(navigator.canShare && navigator.share && typeof File !== 'undefined')) return false;
-  const card = designCard();
-  // Klassisch (no card of its own) and Die Brücke draw a ranking (#1628); a
-  // split evening's parent is a table builder, not a ranking, so those two keep
-  // the text share for it.
-  if ((!card || card === 'bruecke') && model.outcome === 'split') return false;
-  let blob;
-  try {
-    // Ocean's card (#1220) picks its proportion from the screen; its spec
-    // handles a split session itself.
-    if (!card) blob = await resultCardBlob(model); else
-    if (card === 'bruecke') blob = await brueckeCardBlob(model, 'session'); else
-    if (card === 'programmheft') blob = await programmheftCardBlob('session', model); else
-    if (card === 'forest') blob = await forestCardBlob('session', model); else
-    blob = card === 'ocean'
-      ? await oceanCardBlob(oceanShareKind(), model)
-      : await tischCardBlob(model.outcome === 'split' ? 'split' : 'session', model);
-  } catch (err) {
-    reportClientError('recap_export', err);
-    return false;
-  }
-  const file = new File([blob], 'spielwirbel-session.png', { type: 'image/png' });
-  if (!navigator.canShare({ files: [file] })) return false;
-  try {
-    await navigator.share({ files: [file], text });
-    return true;
-  } catch (e) {
-    // Dismissing the sheet is a normal outcome, not a failure.
-    return !!(e && e.name === 'AbortError');
-  }
 }

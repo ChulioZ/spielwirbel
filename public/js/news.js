@@ -50,6 +50,51 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1726, the share that follows the session. A capability that did not
+   * exist: who won and with how many points could not be shared at all, and
+   * the ranking before a pick carried no detail beyond one score.
+   */
+  {
+    revision: '2026-10-25',
+    kind: 'new',
+    de: {
+      title: 'Teilen zeigt jetzt, was ihr wissen wollt',
+      body: 'Vor der Auswahl teilt „Teilen“ die Rangliste — jetzt mit der Verteilung der Bewertungen zu jedem Spiel. Ist ein Spiel gewählt oder gespielt, geht es nur noch um dieses Spiel: wer gewonnen hat und, wenn ihr gezählt habt, die Punkte aller, mit Teams und Automa. Bei mehreren Tischen bekommt jeder Tisch sein eigenes Ergebnis.',
+    },
+    en: {
+      title: 'Sharing now shows what you want to know',
+      body: 'Before a game is picked, “Share” sends the ranking — now with how each game was rated. Once a game is picked or played, it is only about that game: who won and, if you counted, everyone’s points, teams and automa included. With several tables, each table gets its own result.',
+    },
+    es: {
+      title: 'Compartir muestra ahora lo que queréis saber',
+      body: 'Antes de elegir, «Compartir» envía la clasificación, ahora con cómo se valoró cada juego. Una vez elegido o jugado un juego, todo trata solo de ese juego: quién ganó y, si contasteis, los puntos de todos, con equipos y automa. Con varias mesas, cada mesa tiene su propio resultado.',
+    },
+    fr: {
+      title: 'Partager montre désormais ce que vous voulez savoir',
+      body: 'Avant le choix, « Partager » envoie le classement, désormais avec la répartition des notes de chaque jeu. Une fois un jeu choisi ou joué, il n’est plus question que de lui : qui a gagné et, si vous avez compté, les points de chacun, équipes et automa compris. Avec plusieurs tables, chaque table a son propre résultat.',
+    },
+    it: {
+      title: 'Condividere ora mostra quello che volete sapere',
+      body: 'Prima della scelta, «Condividi» invia la classifica, ora con come è stato valutato ogni gioco. Una volta scelto o giocato un gioco, si parla solo di quello: chi ha vinto e, se avete contato, i punti di tutti, squadre e automa compresi. Con più tavoli, ogni tavolo ha il suo risultato.',
+    },
+    nl: {
+      title: 'Delen laat nu zien wat jullie willen weten',
+      body: 'Vóór de keuze deelt ‘Delen’ de ranglijst — nu met hoe elk spel beoordeeld is. Is er een spel gekozen of gespeeld, dan gaat het alleen nog om dat spel: wie er gewonnen heeft en, als jullie geteld hebben, ieders punten, met teams en automa. Bij meerdere tafels krijgt elke tafel een eigen uitslag.',
+    },
+    pt: {
+      title: 'Compartilhar agora mostra o que vocês querem saber',
+      body: 'Antes da escolha, «Compartilhar» envia a classificação, agora com a forma como cada jogo foi avaliado. Depois de um jogo ser escolhido ou jogado, trata-se apenas desse jogo: quem ganhou e, se contaram, os pontos de todos, com equipas e automa. Com várias mesas, cada mesa tem o seu próprio resultado.',
+    },
+    fi: {
+      title: 'Jakaminen näyttää nyt sen, mitä haluatte tietää',
+      body: 'Ennen valintaa ”Jaa” lähettää sijoitukset, nyt myös sen, miten kutakin peliä arvioitiin. Kun peli on valittu tai pelattu, kyse on vain siitä pelistä: kuka voitti ja, jos laskitte, kaikkien pisteet joukkueineen ja automaatteineen. Kun pöytiä on useita, jokainen pöytä saa oman tuloksensa.',
+    },
+    ko: {
+      title: '이제 공유하면 궁금한 내용이 담깁니다',
+      body: '게임을 고르기 전에는 ‘공유’가 순위를 보내며, 이제 게임마다 평가가 어떻게 나뉘었는지도 함께 보여 줍니다. 게임을 고르거나 플레이한 뒤에는 그 게임만 다룹니다. 누가 이겼는지, 점수를 셌다면 팀과 오토마를 포함한 모두의 점수가 담깁니다. 테이블이 여러 개라면 테이블마다 결과가 따로 나옵니다.',
+    },
+  },
+  /*
    * #1706 + #1721, the Spielwirbel-Score rework: a softer veto on the curve and
    * evenings instead of votes as the shelf's unit, shipped together so users get
    * one explanation. Not a new capability, so by the bar in the header it would

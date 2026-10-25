@@ -239,6 +239,20 @@ const SESSION = {
     { title: 'Unbewertet', score: 0, count: 0, place: null },
   ],
 };
+
+// The same evening before the pick, and after it with points (#1726).
+const RANKING = {
+  ...SESSION, playedTitle: null, winnerNames: [], bringers: [],
+  rows: SESSION.rows.map((r) => ({ ...r, dist: [1, 2, 3, 4, 5].map((n) => ({ n, count: r.count ? n % 3 : 0, word: '' })) })),
+};
+const WITH_POINTS = {
+  ...SESSION, finished: true,
+  points: [{ name: 'Jonas', text: '42', winner: true }, { name: 'Lea', text: '37' }, { name: 'Automa', text: '30', automa: true }],
+};
+const SPLIT_MODEL = {
+  roundName: 'R', day: '20.09.2026', outcome: 'split',
+  tables: [{ title: 'Azul', names: 'Anna, Ben', winnerNames: ['Anna'], points: [{ name: 'Anna', text: '61' }] }],
+};
 const sessionSpec = (dom, model) => JSON.parse(dom.run(`JSON.stringify(brueckeSessionSpec(${JSON.stringify(model)}))`));
 
 test('session spec (#1628): the screen’s sentence, the played score, who brings it, the ranking with its tie', () => {
@@ -250,8 +264,10 @@ test('session spec (#1628): the screen’s sentence, the played score, who bring
     assert.ok(!s.title.includes('\u{1F3C6}'), 'the trophy emoji must not reach the canvas');
     assert.deepEqual(s.plate, { value: '4,8', label: 'Spielwirbel-Score · 5 Wertungen' });
     assert.equal(s.bringers, 'Gehört Lea');
-    assert.deepEqual(s.rows.map((r) => r.place), ['1', '2', '2', '4'], 'a shared place prints twice; unrated rows never');
-    assert.deepEqual(s.rows.map((r) => r.chosen), [true, false, false, false]);
+    assert.deepEqual(s.rows, [], 'once a game is played the ranking is dropped (#1726)');
+    const r = JSON.parse(dom.run(`JSON.stringify(brueckeSessionSpec(${JSON.stringify(RANKING)}))`));
+    assert.deepEqual(r.rows.map((x) => x.place), ['1', '2', '2', '4'], 'a shared place prints twice; unrated rows never');
+    assert.equal(r.plate, null, 'no plate before a pick');
 
     // A cancelled evening names no played game, so it carries no plate and no bringers.
     const cancelled = sessionSpec(dom, { ...SESSION, cancelled: true });
@@ -267,7 +283,9 @@ test('session drawing: 1080 square, no pattern, nothing under 24 px exported, me
     const inks = JSON.parse(dom.run('JSON.stringify([...new Set(BRUECKE_CARD_TEXT.map((p) => BRUECKE_CARD_TOKENS[p.ink]))])'));
     const scale = dom.run('BRUECKE_CARD_SCALE');
     const long = { ...SESSION, playedTitle: 'Die Siedler von Catan – Städte und Ritter Jubiläumsausgabe', winnerNames: ['Konstantin', 'Maximiliane', 'Jonas'] };
-    for (const model of [SESSION, long]) {
+    // Every stage goes through the floor and the measured inks (#1726): the
+    // played card, the ranking with its strips, the points, a split evening.
+    for (const model of [SESSION, long, RANKING, WITH_POINTS, SPLIT_MODEL]) {
       dom.run('__calls.length = 0; __canvases.length = 0');
       dom.context.__model = model;
       await dom.run('brueckeCardBlob(__model, "session")');
@@ -283,15 +301,21 @@ test('session drawing: 1080 square, no pattern, nothing under 24 px exported, me
         assert.ok(inks.includes(fill), `„${text}" is drawn in ${fill}, which BRUECKE_CARD_TEXT does not measure`);
       }
       const all = drawn.map((d) => d.text).join('');
-      assert.ok(all.includes('Kartographen') && all.includes('Azul'), 'the ranking was drawn');
-      assert.ok(all.includes('4,8'), 'the played score was drawn');
+      if (model === RANKING) {
+        assert.ok(all.includes('Kartographen') && all.includes('Azul'), 'the ranking was drawn');
+        continue;
+      }
+      if (model === WITH_POINTS) assert.ok(all.includes('Automa') && all.includes('37'), 'the points were drawn');
+      if (model === SPLIT_MODEL) { assert.ok(all.includes('Azul') && all.includes('Anna hat gewonnen'), 'the tables'); continue; }
+      assert.ok(!all.includes('Kartographen'), 'no ranking once a game was played');
+      if (model !== long) assert.ok(all.includes('4,8'), 'the played score was drawn');
       assert.ok(all.includes('GEHÖRT'), 'the bringers line was drawn');
       assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
     }
   } finally { dom.close(); }
 });
 
-test('the results screen shares Die Brücke’s session card — and the text alone for a split evening', async () => {
+test('the results screen shares Die Brücke’s session card — a split evening’s too', async () => {
   const dom = boot();
   try {
     dom.run('globalThis.__shared = []; navigator.canShare = () => true; navigator.share = async (d) => { __shared.push((d.files || []).length); };');
@@ -300,9 +324,10 @@ test('the results screen shares Die Brücke’s session card — and the text al
     assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__shared)')), [1], 'the card went with the text');
     assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
 
+    // A split evening is a card too since #1726.
     dom.run('__canvases.length = 0');
-    dom.context.__model = { roundName: 'R', outcome: 'split', tables: [{ title: 'Azul', names: 'A, B' }] };
-    assert.equal(await dom.run('shareResultCard(__model, "msg")'), false, 'a split parent keeps the text share');
-    assert.equal(JSON.parse(dom.run('JSON.stringify(__canvases.length)')), 0);
+    dom.context.__model = SPLIT_MODEL;
+    assert.equal(await dom.run('shareResultCard(__model, "msg")'), true, 'a split parent shares its card');
+    assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
   } finally { dom.close(); }
 });

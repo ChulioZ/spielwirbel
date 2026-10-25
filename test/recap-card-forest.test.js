@@ -150,7 +150,10 @@ test('result spec: round · long date, the played sentence, the winner apart wit
     assert.deepEqual(s.headline.map((r) => r.text), ['„Nordlichter“ wurde gespielt.']);
     assert.deepEqual(s.winner, { text: 'Jonas hat gewonnen', score: '4,8', stop: '5' });
     assert.equal(s.cover, true);
-    assert.deepEqual(s.rows.map((r) => [r.place, r.title, r.score, r.stop]),
+    assert.deepEqual(s.rows, [], 'once a game is played the Tafel is dropped (#1726)');
+    const r = spec(dom, 'session', { ...SESSION, playedTitle: null, winnerNames: [] });
+    assert.equal(r.cover, false);
+    assert.deepEqual(r.rows.map((x) => [x.place, x.title, x.score, x.stop]),
       [['1', 'Nordlichter', '4,8', '5'], ['2', 'Kartographen des Nordens', '3,8', '4'], ['3', 'Rost & Regen', '1,6', '2']]);
     assert.equal(s.factLine, SESSION.factLine, 'the screen’s own fact line, never a re-derivation');
     assert.ok(!JSON.stringify(s).includes('21:47'), 'no time of day');
@@ -187,6 +190,11 @@ test('result spec: a split session names its tables, with no winner and no score
     assert.equal(s.winner, null);
     assert.deepEqual(s.rows.map((r) => r.title), ['Nordlichter', 'Azul']);
     assert.ok(!JSON.stringify(s).includes('Jonas'), 'a split names its tables, not their people');
+    // Each table's result, when it has one (#1726) — still not who sat there.
+    const won = spec(dom, 'session', { roundName: 'R', day: 'd', outcome: 'split',
+      tables: [{ title: 'Azul', names: 'Jonas, Lea', winnerNames: ['Lea'], ending: null }] });
+    assert.equal(won.rows[0].sub, 'Lea hat gewonnen');
+    assert.ok(!JSON.stringify(won).includes('Jonas'));
   } finally { dom.close(); }
 });
 
@@ -215,7 +223,11 @@ test('drawing: 1080×1350, no pattern, no icon font, one image, floors, measured
     const heights = sceneH(dom);
     for (const [kind, model] of [['session', SESSION], ['period', PERIOD],
       ['session', { ...SESSION, winnerNames: ['Jonas', 'Lea', 'Ida'] }],
-      ['session', { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul' }] }]]) {
+      ['session', { roundName: 'R', day: 'd', outcome: 'split', tables: [{ title: 'Azul', winnerNames: ['Ida'] }] }],
+      // The other two stages (#1726): the ranking with its strips, the points.
+      ['session', { ...SESSION, playedTitle: null, winnerNames: [],
+        rows: SESSION.rows.map((r) => ({ ...r, dist: [1, 2, 3, 4, 5].map((n) => ({ n, count: 1, word: '' })) })) }],
+      ['session', { ...SESSION, finished: true, points: [{ name: 'Jonas', text: '42', winner: true }, { name: 'Automa', text: '3', automa: true }] }]]) {
       dom.run('__calls.length = 0; __canvases.length = 0');
       dom.context.__model = model;
       await dom.run(`forestCardBlob(${JSON.stringify(kind)}, __model)`);
@@ -239,7 +251,7 @@ test('drawing: 1080×1350, no pattern, no icon font, one image, floors, measured
       // The rank digits are Alegreya Sans 800, never Young Serif (review U3).
       // They stand at the left padding; the kicker's tracked date does not.
       const ranks = drawn.filter((x) => x.x === 30 && /^[1-3]$/.test(x.text));
-      if (kind === 'session') assert.ok(ranks.length >= 1, `${kind}: the ranks were found`);
+      if (kind === 'session' && model.rows && !model.playedTitle) assert.ok(ranks.length >= 1, `${kind}: the ranks were found`);
       for (const d of ranks) {
         assert.match(d.font, /^800 15px "Alegreya Sans"/, `${kind}: rank ${d.text} is set in ${d.font}`);
       }
@@ -331,6 +343,6 @@ test('the results screen adds the long date and its fact line under Forest, and 
 
   const classic = await sharedModel('klassisch');
   assert.deepEqual(Object.keys(classic).sort(),
-    ['bringers', 'cancelled', 'day', 'ending', 'people', 'playedTitle', 'roundName', 'rows', 'when', 'winnerNames'],
+    ['bringers', 'cancelled', 'day', 'ending', 'finished', 'people', 'playedTitle', 'points', 'roundName', 'rows', 'when', 'winnerNames'],
     'Klassisch’s share model carries only what every card reads');
 });

@@ -160,10 +160,7 @@ async function showTableBuilder(round, session, gamesHint) {
         roundName: round.name,
         when,
         outcome: 'split',
-        tables: children.map((child) => ({
-          title: (round.games.find((g) => g.id === child.chosenGameId) || {}).title || t('tables.gameGone'),
-          names: sessionPeople(round, child).map(personLabel).join(', '),
-        })),
+        tables: children.map((child) => splitShareTable(round, child)),
       }));
       body.appendChild(shareBtn);
     }
@@ -463,6 +460,22 @@ async function showTableBuilder(round, session, gamesHint) {
    a second opinion of the split, which is what the Klassisch card avoids too.
 
    Returns a fragment; the caller owns where it goes. */
+// One table of a split evening, for the share (#526, #1726): its game, who sat
+// at it, and that table's own result — who won or how it ended, and the points
+// as its result screen lists them.
+function splitShareTable(round, child) {
+  const people = sessionPeople(round, child);
+  const winnerIds = Array.isArray(child.winnerIds) ? child.winnerIds : [];
+  const played = child.finished && !child.cancelled;
+  return {
+    title: (round.games.find((g) => g.id === child.chosenGameId) || {}).title || t('tables.gameGone'),
+    names: people.map(personLabel).join(', '),
+    winnerNames: played ? winnerIds.map((wid) => personLabel(people.find((p) => p.id === wid))).filter(Boolean) : [],
+    ending: played ? sessionEnding(child) : null,
+    points: played ? sessionSharePoints(round, child, winnerIds) : [],
+  };
+}
+
 function renderTischSplit(round, session, games, children) {
   const frag = document.createDocumentFragment();
   const voted = sessionHasVotes(session);
@@ -484,10 +497,7 @@ function renderTischSplit(round, session, games, children) {
       roundName: round.name,
       when: fmtSessionWhen(session),
       outcome: 'split',
-      tables: children.map((child) => ({
-        title: (round.games.find((g) => g.id === child.chosenGameId) || {}).title || t('tables.gameGone'),
-        names: sessionPeople(round, child).map(personLabel).join(', '),
-      })),
+      tables: children.map((child) => splitShareTable(round, child)),
     }));
     foot.appendChild(shareBtn);
   }
