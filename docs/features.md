@@ -714,7 +714,10 @@ What the app does, in detail. For a short overview see the
   game in the same picker (a guest game included), then the same sheet, dated
   yesterday. A logged session
   counts in the Chronik, the recaps, Pokale and the badges on its own day, and is
-  not announced to friends (it is bookkeeping, not news).
+  not announced to friends (it is bookkeeping, not news). A session started
+  live and finished on a later day is dated by its **finish** (#1725), so a
+  group that votes days ahead files the play under the day it was played;
+  correcting a winner afterwards does not move it again.
 - **Partien importieren** (import plays, #1665) – beside „Session nachtragen",
   the Chronik brings in a whole play history: from a **BG Stats** export file
   (read in the browser, never uploaded) or, with a BGG name linked to the

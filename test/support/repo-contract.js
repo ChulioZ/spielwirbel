@@ -2197,6 +2197,44 @@ module.exports = function repoContract(repo) {
     assert.equal(kept.finishedAt, at);
   });
 
+  // A live session is dated by its FINISH (#1725): `redate` moves the three
+  // stamps to the finish moment, but only on the transition — the results
+  // screen re-POSTs the finish on every winner tap, and those must not drag
+  // the date forward again.
+  test('finishSession with redate moves the date on the transition only', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const started = '2026-03-01T18:00:00.000Z';
+    const blob = (chosen) => ({
+      createdAt: started, gameIds: [g.id], votes: {}, chosenGameId: chosen ? g.id : null,
+      chosenAt: chosen ? started : null, finished: false, finishedAt: null, winnerIds: [],
+      cancelled: false, cancelledAt: null, done: true,
+    });
+    const played = '2026-03-11T21:00:00.000Z';
+    const s = await repo.createSession(T, round.id, blob(true));
+    const done = await repo.finishSession(T, round.id, s.id, { finished: true, winnerIds: [], at: played, redate: true });
+    assert.equal(done.createdAt, played);
+    assert.equal(done.chosenAt, played);
+    assert.equal(done.finishedAt, played);
+
+    const later = '2026-03-20T10:00:00.000Z';
+    const tapped = await repo.finishSession(T, round.id, s.id, { finished: true, winnerIds: ['m1'], at: later, redate: true });
+    assert.equal(tapped.createdAt, played, 'a re-POST on a finished session keeps its date');
+    assert.equal(tapped.chosenAt, played);
+
+    // No chosen game: chosenAt stays null rather than gaining a stamp.
+    const bare = await repo.createSession(T, round.id, blob(false));
+    const bareDone = await repo.finishSession(T, round.id, bare.id, { finished: true, winnerIds: [], at: played, redate: true });
+    assert.equal(bareDone.createdAt, played);
+    assert.equal(bareDone.chosenAt, null);
+
+    // Without the flag nothing but finishedAt moves — the demo seeder's path.
+    const plain = await repo.createSession(T, round.id, blob(true));
+    const plainDone = await repo.finishSession(T, round.id, plain.id, { finished: true, winnerIds: [], at: played });
+    assert.equal(plainDone.createdAt, started);
+    assert.equal(plainDone.finishedAt, played);
+  });
+
   // A finished session's points (#1630). Absent-key parity both ways: an empty
   // object CLEARS the key rather than storing {}, un-finishing keeps the points,
   // and removing the played game takes them with its result. lowScoreWins on a

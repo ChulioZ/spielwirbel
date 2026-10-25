@@ -88,6 +88,56 @@ test('an ordinary session is still stamped NOW when it is finished', async () =>
   assert.ok(done.finishedAt >= before, `${done.finishedAt} is now, not ${s.createdAt}`);
 });
 
+// #1725: a group that votes days ahead and plays later gets the play filed under
+// the day it was FINISHED. The clock is mocked so start, finish and the later
+// winner taps land on different days.
+test('a live session started one day and finished another is dated by its finish', async (t) => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const dayA = Date.parse('2026-03-01T18:00:00.000Z');
+  const dayB = '2026-03-11T21:30:00.000Z';
+  const dayC = '2026-03-14T09:00:00.000Z';
+  t.mock.timers.enable({ apis: ['Date'], now: dayA });
+  const s = (await log(round.id, { gameId: game.id })).body.session;
+  assert.equal(s.createdAt, new Date(dayA).toISOString());
+
+  t.mock.timers.setTime(Date.parse(dayB));
+  const done = (await finish(round.id, s.id, {})).body;
+  assert.equal(done.createdAt, dayB);
+  assert.equal(done.chosenAt, dayB);
+  assert.equal(done.finishedAt, dayB);
+  assert.equal('dateOnly' in done, false, 'a live session carries a real time, never the 20:00 stand-in');
+
+  // A winner corrected three days later re-POSTs the finish: the date holds.
+  t.mock.timers.setTime(Date.parse(dayC));
+  const tapped = (await finish(round.id, s.id, { winnerIds: [round.members[0].id] })).body;
+  assert.equal(tapped.createdAt, dayB);
+  assert.equal(tapped.chosenAt, dayB);
+
+  // An un-finish and re-finish is a real new finish, and may move it again.
+  assert.equal((await finish(round.id, s.id, { finished: false })).body.createdAt, dayB);
+  const again = (await finish(round.id, s.id, {})).body;
+  assert.equal(again.createdAt, dayC);
+  assert.equal(again.finishedAt, dayC);
+
+  // And the Chronik reads the session at its finish day.
+  t.mock.timers.reset();
+  assert.equal((await roundOf(round.id)).sessions.find((x) => x.id === s.id).createdAt, dayC);
+});
+
+test('a re-dated session keeps its day through a later winner tap and a re-finish', async () => {
+  const round = await createRound(request);
+  const game = await addGame(round.id);
+  const s = (await log(round.id, { gameId: game.id })).body.session;
+  await finish(round.id, s.id, {});
+  await redate(round.id, s.id, PAST);
+  assert.equal((await finish(round.id, s.id, { winnerIds: [round.members[0].id] })).body.createdAt, PAST);
+  await finish(round.id, s.id, { finished: false });
+  const again = (await finish(round.id, s.id, {})).body;
+  assert.equal(again.createdAt, PAST, 'hand-dated: never moved by a finish');
+  assert.equal(again.finishedAt, PAST);
+});
+
 test('a finished session can be moved to another day — all three stamps together', async () => {
   const round = await createRound(request);
   const game = await addGame(round.id);

@@ -111,9 +111,10 @@ test('GET /api/rounds summary carries members, background and lastPlayed', async
   assert.ok(entry.lastPlayed.at);
 });
 
-test('GET /api/rounds lastPlayed follows createdAt, not a later re-finish', async () => {
-  // Re-finishing an older session must not make it the "last played" one: the
-  // home tile has to agree with the Chronik, which orders by createdAt.
+test('GET /api/rounds lastPlayed follows createdAt, not a winner tap', async () => {
+  // The home tile has to agree with the Chronik, which orders by createdAt —
+  // never by finishedAt, which a winner tap rewrites. Since #1725 a reset and
+  // re-finish IS a new finish and re-dates the session, so both move together.
   const round = await createRound(request); // Alice, Bob
   const alice = round.members[0];
 
@@ -144,18 +145,28 @@ test('GET /api/rounds lastPlayed follows createdAt, not a later re-finish', asyn
   const at = entry.lastPlayed.at;
   assert.ok(at > older.createdAt); // the newer session's createdAt is shown
 
-  // Reset the older session's result and finish it again — its finishedAt is
-  // now the newest, but it stays the older session.
+  // A winner tap on the older, finished session rewrites its finishedAt to the
+  // newest stamp, but it stays the older session.
+  await new Promise((r) => setTimeout(r, 5));
+  await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${older.id}/finish`)
+    .send({ finished: true, winnerIds: [round.members[1].id] });
+  entry = (await request(app).get('/api/rounds')).body.find((r) => r.id === round.id);
+  assert.equal(entry.lastPlayed.gameTitle, 'Go');
+  assert.equal(entry.lastPlayed.at, at);
+
+  // Reset and finish again: a new finish, so it is now the newest — on the home
+  // tile AND in the round's own (Chronik) order.
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${older.id}/finish`)
     .send({ finished: false });
   await request(app)
     .post(`/api/rounds/${round.id}/sessions/${older.id}/finish`)
     .send({ finished: true, winnerIds: [alice.id] });
-
   entry = (await request(app).get('/api/rounds')).body.find((r) => r.id === round.id);
-  assert.equal(entry.lastPlayed.gameTitle, 'Go');
-  assert.equal(entry.lastPlayed.at, at);
+  assert.equal(entry.lastPlayed.gameTitle, 'Chess');
+  const sessions = (await request(app).get(`/api/rounds/${round.id}`)).body.sessions;
+  assert.equal(sessions[sessions.length - 1].id, older.id);
 });
 
 test('GET /api/rounds/:rid 404s for an unknown round', async () => {

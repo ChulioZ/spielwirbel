@@ -97,6 +97,12 @@ function renderChronikTab(round, activities) {
     list.push(s);
     childrenOf.set(s.parentSessionId, list);
   });
+  // In the order the split wrote them, not by date: since #1725 each table is
+  // dated by its own finish, so the stored order no longer is the split's.
+  doneSessions.filter((s) => childrenOf.has(s.id)).forEach((p) => {
+    const order = sessionChildIds(p);
+    childrenOf.get(p.id).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  });
   doneSessions
     .filter((s) => !(s.parentSessionId && parentIds.has(s.parentSessionId)))
     .forEach((s) => entries.push({ kind: 'session', at: s.createdAt, session: s }));
@@ -642,7 +648,7 @@ function renderChronikTab(round, activities) {
     item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
     // The tables of a split evening, indented under the parent they came from
     // (#796). Newest-first everywhere else in this timeline, but a split's
-    // tables are siblings of one moment, so they keep their creation order.
+    // tables are siblings of one moment, so they keep the split's own order.
     const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
     if (kids && kids.length) {
       const nest = h('<div class="tl-nest"></div>');
