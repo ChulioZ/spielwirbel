@@ -215,10 +215,10 @@ function fitsRecommendedCount(game, playerCount, on) {
 
 // THE MULTI-TABLE POOL PREDICATE IS `fitsSomeTable` IN public/js/table-split.js
 // (#796). A session split across several tables asks "can this box seat SOME
-// table of at least three?" instead of "does it seat exactly this party?", so it
+// table of at least the session's minimum (#1730)?" instead of "does it seat exactly this party?", so it
 // is a sibling of the function above and not a different `playerCount`. It sits
 // in table-split.js because these are classic scripts over one global lexical
-// scope and MIN_TABLE_PARTIES — which every other user of is in that file —
+// scope and DEFAULT_MIN_TABLE_SEATS — which every other user of is in that file —
 // cannot be declared twice. Both sides of the draw apply it identically, exactly
 // like the two predicates here (.claude/rules/active-games-filter-sites.md).
 

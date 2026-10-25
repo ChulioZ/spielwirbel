@@ -113,7 +113,7 @@ test('the count bubbles follow the stepper, one per game, capped', async (t) => 
   const dom = await setup(t, 'ocean');
   const bubbles = () => qa(dom, '.ocean-count .ocean-count__bubble').length;
   assert.equal(bubbles(), 3);
-  q(dom, '.stepper__btn[data-d="-1"]').click();
+  q(dom, '.setup-bar .stepper__btn[data-d="-1"]').click();
   assert.equal(bubbles(), 2);
   const input = q(dom, '#count');
   input.value = '12';

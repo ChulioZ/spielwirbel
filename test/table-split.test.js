@@ -19,7 +19,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
-  MIN_TABLE_PARTIES,
+  DEFAULT_MIN_TABLE_SEATS,
+  MIN_TABLE_SEATS_LOWEST,
+  MIN_TABLE_SEATS_HIGHEST,
+  minTableSeatsOf,
   VIOLATION_MAX,
   NEUTRAL_RATING,
   seatRating,
@@ -283,7 +286,7 @@ test('every proposal seats every person exactly once, in range, at a distinct ga
     assert.equal(new Set(seated).size, PARTIES.length);
     assert.equal(new Set(proposal.tables.map((tb) => tb.gameId)).size, proposal.tables.length);
     proposal.tables.forEach((tb) => {
-      assert.ok(tb.personIds.length >= MIN_TABLE_PARTIES);
+      assert.ok(tb.personIds.length >= DEFAULT_MIN_TABLE_SEATS);
       assert.ok(fitsPlayerCount(GAMES.find((g) => g.id === tb.gameId), tb.personIds.length));
     });
   });
@@ -336,4 +339,94 @@ test('too few usable games for the tables the group needs yields no proposal at 
     proposeTableSplits({ parties: PARTIES, games: [game('only', 2, 4)], votes: VOTES, seed: 's', tileValue, fitsPlayerCount }),
     []
   );
+});
+
+/* ---- The session's own minimum table size (#1730) ---- */
+
+test('minTableSeatsOf: absent or out of range is the default, 2..6 is kept', () => {
+  assert.equal(DEFAULT_MIN_TABLE_SEATS, 3);
+  assert.deepEqual([MIN_TABLE_SEATS_LOWEST, MIN_TABLE_SEATS_HIGHEST], [2, 6]);
+  // The legacy shape: every session and preset before #1730 carries no key.
+  for (const holder of [undefined, null, {}, { minTableSeats: null }]) {
+    assert.equal(minTableSeatsOf(holder), 3, JSON.stringify(holder));
+  }
+  for (const v of [2, 4, 6]) assert.equal(minTableSeatsOf({ minTableSeats: v }), v);
+  // Only a hand-crafted blob can hold these; none may shrink or grow a table.
+  for (const v of [1, 7, 0, -2, 2.5, '2', NaN]) {
+    assert.equal(minTableSeatsOf({ minTableSeats: v }), 3, String(v));
+  }
+});
+
+test('the pool predicate takes the minimum: a duo box joins at 2, a trio box leaves at 4', () => {
+  const duo = { id: 'd', minPlayers: 2, maxPlayers: 2 };
+  const trio = { id: 't', minPlayers: 3, maxPlayers: 3 };
+  assert.equal(fitsSomeTable(duo, 6, fitsPlayerCount), false, 'default: no table of 2');
+  assert.equal(fitsSomeTable(duo, 6, fitsPlayerCount, 2), true);
+  assert.equal(fitsSomeTable(trio, 6, fitsPlayerCount), true);
+  assert.equal(fitsSomeTable(trio, 6, fitsPlayerCount, 4), false);
+  assert.deepEqual(admittedTableSizes({ id: 'x', minPlayers: 1, maxPlayers: 8 }, 6, fitsPlayerCount, 2), [2, 3, 4, 5, 6]);
+});
+
+test('a lower minimum raises the most tables a group can form', () => {
+  const six = Array.from({ length: 6 }, (_, i) => ({ id: 'g' + i, minPlayers: 2, maxPlayers: 6 }));
+  assert.deepEqual(feasibleTableCounts(six, 12, fitsPlayerCount), [2, 3, 4]);
+  assert.deepEqual(feasibleTableCounts(six, 12, fitsPlayerCount, 2), [2, 3, 4, 5, 6]);
+  assert.deepEqual(feasibleTableCounts(six, 12, fitsPlayerCount, 6), [2]);
+});
+
+const onePartyEach = (n) => Array.from({ length: n }, (_, i) => ({ id: 'p' + i, personIds: ['p' + i] }));
+const rateAll = (parties, games, rating) => {
+  const votes = {};
+  parties.forEach((p) => {
+    votes[p.id] = {};
+    games.forEach((g) => { votes[p.id][g.id] = { rating: rating(p, g) }; });
+  });
+  return votes;
+};
+
+test('at minimum 2 the search proposes a 2 + 4 split around a two-player game', () => {
+  // The issue's own case: a two-player game wanted by exactly two people.
+  const parties = onePartyEach(6);
+  const games = [
+    { id: 'duo', minPlayers: 2, maxPlayers: 2 },
+    { id: 'quad', minPlayers: 4, maxPlayers: 4 },
+  ];
+  const votes = rateAll(parties, games, (p, g) => (g.id === 'duo' ? (['p0', 'p1'].includes(p.id) ? 5 : 1) : 4));
+  const args = { parties, games, votes, seed: 's', tileValue, fitsPlayerCount };
+
+  assert.deepEqual(proposeTableSplits(args), [], 'default: the duo box seats no table, and one quad cannot seat six');
+  const [first] = proposeTableSplits({ ...args, minSeats: 2 });
+  assert.ok(first, 'at 2 there is a split');
+  const byGame = Object.fromEntries(first.tables.map((tb) => [tb.gameId, tb.personIds.slice().sort()]));
+  assert.deepEqual(byGame.duo, ['p0', 'p1']);
+  assert.equal(byGame.quad.length, 4);
+});
+
+test('at minimum 4 no proposal holds a table of three', () => {
+  // Nine over three 3-5 games: at the default the three-table proposal is
+  // necessarily 3 + 3 + 3, so the control below is deterministic. At 4 only the
+  // two-table counts remain (floor(9 / 4) = 2).
+  const parties = onePartyEach(9);
+  const games = ['a', 'b', 'c'].map((id) => ({ id, minPlayers: 3, maxPlayers: 5 }));
+  const votes = rateAll(parties, games, () => 4);
+  const args = { parties, games, votes, seed: 's', tileValue, fitsPlayerCount };
+  const sizes = (proposals) => proposals.flatMap((pr) => pr.tables.map((tb) => tb.personIds.length));
+  assert.ok(sizes(proposeTableSplits(args)).includes(3), 'control: the default proposes a table of three');
+  const at4 = proposeTableSplits({ ...args, minSeats: 4 });
+  assert.ok(at4.length, 'a 4 + 5 split still exists');
+  assert.ok(sizes(at4).every((n) => n >= 4), JSON.stringify(sizes(at4)));
+});
+
+test('proposal search stays fast for a large group at minimum 2', () => {
+  // The "group of sixty" from docs/features.md, with a minimum of 2 the widest
+  // table-count window the search ever faces. Bounded by passes, so this is a
+  // regression tripwire rather than a benchmark.
+  const parties = onePartyEach(60);
+  const games = Array.from({ length: 30 }, (_, i) => ({ id: 'g' + i, minPlayers: 2, maxPlayers: 2 + (i % 5) }));
+  const votes = rateAll(parties, games, (p, g) => 1 + ((Number(p.id.slice(1)) * 7 + Number(g.id.slice(1)) * 3) % 5));
+  const started = Date.now();
+  const proposals = proposeTableSplits({ parties, games, votes, seed: 'big', tileValue, fitsPlayerCount, minSeats: 2 });
+  const ms = Date.now() - started;
+  assert.ok(proposals.length >= 1);
+  assert.ok(ms < 5000, `took ${ms} ms`);
 });

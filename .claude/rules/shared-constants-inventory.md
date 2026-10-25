@@ -219,9 +219,16 @@ justifying it moved up one.
 
 `fitsSomeTable` lives here rather than beside `fitsPlayerCount` for a reason that
 is structural rather than editorial: these are classic scripts over one global
-lexical scope, so two files cannot both declare `MIN_TABLE_PARTIES`, and every
+lexical scope, so two files cannot both declare `DEFAULT_MIN_TABLE_SEATS`, and every
 other user of that constant is in this file. `draw-pool.js` carries a pointer
 comment to it so a `grep` for the pool predicates lands on both.
+
+Since #1730 the minimum table size is a per-session choice (2–6, default 3), and
+the default, the bounds and the reader `minTableSeatsOf` live here too: the draw
+schema (`lib/draw-filters.js`), the split validation (`lib/session-split.js`),
+the setup stepper and the builder all read them from this one file, so the
+stepper cannot offer a value the server 400s and the builder cannot accept a
+table the server refuses.
 
 **The tenth is `public/js/session-outcome.js`** (#796): `sessionOutcome`, what
 became of a session — `open`, `played`, `cancelled` or `split`. It is the

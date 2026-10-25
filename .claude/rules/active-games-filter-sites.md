@@ -88,11 +88,12 @@ before assuming you have them all:
 
   **A FOURTH predicate joined the same three sites in #796 — and it is NOT in
   this file.** `fitsSomeTable` is the pool clause a multi-table session draws
-  with ("can this box seat *some* table of three or more?" rather than "does it
+  with ("can this box seat *some* table of at least the session's minimum —
+  3 by default, 2–6 since #1730?" rather than "does it
   seat the whole party?"), applied by `drawPool` and by `showStartSession`'s
   preview exactly where `fitsPlayerCount` is. It lives in
   `public/js/table-split.js`, not here, because these are classic scripts over one
-  global lexical scope and `MIN_TABLE_PARTIES` — which every other user of is in
+  global lexical scope and `DEFAULT_MIN_TABLE_SEATS` — which every other user of is in
   that file — cannot be declared twice. `draw-pool.js` carries a pointer comment
   so a `grep` landing here finds it; see
   `.claude/rules/multi-table-sessions.md` §2.

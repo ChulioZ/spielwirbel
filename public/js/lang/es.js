@@ -1153,6 +1153,9 @@ I18N.es = {
   // una sola plaza en el sorteo.
   'startSession.multiTable': 'Varias mesas',
   'startSession.multiTableNote': 'Para grupos grandes: votáis todos juntos una vez y después os repartís en varias mesas. Sortead al menos un juego por mesa.',
+  'startSession.minTableSeats': 'Plazas por mesa, como mínimo',
+  'startSession.minTableSeatsDown': 'Una plaza menos por mesa',
+  'startSession.minTableSeatsUp': 'Una plaza más por mesa',
   'tables.title': 'Formar las mesas',
   'tables.titleDone': 'Las mesas',
   'tables.countLabel': '¿Cuántas mesas?',

@@ -33,11 +33,11 @@ objective is monotone in the very dimension you are ranking. If it is, the ranki
 carries no information and the dimension has to be *exposed* rather than
 optimised.
 
-## 2. `MIN_TABLE_PARTIES` is why the pool predicate is not in `draw-pool.js`
+## 2. `DEFAULT_MIN_TABLE_SEATS` is why the pool predicate is not in `draw-pool.js`
 
 `fitsSomeTable` is a sibling of `fitsPlayerCount` and belongs beside it. It
 cannot be there: these are classic scripts over **one global lexical scope**, so
-two files declaring `const MIN_TABLE_PARTIES` is a `SyntaxError` at load —
+two files declaring `const DEFAULT_MIN_TABLE_SEATS` is a `SyntaxError` at load —
 "Identifier has already been declared" — and every other user of that constant is
 in `table-split.js`. Injecting the constant instead would have meant a fourth
 injected dependency for one integer.
@@ -116,8 +116,8 @@ pushes its log entry **inside** the claim rather than through `withSession`'s
 - **The seating atom is a PARTY, not a person** (#575), so a team never spans two
   tables — but since #1610 a party WEIGHS its seats (`seats` on
   `sessionPartyGroups`): a team sharing one hand takes one, an own-seat team its
-  headcount. `MIN_TABLE_PARTIES` (the name predates this) and every range check
-  count seats while every rating counts people, and the two are never conflated.
+  headcount. The minimum table size (per session since #1730, absent = 3, via
+  `minTableSeatsOf`) and every range check count seats while every rating counts people.
   The search places the heaviest parties first and checks a move or swap against
   both tables' admitted seat counts; with every party one seat it is
   byte-identical to before (`test/team-seats-split.test.js`). `sessionPartyGroups`

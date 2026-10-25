@@ -10777,6 +10777,13 @@ kbd {
    the chip did — under the row, and only while it is on. */
 .setup-addons__note { margin-top: 10px; text-align: center; }
 .setup-addons__note[hidden] { display: none; }
+/* „Mehrere Tische": the note and the minimum-table stepper (#1730) show together. */
+.setup-addons__tables[hidden] { display: none; }
+.setup-tables-min {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: 10px; margin-top: 8px;
+}
+.setup-tables-min label { font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); }
 
 /* The action bar: the draw count, a live summary and „Loswirbeln" in one box.
    Measured before #1015, the button sat at y=1454 on a 390x844 phone — the last

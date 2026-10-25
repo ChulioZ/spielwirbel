@@ -139,7 +139,17 @@ function showStartSession(round, prefill) {
           <div class="muted field__hint center">${esc(t('startSession.membersNote'))}</div>
         </div>
         <div id="addonMount"></div>
-        <div class="muted field__hint setup-addons__note" id="multiTableNote" hidden>${esc(t('startSession.multiTableNote'))}</div>
+        <div class="setup-addons__tables" id="multiTableOpts" hidden>
+          <div class="muted field__hint setup-addons__note">${esc(t('startSession.multiTableNote'))}</div>
+          <div class="setup-tables-min">
+            <label for="minTableSeats">${esc(t('startSession.minTableSeats'))}</label>
+            <div class="stepper">
+              <button type="button" class="stepper__btn" data-d="-1" aria-label="${esc(t('startSession.minTableSeatsDown'))}"><i class="ti ti-minus" aria-hidden="true"></i></button>
+              <input id="minTableSeats" class="stepper__val" inputmode="numeric" value="${DEFAULT_MIN_TABLE_SEATS}" />
+              <button type="button" class="stepper__btn" data-d="1" aria-label="${esc(t('startSession.minTableSeatsUp'))}"><i class="ti ti-plus" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="setup-grid__aside">
         <div class="setup-filterbar">
@@ -252,7 +262,10 @@ function showStartSession(round, prefill) {
     joining.size + guests.length - teamPicker.sharedTeamedPeopleCount() + teamPicker.sharedTeamCount();
   // Multi-table mode (#796). Preset from the same #252 blob as everything else on
   // this screen; the checkbox below is bound to it and the pool reads it live.
-  const tableState = { multiTable: !!(preset && preset.multiTable) };
+  // `minTableSeats` (#1730) rides along: the smallest table the split may form,
+  // read through the shared `minTableSeatsOf` so an absent preset key — every
+  // remembered draw before it, and every one at the default — opens on 3.
+  const tableState = { multiTable: !!(preset && preset.multiTable), minTableSeats: minTableSeatsOf(preset) };
   // A preset can arrive with BOTH remembered (#252), and `normalizeMetadataFilters`
   // above cannot drop it: it prunes against the SHELF's options, and whether this
   // evening has one table is a property of the screen. Without this the restored
@@ -307,7 +320,28 @@ function showStartSession(round, prefill) {
   }, guestList, { stateLines: tisch || ocean || bruecke || ph || forest });
   seatTable.setAttribute('role', 'group');
   seatTable.setAttribute('aria-labelledby', 'seatsLabel');
-  const multiTableNote = form.querySelector('#multiTableNote');
+  // The note and the minimum-table stepper (#1730) appear together, only while
+  // the mode is on: without it there are no tables to size.
+  const multiTableOpts = form.querySelector('#multiTableOpts');
+  const minSeatsInput = form.querySelector('#minTableSeats');
+  minSeatsInput.value = String(tableState.minTableSeats);
+  const setMinSeats = (n) => {
+    const v = Math.min(MIN_TABLE_SEATS_HIGHEST, Math.max(MIN_TABLE_SEATS_LOWEST, Number.isInteger(n) ? n : DEFAULT_MIN_TABLE_SEATS));
+    tableState.minTableSeats = v;
+    minSeatsInput.value = String(v);
+    // The pool preview depends on it: at 2 a two-player box joins the pot.
+    updateHint();
+  };
+  multiTableOpts.querySelectorAll('.stepper__btn').forEach((btn) => {
+    btn.addEventListener('click', () => setMinSeats(tableState.minTableSeats + parseInt(btn.dataset.d, 10)));
+  });
+  // Typed digits are clamped when the field is left, not per keystroke — a
+  // clamp on input would turn the first digit of nothing into a 2.
+  minSeatsInput.addEventListener('input', () => {
+    const digits = minSeatsInput.value.replace(/\D/g, '');
+    if (minSeatsInput.value !== digits) minSeatsInput.value = digits;
+  });
+  minSeatsInput.addEventListener('change', () => setMinSeats(parseInt(minSeatsInput.value, 10)));
   /* „Wer hat seine Spiele nicht dabei?" (#1002) — see buildSetupShelfField. Its
      `field` is null on an unmarked shelf, which is what decides whether the chip
      is offered; `refresh` is then a no-op. */
@@ -362,7 +396,7 @@ function showStartSession(round, prefill) {
     on: () => tableState.multiTable,
     onToggle: () => {
       tableState.multiTable = !tableState.multiTable;
-      multiTableNote.hidden = !tableState.multiTable;
+      multiTableOpts.hidden = !tableState.multiTable;
       // Hiding the control is not enough: the VALUE would survive on `metaFilters`,
       // so the chip outside the panel would keep claiming a filter whose control
       // has gone — a filter the user could neither see nor clear, which is the
@@ -379,7 +413,7 @@ function showStartSession(round, prefill) {
     },
   });
   // A remembered preset can arrive with the mode already on (#252).
-  multiTableNote.hidden = !tableState.multiTable;
+  multiTableOpts.hidden = !tableState.multiTable;
   form.querySelector('#addonMount').replaceWith(addons);
   updateHint();
 
@@ -484,7 +518,9 @@ function showStartSession(round, prefill) {
     const digits = countInput.value.replace(/\D/g, '');
     if (countInput.value !== digits) countInput.value = digits;
   });
-  form.querySelectorAll('.stepper__btn').forEach((btn) => {
+  // Scoped to the bar: the minimum-table stepper (#1730) is a `.stepper` too,
+  // and wired above to its own value.
+  form.querySelectorAll('.setup-bar .stepper__btn').forEach((btn) => {
     btn.addEventListener('click', () => {
       const cur = parseInt(countInput.value, 10);
       countInput.value = Math.max(1, (Number.isInteger(cur) ? cur : 1) + parseInt(btn.dataset.d, 10));
@@ -513,6 +549,7 @@ function showStartSession(round, prefill) {
       tagMode: tagFilterState.tagMode,
       metadata: metaFilters,
       multiTable: tableState.multiTable,
+      minTableSeats: tableState.minTableSeats, // #1730; stored only with multiTable
       memberIds: [...joining],
     };
   });
@@ -573,6 +610,7 @@ function showStartSession(round, prefill) {
         guests: guestList.payload(),
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false
+        minTableSeats: tableState.minTableSeats, // #1730; ignored without multiTable
       });
       // A per-device session opens the lobby instead: its votes arrive one
       // person at a time, from wherever those people are, so there is no single

@@ -264,7 +264,8 @@ test('every refusal the builder prevents is refused again server-side', async ()
 
 test('a table below the floor is refused even when the box would seat it', async () => {
   // Nine people over three tables is 3/3/3; moving one person makes a 2 and a 4,
-  // and a 2 is inside the game's 2-4 range but below MIN_TABLE_PARTIES.
+  // and a 2 is inside the game's 2-4 range but below the default minimum of 3.
+  // The session carries no `minTableSeats` — the legacy shape (#1730).
   const { round, session, tables } = await readyToSplit();
   assert.equal(tables.length, 3, 'nine people over three 4-seat games is 3/3/3');
   const moved = JSON.parse(JSON.stringify(tables));

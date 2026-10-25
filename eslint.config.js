@@ -208,7 +208,9 @@ const frontendGlobals = {
   sessionHasVotes: 'readonly', sessionEnding: 'readonly', ENDINGS: 'readonly',
   ENDING_LABELS: 'readonly', endingText: 'readonly',
   // table-split.js (issue #796) — also required by lib/draw.js and lib/session-split.js
-  MIN_TABLE_PARTIES: 'readonly', VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
+  DEFAULT_MIN_TABLE_SEATS: 'readonly', MIN_TABLE_SEATS_LOWEST: 'readonly',
+  MIN_TABLE_SEATS_HIGHEST: 'readonly', minTableSeatsOf: 'readonly',
+  VIOLATION_MAX: 'readonly', NEUTRAL_RATING: 'readonly',
   MAX_TABLE_PROPOSALS: 'readonly', seatRating: 'readonly', tableFeedback: 'readonly',
   admittedTableSizes: 'readonly', fitsSomeTable: 'readonly',
   feasibleTableCounts: 'readonly', scoreSplit: 'readonly', compareSplits: 'readonly',

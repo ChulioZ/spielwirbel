@@ -27,9 +27,29 @@
 // play their own takes its headcount. Everything here counts seats for
 // feasibility and PEOPLE for ratings, and the two are never conflated. The
 // PARTY stays the atom the search moves, so a team never spans two tables — a
-// party simply weighs its seats. (The name predates #1610, when every party was
-// one seat.)
-const MIN_TABLE_PARTIES = 3;
+// party simply weighs its seats.
+//
+// Since #1730 the group chooses it per session, within the range below: 2 makes
+// duo tables possible (a weekend where a two-player game wanted by exactly two
+// people is a good pick), a higher value says "big tables only". 3 stays the
+// default because the reason it was fixed still holds for most groups: a big
+// group splitting up usually wants proper tables rather than duos.
+const DEFAULT_MIN_TABLE_SEATS = 3;
+const MIN_TABLE_SEATS_LOWEST = 2;
+const MIN_TABLE_SEATS_HIGHEST = 6;
+
+// The minimum a session (or a stored filter preset) was drawn with. ABSENT means
+// the default — every session before #1730, and every one drawn at 3, since the
+// value is only stored when it differs (lib/draw-filters.js) — and so does
+// anything out of range, which only a hand-crafted blob can carry: the draw
+// route 400s on one. Read through this everywhere rather than as a raw field, so
+// the default lives in exactly one place.
+function minTableSeatsOf(holder) {
+  const v = holder && holder.minTableSeats;
+  return Number.isInteger(v) && v >= MIN_TABLE_SEATS_LOWEST && v <= MIN_TABLE_SEATS_HIGHEST
+    ? v
+    : DEFAULT_MIN_TABLE_SEATS;
+}
 
 // At or below this, a seating is a tier-1 violation: the person is at a game
 // they said they did not want to play. It is the BOTTOM TWO RUNGS of the vote
@@ -88,14 +108,14 @@ function tableFeedback(table, votes, tileValue) {
   return { sum, avg: personIds.length ? sum / personIds.length : null, lowest, violations };
 }
 
-// Every party count from MIN_TABLE_PARTIES up to `maxParties` this game can
-// seat, ascending. Derived from `fitsPlayerCount`, so owned expansions (#653)
+// Every seat count from `minSeats` up to `maxParties` this game can seat,
+// ascending. Derived from `fitsPlayerCount`, so owned expansions (#653)
 // widen it exactly as they widen the draw pool — and the set may have HOLES,
 // which is why it is enumerated rather than reduced to a min/max pair: a 3-4
 // base with a 6-8 expansion admits {3,4,6,7,8} and nothing at 5.
-function admittedTableSizes(game, maxParties, fitsPlayerCount) {
+function admittedTableSizes(game, maxParties, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS) {
   const sizes = [];
-  for (let s = MIN_TABLE_PARTIES; s <= maxParties; s++) {
+  for (let s = minSeats; s <= maxParties; s++) {
     if (fitsPlayerCount(game, s)) sizes.push(s);
   }
   return sizes;
@@ -107,21 +127,21 @@ function admittedTableSizes(game, maxParties, fitsPlayerCount) {
    `fitsPlayerCount` is point containment: does this box seat exactly the party
    at the table? Multi-table asks a different question — can this box seat SOME
    table the group could form? — so it is an existence test over the admitted
-   sizes between three and the whole group.
+   sizes between the session's minimum (#1730) and the whole group.
 
    The upper bound matters as much as the lower one. A 10-12 player game admits
    no table a group of six could form, so it has no business in their pool even
-   though its maximum clears three; bounding by `maxParties` is what says so.
+   though its maximum clears the minimum; bounding by `maxParties` is what says so.
    Owned expansions and the absent-range rule are inherited wholesale, because
    the whole predicate is expressed through `fitsPlayerCount` rather than by
    reading min/max again (.claude/rules/expansions-widen-by-union.md).
 
    It lives HERE rather than beside `fitsPlayerCount` in draw-pool.js only
    because these are classic scripts over one global lexical scope: two files
-   cannot both declare `MIN_TABLE_PARTIES`, and every other user of that constant
-   is in this file. draw-pool.js carries a pointer to it. */
-function fitsSomeTable(game, maxParties, fitsPlayerCount) {
-  for (let s = MIN_TABLE_PARTIES; s <= maxParties; s++) {
+   cannot both declare `DEFAULT_MIN_TABLE_SEATS`, and every other user of that
+   constant is in this file. draw-pool.js carries a pointer to it. */
+function fitsSomeTable(game, maxParties, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS) {
+  for (let s = minSeats; s <= maxParties; s++) {
     if (fitsPlayerCount(game, s)) return true;
   }
   return false;
@@ -132,22 +152,22 @@ function fitsSomeTable(game, maxParties, fitsPlayerCount) {
    tables or more, and a hard maximum would simply make the feature unusable at
    that size.
 
-       ceil(N / largest table the pool can seat)  <=  k  <=  floor(N / 3)
+       ceil(N / largest table the pool can seat)  <=  k  <=  floor(N / minimum)
 
    The lower bound is computed against the k LARGEST capacities rather than
    against one repeated maximum, because the games differ: two 4-player games
    cannot seat nine parties even though one 9-player game could. The upper bound
    can never exceed the number of distinct games drawn either — two tables playing
    the same box at once needs two copies of it. */
-function feasibleTableCounts(games, totalParties, fitsPlayerCount) {
+function feasibleTableCounts(games, totalParties, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS) {
   const caps = (games || [])
     .map((g) => {
-      const sizes = admittedTableSizes(g, totalParties, fitsPlayerCount);
+      const sizes = admittedTableSizes(g, totalParties, fitsPlayerCount, minSeats);
       return sizes.length ? sizes[sizes.length - 1] : 0;
     })
-    .filter((c) => c >= MIN_TABLE_PARTIES)
+    .filter((c) => c >= minSeats)
     .sort((a, b) => b - a);
-  const kMax = Math.min(Math.floor(totalParties / MIN_TABLE_PARTIES), caps.length);
+  const kMax = Math.min(Math.floor(totalParties / minSeats), caps.length);
   if (kMax < 1) return [];
   let kMin = 0;
   let seats = 0;
@@ -314,12 +334,15 @@ function seedTableAssignment(gameIds, sizes, partyIds, ctx, rand) {
 // Try one party moving from `from` to `to`. Both table sizes change — by the
 // party's seats (#1610) — so both have to stay inside their game's admitted set:
 // the holes an expansion leaves make this a real test rather than a range check.
+// That same test is the minimum-size guard: an admitted set never holds a size
+// below the session's minimum, so a separate `< minSeats` check here could never
+// fire — it was removed in #1730 after a deliberate break left the suite green
+// (.claude/rules/redundant-guards-make-each-other-untestable.md).
 function trySplitMove(from, to, tables, ctx, state) {
   const fromSeats = ctx.seatsAt(from);
   const toSeats = ctx.seatsAt(to);
   for (let i = 0; i < from.partyIds.length; i++) {
     const w = ctx.seatsOf(from.partyIds[i]);
-    if (fromSeats - w < MIN_TABLE_PARTIES) continue;
     if (!ctx.admits(from.gameId, fromSeats - w) || !ctx.admits(to.gameId, toSeats + w)) continue;
     const x = from.partyIds.splice(i, 1)[0];
     to.partyIds.push(x);
@@ -447,19 +470,22 @@ const MAX_TABLE_PROPOSALS = 5;
    `parties` is [{ id, personIds, seats }] — one entry per team plus one per
    un-teamed person, so a team is never split across two tables and all its
    people's ratings count. `seats` (#1610) is what the party takes at a table; an
-   absent one is 1, which is every party before own-seat teams existed. */
-function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayerCount }) {
+   absent one is 1, which is every party before own-seat teams existed.
+
+   `minSeats` is the session's minimum table size (#1730), read through
+   `minTableSeatsOf` by the caller; absent, the default. */
+function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS }) {
   const partyList = (parties || []).filter((p) => p && Array.isArray(p.personIds) && p.personIds.length);
   const seatsById = new Map(partyList.map((p) => [p.id, Number.isInteger(p.seats) && p.seats > 0 ? p.seats : 1]));
   const total = [...seatsById.values()].reduce((n, w) => n + w, 0);
-  const counts = feasibleTableCounts(games, total, fitsPlayerCount);
+  const counts = feasibleTableCounts(games, total, fitsPlayerCount, minSeats);
   if (!counts.length) return [];
 
   const sizesByGame = new Map();
   const capByGame = new Map();
   const usable = [];
   (games || []).forEach((g) => {
-    const sizes = admittedTableSizes(g, total, fitsPlayerCount);
+    const sizes = admittedTableSizes(g, total, fitsPlayerCount, minSeats);
     if (!sizes.length) return;
     sizesByGame.set(g.id, sizes);
     capByGame.set(g.id, sizes[sizes.length - 1]);
@@ -525,7 +551,10 @@ function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayer
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    MIN_TABLE_PARTIES,
+    DEFAULT_MIN_TABLE_SEATS,
+    MIN_TABLE_SEATS_LOWEST,
+    MIN_TABLE_SEATS_HIGHEST,
+    minTableSeatsOf,
     VIOLATION_MAX,
     NEUTRAL_RATING,
     MAX_TABLE_PROPOSALS,

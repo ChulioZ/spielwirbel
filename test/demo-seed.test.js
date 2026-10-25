@@ -30,7 +30,7 @@ const { TAG_ICONS } = require('../lib/tag-icons');
 const { isActiveGame, fitsPlayerCount, ownedByParty } = require('../public/js/draw-pool');
 const { isMarkerIndex } = require('../public/js/round-marker');
 const { designMarkers } = require('../public/js/designs');
-const { MIN_TABLE_PARTIES } = require('../public/js/table-split');
+const { DEFAULT_MIN_TABLE_SEATS } = require('../public/js/table-split');
 const { ENDINGS } = require('../public/js/session-outcome');
 const { PROVIDER_INFO_FIELDS } = require('../public/js/provider-info-fields');
 
@@ -212,10 +212,10 @@ test('the split fixture rates exactly the people who sit at the table', () => {
     for (const row of round.split.ratings) {
       assert.strictEqual(row.length, round.split.gameIndexes.length, 'a rating row is short of the drawn games');
     }
-    // The parties have to admit a two-table split at all: MIN_TABLE_PARTIES is 3
+    // The parties have to admit a two-table split at all: DEFAULT_MIN_TABLE_SEATS is 3
     // per table, and a team counts as ONE party.
     const parties = people - round.split.team.length + 1;
-    assert.ok(parties >= 2 * MIN_TABLE_PARTIES, `round '${round.key}': ${parties} parties cannot fill two tables`);
+    assert.ok(parties >= 2 * DEFAULT_MIN_TABLE_SEATS, `round '${round.key}': ${parties} parties cannot fill two tables`);
   }
 });
 
