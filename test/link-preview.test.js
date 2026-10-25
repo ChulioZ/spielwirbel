@@ -99,8 +99,9 @@ test('the declared image dimensions match the committed file', () => {
 test('the static card copy still matches the German hero copy it duplicates', async () => {
   // #437: the hero pitch lives in FIVE places — landing.hero.{title,sub} in
   // de.js, and four hand-copied strings in index.html. The copies cannot be
-  // shared away (a scraper runs no JS and has no locale, see
-  // .claude/rules/link-preview-card.md §1), so this parity check is the licence
+  // shared away (the static file IS the German card, served byte for byte; only
+  // other locales are rewritten — .claude/rules/link-preview-card.md §1), so
+  // this parity check is the licence
   // for them: retune the positioning in de.js alone and the card keeps selling
   // the old pitch, with nothing else going red.
   const de = loadLocale('de');

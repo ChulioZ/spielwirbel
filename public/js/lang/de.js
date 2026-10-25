@@ -1943,6 +1943,11 @@ I18N.de = {
   'auth.seg.register': 'Registrieren',
   'auth.promise.claim': 'Wer am Tisch sitzt, entscheidet mit.',
   'auth.promise.lede': 'Regal füllen, Session wirbeln, geheim werten — und danach weiß die Chronik, was gespielt wurde und wer gewonnen hat.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Regal füllen, Session wirbeln, geheim werten.',
+  'linkPreview.cardTrust': 'Kein Tracking · EU-Hosting',
+  'linkPreview.imageAlt': 'Ein Spieleregal auf dunklem Holz neben grünem Spielfilz',
   'auth.promise.pointShelf': 'Euer Regal an einem Ort — Titel und Cover von BGG',
   'auth.promise.pointWhirl': 'Session wirbeln: auslosen, geheim werten, fertig',
   'auth.promise.pointChronicle': 'Chronik und Pokale führen Buch, ohne dass ihr etwas tippt',

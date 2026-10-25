@@ -1948,6 +1948,11 @@ I18N.en = {
   'auth.seg.register': 'Sign up',
   'auth.promise.claim': 'Everyone at the table gets a say.',
   'auth.promise.lede': 'Fill the shelf, start a session, rate in secret — and afterwards the history knows what was played and who won.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Fill the shelf, start a session, rate in secret.',
+  'linkPreview.cardTrust': 'No tracking · EU hosting',
+  'linkPreview.imageAlt': 'A game shelf on dark wood beside green felt',
   'auth.promise.pointShelf': 'Your shelf in one place — titles and covers from BGG',
   'auth.promise.pointWhirl': 'Start a session: draw, rate in secret, done',
   'auth.promise.pointChronicle': 'History and trophies keep score without anyone typing',

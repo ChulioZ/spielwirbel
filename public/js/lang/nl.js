@@ -1869,6 +1869,11 @@ I18N.nl = {
   'auth.seg.register': 'Registreren',
   'auth.promise.claim': 'Wie aan tafel zit, beslist mee.',
   'auth.promise.lede': 'Vul de kast, start een sessie, beoordeel in het geheim — en daarna weet de geschiedenis wat er gespeeld is en wie er won.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Vul de kast, start een sessie, beoordeel in het geheim.',
+  'linkPreview.cardTrust': 'Geen tracking · Hosting in de EU',
+  'linkPreview.imageAlt': 'Een spellenkast van donker hout naast groen speelvilt',
   'auth.promise.pointShelf': 'Jullie kast op één plek — titels en covers van BGG',
   'auth.promise.pointWhirl': 'Een sessie starten: loten, in het geheim beoordelen, klaar',
   'auth.promise.pointChronicle': 'Geschiedenis en trofeeën houden alles bij zonder dat iemand iets typt',

@@ -1837,6 +1837,11 @@ I18N.fi = {
   'auth.seg.register': 'Rekisteröidy',
   'auth.promise.claim': 'Kaikki pöydän ääressä pääsevät päättämään.',
   'auth.promise.lede': 'Täytä hylly, aloita sessio, arvioi salaa — ja sen jälkeen historia tietää, mitä pelattiin ja kuka voitti.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Täytä hylly, aloita sessio, arvioi salaa.',
+  'linkPreview.cardTrust': 'Ei seurantaa · Palvelin EU:ssa',
+  'linkPreview.imageAlt': 'Tumma puinen pelihylly vihreän pelihuovan vieressä',
   'auth.promise.pointShelf': 'Teidän hyllynne yhdessä paikassa — nimet ja kannet BGG:stä',
   'auth.promise.pointWhirl': 'Aloita sessio: arvo, arvioi salaa, valmis',
   'auth.promise.pointChronicle': 'Historia ja palkinnot pitävät kirjaa ilman, että kenenkään tarvitsee kirjoittaa mitään',

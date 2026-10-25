@@ -1898,6 +1898,11 @@ I18N.es = {
   'auth.seg.register': 'Registrarse',
   'auth.promise.claim': 'Quien se sienta a la mesa también decide.',
   'auth.promise.lede': 'Llena la estantería, sortea una sesión, puntúa en secreto — y después el historial sabe a qué se jugó y quién ganó.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Llena la estantería, sortea una sesión, puntúa en secreto.',
+  'linkPreview.cardTrust': 'Sin rastreo · Alojado en la UE',
+  'linkPreview.imageAlt': 'Una estantería de juegos de madera oscura junto a un tapete verde',
   'auth.promise.pointShelf': 'Vuestra estantería en un solo lugar — títulos y portadas de BGG',
   'auth.promise.pointWhirl': 'Sortear una sesión: sortear, puntuar en secreto, listo',
   'auth.promise.pointChronicle': 'El historial y los trofeos llevan la cuenta sin que nadie teclee nada',
