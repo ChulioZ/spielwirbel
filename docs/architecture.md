@@ -170,6 +170,9 @@ lib/
                      where the demo exists
   guide-text/        the guide's prose, one file per locale (de.js is the
                      reference text every translation is made from)
+  link-preview.js    the SPA shell's preview card per `?lang=` (#1727): the
+                     static German head rewritten from the lang tables, one
+                     shell per locale rendered at startup
   faq.js             the server-rendered FAQ page, one language per page in
                      every shipped locale (#1088), with each answer an instance
                      cannot honestly give gated out (issue #489)
@@ -558,7 +561,8 @@ public/
                      og-image.png (the 1200×630 card link previews show) —
                      Klassisch's marks
     tisch/           Der Tisch's own marks (#1199): felt + gold whirl icons, a
-                     maskable one, apple-touch, favicon and its og-image.png,
+                     maskable one, apple-touch, favicon and its og-image.png
+                     (plus og-image-<code>.png per locale, #1727),
                      rendered by scripts/render-design-marks.js
     ocean/           Ocean's own marks (#1222): the whirl in Gischt on the
                      accent water, the same six files, same script

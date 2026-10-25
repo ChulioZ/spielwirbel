@@ -899,7 +899,10 @@ What the app does, in detail. For a short overview see the
   renders a card (title, description and a 1200×630 brand image) instead of a
   bare link. The Open Graph/Twitter tags live statically in `index.html` because
   scrapers don't run JavaScript; every deep link shows the same generic card, so
-  no round or member name ever ends up in a preview.
+  no round or member name ever ends up in a preview. The card is German by
+  default; a link with `?lang=<code>` (e.g. `https://spielwirbel.app/?lang=fr`)
+  gets the title, description and image in that language, and opens the app in
+  it for a visitor who has not picked a language (#1727).
 - **Feedback** – a button in the top bar opens the contact form with a
   **Feedback** category preselected, together with the screen it was written on
   (issue #321). Submissions are **anonymous by default**: giving an e-mail

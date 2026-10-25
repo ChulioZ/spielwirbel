@@ -1871,6 +1871,11 @@ I18N.pt = {
   'auth.seg.register': 'Criar conta',
   'auth.promise.claim': 'Quem está à mesa também decide.',
   'auth.promise.lede': 'Encha a estante, inicie uma sessão, avalie em segredo — e depois o histórico sabe o que se jogou e quem ganhou.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Encha a estante, inicie uma sessão, avalie em segredo.',
+  'linkPreview.cardTrust': 'Sem rastreamento · Hospedado na UE',
+  'linkPreview.imageAlt': 'Uma estante de jogos de madeira escura ao lado de um feltro verde',
   'auth.promise.pointShelf': 'A vossa estante num só lugar — títulos e capas do BGG',
   'auth.promise.pointWhirl': 'Iniciar uma sessão: sortear, avaliar em segredo, pronto',
   'auth.promise.pointChronicle': 'O histórico e os troféus registam tudo sem ninguém escrever nada',

@@ -1876,6 +1876,11 @@ I18N.it = {
   'auth.seg.register': 'Registrati',
   'auth.promise.claim': 'Chi siede al tavolo decide insieme.',
   'auth.promise.lede': 'Riempi lo scaffale, avvia una sessione, vota in segreto — e poi la cronologia sa a cosa si è giocato e chi ha vinto.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Riempi lo scaffale, avvia una sessione, vota in segreto.',
+  'linkPreview.cardTrust': 'Nessun tracciamento · Hosting nell’UE',
+  'linkPreview.imageAlt': 'Uno scaffale di giochi in legno scuro accanto a un panno verde',
   'auth.promise.pointShelf': 'Il vostro scaffale in un unico posto — titoli e copertine da BGG',
   'auth.promise.pointWhirl': 'Avviare una sessione: estrarre, votare in segreto, fatto',
   'auth.promise.pointChronicle': 'Cronologia e trofei tengono il conto senza che nessuno scriva nulla',

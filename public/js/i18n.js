@@ -17,13 +17,21 @@ let locale = 'en';
 function detectLocale() {
   const saved = localStorage.getItem('locale');
   if (saved && SUPPORTED_LOCALES.includes(saved)) return saved;
+  // A shared link's language (#1727): `?lang=fr` is what the server rendered
+  // the preview card in, so the app it opens should match. Allowlisted, and
+  // deliberately NOT saved — only the picker writes `locale`, so a visitor who
+  // follows one French link is not French forever. Read here, before the
+  // router's first replaceState drops the query.
+  const asked = typeof location !== 'undefined'
+    ? new URLSearchParams(location.search).get('lang') : null;
+  if (asked && SUPPORTED_LOCALES.includes(asked)) return asked;
   const sys = (navigator.language || 'en').slice(0, 2).toLowerCase();
   return SUPPORTED_LOCALES.includes(sys) ? sys : 'en';
 }
 
 // The tab title is written from the active locale (#566), never from the static
-// <title> in index.html — that one stays German on purpose, because crawlers and
-// link-preview scrapers run no JS and have no locale (see
+// <title> in index.html — that one stays German on purpose: crawlers run no JS,
+// and only the preview tags follow `?lang=` (#1727,
 // .claude/rules/link-preview-card.md). Writing it here is invisible to them by
 // construction, so it closes the visitor-facing gap without touching the crawler
 // surface. Safe to call t() at this point: initLocale/setLocale both run long

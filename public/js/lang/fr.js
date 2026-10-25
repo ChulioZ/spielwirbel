@@ -1877,6 +1877,11 @@ I18N.fr = {
   'auth.seg.register': 'S’inscrire',
   'auth.promise.claim': 'Qui est à table a son mot à dire.',
   'auth.promise.lede': 'Remplis l’étagère, démarre une session, note en secret — ensuite l’historique sait à quoi on a joué et qui a gagné.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': 'Remplis l’étagère, démarre une session, note en secret.',
+  'linkPreview.cardTrust': 'Sans pistage · Hébergé dans l’UE',
+  'linkPreview.imageAlt': 'Une étagère de jeux en bois sombre à côté d’un tapis de feutre vert',
   'auth.promise.pointShelf': 'Votre étagère au même endroit — titres et couvertures de BGG',
   'auth.promise.pointWhirl': 'Démarrer une session : tirer au sort, noter en secret, c’est fait',
   'auth.promise.pointChronicle': 'L’historique et les trophées tiennent les comptes sans que personne ne tape rien',

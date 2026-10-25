@@ -43,6 +43,8 @@ const { CARD_GLYPHS, CARD_GLYPH_BOX } = require('../public/js/card-glyphs');
 const ROOT = path.join(__dirname, '..');
 const PUBLIC = path.join(ROOT, 'public');
 const { connectCdp } = require('./cdp');
+const { SUPPORTED_LOCALES } = require('../public/js/locales');
+const { loadTable, localizedImagePath } = require('../lib/link-preview');
 const CDP_PORT = Number(process.env.MARKS_CDP_PORT) || 9334;
 
 // One custom property out of a design stylesheet's first `:root[data-design]`
@@ -102,35 +104,42 @@ function tischRecipe() {
 
   const marks = design.marks;
   const [i192, i512, maskable] = marks.icons;
-  const og = {
-    width: 1200,
-    height: 630,
-    // T11.2's Open Graph frame at 2x: the felt panel with the claim on the left,
-    // the shelf with the "Session wirbeln" plate on the right. The copy is the
-    // design's own and German only, like today's card — a scraper runs no
-    // script, so there is no locale to follow (.claude/rules/link-preview-card.md
-    // §1). No covers but the app's own placeholder gradients, as everywhere a
-    // committed image shows a shelf.
-    html: `<div style="position:fixed;inset:0;display:flex;background:${c.page};font-family:Manrope">
+  // One card per shipped locale (#1727): the face's card is what a `?lang=`
+  // link's head names, so its copy comes from that locale's own table.
+  const og = (code) => {
+    const t = loadTable(code);
+    // Bricolage and Manrope have no Hangul: Korean falls back to the system's
+    // CJK face, and keeps whole words on a line (hangul-locale-typography.md).
+    const cjk = ", 'Apple SD Gothic Neo', 'Noto Sans CJK KR', sans-serif";
+    return {
+      width: 1200,
+      height: 630,
+      // T11.2's Open Graph frame at 2x: the felt panel with the claim on the left,
+      // the shelf with the "Session wirbeln" plate on the right. The copy is the
+      // locale's claim, card line, trust line and session button. No covers
+      // but the app's own placeholder gradients, as everywhere a committed image
+      // shows a shelf.
+      html: `<div lang="${code}" style="position:fixed;inset:0;display:flex;background:${c.page};font-family:Manrope${cjk};${code === 'ko' ? 'word-break:keep-all;' : ''}">
       <div style="width:680px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;
         background:radial-gradient(90% 130% at 30% -10%, ${c.felt}, ${c.feltDeep} 74%);border-right:10px solid ${c.edge}">
-        <span style="align-self:flex-start;font:800 26px 'Bricolage Grotesque';letter-spacing:.14em;text-transform:uppercase;
+        <span style="align-self:flex-start;font:800 26px 'Bricolage Grotesque'${cjk};letter-spacing:.14em;text-transform:uppercase;
           color:${c.goldInk};background:linear-gradient(180deg, ${c.brassHi}, ${c.goldDeep});border-radius:6px;padding:10px 22px">Spielwirbel</span>
-        <span style="font:800 64px/1.06 'Bricolage Grotesque';color:${c.ink}">Wer am Tisch sitzt, entscheidet mit.</span>
-        <span style="font:600 28px/1.45 Manrope;color:${c.inkSoft}">Regal füllen, Session wirbeln, geheim werten.</span>
-        <span style="margin-top:auto;font:700 24px Manrope;color:${c.ink}">Kein Tracking · EU-Hosting · spielwirbel.app</span>
+        <span style="font:800 64px/1.06 'Bricolage Grotesque'${cjk};color:${c.ink}">${t['auth.promise.claim']}</span>
+        <span style="font:600 28px/1.45 Manrope${cjk};color:${c.inkSoft}">${t['linkPreview.cardLine']}</span>
+        <span style="margin-top:auto;font:700 24px Manrope${cjk};color:${c.ink}">${t['linkPreview.cardTrust']} · spielwirbel.app</span>
       </div>
       <div style="flex:1;padding:48px 44px;display:flex;flex-direction:column;gap:24px;justify-content:center">
         <span style="display:flex;gap:16px;align-items:flex-end">
           ${[[184, 204], [148, 32], [208, 318], [168, 150]].map(([h, hue]) => `<span style="width:92px;height:${h}px;border-radius:6px;
-            background:linear-gradient(150deg, hsl(${hue} 42% 34%), hsl(${hue + 40} 50% 15%));box-shadow:0 10px 22px rgba(0,0,0,.5)"></span>`).join('')}
+              background:linear-gradient(150deg, hsl(${hue} 42% 34%), hsl(${hue + 40} 50% 15%));box-shadow:0 10px 22px rgba(0,0,0,.5)"></span>`).join('')}
         </span>
         <span style="height:18px;border-radius:4px;background:linear-gradient(180deg, ${c.goldDeep}, ${c.edge})"></span>
         <span style="align-self:flex-start;display:inline-flex;align-items:center;gap:16px;min-height:88px;padding:0 32px;border-radius:8px;
-          background:linear-gradient(180deg, ${c.brassHi}, ${c.goldDeep});color:${c.goldInk};font:800 32px 'Bricolage Grotesque'">
-          ${whirl(38, c.goldInk)} Session wirbeln</span>
+          background:linear-gradient(180deg, ${c.brassHi}, ${c.goldDeep});color:${c.goldInk};font:800 32px 'Bricolage Grotesque'${cjk}">
+          ${whirl(38, c.goldInk)} ${t['round.startSession']}</span>
       </div>
     </div>`,
+    };
   };
 
   return {
@@ -145,7 +154,7 @@ function tischRecipe() {
       // T11.2: the favicon drops the gradient for the flat deep felt, and keeps
       // a small radius — at 32px a gradient only reads as noise.
       [marks.favicon.href, icon(32, 0.56, c.feltDeep, 5)],
-      [marks.og, og],
+      ...SUPPORTED_LOCALES.map((code) => [localizedImagePath(marks.og, code), og(code)]),
     ],
   };
 }
@@ -200,7 +209,7 @@ function oceanRecipe() {
     height: 630,
     // Der Tisch's Open Graph frame, Ocean's materials: the deep-water panel with
     // the claim on the left, the shelf on a sand ledge over the page's water on
-    // the right. German only, like every og card (link-preview-card.md §1).
+    // the right. German only: only the face's card is localized (link-preview-card.md §1).
     html: `<div style="position:fixed;inset:0;display:flex;background:linear-gradient(180deg, ${c.foam}, ${c.coast});font-family:Figtree">
       <div style="width:680px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;
         background:linear-gradient(180deg, ${c.deep}, ${c.deepBottom});border-right:10px solid ${c.waterlineDeep}">
@@ -302,8 +311,8 @@ function brueckeRecipe() {
     // Der Tisch's Open Graph frame in Die Brücke's materials: the flat plate
     // with its brackets and the whirl + wordmark over the claim on the left, the shelf
     // on a cyan hairline over the night on the right, the amber action — B1's
-    // „die eine Hauptaktion" — below it. German only, like every og card
-    // (link-preview-card.md §1).
+    // „die eine Hauptaktion" — below it. German only: only the face's card is
+    // localized (link-preview-card.md §1).
     html: `<div style="position:fixed;inset:0;display:flex;background:${night};font-family:'IBM Plex Sans'">
       <div style="position:relative;width:680px;flex:none;box-sizing:border-box;padding:52px;display:flex;flex-direction:column;gap:28px;
         background:${c.surface};border-right:1px solid ${c.line}">
@@ -397,7 +406,7 @@ function programmheftRecipe() {
     // decision on #1436) across the whole card, the claim in Anton
     // over the 3px rule on the left, the shelf's placeholder covers flat on
     // paper on the right with the black box — P1's component — as the action.
-    // German only, like every og card (link-preview-card.md §1).
+    // German only: only the face's card is localized (link-preview-card.md §1).
     html: `<div style="position:fixed;inset:0;display:flex;flex-direction:column;background:${c.page};font-family:Archivo">
       <div style="height:96px;flex:none;background:${c.vermilion};display:flex;align-items:center;gap:20px;padding:0 52px">
         ${whirl(54, c.onVermilion)}
@@ -494,8 +503,8 @@ function forestRecipe() {
     // Der Tisch's Open Graph frame, Forest's materials: the dusk panel with the
     // claim in Young Serif on the left — the one dark ground, the wordmark
     // badge beside the name (#1475) — and the clearing on the right: covers on a card, the
-    // stump's cut face as a ledge, the leaf-shaped primary button. German only,
-    // like every og card (link-preview-card.md §1).
+    // stump's cut face as a ledge, the leaf-shaped primary button. German only:
+    // only the face's card is localized (link-preview-card.md §1).
     html: `<div style="position:fixed;inset:0;display:flex;background:${c.page};font-family:'Alegreya Sans'">
       <div style="width:660px;flex:none;box-sizing:border-box;padding:48px;display:flex;flex-direction:column;gap:26px;background:${c.dusk}">
         <span style="display:flex;align-items:center;gap:14px;font:400 30px 'Young Serif';color:${c.onDusk}">

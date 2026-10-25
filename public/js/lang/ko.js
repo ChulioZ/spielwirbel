@@ -1811,6 +1811,11 @@ I18N.ko = {
   'auth.seg.register': '가입하기',
   'auth.promise.claim': '테이블에 앉은 모두가 함께 정해요.',
   'auth.promise.lede': '선반을 채우고, 세션을 시작하고, 몰래 평가하세요 — 그러면 기록이 무엇을 했고 누가 이겼는지 기억해요.',
+  // The shared link-preview card (#1727): drawn into icons/tisch/og-image-<code>.png
+  // by scripts/render-design-marks.js and served in the head for ?lang=<code>.
+  'linkPreview.cardLine': '선반을 채우고, 세션을 시작하고, 몰래 평가해요.',
+  'linkPreview.cardTrust': '추적 없음 · EU 호스팅',
+  'linkPreview.imageAlt': '어두운 나무 게임 선반과 초록색 게임 펠트',
   'auth.promise.pointShelf': '우리 선반을 한곳에 — BGG에서 가져온 제목과 표지',
   'auth.promise.pointWhirl': '세션 시작: 뽑고, 몰래 평가하면 끝',
   'auth.promise.pointChronicle': '아무도 입력하지 않아도 기록과 트로피가 정리해요',
