@@ -31,7 +31,7 @@ function setupPoolPreview(setup) {
   // they skip the tag filter and the owner clause, exactly as `drawPool` does.
   const fitsTable = (g) =>
     (tableState.multiTable
-      ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
+      ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
       : fitsPlayerCount(g, playerCount())) &&
     fitsMetadataFilters(g, metaFilters) &&
     (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended));
@@ -63,7 +63,7 @@ function setupPoolPreview(setup) {
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
         (tableState.multiTable
-          ? fitsSomeTable(g, playerCount(), fitsPlayerCount)
+          ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
         (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&

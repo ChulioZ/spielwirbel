@@ -253,8 +253,8 @@ async function showTableBuilder(round, session, gamesHint) {
       return;
     }
 
-    // No feasible split at all — too few people for two tables of three, or fewer
-    // usable games than tables needed. Say which, and offer the ordinary results
+    // No feasible split at all — too few people for two tables of the session's
+    // minimum (#1730), or fewer usable games than tables needed. Say which, and offer the ordinary results
     // screen rather than stranding the evening on a screen with no action.
     if (!proposals.length) {
       body.appendChild(
@@ -275,6 +275,9 @@ async function showTableBuilder(round, session, gamesHint) {
     let picked = 0;
     let tables = tableStateFrom(proposals[0], parties);
     let held = null; // the party waiting to be moved, or null
+    // The session's own minimum (#1730) — the same reader the split validation
+    // uses, so the builder cannot accept a table the server refuses.
+    const minSeats = minTableSeatsOf(session);
 
     const counts = h('<div class="filter-chips" role="group"></div>');
     if (proposals.length > 1) {
@@ -329,7 +332,7 @@ async function showTableBuilder(round, session, gamesHint) {
         const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, tileValue);
         // Seats, not parties (#1610): an own-seat team takes its headcount.
         const size = table.partyIds.reduce((n, pid) => n + ((partyById.get(pid) || {}).seats || 1), 0);
-        const tooSmall = size < MIN_TABLE_PARTIES;
+        const tooSmall = size < minSeats;
         const stale = !!game && !isActiveGame(game);
         const outOfRange = !game || !fitsPlayerCount(game, size);
         if (tooSmall || outOfRange || stale) blocked = true;
@@ -400,7 +403,7 @@ async function showTableBuilder(round, session, gamesHint) {
           });
           card.querySelector('.tables-card__warn').appendChild(drop);
         } else if (tooSmall) {
-          card.querySelector('.tables-card__warn').textContent = t('tables.tooSmall', { n: MIN_TABLE_PARTIES });
+          card.querySelector('.tables-card__warn').textContent = t('tables.tooSmall', { n: minSeats });
         } else if (stale) {
           card.querySelector('.tables-card__warn').textContent = t('tables.gameArchived', { title: game.title });
         } else if (outOfRange) {

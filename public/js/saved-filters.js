@@ -55,6 +55,10 @@ function savedFilterPrefill(sf) {
     tagMode: sf.tagMode === 'any' ? 'any' : 'all',
     metadata: sf.metadata || {},
     multiTable: sf.multiTable === true,
+    // Explicit even when absent (#1730), for the same reason as the rest: null
+    // overrides a remembered minimum, and showStartSession reads it through
+    // `minTableSeatsOf`, where null is the default.
+    minTableSeats: Number.isInteger(sf.minTableSeats) ? sf.minTableSeats : null,
     count: sf.count,
     memberIds: Array.isArray(sf.memberIds) ? sf.memberIds : [],
   };

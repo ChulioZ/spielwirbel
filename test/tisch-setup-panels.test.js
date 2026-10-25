@@ -88,8 +88,10 @@ test('Klassisch renders exactly the setup it rendered before #1267', async (t) =
   // speichern" row under the owners note (b164e497d444db90 before it), and
   // #1346 moved that button beside the Filter trigger (58a99d83fc6021f5 before),
   // and the 2026-10-04 audit (A5) named the count stepper's two buttons
-  // (7838a2a5a7d20674 before — reproduced exactly by putting „−"/„+" back).
-  assert.equal(sha(fingerprint(dom)), '24452e5efa0baeb7');
+  // (7838a2a5a7d20674 before — reproduced exactly by putting „−"/„+" back),
+  // and #1730 wrapped the multi-table note together with the minimum-table
+  // stepper in one hidden `#multiTableOpts` (24452e5efa0baeb7 before).
+  assert.equal(sha(fingerprint(dom)), '3c6a313c4885dd74');
 
   // …and the parts #1267 touches, spelled out so a failure names them.
   assert.deepEqual([...dom.app.children].map((c) => c.className), ['page-head', 'setup-grid setup-grid--session']);
@@ -177,10 +179,10 @@ test('the summary says how many of the pot get drawn, and follows the count and 
   const summary = () => q(dom, '#barSummary').textContent;
   assert.equal(summary(), '3 spielen mit · 3 von 4 Spielen werden gezogen');
 
-  q(dom, '.stepper__btn[data-d="1"]').click();
+  q(dom, '.setup-bar .stepper__btn[data-d="1"]').click();
   assert.equal(summary(), '3 spielen mit · 4 von 4 Spielen werden gezogen');
   // Past the pot the number clamps: the draw cannot take games that are not in it.
-  q(dom, '.stepper__btn[data-d="1"]').click();
+  q(dom, '.setup-bar .stepper__btn[data-d="1"]').click();
   assert.equal(summary(), '3 spielen mit · 4 von 4 Spielen werden gezogen');
 
   // Typing moves it too.

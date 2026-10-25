@@ -767,7 +767,11 @@ What the app does, in detail. For a short overview see the
   can be removed from a session's results.
 - **Several tables from one vote** – a group too big for a single game ticks
   **„Mehrere Tische"** before the draw. The pool then admits any game that seats
-  *some* table of three or more rather than the whole party, everyone votes once
+  *some* table of at least the chosen minimum rather than the whole party — the
+  minimum is a stepper beside the toggle, 3 seats by default and adjustable from
+  2 (duo tables, so a two-player game two people want can be drawn) to 6
+  (big tables only), remembered with the draw and in saved filters (issue #1730)
+  — everyone votes once
   together as usual, and the results screen is replaced by a **table builder**: it
   proposes complete splits of the people and the drawn games, one per feasible
   number of tables, and the group picks between them or moves people and games by

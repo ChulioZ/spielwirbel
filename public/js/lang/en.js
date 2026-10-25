@@ -1173,6 +1173,9 @@ I18N.en = {
   // ---- Multiple tables (#796) ----
   'startSession.multiTable': 'Multiple tables',
   'startSession.multiTableNote': 'For big groups: everyone votes together once, then you split across several tables. Draw at least one game per table.',
+  'startSession.minTableSeats': 'Seats per table, at least',
+  'startSession.minTableSeatsDown': 'One seat fewer per table',
+  'startSession.minTableSeatsUp': 'One seat more per table',
   'tables.title': 'Build the tables',
   'tables.titleDone': 'The tables',
   'tables.countLabel': 'How many tables?',

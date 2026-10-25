@@ -1172,6 +1172,9 @@ I18N.de = {
   // ---- Multiple tables (#796) ----
   'startSession.multiTable': 'Mehrere Tische',
   'startSession.multiTableNote': 'Für große Gruppen: Es wird einmal gemeinsam abgestimmt und danach auf mehrere Tische aufgeteilt. Zieh dafür mindestens ein Spiel pro Tisch.',
+  'startSession.minTableSeats': 'Plätze pro Tisch, mindestens',
+  'startSession.minTableSeatsDown': 'Ein Platz weniger pro Tisch',
+  'startSession.minTableSeatsUp': 'Ein Platz mehr pro Tisch',
   'tables.title': 'Tische bilden',
   'tables.titleDone': 'Die Tische',
   'tables.countLabel': 'Wie viele Tische?',

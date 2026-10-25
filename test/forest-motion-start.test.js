@@ -68,7 +68,7 @@ test('a count change after the arrival repaints the leaves still', async (t) => 
   const dom = await setup(t, 'forest');
   const row = dom.app.querySelector('.forest-leaves');
   const before = row.children.length;
-  dom.app.querySelector('.stepper button:last-child').click();
+  dom.app.querySelector('.setup-bar .stepper button:last-child').click();
   await flush();
   assert.notEqual(row.children.length, before, 'the stepper did change the count');
   assert.equal(opening(dom), null, 'the new leaves do not whirl — only the arrival does');

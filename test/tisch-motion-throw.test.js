@@ -90,7 +90,7 @@ test('a seat tap that adds games throws exactly those, indexed and aimed', async
 
   // The next write that adds nothing — the stepper — clears the marks rather
   // than re-throwing the same two.
-  dom.app.querySelector('.stepper__btn[data-d="1"]').click();
+  dom.app.querySelector('.setup-bar .stepper__btn[data-d="1"]').click();
   assert.deepEqual(thrownTitles(dom, '.pool-tile'), [], 'a re-render must not throw again');
 });
 

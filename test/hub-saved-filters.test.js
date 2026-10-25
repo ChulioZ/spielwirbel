@@ -106,10 +106,10 @@ test('a saved chip opens the setup with the WHOLE filter — every key present, 
   // Every key is spelled out, so nothing falls through to the round's
   // remembered draw when showStartSession merges the prefill over it.
   assert.deepEqual(seen[0], {
-    tagIds: [], excludeTagIds: [], tagMode: 'all', metadata: {}, multiTable: false, count: 2, memberIds: ['m1'],
+    tagIds: [], excludeTagIds: [], tagMode: 'all', metadata: {}, multiTable: false, minTableSeats: null, count: 2, memberIds: ['m1'],
   });
   assert.deepEqual(seen[1], {
-    tagIds: [], excludeTagIds: [], tagMode: 'all', metadata: { maxPlaytime: 60 }, multiTable: true, count: 1, memberIds: [],
+    tagIds: [], excludeTagIds: [], tagMode: 'all', metadata: { maxPlaytime: 60 }, multiTable: true, minTableSeats: null, count: 1, memberIds: [],
   });
 });
 
