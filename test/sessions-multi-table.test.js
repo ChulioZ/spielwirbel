@@ -417,3 +417,36 @@ test('deleting a child leaves the parent readable, and vice versa', async () => 
   assert.equal(stranded.length, tables.length - 1);
   stranded.forEach((s) => assert.ok(s.chosenGameId, 'still a perfectly good direct-pick session'));
 });
+
+// #1725: a split evening is dated by when it was PLAYED. Each table is dated by
+// its own finish, and the parent — which never finishes itself, and is the card
+// the Chronik draws — follows the first table to finish. A later table, or a
+// winner corrected next week, does not move it again.
+test('a split parent follows its first table to finish, and only that one', async (t) => {
+  const dayA = Date.parse('2026-03-01T18:00:00.000Z');
+  const dayC = '2026-03-11T22:40:00.000Z';
+  const dayD = '2026-03-15T09:00:00.000Z';
+  t.mock.timers.enable({ apis: ['Date'], now: dayA });
+  const { round, session, tables } = await readyToSplit();
+  const children = (await request(app)
+    .post(`/api/rounds/${round.id}/sessions/${session.id}/split`).send({ tables })).body.children;
+  assert.ok(children.length >= 2, 'the fixture must produce two tables');
+  const finish = (sid, body = {}) => request(app)
+    .post(`/api/rounds/${round.id}/sessions/${sid}/finish`).send(body);
+  const parentAt = async () => (await request(app).get(`/api/rounds/${round.id}`)).body.sessions
+    .find((s) => s.id === session.id).createdAt;
+
+  t.mock.timers.setTime(Date.parse(dayC));
+  assert.equal((await finish(children[1].id)).body.createdAt, dayC);
+  assert.equal(await parentAt(), dayC, 'the first table to finish dates the evening');
+
+  // The second table to finish does not drag the evening forward.
+  t.mock.timers.setTime(Date.parse(dayD));
+  assert.equal((await finish(children[0].id)).body.createdAt, dayD);
+  assert.equal(await parentAt(), dayC, 'a later table leaves the evening where it is');
+  await finish(children[1].id, { winnerIds: [children[1].memberIds[0]] });
+  assert.equal(await parentAt(), dayC, 'a winner tap on a finished table moves nothing');
+  // The parent's log is untouched: following its table is not a user's re-date.
+  const parent = (await request(app).get(`/api/rounds/${round.id}`)).body.sessions.find((s) => s.id === session.id);
+  assert.ok(!parent.events.some((e) => e.type === 'redated'));
+});

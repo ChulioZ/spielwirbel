@@ -87,6 +87,18 @@ test('a split parent is not drawn as a played night, and its tables nest under i
   assert.equal(icon.className, 'ti ti-layout-grid');
 });
 
+// Since #1725 a table is dated by its own finish, so the second table to be
+// created can carry the EARLIER stamp. The nest keeps the split's own order.
+test('a split\'s tables nest in the parent\'s order, not by when each finished', async (t) => {
+  const dom = loadApp({ locale: 'de' });
+  t.after(() => dom.close());
+  const late = child('c1', 'g1', ['m0', 'm1', 'm2'], { finished: true, createdAt: '2026-08-20T22:30:00.000Z' });
+  const early = child('c2', 'g2', ['m3', 'm4', 'm5'], { finished: true, createdAt: '2026-08-20T20:15:00.000Z' });
+  dom.call('renderChronikTab', round([parent, early, late]), []);
+  const titles = [...dom.app.querySelectorAll('.tl-nest .session-card__title')].map((el) => el.textContent.trim());
+  assert.deepEqual(titles, ['Catan', 'Azul']);
+});
+
 test('an ordinary session is untouched by any of it', async (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
