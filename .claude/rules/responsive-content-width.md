@@ -137,6 +137,16 @@ Measured 2026-09-13 before it: the column stopped growing at 900px from 1280 up,
 leaving 285px of gutter per side on a 15" laptop and 830px at 2560, on the one
 screen every prospective user meets.
 
+**A SEVENTH, the voting lobby (#1719)**, one selector on the same argument —
+and the first conditioned on a CHILD rather than on the screen's class, because
+`.live-vote` is also the root of the shared vote-link page, a claim screen that
+keeps the reading measure: `.live-vote:has(> .live-vote__people)`. Die Brücke,
+Das Programmheft and Forest render a tab strip on it and set their own width at a
+higher weight; `test/lobby-width.test.js` pins both halves. Widening it
+changed what the roster's *rows* can hold, so the row composition keys off a
+container query on the roster, not off the viewport
+(`.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md`).
+
 **This had already happened a second time, so treat it as the norm rather than as
 one screen's quirk.** #577 gave the two setup forms a two-column layout and
 exempted `.setup-grid` alone; the `.page-head` above it — again a *sibling*, not

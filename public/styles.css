@@ -1021,6 +1021,24 @@ h1, h2, h3 { font-family: var(--font-display); }
     max-width: var(--w-landing);
   }
 
+  /* The voting lobby (#1719) takes the same licence, on the setup forms'
+     argument: `showSessionLobby` renders no rail, no dock and no back row, so
+     `.live-vote` is `.app`'s only child and widening it moves no navigation.
+     Measured before at 1440: 900px with 270px of gutter per side, the roster a
+     ~490px column of one person per row, „Jetzt abstimmen" below the fold in
+     Ocean and Der Tisch. Die Brücke, Das Programmheft and Forest already widen
+     it in their own sheets, at a weight this rule does not reach.
+
+     ONE selector: there is no sibling to drag along. Conditioned on the roster,
+     because the shared vote-link page (views-vote-link.js) also renders a
+     `.live-vote` at the root — a claim screen with one column of buttons, which
+     keeps the reading measure.
+
+     (0,5,0) against the cap's (0,3,0) — specificity, never source order. */
+  .app > *:not(.rail):not(.dock).live-vote:has(> .live-vote__people) {
+    max-width: var(--w-detail);
+  }
+
   /* On a screen WITHOUT a rail — home, the new-round form, the session wizard —
      capped content centres instead. Beside a rail, a left edge is anchored and
      reads as deliberate; with no rail it is just a column shoved against the
@@ -11424,7 +11442,17 @@ kbd {
    design composes this screen itself; an unscoped row rule would leak into
    whatever properties they do not restate (operator decision 2026-10-06 lifts
    „Klassisch stays unchanged" for this layout only). */
+/* One list until the lobby takes `--w-detail` (#1719). From 1280px the roster
+   gets ~880–1040px, and rows of two use it: 420px is the base 280px floor (the
+   name's guarantee, above) plus room for „Für …" beside the state, so the key
+   stays on the row's own line at the widths where two fit. At the bare 280px
+   floor it was three columns at 1440 with every key wrapped under its name.
+   The count heads the whole grid rather than taking a cell of its own. */
 :root[data-design="klassisch"] .live-vote__people { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1280px) {
+  :root[data-design="klassisch"] .live-vote > .live-vote__people { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+  :root[data-design="klassisch"] .live-vote__people > .live-vote__count { grid-column: 1 / -1; }
+}
 :root[data-design="klassisch"] .live-vote__count {
   display: block;
   margin: 0;

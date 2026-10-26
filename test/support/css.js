@@ -52,8 +52,14 @@ const bodyOfIn = (selector, rules = RULES) => {
    cannot tell you which block a rule came from — and that distinction is
    load-bearing for anything scoped to a width range. */
 function mediaBlocks(css = CSS) {
+  return atBlocks(css, 'media');
+}
+
+/* The same for any block at-rule — `atBlocks(css, 'container')` reads the
+   `@container <name> (<query>)` blocks (#1719) as [prelude, css]. */
+function atBlocks(css, name) {
   const out = [];
-  const re = /@media([^{]+)\{/g;
+  const re = new RegExp(`@${name}([^{]+)\\{`, 'g');
   let m;
   while ((m = re.exec(css))) {
     let depth = 1;
@@ -395,6 +401,6 @@ const columnsIn = (width, { floor, gap, count }) => {
 };
 
 module.exports = {
-  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, topLevel, whole, rootPx, gridSpec, columnSpec,
+  ROOT, CSS, RULES, rulesOf, bodyOf, bodyOfIn, mediaBlocks, atBlocks, topLevel, whole, rootPx, gridSpec, columnSpec,
   columnsIn, specificity, outranks, matchesEl, declaredValue, resolvedDeclaration,
 };

@@ -20,8 +20,10 @@ const path = require('node:path');
 
 const { loadApp, flush } = require('./support/dom');
 const { rulesOf, declaredValue } = require('./support/css');
+const { assertRosterReflow } = require('./support/live-roster');
 
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/ocean.css'), 'utf8');
+const OCEAN = RAW.replace(/\/\*[\s\S]*?\*\//g, '');
 const HEAD = '/* ===== #1214 — Shared vote: the pass-device blind and the live vote ===== */';
 const GATE = ':root[data-design="ocean"]:not([data-scheme="dark"]) ';
 
@@ -192,4 +194,25 @@ test('every rule in the #1214 section is gated on Ocean\'s light scheme', () => 
   const ungated = rules.flatMap(([sel]) => sel.split(/,(?![^(]*\))/).map((x) => x.trim()))
     .filter((x) => !x.startsWith('@') && !x.startsWith(GATE.trim()));
   assert.deepEqual(ungated, []);
+});
+
+test('from 1280px the roster flows into rows of two, and a row keeps the key inline and the name its room', () => {
+  const G = ':root[data-design="ocean"]:not([data-scheme="dark"])';
+  const L = `${G} .live-vote--ocean`;
+  assertRosterReflow(OCEAN, {
+    container: 'ocean-roster',
+    sel: {
+      roster: `${L} > .live-vote__people`,
+      people: `${L} .live-vote__people`,
+      split: `${L}:has(.live-vote__panel)`,
+      row: `${L} .live-vote__people > .live-person`,
+      rowBase: `${L} .live-person`,
+      progress: `${L} .live-person > .live-person__progress`,
+      key: `${L} .live-person > .live-vote__hotseat-btn`,
+      name: `${L} .live-person > .live-person__name`,
+      avatar: `${L} .live-person .live-person__avatar`,
+      dots: `${L} .live-person__dots`,
+      panel: `${G} .live-vote.live-vote--ocean > .live-vote__panel`,
+    },
+  });
 });

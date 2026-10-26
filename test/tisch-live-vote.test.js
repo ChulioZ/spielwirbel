@@ -21,6 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
+const { assertRosterReflow } = require('./support/live-roster');
 
 const read = (...p) => fs.readFileSync(path.join(__dirname, '..', ...p), 'utf8');
 const strip = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -332,4 +333,28 @@ test('the vote-link page forces the face design over whatever the viewer wears',
     dom.run('FACE_DESIGN'),
     'the public ballot wears the instance face'
   );
+});
+
+/* #1719: the roster at the lobby's detail width. Rows of two once two fit, with
+   „Für …" on the state line and the count dropped only where the row is too
+   narrow for it. Each claim is derived from the sheet's own numbers, so
+   retuning one without the other goes red. */
+test('from 1280px the roster flows into rows of two, and a row keeps the key inline and the name its room', () => {
+  const G = ':root[data-design="tisch"][data-scheme="dark"]';
+  assertRosterReflow(TISCH, {
+    container: 'tisch-roster',
+    sel: {
+      roster: `${G} .live-vote > .live-vote__people`,
+      people: `${G} .live-vote__people`,
+      split: `${G} .live-vote:has(.live-vote__panel)`,
+      row: `${G} .live-vote__people > .live-person`,
+      rowBase: `${G} .live-person`,
+      progress: `${G} .live-person > .live-person__progress`,
+      key: `${G} .live-person > .live-vote__hotseat-btn`,
+      name: `${G} .live-person > .live-person__name`,
+      avatar: `${G} .live-person__avatar`,
+      dots: `${G} .live-person__dots`,
+      panel: `${G} .live-vote > .live-vote__panel`,
+    },
+  });
 });

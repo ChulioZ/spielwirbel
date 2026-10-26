@@ -4929,6 +4929,60 @@
        wrong instrument beside the roster, where the panel is its own column. */
     margin-top: 0;
   }
+
+  /* The roster at the lobby's detail width (#1719). With `.live-vote` lifted
+     out of the 900px reading measure the roster column runs ~840px at 1280 and
+     ~1000px from ~1370 up, so it flows into rows of two once two 460px rows fit.
+     The count and the guests' note head the whole grid.
+
+     A CONTAINER, not a viewport query: what decides the row's composition is the
+     width of the row, and that is the roster's width over its column count —
+     two indirections from the viewport (card-tracks-are-a-fraction-of-a-fraction).
+     (0,4,0), so it wins over the one-column rule above on weight. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote > .live-vote__people {
+    container: tisch-roster / inline-size;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote > .live-vote__people > :not(.live-person) { grid-column: 1 / -1; }
+  /* „Für …" on the state line, beside „offen", instead of on a third line of
+     its own. The name spans both text tracks above them, so a key never takes
+     width from the name: measured at 1440 with the key in a track of its own
+     beside the text, an 11-character guest name clipped at 109px. The boxes and
+     the count stay the right edge, aligned down the list whether or not a row
+     carries a key. DOM order is unchanged — the key is the only focusable thing
+     in the row and still its last tab stop. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote__people > .live-person {
+    grid-template-columns: auto auto minmax(0, 1fr) auto 122px;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-person__name { grid-column: 2 / 4; }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-vote__hotseat-btn {
+    grid-column: 3;
+    grid-row: 2;
+    min-width: 0;
+    max-width: 100%;
+    margin-top: 0;
+    /* A long name or a long locale („Pelaajan … puolesta") wraps the label
+       inside its own track rather than pushing the boxes out of line. */
+    white-space: normal;
+    text-align: center;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-person__dots { grid-column: 4; }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-person__progress { grid-column: 5; }
+  /* Two rows of people are shorter than the paper panel, so on row 2 alone
+     the panel would hold „Jetzt abstimmen" down below its own foot — measured
+     ~150px of nothing at 1440 with four people. Spanning the actions' row too
+     (Klassisch's `2 / span 2`) lets the button follow the roster. Still a
+     count of the fixed five, never of who has voted. */
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote > .live-vote__panel { grid-row: 2 / span 2; }
+}
+/* Two rows across: each is ~490px, and the count beside the boxes is what does
+   not fit — the phone's answer (T6.5 drops the count, the boxes and the state
+   line already say it). 930 = two 460px tracks and the 10px gap. */
+@container tisch-roster (min-width: 930px) {
+  :root[data-design="tisch"][data-scheme="dark"] .live-vote__people > .live-person {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-person__progress { display: none; }
 }
 
 /* The box column pinned while the Tafel scrolls (#1430) — only where the whole
