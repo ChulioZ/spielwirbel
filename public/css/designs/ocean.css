@@ -4615,6 +4615,44 @@
     margin-top: 0;
   }
 }
+/* The roster at the lobby's detail width (#1719) — from 1280px, where
+   styles.css lifts `.live-vote` out of the 900px reading measure. Der Tisch's
+   treatment, for its reason (tisch.css): rows of two once two 460px rows fit,
+   „Für …" inline between the text and the bubbles, and the count dropped only
+   where the row is too narrow to carry it. The count, the guests' note and
+   „Noch in der Tiefe" head or close the whole grid. */
+@media (min-width: 1280px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean > .live-vote__people {
+    container: ocean-roster / inline-size;
+    grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean > .live-vote__people > :not(.live-person) { grid-column: 1 / -1; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__people > .live-person {
+    grid-template-columns: auto auto minmax(0, 1fr) auto 122px;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__name { grid-column: 2 / 4; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
+    grid-column: 3;
+    grid-row: 2;
+    min-width: 0;
+    max-width: 100%;
+    margin-top: 0;
+    white-space: normal;
+    text-align: center;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__dots { grid-column: 4; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { grid-column: 5; }
+  /* Der Tisch's `2 / span 2`, for its reason: a two-row roster is shorter than
+     the panel, which on row 2 alone holds „Jetzt abstimmen" below its foot. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote.live-vote--ocean > .live-vote__panel { grid-row: 2 / span 2; }
+}
+/* 930 = two 460px tracks and the 10px gap. */
+@container ocean-roster (min-width: 930px) {
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__people > .live-person {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { display: none; }
+}
 
 /* ===== #1216 — Leer, jung und Fehler: empty, young and error states ===== */
 /* Source: docs/design/ocean/Ocean-O7-Leerzustaende.dc.html. O7's three rules:
