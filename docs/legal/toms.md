@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-10-22
+**Stand:** 2026-10-27
 
 ## Verschlüsselung & Transport
 
@@ -95,7 +95,8 @@ list nothing that is not actually in place.
 - **Objektspeicher (Cloudflare R2):** derzeit **keine** eigene Replikation und
   keine eigenen Sicherungen konfiguriert. Betroffen wären hochgeladene Cover und
   Profilbilder; die zugehörigen Datensätze in der Datenbank sind von den oben
-  genannten Sicherungen abgedeckt. Offener Punkt.
+  genannten Sicherungen abgedeckt. Offener Punkt, verfolgt in #1743 (seit dem
+  Bekanntwerden des R2-Schlüssels am 2026-10-22 dringlicher).
 - Health-Check (`/healthz`, ohne Datenbankzugriff) + Bereitschafts-Check
   (`/readyz`, prüft die Datenbank und antwortet 503, wenn sie nicht erreichbar
   ist — #462) + externes Uptime-Monitoring, das den Verantwortlichen alarmiert;

@@ -3,7 +3,7 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-10-22
+**Stand:** 2026-10-27
 
 ## 1. Erkennen & Eindämmen (sofort)
 
@@ -16,7 +16,11 @@ stress by one person.
   - `SESSION_SECRET` — signiert die kurzlebigen Konto-Zugangstoken. Laufende
     Sitzungen **überleben** die Rotation, weil die Refresh-Token nicht davon
     abhängen (gespeichert als SHA-256-Hash); wer gestohlene Sitzungen beenden
-    muss, sperrt die betroffenen Konten im Admin-Panel.
+    muss, sperrt die betroffenen Konten im Admin-Panel. Mit dem Secret ließen
+    sich außerdem Zugangstoken fälschen und damit **Passkeys registrieren**,
+    die nicht vom Secret abhängen und die Rotation daher ebenfalls überleben:
+    im Expositionsfenster angelegte Passkeys prüfen und verdächtige entfernen
+    (bis #1741 verlangt die Passkey-Registrierung keine erneute Anmeldung).
   - `ADMIN_PASSWORD` **und `ADMIN_SESSION_SECRET`, falls gesetzt** — der
     erste Anmeldefaktor und der Schlüssel, der den Passwort-Schritt der
     Anmeldung signiert. Seit dem 2026-10-22 ist die Betreiber-Sitzung
