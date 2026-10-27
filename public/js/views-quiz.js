@@ -443,7 +443,7 @@ async function showQuizArchive() {
   } catch {}
   if (currentView !== view || !head.isConnected) return;
   if (!data || (!data.current && !(data.past || []).length)) {
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('quiz.archive.empty'))}</p>`));
+    app.appendChild(emptyState({ icon: 'ti-puzzle', text: t('quiz.archive.empty') }));
     return;
   }
 

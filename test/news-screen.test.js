@@ -127,7 +127,7 @@ test('the empty list renders an honest empty state and NO entries', async (t) =>
   await dom.call('showNews');
 
   assert.equal(dom.app.querySelectorAll('.news-entry').length, 0);
-  const note = dom.app.querySelector('.empty-note');
+  const note = dom.app.querySelector('.empty .empty__text');
   assert.ok(note && note.textContent.trim(), 'the empty state says something');
   // It still renders as a screen — heading and all — rather than a blank page.
   assert.ok(dom.app.querySelector('.lobby-head h1'));

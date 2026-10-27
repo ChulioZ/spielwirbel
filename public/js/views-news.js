@@ -50,7 +50,7 @@ async function showNews() {
   if (!NEWS.length) {
     // An honest empty state, not a placeholder entry. The list starts empty and
     // stays empty until something genuinely worth announcing ships.
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('news.empty'))}</p>`));
+    app.appendChild(emptyState({ icon: 'ti-sparkles', text: t('news.empty') }));
   } else {
     const list = h('<div class="news-list"></div>');
     for (const entry of NEWS) list.appendChild(renderNewsEntry(entry));

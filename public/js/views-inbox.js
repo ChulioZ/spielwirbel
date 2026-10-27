@@ -37,7 +37,7 @@ async function showInbox() {
   app.appendChild(h(`<div class="lobby-head"><h1>${esc(t('inbox.title'))}</h1></div>`));
 
   if (!items.length) {
-    app.appendChild(h(`<p class="muted empty-note">${esc(t('inbox.empty'))}</p>`));
+    app.appendChild(emptyState({ icon: 'ti-mail', text: t('inbox.empty') }));
     return;
   }
 
