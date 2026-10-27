@@ -98,14 +98,16 @@ research at all.
   `keep-readme-current.md`; a feature documented only in the README's one-liner list
   is as stale as one documented nowhere.
 - **Enforced by:** `test/readme-tree.test.js` (the architecture tree, both directions),
-  `test/skills.test.js` (cited paths) — prose is manual
+  `test/skills.test.js` (cited paths, and since 2026-10-27 `CONTRIBUTING.md`'s skill table
+  against the skill directories, both directions) — prose is manual
 
 ### C-020 — The README stays a landing page, not a manual
 - **Status:** adopted · 2026-07-30
 - **Source:** operator observation, 2026-07-30 ("it currently feels huge to me") ·
   `keep-readme-current.md`
 - **Check:** `wc -l README.md` stays at roughly 100–150 (133 after the 2026-07-30
-  restructure, down from **985**). Reference material belongs in `docs/`; the README's
+  restructure, down from **985**; 170 since 2026-10-02, accepted at the 2026-10-04
+  audit — don't re-raise it unless it grows past that). Reference material belongs in `docs/`; the README's
   job is to tell a first-time visitor what the app is, show it, get it running, and
   point at the right document. Watch for the specific regression this criterion
   exists for: a section that starts as a summary and accretes back into a full
@@ -121,7 +123,7 @@ research at all.
 ### C-024 — The product copy reflects the shipped app
 - **Status:** adopted · 2026-08-13
 - **Source:** the #209 drift that proved the gap ·
-  `keep-readme-current.md` → "The PRODUCT copy is a fifth and sixth surface"
+  `keep-readme-current.md` → "The PRODUCT copy is a surface too — and it was missing here"
 - **Check:** The **end-user** copy — the `landing.*` **and `stats.*`** keys in
   **every** `public/js/lang/*.js`, the answers in `lib/faq.js`, and the landing
   screenshots under `public/img/` — still describes the app that
@@ -149,7 +151,12 @@ research at all.
     it claims to show. Cheap proxy before opening a browser — compare each file's
     last-commit date against the last commit touching the view it depicts
     (`public/js/views-regal.js` for the `landing-shelf-*` shots,
-    `public/js/views-session.js` for `landing-vote`). **Name
+    `public/js/views-session.js` for `landing-vote`, the results view for
+    `landing-result`, `views-round.js`/`views-round-start.js` for `landing-desktop`).
+    **Run it per design set** — Klassisch (`public/img/landing-*`) and Der Tisch
+    (`public/img/tisch/`) separately: on 2026-10-27 the Klassisch set was three
+    rebuilds stale while a "last commit to `public/img`" check read fresh, because
+    #1698 had just regenerated the other set. **Name
     `.claude/rules/landing-product-screenshots.md` in any such finding** — it
     holds the regeneration procedure, and it is `paths:`-scoped to
     `public/img/**` and friends, so it does **not** load for a session reading
@@ -344,7 +351,7 @@ research at all.
   imports "don't reduce its context cost" — C-R06 stands)
 - **Check:** `wc -l CLAUDE.md` stays around or under 200 (171 at adoption, 203 on
   2026-07-30, 226 on 2026-09-07, 227 on 2026-09-14 after the i18n paragraph stopped
-  restating `CONTRIBUTING.md`'s ten-step list, still 227 on 2026-10-04). Growth beyond that is a signal to move
+  restating `CONTRIBUTING.md`'s ten-step list, still 227 on 2026-10-04, 228 on 2026-10-27). Growth beyond that is a signal to move
   content into a scoped rule or a skill, not to restructure (C-R03 still holds).
 - **Enforced by:** `test/token-budget.test.js` (allowlisted, `recorded` at 226 — the entry has to
   be dropped when the trim happens, so the overshoot cannot be forgotten)
@@ -360,7 +367,10 @@ research at all.
   cat .claude/rules/*.md | wc -c                    # corpus (427 KB / 82 files on 2026-07-30;
                                                     #  862 KB / 134 on 2026-09-02;
                                                     #  1.15 MB / 168 on 2026-09-14;
-                                                    #  1.38 MB / 206 on 2026-10-04)
+                                                    #  1.38 MB / 206 on 2026-10-04;
+                                                    #  1.42 MB / 205 on 2026-10-27 — the
+                                                    #  first flat window, #1701 moved the
+                                                    #  Browser-pane rules into a skill)
   ```
   **The rate is the signal, not the total.** The 2026-09-14 reading is +34 files and
   +34% in **twelve days**, against +52 files over the preceding ~33 — so the corpus is
@@ -444,10 +454,11 @@ research at all.
   are verification-tool rules. The figure includes ~6 KB of `<!-- scope: global -->`
   markers; the memory docs say block-level HTML comments are stripped from
   CLAUDE.md before injection, which is **not** documented for rule files, so the
-  figure may overcount by ~3.5%. **Standing candidate for the residency remedy:**
-  the Browser-pane cluster — no path can trigger it, so it is global by necessity
-  as a *rule*; the residency question is whether it belongs in a skill the preview
-  workflow invokes, behind a short global pointer. Against 18 files at the
+  figure may overcount by ~3.5%. **The Browser-pane cluster was the standing
+  candidate for the residency remedy, and #1701 applied it**: the write-ups moved
+  into the `browser-verification` skill behind one short global pointer
+  (`load-browser-verification-before-a-browser-check.md`). **2026-10-27: 30 global
+  files / 146 KB**, down from 37 / 180 KB. Against 18 files at the
   C-022 trial's conclusion (2026-08-01) — while the corpus as a whole went
   82 files/427 KB (2026-07-30) to 134 files/862 KB. So the global slice grew ~44%
   while the corpus grew ~102%: scoping is working, and the number still needs
@@ -476,8 +487,9 @@ research at all.
   recorded (the licensed-copy sections, a *topic* seam) but the RESIDENCY one:
   which half a session that is not creating an instance actually needs. The
   growth between those two measurements is itself the argument: the file gains an
-  entry per shared constant, so the standing case gets worse on its own. Tracked
-  as #978.
+  entry per shared constant, so the standing case gets worse on its own (#978
+  shipped the split on 2026-09-12; the inventory stood at 795 lines on 2026-10-27,
+  up from 619).
 
   **Why C-021 was not enough:** it asks what the corpus costs *in total*, which
   is the right question for a file nobody has to read. A global rule is read
