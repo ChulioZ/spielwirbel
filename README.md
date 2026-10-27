@@ -69,7 +69,7 @@ and documented in [`docs/configuration.md`](docs/configuration.md).
   member.
 - **Teams** — members and guests can pair up for a session: a team counts as one
   player when the games are drawn, and wins together.
-- **Ratings & trophies** — averages are computed live from session votes, with a
+- **Ratings & trophies** — scores are computed live from session votes, with a
   winners' podium, streaks, a "gathering dust" tile and a taste retrospective.
 - **Two archives** — games are never deleted by accident: *retired* (done with
   it) and *completed* (finished its content), both restorable.

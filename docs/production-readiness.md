@@ -274,7 +274,8 @@ itself (would concentrate high-risk surface for no product benefit) and
 passwordless-only login (hard-depends on reliable transactional email).
 Offloading identity to an IdP/OAuth was considered and **deferred, not
 rejected** — revisit if maintaining the hand-rolled token issuance
-(`lib/accounts.js`) becomes a burden; tracked as **#214** (§7).
+(`lib/accounts.js`) becomes a burden. #214 (§7) replaced the HMAC token code
+with `jose`; no issue owns the IdP revisit itself.
 
 ---
 

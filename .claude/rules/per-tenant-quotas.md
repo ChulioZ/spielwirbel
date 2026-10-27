@@ -26,10 +26,11 @@ comment is the authoritative list. The table mirrors it, in two groups:
 | price alerts per user | `lib/routes/price-watches.js` | `quota_price_watches` | #680 |
 
 The last four are per **account**, not per tenant — a friendship is a
-cross-account social surface and a passkey is a credential, neither of which is
-tenant data — but they take the same shape (env-tunable, read per call, distinct
-403 → localized toast). They need no `enforced()` gate of their own: the friend
-and passkey routes 404 outright when accounts are off.
+cross-account social surface, a passkey is a credential and a price alert is a
+personal watch, none of which is tenant data — but they take the same shape
+(env-tunable, read per call, distinct 403 → localized toast). They need no
+`enforced()` gate of their own: the friend, passkey and price-alert routes 404
+outright when accounts are off.
 
 `quota_passkeys` differs from the other two in *where* it is checked: at the
 **options** step as well as at the verify, so the ceremony is refused before the

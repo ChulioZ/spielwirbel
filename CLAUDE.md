@@ -106,7 +106,7 @@ not a full ORM", #211) — they are not leftover localhost-era minimalism.
     reference a function/`const` defined in a later file at *load time* (it isn't
     defined yet). Defer such references (e.g. wrap in an arrow that runs on
     click/navigation). See `.claude/rules/`.
-  - Rating averages are computed **on demand** from session votes (see
+  - Rating scores are computed **on demand** from session votes (see
     `gameStats` in `game-stats.js`) — sessions are the single source of truth, so
     deleting a session automatically removes its effect. Don't denormalize.
 
