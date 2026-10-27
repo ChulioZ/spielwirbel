@@ -427,3 +427,15 @@ test('implement phase 4 checks the branch in the same command block as git commi
   assert.ok(guard >= 0, 'the block refuses to run on main');
   assert.ok(guard < commit, 'the guard runs BEFORE git commit, in the same block');
 });
+
+// CONTRIBUTING.md's skill table is how a contributor learns a skill exists, and
+// it is edited by hand: #1735 removed a row correctly, #1701 added a skill and
+// never added its row (claude-file-audit C-006, 2026-10-27). Both directions:
+// every skill directory has a **`<dir>`** row, and every row names a directory.
+test('CONTRIBUTING.md lists every skill, and only skills that exist', () => {
+  const contrib = fs.readFileSync(path.join(ROOT, 'CONTRIBUTING.md'), 'utf8');
+  const rows = [...contrib.matchAll(/^\| \*\*`([a-z0-9-]+)`\*\* \|/gm)].map((m) => m[1]);
+  assert.ok(rows.length >= 10, `found only ${rows.length} skill rows — has the table's shape changed?`);
+  assert.deepEqual(dirs.filter((d) => !rows.includes(d)), [], 'skills missing from CONTRIBUTING.md');
+  assert.deepEqual(rows.filter((r) => !dirs.includes(r)), [], 'CONTRIBUTING.md rows naming no skill');
+});

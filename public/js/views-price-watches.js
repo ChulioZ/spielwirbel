@@ -195,7 +195,7 @@ async function showPriceWatches() {
   function paint() {
     intro.textContent = t('priceWatch.intro', { n: watches.length, max: limit });
     if (!watches.length) {
-      list.replaceChildren(h(`<p class="muted price-watches__empty">${esc(t('priceWatch.empty'))}</p>`));
+      list.replaceChildren(emptyState({ icon: 'ti-bell', text: t('priceWatch.empty') }));
       return;
     }
     list.replaceChildren(...watches.map((w) => watchRow(w, (next) => {

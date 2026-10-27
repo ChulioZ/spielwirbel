@@ -1,6 +1,6 @@
 # Security criteria
 
-- **last-researched:** 2026-09-08
+- **last-researched:** 2026-10-27
 - **cadence:** 45 days
 
 Seeded 2026-07-24 from `lib/app.js`, `lib/accounts.js`, `lib/auth.js`,
@@ -274,8 +274,11 @@ that a generic scanner does not know about.
     required contexts, so **CodeQL does not gate merges**. A criterion or report claiming
     it does is itself the finding.
 
-  `npm audit` is clean and Dependabot alerts are zero — a new advisory is a finding routed
-  to the `dependabot` skill. A red gitleaks with only a license-probe message is the
+  **`npm audit --omit=dev` against the committed lockfile is the primary dependency
+  signal; Dependabot alerts lag it.** Measured 2026-10-27: two reviewed high advisories
+  (GHSA-27r3-jxmh-p828 body-parser, GHSA-q7qp-rjg7-q26m multer) were four days old with no
+  alert and no PR, and only `npm audit` saw them (fixed in #1740). Any advisory it reports
+  is a finding routed to the `dependabot` skill; a daily automated leg is #1742. A red gitleaks with only a license-probe message is the
   documented transient flake (re-run), not a leak.
 - **Enforced by:** CI (`gitleaks` — the one required context); CodeQL default setup and
   secret-scanning push protection run outside the required-check set
@@ -339,7 +342,7 @@ that a generic scanner does not know about.
 ### S-023 — Exceptional conditions fail closed: unexpected errors answer a generic 500, every auth/tenant lookup failure denies, and nothing falls open to a default
 - **Status:** adopted · 2026-09-08
 - **Source:** OWASP Top 10:2025 A10 Mishandling of Exceptional Conditions · `lib/app.js` (central `errorHandler`), `lib/tenant.js`, `lib/upload-access.js`, `lib/accounts.js`
-- **Check:** `errorHandler` is the last middleware and answers a generic 500 with no stack (Express 5 forwards async rejections to it); `verifyPassword`/`jwt.verify` failures resolve to "refuse", never throw into a fall-through; a token whose user row is gone resolves to ERASED/`null` — in `lib/tenant.js` **and** in the cookie path of `lib/upload-access.js` — never to `'default'`; an unset `app.tenant_id` yields zero rows; a malformed upload key is a 404, not an exception. A new lookup that `.catch()`es to a permissive value, or a new gate whose error branch calls `next()`, is the finding.
+- **Check:** `errorHandler` is the last middleware and answers a generic 500 with no stack (Express 5 forwards async rejections to it); `verifyPassword`/`jwt.verify` failures resolve to "refuse", never throw into a fall-through; a token whose user row is gone resolves to ERASED/`null` — in `lib/tenant.js` **and** in the cookie path of `lib/upload-access.js` — never to `'default'`; an unset `app.tenant_id` yields zero rows; a malformed upload key is a 404, not an exception. A new lookup that `.catch()`es to a permissive value, or a new gate whose error branch calls `next()`, is the finding. **A dependency advisory is judged by where its sink is mounted**: anything before the `/api` gate (the global body parsers) is reachable unauthenticated, and one that ends the process is a blocker while the app runs one replica with bounded restarts (`railway.json`) — #1740 was that case. Report reachability privately until the fix is deployed (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
 - **Enforced by:** `test/admin.test.js` (erasure → 401), `test/uploads-tenant-isolation.test.js` (malformed key, unreferenced object), `test/observability.test.js` (generic 500) — partial; the "no fall-open default" half is manual
 
 ### S-024 — Passkey ceremonies verify challenge scope, origin and RP ID server-side, and persist the signature counter
@@ -411,4 +414,8 @@ that a generic scanner does not know about.
 
 ### S-R08 — "Express 5 / qs / path-to-regexp advisories from the 5.1.0 era are open findings"
 - **Status:** rejected · 2026-09-08
-- **Why:** Lockfile carries `express 5.2.1`, `path-to-regexp 8.4.2`, `qs 6.16.0`, `body-parser 2.3.0`, `multer 2.3.0`; `npm audit` is clean, and Express 5's default query parser is `simple`, so `qs` is not on the request path at all. A third-party aggregator's list for an older version is not an advisory against this lockfile. Reopens only via `npm audit`/Dependabot (S-020).
+- **Why:** Lockfile carries `express 5.2.1`, `path-to-regexp 8.4.2`, `qs 6.16.0`, `body-parser 2.3.0`, `multer 2.3.0`; `npm audit` is clean, and Express 5's default query parser is `simple`, so `qs` is not on the request path at all. A third-party aggregator's list for an older version is not an advisory against this lockfile. Reopens only via `npm audit`/Dependabot (S-020). **It did, 2026-10-27:** body-parser 2.3.0 (GHSA-27r3-jxmh-p828) and multer (GHSA-q7qp-rjg7-q26m) were real advisories against this lockfile, fixed in #1740 (body-parser 2.4.0, multer 2.5.0, qs 6.17.0). The rejection still holds for the aggregator list it was written about.
+
+### S-R09 — "Also set `inflate: false` on the JSON parsers, on top of the body-parser bump"
+- **Status:** rejected · 2026-10-27
+- **Why:** It guards the same case the version floor already closes, so each guard would make the other untestable (`.claude/rules/redundant-guards-make-each-other-untestable.md`). The fixed body-parser is the control. Reopens only if the app ever has to stay on an affected body-parser.

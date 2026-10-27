@@ -11,13 +11,15 @@ Use PostgreSQL instead of the JSON file: `DATABASE_URL=postgres://… npm start`
 app runs its Knex migrations on start, so the schema is created/updated
 automatically; add `DATABASE_SSL=true` for managed Postgres that requires TLS).
 Unset, it uses `DATA_DIR/data.json` as before. Migrations can also be run
-explicitly with `npm run migrate` (and authored with `npm run migrate:make -- <name>`).
+explicitly with `npm run migrate`, undone one batch at a time with
+`npm run migrate:rollback`, and authored with `npm run migrate:make -- <name>`.
 
 Store cover images in S3-compatible object storage instead of on local disk (for
 a stateless, scalable app tier): `S3_BUCKET=my-bucket npm start`. Set `S3_ENDPOINT`
 (+ usually `S3_FORCE_PATH_STYLE=true`) for non-AWS stores like Cloudflare R2,
 Backblaze B2 or MinIO; credentials come from `S3_ACCESS_KEY_ID`/`S3_SECRET_ACCESS_KEY`
-or the AWS default provider chain. Unset, images stay under `DATA_DIR/uploads` as
+or the AWS default provider chain; `S3_REGION` sets the signing region and
+`S3_PREFIX` namespaces the keys inside a shared bucket. Unset, images stay under `DATA_DIR/uploads` as
 before. See the S3 block in `.env.example`.
 
 Behind a TLS-terminating proxy: `TRUST_PROXY=<hops> npm start` (so rate limiting

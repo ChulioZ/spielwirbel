@@ -1,6 +1,6 @@
 # UI criteria
 
-- **last-researched:** 2026-07-26
+- **last-researched:** 2026-10-27
 - **cadence:** 90 days
 
 Seeded 2026-07-26 from `public/styles.css`, the round `PALETTES` table (retired at #1202; the designs now live in `public/js/designs.js`)
@@ -15,6 +15,12 @@ composition and character coverage, not only token/consistency discipline — se
 The 2026-08-07 sweep (cadence-skip, no research) refreshed stale state: **U-014**
 is resolved (#692), `test/design-tokens.test.js` now enforces U-003/U-005/U-014
 and parts of U-004, and **U-R10** records the settled per-component radii call.
+The 2026-10-27 research pass adopted nothing new. One technique note: `text-box-trim`
+/ `text-box-edge` became Baseline (Newly available) in August 2026 with Firefox 154
+(https://web.dev/blog/web-platform-08-2026), so optical centring of text in buttons,
+chips and medallions may use it without a build step — it degrades to today's
+line-box spacing where unsupported. A technique, not a criterion: no screen is wrong
+for lacking it.
 
 **Goal.** Make the app *visually* excellent — something people want to open and
 enjoy looking at. Beautiful, polished, characterful. This is the one audit whose

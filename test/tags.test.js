@@ -15,6 +15,7 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 
 const { app, createRound } = require('./helpers');
+const { TAG_NAME_MAX } = require('../public/js/tag-name-policy');
 
 const addGame = (rid, title, tagIds = []) => {
   let req = request(app).post(`/api/rounds/${rid}/games`)
@@ -58,11 +59,11 @@ test('tag routes: create (trimmed + deduped) and delete', async (t) => {
 
   // Own round: the sibling subtests assert on this round's exact tag list, so a
   // tag created here would throw them off.
-  await t.test('a name longer than 30 chars is a 400; exactly 30 is accepted', async () => {
+  await t.test('a name longer than TAG_NAME_MAX is a 400; exactly TAG_NAME_MAX is accepted', async () => {
     const own = await createRound(request);
     const tooLong = await request(app)
       .post(`/api/rounds/${own.id}/tags`)
-      .send({ name: 'x'.repeat(31) });
+      .send({ name: 'x'.repeat(TAG_NAME_MAX + 1) });
     assert.equal(tooLong.status, 400);
     assert.equal(tooLong.body.error, 'Tag name is too long');
 
@@ -70,9 +71,9 @@ test('tag routes: create (trimmed + deduped) and delete', async (t) => {
     // push an otherwise-valid name over the limit.
     const padded = await request(app)
       .post(`/api/rounds/${own.id}/tags`)
-      .send({ name: `  ${'y'.repeat(30)}  ` });
+      .send({ name: `  ${'y'.repeat(TAG_NAME_MAX)}  ` });
     assert.equal(padded.status, 201);
-    assert.equal(padded.body.name, 'y'.repeat(30));
+    assert.equal(padded.body.name, 'y'.repeat(TAG_NAME_MAX));
   });
 
   await t.test('deleting a tag unassigns it from every game', async () => {
@@ -347,36 +348,35 @@ test('tag icons: create with one, patch it, clear it, reject bad input', async (
   });
 });
 
-test('the client maxlength on EVERY tag-name input equals the server TAG_NAME_MAX', () => {
-  // TAG_NAME_MAX in lib/routes/tags.js carries a literal "keep in sync" comment
-  // pointing at the two tag inputs in views-round-detail.js — the exact
-  // hand-copied-constant shape that produced the #420 palette bug. Neither
-  // side exports the number (the route constant is module-local, the inputs
-  // are template literals), so this is the licensed-copy model of
-  // test/standalone-page-brand.test.js: parse both sources and compare.
+test('every tag-name input takes its maxlength from the shared TAG_NAME_MAX', () => {
+  // One value, one file: public/js/tag-name-policy.js is required by
+  // lib/routes/tags.js and read by every input as a template expression, so the
+  // UI cannot offer a name the route refuses. The input set is DERIVED from the
+  // placeholder keys across all of public/js rather than from a file list — the
+  // fixed three-file list this replaced missed the add-game sheet (no limit at
+  // all) and the shelf's bulk sheet, and stayed green when the value moved
+  // (.claude/rules/source-scanning-guards-enumerate-shapes.md).
   const fs = require('node:fs');
   const path = require('node:path');
+  const dir = path.join(__dirname, '..', 'public', 'js');
+  const inputs = [];
+  for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.js'))) {
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    for (const m of src.matchAll(/<input\b[^>]*>/g)) {
+      if (/tags\.(?:add|name)Placeholder/.test(m[0])) inputs.push({ f, tag: m[0] });
+    }
+  }
+  // Five today (Tags screen add + rename, the game-detail popover, the add-game
+  // sheet, the shelf's bulk sheet). A floor, not an exact count, so a sixth
+  // input joins the assertion instead of failing it.
+  assert.ok(inputs.length >= 5, `found only ${inputs.length} tag-name inputs`);
+  const bad = inputs.filter(({ tag }) => !tag.includes('maxlength="${TAG_NAME_MAX}"'))
+    .map(({ f, tag }) => `${f}: ${tag.slice(0, 70)}`);
+  assert.deepEqual(bad, [], 'tag-name inputs not bound to TAG_NAME_MAX');
+
   const routeSrc = fs.readFileSync(path.join(__dirname, '..', 'lib', 'routes', 'tags.js'), 'utf8');
-  // Both renderings, across the files they live in: #956 moved the Tags screen
-  // to views-round-settings.js and #968 moved the popover to game-editors.js.
-  const viewSrc = ['game-editors.js', 'views-round-detail.js', 'views-round-settings.js']
-    .map((f) => fs.readFileSync(path.join(__dirname, '..', 'public', 'js', f), 'utf8'))
-    .join('\n');
-
-  const serverMax = Number((routeSrc.match(/const TAG_NAME_MAX = (\d+)/) || [])[1]);
-  assert.ok(Number.isFinite(serverMax), 'TAG_NAME_MAX not found in lib/routes/tags.js');
-
-  // Only the tag inputs (identified by their shared placeholder key) — an
-  // unrelated maxlength elsewhere in the view must not join this assertion.
-  // Three since #1004 added the rename field. The alternation is the whole
-  // point: a new tag-name input that spelled its label differently would drop
-  // OUT of this scan and reintroduce the un-guarded hand-copy, which is the
-  // shape .claude/rules/source-scanning-guards-enumerate-shapes.md is about —
-  // so the count is asserted as well as the values.
-  const clientMaxes = [...viewSrc.matchAll(/maxlength="(\d+)"[^>]*tags\.(?:add|name)Placeholder/g)]
-    .map((m) => Number(m[1]));
-  assert.equal(clientMaxes.length, 3, 'expected exactly three tag-name inputs with a maxlength');
-  for (const max of clientMaxes) assert.equal(max, serverMax);
+  assert.match(routeSrc, /require\('\.\.\/\.\.\/public\/js\/tag-name-policy'\)/);
+  assert.doesNotMatch(routeSrc, /TAG_NAME_MAX\s*=\s*\d/, 'the route must not restate the value');
 });
 
 // Manual tag order (#1159). The route is PATCH …/tags/order, and it must be

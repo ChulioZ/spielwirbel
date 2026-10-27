@@ -11,6 +11,8 @@
  * unconditional. Regenerate only for a change that deliberately alters
  * Klassisch:
  *   SPIELWIRBEL_UPDATE_GOLDEN=1 node --test test/forest-regal.test.js
+ * Regenerated on 2026-10-27 for the add-game tag input's new maxlength
+ * (TAG_NAME_MAX, public/js/tag-name-policy.js) — that attribute is the only change.
  *
  * The pixels were judged in headless Chromium at 390 and 1440; what is pinned
  * here is what regresses silently —

@@ -388,3 +388,28 @@ test('a send failure returns 502 with the fallback email — but keeps the store
   assert.equal(await repo.countContactNotices(), countBefore + 1);
   assert.equal((await lastNotice()).message, 'survives the mail outage');
 });
+
+// public/kontakt.html is a standalone page with no shared-scope scripts, so its
+// field caps cannot read the route's bounds and are a licensed COPY
+// (.claude/rules/shared-constants-across-the-stack.md) — this spec is the
+// licence. It drives the route's own schema at each field's maxlength and one
+// past it: a page cap above the route's would let the form send a notice the
+// route then 400s, which on the DSA notice channel loses the report.
+test('every kontakt.html field cap equals the bound the contact route enforces', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { contactSchema } = require('../lib/routes/contact');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'kontakt.html'), 'utf8');
+  const caps = [...html.matchAll(/<(?:input|textarea)\b[^>]*\bid="([^"]+)"[^>]*\bmaxlength="(\d+)"/g)]
+    .map((m) => [m[1], Number(m[2])]);
+  // Six today: name, email, url, reportedUsername, subject, message.
+  assert.ok(caps.length >= 6, `found only ${caps.length} capped fields`);
+  const fill = (id, n) => (id === 'email' ? `${'a'.repeat(n - 12)}@example.org` : 'a'.repeat(n));
+  const base = { message: 'hello' };
+  const drift = [];
+  for (const [id, n] of caps) {
+    if (!contactSchema.safeParse({ ...base, [id]: fill(id, n) }).success) drift.push(`${id}: ${n} refused`);
+    if (contactSchema.safeParse({ ...base, [id]: fill(id, n + 1) }).success) drift.push(`${id}: ${n + 1} accepted`);
+  }
+  assert.deepEqual(drift, []);
+});

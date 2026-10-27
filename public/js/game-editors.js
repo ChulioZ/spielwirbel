@@ -185,7 +185,7 @@ function openTagsPopover(ctx, anchor) {
     // not exposed as the accessible name and it disappears on input), so
     // without this the field is an unnamed text input to a screen reader.
     // The Tags screen's own copy of this control already carries it.
-    const input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+    const input = h(`<input class="input" maxlength="${TAG_NAME_MAX}" placeholder="${esc(t('tags.addPlaceholder'))}"
             aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
     const addBtn = h(`<button class="btn">${esc(t('tags.add'))}</button>`);
     // Icon picker for the inline "create new tag" (#255). The trigger joins

@@ -464,7 +464,7 @@ async function showTags(rid) {
   sec.appendChild(h(`<div class="muted" style="margin-bottom:14px">${esc(t('tags.note'))}</div>`));
 
   const addRow = h(`<div class="toolbar" style="margin-bottom:14px">
-       <input class="input" style="flex:1" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+       <input class="input" style="flex:1" maxlength="${TAG_NAME_MAX}" placeholder="${esc(t('tags.addPlaceholder'))}"
               aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />
        <button class="btn btn--primary"><i class="ti ti-plus" aria-hidden="true"></i> ${esc(t('tags.add'))}</button>
      </div>`);
@@ -617,7 +617,7 @@ async function showTags(rid) {
         const p = tagIconPicker(tg.icon, { expanded: true });
         const editor = h(`<div class="tag-edit">
              <div class="toolbar">
-               <input class="input" style="flex:1" maxlength="30" value="${esc(tg.name)}"
+               <input class="input" style="flex:1" maxlength="${TAG_NAME_MAX}" value="${esc(tg.name)}"
                       aria-label="${esc(t('tags.namePlaceholder'))}" autocorrect="off" spellcheck="false" />
                <button class="btn btn--primary">${esc(t('tags.save'))}</button>
              </div>

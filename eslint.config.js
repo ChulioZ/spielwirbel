@@ -110,7 +110,7 @@ const frontendGlobals = {
   scoreReason: 'readonly',
   // score-info.js (issue #893)
   infoButton: 'readonly', wireInfoButtons: 'readonly', openInfoSheet: 'readonly', INFO_SHEETS: 'readonly',
-  MEMBER_COLORS: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
+  MEMBER_COLORS: 'readonly', TAG_NAME_MAX: 'readonly', CSV_FORMULA_LEAD: 'readonly', memberColor: 'readonly', memberHex: 'readonly',
   memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly', personNameInk: 'readonly', designPersonTone: 'readonly',

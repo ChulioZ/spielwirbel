@@ -768,6 +768,26 @@ import after the first had already been written. `IMPORT_SOURCES` is the
 `importRef.source` vocabulary, and a source the route does not know is a
 whole import refused. The parsers in the same file are client-only.
 
+**The thirty-second is `public/js/tag-name-policy.js`** (2026-10-27 audit):
+`TAG_NAME_MAX`, the longest name a round tag may have. The plain
+offer/validate shape — every tag-name input renders `maxlength` from it and
+`lib/routes/tags.js` validates create and rename against it. It was a literal in
+the route and a hand-copied `30` in three inputs, pinned by a parity test that
+read a fixed list of three files; the shelf's bulk sheet had copied the 30 in
+too, unseen by that test, and the add-game sheet had no cap at all, so a long
+name there came back as the route's English „Tag name is too long" in every
+locale. `test/tags.test.js` now derives the input set from the placeholder keys
+across all of `public/js`, so a sixth input joins the assertion by itself.
+
+**The thirty-third is `public/js/csv-formula.js`** (2026-10-27 audit):
+`CSV_FORMULA_LEAD`, the leading characters that make a spreadsheet run a cell
+as a formula. Neither side offers nor validates it; both WRITE CSV with it —
+`lib/csv.js` for the operator's downloads and `round-export.js` for a round's
+export in the browser — and a set widened on one side only would leave the
+other's files executable, with nothing red. `test/csv.test.js` and
+`test/round-export.test.js` each sweep every ASCII lead through their writer
+against the shared set.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

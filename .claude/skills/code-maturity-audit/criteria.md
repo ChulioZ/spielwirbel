@@ -1,6 +1,6 @@
 # Code-maturity criteria
 
-- **last-researched:** 2026-07-29
+- **last-researched:** 2026-10-27
 - **cadence:** 90 days
 
 Seeded 2026-07-29 from `CLAUDE.md` (the production-readiness mindset shift and
@@ -52,9 +52,10 @@ not a finding; the rejected entries below are that ledger.
   constants. Every duplicate either becomes a shared file the route `require`s
   out of `public/js/`, or carries a parity test as its explicit licence
   (`test/tag-icons.test.js`, `test/standalone-page-brand.test.js`,
-  `test/landing-copy.test.js` and `test/tags.test.js` — the `TAG_NAME_MAX`
-  client-`maxlength`-vs-server assertion, which licenses the literal "keep in
-  sync" comment in `lib/routes/tags.js` — are the sanctioned instances). A copy
+  `test/landing-copy.test.js` and `test/contact.test.js`'s `kontakt.html` cap
+  sweep are the sanctioned instances; `TAG_NAME_MAX` left this list on
+  2026-10-27 for `public/js/tag-name-policy.js`, after its file-list parity test
+  stayed green with the value changed). A copy
   that could have been a `require()` is the bug waiting to happen. Note the
   shared-file *inventory* in the rule is itself enforced, by
   `test/rule-enumerations.test.js`: a new `require('../public/js/…')` under
@@ -109,6 +110,10 @@ not a finding; the rejected entries below are that ledger.
   **jsonwebtoken** (last release 2023-08; not deprecated, no unpatched
   advisory; the ecosystem default has shifted to `jose`) — re-check it first
   each pass, and see the rejected M-R08 before proposing the swap.
+- **2026-10-27:** all 17 pass (none deprecated, each released within 18 months;
+  no Node ≥ 22 built-in obsoletes one). jsonwebtoken shipped **9.0.3 on
+  2025-12-04**, so it is no longer the slowest. **qrcode** is now (last publish
+  2024-08-05, one call site in `lib/routes/sessions.js`) — re-check it first.
 
 ## Multi-process & in-memory state
 
@@ -121,15 +126,12 @@ not a finding; the rejected entries below are that ledger.
   `docs/production-readiness.md` §7 item 5
 - **Check:** Sweep module-level mutable state (module-scope counters, Maps,
   caches) in `lib/` and `lib/routes/`. Classify each instance: (a) correct
-  per-process by design; (b) a **documented accepted trade-off** — the
-  in-memory rate-limiter stores (accepted: the tested `numReplicas: 1` pin is the
-  control — #215's Redis store was closed unshipped 2026-08-02), the `MAIL_DAILY_MAX` budget in `lib/mail.js` (per-process by
-  documented decision, `bounding-bulk-registration-mail.md`), the 10-minute
-  provider-hop cache in `lib/provider-cache.js` (extracted from
-  `lib/routes/lookup.js` by #518/PR #587 once `lib/routes/games.js` became a
-  second consumer — it is one shared Map now, not one per route), the
-  `/readyz` result cache in
-  `lib/observability.js`; or (c) a finding — state whose *correctness* (not
+  per-process by design; (b) a **documented accepted trade-off** — accepted only
+  when **the module's own comment says why per-process is safe while two
+  processes overlap** (every deploy does). The rule replaced an enumerated list
+  on 2026-10-27, which had already missed seven such stores; the in-memory
+  rate-limiter stores are the standing example (the tested `numReplicas: 1` pin
+  is the control — #215's Redis store was closed unshipped 2026-08-02); or (c) a finding — state whose *correctness* (not
   merely efficiency) assumes one process. The done-right model is the demo
   machinery: liveness counts and cooldowns are read from the store per request,
   so replicas agree by construction. A new (b) requires the documentation, not
@@ -176,6 +178,9 @@ not a finding; the rejected entries below are that ledger.
   (classification enums, localized separators, region-scoped ids), the fixture
   is a dated live capture, not a hand-written sample — a fixture that merely
   agrees with the code cannot falsify it.
+  Known synthetic instance (2026-10-27): the BG Stats export fixture behind
+  `public/js/play-import.js` (`test/play-import.test.js` says so) — nobody on the
+  project has the app, and the parser skips unparseable plays silently.
 - **Enforced by:** — (manual)
 
 ### M-010 — An assertion that can pass vacuously names its counter-check
@@ -266,7 +271,8 @@ not a finding; the rejected entries below are that ledger.
 - **Why:** The usage here is narrow and hardened: HS256 only, the algorithm is
   pinned at verify time, and the token payloads are domain-separated
   (`.claude/rules/admin-moderation-surface.md` §1). jsonwebtoken's last release
-  is 2023-08 but it is not deprecated and carries no unpatched advisory; `jose`
+  is 9.0.3 (2025-12-04; the 2026-07-29 pass recorded 2023-08) and it is not
+  deprecated and carries no unpatched advisory; `jose`
   is ESM-first, which frictions this CommonJS repo for zero behavioural gain.
   Re-open on a formal deprecation, an unpatched CVE, or a real need for an
   algorithm/feature jsonwebtoken lacks.

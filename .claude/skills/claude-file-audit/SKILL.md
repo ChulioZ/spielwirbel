@@ -132,11 +132,12 @@ change had to update). Then diff `process.env.*` across `lib/`, `lib/routes/`,
 `scripts/`, `server.js` **and `knexfile.js`** against `.env.example` — entries
 there are commented out, so match on the name, not on an assignment. (Miss
 `knexfile.js` and `DATABASE_SSL` reads as an orphan entry; the platform-injected
-`NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.) Two files read
-their names **table-driven** through `process.env[name]` — `lib/public-stats.js`
-(the whole `PUBLIC_STATS_MIN_*` family plus `PUBLIC_STATS_RESOLVE_MAX`) and
-`lib/corpus.js` (`BGG_CORPUS_*`) — so a literal `process.env.X` grep reports every
-one of them as a false orphan; match those against the name tables, not the grep.
+`NODE_ENV`/`RAILWAY_GIT_COMMIT_SHA` family is deliberately absent.) Some files
+read their names **table-driven** through `process.env[name]` (find them with
+`grep -rn 'process.env\[' lib scripts` — `lib/public-stats.js`, `lib/corpus.js`
+and `lib/quiz.js` on 2026-10-27), so a literal `process.env.X` grep reports every
+one of those names as a false orphan; match them against the name tables, not
+the grep.
 **Don't restate how many there are here**: the count is a value those files own
 and it grows with the feature — #1035 added two, and the stale number this
 paragraph carried until 2026-09-14 is what the check is supposed to catch.

@@ -24,6 +24,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp } = require('./support/dom');
+const { USERNAME_MAX } = require('../public/js/username-policy');
 
 // The heuristic's own vocabulary. An id containing any of these is what makes
 // WebKit read the field as a login, so the guard bans the WORDS, not one spelling.
@@ -103,6 +104,14 @@ for (const [what, render] of CASES) {
       assert.ok(input.hasAttribute(attr), `${attr} is missing`);
     }
     assert.equal(input.getAttribute('data-lpignore'), 'true', 'data-lpignore must be the string "true"');
+  });
+
+  // Both fields take a public username, so both cap at the register form's own
+  // bound, read from the shared policy rather than restated as a literal: the
+  // friend field had a hand-written 30 and the invite field had no cap at all.
+  test(`${what} caps input at the shared USERNAME_MAX`, async (t) => {
+    const { input } = await render(t);
+    assert.equal(input.getAttribute('maxlength'), String(USERNAME_MAX));
   });
 
   test(`${what} keeps its accessible name`, async (t) => {

@@ -1,6 +1,6 @@
 # Legal criteria
 
-- **last-researched:** 2026-07-24
+- **last-researched:** 2026-10-27
 - **cadence:** 90 days
 
 Seeded 2026-07-23 from `.claude/rules/keep-legal-docs-current.md`, `docs/legal/`,
@@ -114,7 +114,10 @@ than an acknowledged gap.
   #311, closed 2026-09-14); `dsar-process.md` against the admin export/erasure routes;
   `notice-and-action.md` against the actual notice workflow and the operator inbox;
   `toms.md` against the security measures really in place; `breach-process.md` against who
-  and what exists today.
+  and what exists today — including that its containment list covers **every persistent
+  credential an attacker holding a leaked secret can create** (refresh tokens, passkeys, a
+  changed e-mail): a rotation that leaves one alive is not containment (added 2026-10-27,
+  after the 2026-10-22 incident; passkey enrolment step-up is #1741).
 - **Enforced by:** — (manual)
 
 ### L-009 — The legal surface fails closed
@@ -146,7 +149,7 @@ than an acknowledged gap.
   claim). Also confirm the EU-US Data Privacy Framework adequacy decision still
   stands — the Cloudflare transfer statement leans on it, with SCCs as fallback
   (General Court upheld it 2025-09, *Latombe*; appeal C-703/25 P pending as of
-  2026-07-24).
+  2026-10-27, no Advocate General opinion yet).
 - **Enforced by:** — (manual; check the platform, not the code)
 
 ### L-012 — Donations stay unconditional
@@ -197,8 +200,10 @@ than an acknowledged gap.
   the first truncation, `.claude/rules/railway-postgres-floating-major.md`), encryption at
   rest (Railway Postgres, R2), TLS, access control and whether the app's DB role is a
   superuser, `ipHash` pseudonymisation (code), and the deployment regions of every service
-  (dashboard, cf. L-011). A **platform-side** claim is the one no commit can touch, so it
-  is the one that rots.
+  (dashboard, cf. L-011), and R2 object versioning or replication (dashboard; none on
+  2026-10-27, tracked as #1743). A **platform-side** claim is the one no commit can touch,
+  so it is the one that rots. An „Offener Punkt" in `toms.md` needs an OPEN owning issue
+  or a dated decision (`.claude/rules/deferred-weakness-attributions-rot.md`).
 - **Enforced by:** — (manual; platform-side by construction)
 
 ### L-016 — No personal data reaches a derived or public surface undeclared
@@ -209,7 +214,10 @@ than an acknowledged gap.
   exists or only a convention: `lib/public-stats.js` (the landing page and `/entdecken` —
   the one with a real guarantee, that no user-authored byte reaches the payload because
   titles and covers resolve from the provider; its header documents it and the criterion's
-  job is to check it still holds), `feed_events` and its allowlist, shared vote links
+  job is to check it still holds), the public quiz archive `/api/quiz/archive` (#743 —
+  per-question percentages with no minimum count on 2026-10-27; a percentage over a
+  handful of answers is one person's answers, and the public-stats floor is the structural
+  guarantee to look for), `feed_events` and its allowlist, shared vote links
   (#652), public profiles (#558), and the recap/share text. A surface leaning on "only
   logged-in users can see it" is a finding: L-007 already records that as invalid on this
   instance, since `DEMO_ENABLED` has been on since 2026-07-27 and an unauthenticated
@@ -258,7 +266,8 @@ than an acknowledged gap.
   dedicated `accessibility-audit` skill on product merits (WCAG 2.2 AA as the bar;
   its side of this decision is A-R05). Re-open if the operator grows past the
   thresholds, a paid tier changes the classification, or the EAA/EN 301 549
-  harmonisation (V4.1.1 expected in the OJEU ~Oct 2026) shifts the applicability
+  harmonisation (V4.1.1 published by ETSI 2026-09-02 on WCAG 2.2; OJEU citation expected
+  ~Dec 2026) shifts the applicability
   analysis.
 
 ### L-R06 — "Add a standalone data-protection-audit domain"
