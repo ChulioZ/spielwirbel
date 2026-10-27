@@ -4983,6 +4983,15 @@
     grid-template-columns: auto auto minmax(0, 1fr) auto;
   }
   :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-person__progress { display: none; }
+  /* „Für …" back on a line of its own, whole. With ten games the boxes take
+     their cap and the key's track in a two-up row is ~150px, so the label broke
+     as „Für / Maximilian" (measured at 1440, Ocean's twin of this rule). */
+  :root[data-design="tisch"][data-scheme="dark"] .live-person > .live-vote__hotseat-btn {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
 }
 
 /* The box column pinned while the Tafel scrolls (#1430) — only where the whole

@@ -52,6 +52,15 @@ function assertRosterReflow(sheet, { container, sel }) {
   assert.equal(css.declaredValue(css.bodyOf(sel.name, wide), 'grid-column'), '2 / 4',
     'the name no longer spans the key\'s track, so a key takes its width');
 
+  // …but not in a two-up row: with the marks at their cap the key's track there
+  // is ~150px, and „Für Maximilian" broke over two lines. It takes a line of its
+  // own under the state, whole, as on a phone.
+  const twoUpKey = css.bodyOf(sel.key, narrow);
+  assert.ok(twoUpKey, 'a two-up row keeps the key on the state line');
+  assert.equal(css.declaredValue(twoUpKey, 'grid-row'), '3');
+  assert.equal(css.declaredValue(twoUpKey, 'grid-column'), '2 / -1');
+  assert.equal(css.declaredValue(twoUpKey, 'white-space'), 'nowrap', 'a two-up key may still break its label');
+
   // What a two-up row at its floor leaves the name, with the marks at their cap.
   const row = css.bodyOf(sel.rowBase, top);
   const pad = px(row, /padding:\s*\d+px\s+(\d+)px/, 'the row padding');

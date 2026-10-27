@@ -4652,6 +4652,15 @@
     grid-template-columns: auto auto minmax(0, 1fr) auto;
   }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { display: none; }
+  /* „Für …" back on a line of its own, whole. With ten games the bubbles take
+     their 160px cap and the key's track in a two-up row is ~150px, so the label
+     broke as „Für / Maximilian" (measured at 1440 and 1512, Safari). */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
 }
 
 /* ===== #1216 — Leer, jung und Fehler: empty, young and error states ===== */
