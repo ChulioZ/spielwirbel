@@ -205,6 +205,28 @@ test('a text cell opening with a formula character is defused; a number is not (
   assert.equal(cell(Number.NaN), '');
 });
 
+// The browser export and the server's CSV writer (lib/csv.js, the operator's
+// downloads) defuse the SAME leading characters, because both read
+// CSV_FORMULA_LEAD from public/js/csv-formula.js. Swept over every ASCII lead
+// rather than the four the test above names, so a widened set on one side is a
+// named failure here.
+test('the export defuses exactly the leads CSV_FORMULA_LEAD names (shared with lib/csv.js)', (t) => {
+  const { CSV_FORMULA_LEAD } = require('../public/js/csv-formula');
+  const { dom } = boot(t);
+  const drift = [];
+  for (let c = 0; c < 128; c++) {
+    const v = `${String.fromCharCode(c)}x`;
+    // Guarded = the cell is not the plain (RFC-quoted where needed) value; an
+    // apostrophe check would misread lead 39, which opens with one anyway.
+    const plain = /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    const guarded = dom.call('exportCsvCell', v) !== plain;
+    if (guarded !== CSV_FORMULA_LEAD.test(v)) drift.push(c);
+  }
+  assert.deepEqual(drift, []);
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', 'js', 'round-export.js'), 'utf8');
+  assert.doesNotMatch(src, /\/\^\[=/, 'round-export.js must not restate the lead set');
+});
+
 test('the filename is a safe slug of the round name plus the local day (#1702)', (t) => {
   const { dom } = boot(t);
   const name = (n) => dom.run(`roundExportFilename({ name: ${JSON.stringify(n)} }, new Date(2026, 9, 20, 12))`);

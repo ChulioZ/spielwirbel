@@ -717,6 +717,8 @@ public/
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
     member-colors.js the curated avatar palette — the single source of truth
                      lib/routes/members.js validates against (issue #420)
+    tag-name-policy.js TAG_NAME_MAX, the tag-name length every tag input
+                     caps at and lib/routes/tags.js validates against
     member-active.js which members are still PLAYING — the one filter the
                      forward-looking surfaces (session setup, teams, rankings,
                      trophies) apply, while history keeps resolving a retired
@@ -1012,6 +1014,8 @@ public/
     vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-
                           identity test, MIT LICENSE beside it) — the zip
                           writer for the round export (issue #1702)
+    csv-formula.js        the leading characters a CSV writer defuses —
+                          shared by round-export.js and lib/csv.js
     round-export.js       a round's data as a zip — one CSV per table plus
                           round.json — built in the browser from the screens'
                           own score/outcome helpers, saved as a download (#1702)

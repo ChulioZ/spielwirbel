@@ -39,7 +39,7 @@ function exportCsvCell(value) {
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : '';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   let s = String(value);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (CSV_FORMULA_LEAD.test(s)) s = `'${s}`; // the set lib/csv.js defuses too (csv-formula.js)
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

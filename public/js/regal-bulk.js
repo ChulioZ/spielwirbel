@@ -387,7 +387,7 @@ function createRegalBulk(ctx) {
 
         // The game-detail popover's create row (game-editors.js openTagsPopover).
         // aria-label as well as placeholder: a placeholder is not a label.
-        input = h(`<input class="input" maxlength="30" placeholder="${esc(t('tags.addPlaceholder'))}"
+        input = h(`<input class="input" maxlength="${TAG_NAME_MAX}" placeholder="${esc(t('tags.addPlaceholder'))}"
                 aria-label="${esc(t('tags.addPlaceholder'))}" autocorrect="off" spellcheck="false" />`);
         const picker = tagIconPicker(null);
         const addBtn = h(`<button type="button" class="btn" data-act="create-tag">${esc(t('tags.add'))}</button>`);

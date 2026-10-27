@@ -10,6 +10,7 @@
 const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp, flush, waitFor } = require('./support/dom');
+const { TAG_NAME_MAX } = require('../public/js/tag-name-policy');
 
 const dom = loadApp({ locale: 'de' });
 after(() => dom.close());
@@ -228,7 +229,7 @@ test('a round with no tags still offers the tags action, with just the create ro
   assert.ok(nameInput(), 'no way to name a new tag');
   assert.equal(nameInput().getAttribute('aria-label'), dom.run("t('tags.addPlaceholder')"),
     'a placeholder is not a label');
-  assert.equal(nameInput().getAttribute('maxlength'), '30');
+  assert.equal(nameInput().getAttribute('maxlength'), String(TAG_NAME_MAX));
   assert.ok(sheet().querySelector('.bulk-tags__create .icon-picker__trigger'), 'no icon picker');
   assert.equal(sheet().querySelector('.bulk-tags__chips').hidden, true, 'an empty chip row must not show');
   assert.equal(sheetBtn(APPLY).disabled, true, 'nothing picked and nothing typed');

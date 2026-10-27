@@ -52,9 +52,10 @@ not a finding; the rejected entries below are that ledger.
   constants. Every duplicate either becomes a shared file the route `require`s
   out of `public/js/`, or carries a parity test as its explicit licence
   (`test/tag-icons.test.js`, `test/standalone-page-brand.test.js`,
-  `test/landing-copy.test.js` and `test/tags.test.js` — the `TAG_NAME_MAX`
-  client-`maxlength`-vs-server assertion, which licenses the literal "keep in
-  sync" comment in `lib/routes/tags.js` — are the sanctioned instances). A copy
+  `test/landing-copy.test.js` and `test/contact.test.js`'s `kontakt.html` cap
+  sweep are the sanctioned instances; `TAG_NAME_MAX` left this list on
+  2026-10-27 for `public/js/tag-name-policy.js`, after its file-list parity test
+  stayed green with the value changed). A copy
   that could have been a `require()` is the bug waiting to happen. Note the
   shared-file *inventory* in the rule is itself enforced, by
   `test/rule-enumerations.test.js`: a new `require('../public/js/…')` under

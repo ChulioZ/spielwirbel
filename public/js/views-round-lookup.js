@@ -88,7 +88,7 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
           <label>${esc(t('addGame.tagsLabel'))}</label>
           <div class="filter-chips" id="tagSeg" hidden></div>
           <div class="toolbar" style="margin-top:6px">
-            <input id="newTag" class="input" placeholder="${esc(t('tags.addPlaceholder'))}"
+            <input id="newTag" class="input" maxlength="${TAG_NAME_MAX}" placeholder="${esc(t('tags.addPlaceholder'))}"
                    aria-label="${esc(t('tags.addPlaceholder'))}" style="flex:1" autocomplete="off" autocorrect="off" spellcheck="false" />
             <button type="button" id="addTagBtn" class="btn">${esc(t('tags.add'))}</button>
           </div>

@@ -151,3 +151,21 @@ test('fromCsv never throws on junk, and answers [] for nothing at all', () => {
   // not by an exception here.
   assert.deepEqual(fromCsv('1,"unterminated'), [['1', 'unterminated']]);
 });
+
+// lib/csv.js and the browser's round export (public/js/round-export.js) must
+// defuse the same leads, so both read CSV_FORMULA_LEAD from one shared file.
+test('csvField defuses exactly the leads CSV_FORMULA_LEAD names', () => {
+  const { CSV_FORMULA_LEAD } = require('../public/js/csv-formula');
+  const drift = [];
+  for (let c = 0; c < 128; c++) {
+    const v = `${String.fromCharCode(c)}x`;
+    // Guarded = the cell is not the plain quoted value. Not "starts with an
+    // apostrophe": a value that already opens with one (lead 39) would read as
+    // guarded either way.
+    const guarded = csvField(v) !== `"${v.replace(/"/g, '""')}"`;
+    if (guarded !== CSV_FORMULA_LEAD.test(v)) drift.push(c);
+  }
+  assert.deepEqual(drift, []);
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'lib', 'csv.js'), 'utf8');
+  assert.doesNotMatch(src, /\/\^\[=/, 'lib/csv.js must not restate the lead set');
+});
