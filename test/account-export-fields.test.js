@@ -82,10 +82,11 @@ async function fullAccount() {
   assert.equal(login.status, 200);
   const token = login.body.accessToken;
 
-  const opts = await request(app).post('/api/account/passkeys/options').set(auth(token)).send({});
+  const opts = await request(app).post('/api/account/passkeys/options').set(auth(token))
+    .send({ currentPassword: PASSWORD }); // the enrolment step-up (#1741)
   assert.equal(opts.status, 200, JSON.stringify(opts.body));
   const pk = await request(app).post('/api/account/passkeys').set(auth(token))
-    .send({ response: { id: 'cred-export' }, challenge: opts.body.challenge, name: 'Laptop' });
+    .send({ response: { id: 'cred-export' }, challenge: opts.body.challenge, name: 'Laptop', currentPassword: PASSWORD });
   assert.equal(pk.status, 201, JSON.stringify(pk.body));
 
   const chg = await request(app).post('/api/account/change-email').set(auth(token))

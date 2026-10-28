@@ -971,7 +971,9 @@ What the app does, in detail. For a short overview see the
   credential, never a replacement: the password and the e-mail reset stay
   exactly as they are, so losing every device cannot lock anyone out. Set them
   up under **Konto → Passkeys** (several per account, each renamable and
-  removable); the login screen then offers **"Mit Passkey anmelden"**, which
+  removable) — adding one asks for the **current password** first, like
+  changing the password or the address does (#1741), so a session left open on
+  someone else's device cannot enrol a credential; the login screen then offers **"Mit Passkey anmelden"**, which
   needs **no e-mail address typed at all** — the device offers whichever
   credential it holds for the site. Every device class works: Touch ID on a Mac,
   Windows Hello, Android and iOS biometrics, credentials synced through iCloud
