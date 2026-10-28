@@ -1,9 +1,11 @@
 name: Node Security Watch
 
 # Daily: if nodejs.org marks a release on the pinned major as a security release
-# newer than the Dockerfile's pin, open a PRIVATE draft security advisory so the
-# operator is told without the public repo announcing an unpatched production.
-# Logic and the reasoning: scripts/node-security-watch.js. Not part of ci-passed —
+# newer than the Dockerfile's pin, or `npm audit --omit=dev` reports a high or
+# critical advisory against the committed lockfile (#1742), open a PRIVATE draft
+# security advisory so the operator is told without the public repo announcing
+# an unpatched production. The audit reads the lockfile alone — no `npm ci`.
+# Logic and the reasoning: scripts/node-security-watch.js, scripts/npm-audit-watch.js. Not part of ci-passed —
 # it gates nothing and never runs on a PR, so the token never meets fork code.
 
 on:
