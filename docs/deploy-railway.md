@@ -350,7 +350,7 @@ If you do configure one later:
   POST. Don't route it through `lib/mail.js`: an error loop would burn the daily
   send budget that `MAIL_DAILY_MAX` protects for *registration* mail.
 
-### Node security releases
+### Node security releases and npm advisories
 
 GitHub raises no alert for the Node runtime inside the Docker base image, and
 Dependabot bumps it only weekly. The **Node Security Watch** workflow
@@ -361,6 +361,15 @@ draft security advisory** (Security → Advisories) when it finds one. It never
 opens an issue, and its public log says only "action required", because this
 repo is public (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
 
+The same run also does `npm audit --omit=dev` against the committed lockfile
+(#1742), because Dependabot alerts lag it: on 2026-10-27 two high advisories
+against production dependencies were four days old with neither an alert nor a
+PR. A **high or critical** finding goes into a single draft titled "npm audit:
+high/critical advisory in a production dependency", which each run rewrites
+with the current findings rather than adding a new draft, and fails the run.
+Dev dependencies and moderate/low findings never fail it. Close that draft once
+the bump is live; a later finding opens a new one.
+
 It needs the repo secret **`GH_ADVISORY_TOKEN`**: a fine-grained PAT scoped to
 this repository only, with **Repository security advisories: Read and write**
 (GitHub adds Metadata: Read automatically) and nothing else. `GITHUB_TOKEN`
@@ -368,8 +377,8 @@ cannot create advisories.
 
 **The alert is the failed run, not the draft.** The draft is created with your
 own token, and GitHub does not notify you of your own actions. So while a
-security release is pending, the run fails every day until the bump is live,
-and GitHub mails the failure to the account that last edited the cron. That
+security release or an npm advisory is pending, the run fails every day until
+the bump is live, and GitHub mails the failure to the account that last edited the cron. That
 needs **Settings → Notifications → Actions → Email**, "failed workflows only"
 is enough; it was "Don't notify" until 2026-10-22. An expired PAT fails the run
 too (`GitHub API GET answered 401`): renew it then. A private one-shot reminder

@@ -57,7 +57,10 @@ async function runMain(t, index, extra = {}) {
   });
   t.mock.method(console, 'log', () => {});
   const vars = Object.assign({ GH_ADVISORY_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' }, extra);
-  return { result: await main({ env: vars }), calls };
+  // A clean npm audit, so only the Node leg can require action (its own spec:
+  // test/npm-audit-watch.test.js).
+  const spawn = () => ({ status: 0, stdout: JSON.stringify({ auditReportVersion: 2, vulnerabilities: {} }) });
+  return { result: await main({ env: vars, spawn }), calls };
 }
 
 test('a pending security release files a draft AND reports action required', async (t) => {

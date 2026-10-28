@@ -2,7 +2,9 @@
 
 /*
  * Daily watch for Node.js security releases on the line the Dockerfile pins
- * (.github/workflows/node-security-watch.yml).
+ * (.github/workflows/node-security-watch.yml), plus a second leg for high and
+ * critical `npm audit` advisories in production dependencies — its own reasoning
+ * is in scripts/npm-audit-watch.js; it reports through the same path as below.
  *
  * Dependabot's `docker` ecosystem bumps the base image weekly and cannot tell a
  * security release from an ordinary patch, and GitHub raises no alert for the
@@ -17,7 +19,7 @@
  *
  * The draft alone notifies nobody: it is created with the operator's own token,
  * and GitHub does not notify you of your own actions (measured 2026-10-22). So
- * while a security release is pending the run FAILS, every day until the bump
+ * while a finding is pending the run FAILS, every day until the bump
  * lands, and GitHub's failed-workflow mail is the alert. A red run says only
  * "action required", a bit anyone can already derive from the public pin and
  * index.json; the details stay in the draft.
@@ -28,6 +30,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { auditFindings, auditAdvisoryBody, runAudit } = require('./npm-audit-watch');
 
 const INDEX_URL = 'https://nodejs.org/dist/index.json';
 const TITLE_PREFIX = 'Node.js security release';
@@ -92,12 +95,16 @@ async function gh(method, url, token, body) {
   return res.json();
 }
 
-async function main({ env = process.env, root = path.join(__dirname, '..') } = {}) {
-  const token = env.GH_ADVISORY_TOKEN;
-  const repo = env.GITHUB_REPOSITORY;
-  if (!token) throw new Error('GH_ADVISORY_TOKEN is not set');
-  if (!repo) throw new Error('GITHUB_REPOSITORY is not set');
+// Files the draft once; with `update`, an existing draft of the same title is
+// rewritten instead, for a leg whose findings can change while it stays open.
+async function fileDraft(repo, token, body, { update = false } = {}) {
+  const drafts = await gh('GET', `/repos/${repo}/security-advisories?state=draft&per_page=100`, token);
+  const existing = drafts.find((a) => a.summary === body.summary);
+  if (!existing) return gh('POST', `/repos/${repo}/security-advisories`, token, body);
+  if (update) return gh('PATCH', `/repos/${repo}/security-advisories/${existing.ghsa_id}`, token, body);
+}
 
+async function nodeLeg({ env, root, repo, token }) {
   const pinned = pinnedVersion(fs.readFileSync(path.join(root, 'Dockerfile'), 'utf8'));
   let release;
   if (env.WATCH_TEST === 'true') {
@@ -108,20 +115,41 @@ async function main({ env = process.env, root = path.join(__dirname, '..') } = {
     if (!res.ok) throw new Error(`${INDEX_URL} answered ${res.status}`);
     [release] = pendingSecurityReleases(await res.json(), pinned);
   }
+  if (!release) return false;
+  await fileDraft(repo, token, advisoryBody(release, pinned));
+  console.log('Node security watch: action required — see Security → Advisories.');
+  return true;
+}
 
-  if (release) {
-    const body = advisoryBody(release, pinned);
-    const drafts = await gh('GET', `/repos/${repo}/security-advisories?state=draft&per_page=100`, token);
-    if (!drafts.some((a) => a.summary === body.summary)) {
-      await gh('POST', `/repos/${repo}/security-advisories`, token, body);
+async function npmLeg({ root, repo, token, spawn }) {
+  const findings = auditFindings(runAudit(root, spawn));
+  if (findings.length === 0) return false;
+  await fileDraft(repo, token, auditAdvisoryBody(findings), { update: true });
+  console.log('npm audit watch: action required — see Security → Advisories.');
+  return true;
+}
+
+// Both legs always run: one failing (nodejs.org down, an expired token) must not
+// silence the other. Any failure still fails the run, after both have reported.
+async function main({ env = process.env, root = path.join(__dirname, '..'), spawn } = {}) {
+  const token = env.GH_ADVISORY_TOKEN;
+  const repo = env.GITHUB_REPOSITORY;
+  if (!token) throw new Error('GH_ADVISORY_TOKEN is not set');
+  if (!repo) throw new Error('GITHUB_REPOSITORY is not set');
+
+  const ctx = { env, root, repo, token, spawn };
+  let actionRequired = false;
+  let failure;
+  for (const leg of [nodeLeg, npmLeg]) {
+    try {
+      if (await leg(ctx)) actionRequired = true;
+    } catch (err) {
+      failure = failure || err;
     }
   }
-  if (release) {
-    console.log('Node security watch: action required — see Security → Advisories.');
-    return true;
-  }
-  console.log('Node security watch: check complete.');
-  return false;
+  if (failure) throw failure;
+  if (!actionRequired) console.log('Security watch: check complete.');
+  return actionRequired;
 }
 
 module.exports = { pinnedVersion, pendingSecurityReleases, advisoryBody, main };

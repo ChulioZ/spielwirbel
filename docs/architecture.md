@@ -1176,7 +1176,12 @@ scripts/
   node-security-watch.js
                      daily (Node Security Watch workflow): files a PRIVATE draft
                      security advisory when nodejs.org marks a release newer
-                     than the Dockerfile's pin as a security release
+                     than the Dockerfile's pin as a security release, and
+                     runs the npm-audit leg below
+  npm-audit-watch.js
+                     that watch's second leg (#1742): `npm audit --omit=dev`
+                     against the lockfile, high/critical only, into one
+                     private draft it keeps up to date
   cdp.js             the dependency-free Chrome DevTools Protocol client both
                      image scripts drive headless Chrome with
   render-design-marks.js

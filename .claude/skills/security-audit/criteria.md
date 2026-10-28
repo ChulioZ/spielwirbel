@@ -278,10 +278,12 @@ that a generic scanner does not know about.
   signal; Dependabot alerts lag it.** Measured 2026-10-27: two reviewed high advisories
   (GHSA-27r3-jxmh-p828 body-parser, GHSA-q7qp-rjg7-q26m multer) were four days old with no
   alert and no PR, and only `npm audit` saw them (fixed in #1740). Any advisory it reports
-  is a finding routed to the `dependabot` skill; a daily automated leg is #1742. A red gitleaks with only a license-probe message is the
+  is a finding routed to the `dependabot` skill. Since #1742 the daily Node Security Watch
+  runs it too (high/critical, production only), filing a private draft and failing the run. A red gitleaks with only a license-probe message is the
   documented transient flake (re-run), not a leak.
 - **Enforced by:** CI (`gitleaks` — the one required context); CodeQL default setup and
-  secret-scanning push protection run outside the required-check set
+  secret-scanning push protection run outside the required-check set; `npm audit` by the
+  daily Node Security Watch (`scripts/npm-audit-watch.js`), which gates nothing
 
 ## Public-repo disclosure risk
 
