@@ -766,32 +766,71 @@ function buildPasskeySection() {
     .then((data) => render(data.passkeys || []))
     .catch((ex) => { if (ex.message !== 'auth') setKontoError(err, t('auth.error.network')); });
 
-  if (add) {
-    add.addEventListener('click', async () => {
+  if (add) add.addEventListener('click', () => openPasskeyReauth(add, render, err));
+
+  return wrap;
+}
+
+/* Adding a passkey asks for the current password first (#1741), like changing
+   the password or the address: a valid token alone must not enrol a credential
+   that outlives both. The server checks it on BOTH calls — the challenge is not
+   bound to an account — so the password rides along to the verify as well.
+
+   Through openEditor, so it is the popover-from-860px / sheet-below pattern with
+   the focus trap and Back-dismissal (.claude/rules/accessibility-contrast-and-modals.md).
+   The sheet stays open across the OS ceremony: a wrong password or a refused
+   verify reports inside it, where the field to fix is. */
+function openPasskeyReauth(anchor, render, sectionErr) {
+  openEditor(anchor, 'passkey-reauth', t('konto.passkey.reauthTitle'), (el, close) => {
+    el.appendChild(h(`<form class="konto-pw">
+        <p class="muted">${esc(t('konto.passkey.reauthIntro'))}</p>
+        <div class="field">
+          <label for="kpkCurrent">${esc(t('konto.pw.current'))}</label>
+          <input id="kpkCurrent" class="input" type="password" autocomplete="current-password" />
+        </div>
+        <p class="konto-error" role="alert"></p>
+        <button class="btn btn--primary" type="submit">${iconText('ti-fingerprint', t('konto.passkey.reauthSubmit'))}</button>
+      </form>`));
+    const form = el.querySelector('form');
+    const current = el.querySelector('#kpkCurrent');
+    const err = el.querySelector('.konto-error');
+    const submit = el.querySelector('button[type=submit]');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
       err.textContent = '';
-      add.disabled = true;
+      sectionErr.textContent = '';
+      // An empty field costs no request (and no Argon2 verify on the server).
+      if (!current.value) return setKontoError(err, t('auth.error.missing'));
+      const currentPassword = current.value;
+      submit.disabled = true;
       try {
-        const start = await accountApi('POST', '/passkeys/options', {});
+        const start = await accountApi('POST', '/passkeys/options', { currentPassword });
         // Opens the platform's own sheet (Touch ID, Windows Hello, a hardware
         // key, or the QR flow to another device).
         const credential = await createPasskey(start.options);
         const done = await accountApi('POST', '/passkeys', {
           response: credential,
           challenge: start.challenge,
+          currentPassword,
         });
+        close();
         render(done.passkeys || []);
         toast(t('konto.passkey.done'));
+        return;
       } catch (ex) {
-        // Dismissing the sheet is a deliberate cancel, not an error.
+        // Dismissing the OS sheet is a deliberate cancel, not an error; 'auth'
+        // means accountApi already bounced a dead session to login.
         if (!isPasskeyCancel(ex) && ex.message !== 'auth') {
           setKontoError(err, t(authErrorKey('passkey', ex.message)));
         }
       }
-      add.disabled = false;
+      submit.disabled = false;
     });
-  }
-
-  return wrap;
+    // preventScroll, as focusInto does: a page scroll closes a popover
+    // (popover.js onScroll), so a focus must never be what scrolls it.
+    return () => current.focus({ preventScroll: true });
+  });
 }
 
 /* One passkey. The row is an inert div, so it takes `ds-row--static`: it does

@@ -66,6 +66,8 @@ const AUTH_ERROR_KEYS = {
   },
   // Registering a passkey from the Konto screen (#418).
   passkey: {
+    // The enrolment step-up (#1741): the CURRENT password was wrong.
+    invalid_credentials: 'konto.pw.wrongCurrent',
     quota_passkeys: 'konto.passkey.error.quota',
     passkey_exists: 'konto.passkey.error.exists',
     passkey_taken: 'konto.passkey.error.taken',

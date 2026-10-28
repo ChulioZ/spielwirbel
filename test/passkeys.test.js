@@ -134,10 +134,10 @@ const auth = (req, token) => req.set('Authorization', `Bearer ${token}`);
 
 // Drive a whole registration ceremony and return the stored credential id.
 async function addPasskey(session, credentialId, name) {
-  const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({});
+  const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password });
   assert.equal(opts.status, 200, JSON.stringify(opts.body));
   const res = await auth(request(app).post('/api/account/passkeys'), session.accessToken)
-    .send({ response: { id: credentialId }, challenge: opts.body.challenge, name });
+    .send({ response: { id: credentialId }, challenge: opts.body.challenge, name, currentPassword: session.password });
   return { res, options: opts.body };
 }
 
@@ -146,7 +146,7 @@ async function addPasskey(session, credentialId, name) {
 test('registration options pin residentKey and set NO authenticatorAttachment', async () => {
   resetStub();
   const session = await signIn();
-  const res = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({});
+  const res = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password });
   assert.equal(res.status, 200);
 
   // Asserted on what the ROUTE PASSED IN, not on the response — the response is
@@ -168,6 +168,69 @@ test('registration options pin residentKey and set NO authenticatorAttachment', 
   // store and sync through the platform keychain.
   assert.equal(Buffer.from(captured.registrationOptions.userID).toString('utf8'), session.uid);
   assert.equal(res.body.challenge.split('.')[0], res.body.options.challenge);
+});
+
+/* ------------------------- step-up on enrolment (#1741) -------------------- */
+
+const passkeyCount = async (uid) => ((await repo.getUserById(uid)).identities || [])
+  .filter((i) => i.type === 'passkey').length;
+
+test('registration options refuse a missing or wrong current password (#1741)', async () => {
+  resetStub();
+  const session = await signIn();
+  const options = (body) => auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send(body);
+
+  for (const body of [{}, { currentPassword: '' }, { currentPassword: 'wrong horse battery' }]) {
+    const res = await options(body);
+    assert.equal(res.status, 401, JSON.stringify(body));
+    assert.equal(res.body.error, 'invalid_credentials');
+  }
+  // Refused BEFORE the ceremony starts — no options were generated, so the OS
+  // never asks for a fingerprint on a token alone.
+  assert.equal(captured.registrationOptions, undefined);
+
+  assert.equal((await options({ currentPassword: session.password })).status, 200);
+});
+
+test('the registration VERIFY demands the password too — a challenge from another account is not a pass (#1741)', async () => {
+  resetStub();
+  const victim = await signIn();
+  const attacker = await signIn();
+  // The registration challenge is not bound to an account, so an attacker can
+  // mint one on their OWN account with their own password. Holding only the
+  // victim's token, the verify is the last line.
+  const theirs = await auth(request(app).post('/api/account/passkeys/options'), attacker.accessToken)
+    .send({ currentPassword: attacker.password });
+  assert.equal(theirs.status, 200);
+
+  const verify = (body) => auth(request(app).post('/api/account/passkeys'), victim.accessToken)
+    .send({ response: { id: 'cred-stolen-token' }, challenge: theirs.body.challenge, ...body });
+
+  for (const body of [{}, { currentPassword: 'wrong horse battery' }]) {
+    const res = await verify(body);
+    assert.equal(res.status, 401, JSON.stringify(body));
+    assert.equal(res.body.error, 'invalid_credentials');
+  }
+  assert.equal(captured.verifyRegistration, undefined, 'the attestation was never even verified');
+  assert.equal(await passkeyCount(victim.uid), 0);
+
+  // The genuine owner, with their own password, enrols normally.
+  assert.equal((await verify({ currentPassword: victim.password })).status, 201);
+  assert.equal(await passkeyCount(victim.uid), 1);
+});
+
+test('an account with no password identity cannot enrol a passkey — it fails closed (#1741)', async () => {
+  resetStub();
+  const session = await signIn();
+  // No such real account exists today (register always writes a password);
+  // this pins what happens if one ever does before a passkey step-up is built.
+  await repo.updateUser(session.uid, { identities: [] });
+  assert.equal((await repo.getUserById(session.uid)).identities.length, 0, 'the password is really gone');
+
+  const res = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken)
+    .send({ currentPassword: session.password });
+  assert.equal(res.status, 401);
+  assert.equal(res.body.error, 'invalid_credentials');
 });
 
 test('a passkey registers, appears in the list, and never exposes its public key', async () => {
@@ -270,10 +333,10 @@ test('the registration verify is given the signed challenge, the origin and the 
 test('a tampered, expired or CROSS-SCOPE challenge is refused at registration', async () => {
   resetStub();
   const session = await signIn();
-  const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({});
+  const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password });
 
   const post = (challenge) => auth(request(app).post('/api/account/passkeys'), session.accessToken)
-    .send({ response: { id: 'cred-bad' }, challenge });
+    .send({ response: { id: 'cred-bad' }, challenge, currentPassword: session.password });
 
   const [c, exp, mac] = opts.body.challenge.split('.');
   assert.equal((await post(`${c}.${Number(exp) + 60000}.${mac}`)).body.error, 'invalid_challenge');
@@ -341,7 +404,7 @@ test('the passkey count is capped per account', async () => {
 
     // Refused at the OPTIONS step, so the ceremony never starts and the user is
     // not asked for a fingerprint before being told no.
-    const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({});
+    const opts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password });
     assert.equal(opts.status, 403);
     assert.equal(opts.body.error, 'quota_passkeys');
     assert.equal(opts.body.limit, 2);
@@ -477,7 +540,7 @@ test('an unknown credential, a wrong-scope challenge and a refused assertion all
   assert.equal(res.body.error, 'invalid_credentials');
 
   // A REGISTRATION challenge replayed at login.
-  const regOpts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({});
+  const regOpts = await auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password });
   res = await login({ response: { id: 'cred-401' }, challenge: regOpts.body.challenge });
   assert.equal(res.status, 401);
   assert.equal(res.body.error, 'invalid_credentials');
@@ -523,7 +586,7 @@ test('every passkey route 404s accounts_disabled when accounts are off', async (
   process.env.ACCOUNTS_ENABLED = 'false';
   try {
     const calls = [
-      auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({}),
+      auth(request(app).post('/api/account/passkeys/options'), session.accessToken).send({ currentPassword: session.password }),
       auth(request(app).post('/api/account/passkeys'), session.accessToken).send({}),
       auth(request(app).get('/api/account/passkeys'), session.accessToken),
       auth(request(app).patch('/api/account/passkeys/cred-gate'), session.accessToken).send({ name: 'x' }),

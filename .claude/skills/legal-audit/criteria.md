@@ -117,7 +117,8 @@ than an acknowledged gap.
   and what exists today — including that its containment list covers **every persistent
   credential an attacker holding a leaked secret can create** (refresh tokens, passkeys, a
   changed e-mail): a rotation that leaves one alive is not containment (added 2026-10-27,
-  after the 2026-10-22 incident; passkey enrolment step-up is #1741).
+  after the 2026-10-22 incident; passkey enrolment has needed the current password since #1741,
+  so a forged token alone no longer creates one).
 - **Enforced by:** — (manual)
 
 ### L-009 — The legal surface fails closed

@@ -3,7 +3,7 @@
 Internal record (German). Kept deliberately short — it must be executable under
 stress by one person.
 
-**Stand:** 2026-10-27
+**Stand:** 2026-10-28
 
 ## 1. Erkennen & Eindämmen (sofort)
 
@@ -17,10 +17,12 @@ stress by one person.
     Sitzungen **überleben** die Rotation, weil die Refresh-Token nicht davon
     abhängen (gespeichert als SHA-256-Hash); wer gestohlene Sitzungen beenden
     muss, sperrt die betroffenen Konten im Admin-Panel. Mit dem Secret ließen
-    sich außerdem Zugangstoken fälschen und damit **Passkeys registrieren**,
-    die nicht vom Secret abhängen und die Rotation daher ebenfalls überleben:
-    im Expositionsfenster angelegte Passkeys prüfen und verdächtige entfernen
-    (bis #1741 verlangt die Passkey-Registrierung keine erneute Anmeldung).
+    sich außerdem Zugangstoken fälschen. **Passkeys registrieren** lässt sich
+    damit seit #1741 nicht mehr: die Registrierung verlangt zusätzlich das
+    aktuelle Passwort des Kontos (auf beiden Schritten). Für ein
+    Expositionsfenster **vor** dem Deploy von #1741 gilt weiter: dort
+    angelegte Passkeys hängen nicht vom Secret ab und überleben die Rotation —
+    prüfen und verdächtige entfernen.
   - `ADMIN_PASSWORD` **und `ADMIN_SESSION_SECRET`, falls gesetzt** — der
     erste Anmeldefaktor und der Schlüssel, der den Passwort-Schritt der
     Anmeldung signiert. Seit dem 2026-10-22 ist die Betreiber-Sitzung
