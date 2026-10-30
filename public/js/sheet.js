@@ -59,7 +59,11 @@ function openSheet(backdrop, onKey, onClose) {
   lockPage();
   guardDragDismiss(backdrop);
   const release = trapFocus(backdrop);
-  activeSheet = { el: backdrop, onKey, release, onClose };
+  // Dock it above the iOS keyboard (#1752): WebKit leaves the layout viewport
+  // full height and pans the visual one, which pushed the sheet's head — and its
+  // autofocused field — off the top edge. keyboard-viewport.js has the why.
+  const unfollow = followVisualViewport(backdrop);
+  activeSheet = { el: backdrop, onKey, release, onClose, unfollow };
   if (!sheetHistory) {
     history.pushState(Object.assign({}, history.state, { sheet: true }), '');
     sheetHistory = true;
@@ -85,6 +89,7 @@ function openSheet(backdrop, onKey, onClose) {
 function teardownSheet(opts) {
   if (!activeSheet) return;
   document.removeEventListener('keydown', activeSheet.onKey, true);
+  activeSheet.unfollow();
   activeSheet.el.remove();
   if (activeSheet.release) activeSheet.release();
   const { onClose } = activeSheet;
