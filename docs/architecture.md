@@ -934,6 +934,8 @@ public/
     focus-trap.js    keeps Tab inside an open sheet + restores focus on close
     page-lock.js     freezes the page behind an open sheet, so it can't scroll
                      away underneath it (issue #622)
+    keyboard-viewport.js pins an open sheet to the part of the screen the
+                     iOS keyboard leaves visible (issue #1752)
     session-path.js  URLs for the transient session-flow screens, so browser/OS
                      Back steps through the vote wizard (issue #329)
     nav-link.js      turns a nav element into a real <a href> that still routes

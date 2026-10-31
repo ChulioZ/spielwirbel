@@ -81,6 +81,7 @@ const frontendGlobals = {
   // page-lock.js
   lockPage: 'readonly', unlockPage: 'readonly',
   guardDragDismiss: 'readonly', DRAG_SLOP: 'readonly',
+  visibleBand: 'readonly', followVisualViewport: 'readonly',
   // session-path.js
   sessionSetupPath: 'readonly', sessionStepPath: 'readonly',
   sessionFinalePath: 'readonly', parseSessionPath: 'readonly',
