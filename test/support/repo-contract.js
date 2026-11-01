@@ -6116,6 +6116,17 @@ module.exports = function repoContract(repo) {
       await repo.createUser({ ...userFields(), tenantId: tn, createdAt: recent });
       await repo.createUser({ ...userFields(), tenantId: tn, createdAt: old });
       await repo.createUser({ ...userFields(), tenantId: `demo-${tn}`, createdAt: recent });
+      /* Active accounts: a refresh token issued in the window (login OR the
+         rotation an open app does), not the registration date — the old
+         account counts, the old-token one does not, nor a malformed list.
+         TWO active accounts against ONE recent registration, so a figure that
+         read the registration date instead would answer 1, not 2. */
+      const tok = (createdAt) => ({ tokenHash: 'h', createdAt, expiresAt: ago(-30) });
+      await repo.createUser({ ...userFields(), tenantId: tn, refreshTokens: [tok(old), tok(recent)] });
+      await repo.createUser({ ...userFields(), tenantId: tn, refreshTokens: [tok(recent)] });
+      await repo.createUser({ ...userFields(), tenantId: tn, refreshTokens: [tok(old)] });
+      await repo.createUser({ ...userFields(), tenantId: tn, refreshTokens: 'x' });
+      await repo.createUser({ ...userFields(), tenantId: `demo-${tn}`, refreshTokens: [tok(recent)] });
 
       const r = await repo.createRound(tn, { name: 'Woche', members: ['Ann', 'Bo'] });
       const s = (fields) => repo.createSession(tn, r.id, { gameIds: [], votes: {}, ...fields });
@@ -6156,7 +6167,7 @@ module.exports = function repoContract(repo) {
       assert.deepEqual(
         Object.fromEntries(Object.keys(m.adoption.lastWeek).map((k) => [k, d(k)])),
         {
-          registrations: 1, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
+          registrations: 1, activeAccounts: 2, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
           sessionsImported: 1, roundsShared: 1, friendships: 1,
         },
       );

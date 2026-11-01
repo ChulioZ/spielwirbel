@@ -139,7 +139,8 @@ The card's first entry (operator, 2026-11-01) is bare counts over
 `lib/last-week.js`'s rolling window. Stamps compare as TEXT, never cast
 (`admin-kennzahlen-card.md`'s time-series paragraph); an import is dated by
 its `imported` event, since its `createdAt` is the play date, and is in none
-of the three session lines.
+of the three session lines. „Aktive Konten" is a refresh token issued in the
+window — a login and a rotation look alike, so never relabel it „Logins".
 
 **Related:** `.claude/rules/admin-kennzahlen-card.md` (the cards, the tile
 shapes, the two sweeps and the `atx()` contract — including why „Konten ohne

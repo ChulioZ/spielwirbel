@@ -484,6 +484,9 @@
       total: null,
       lines: [
         line('Neuregistrierungen', w.registrations, null),
+        // Used the app, not logged in: a refresh token is minted by a login
+        // and by every rotation alike (lib/repo/json.js lastWeekOf).
+        line('Aktive Konten', w.activeAccounts, null),
         line('Gestartete Sessions', w.sessionsStarted, null),
         line('Als gespielt markierte Sessions', w.sessionsPlayed, null),
         line('Abgebrochene Sessions', w.sessionsCancelled, null),

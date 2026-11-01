@@ -80,7 +80,7 @@ const STATUS = (over = {}) => ({
       // „Letzte sieben Tage": bare counts, each value distinct so a line
       // reading its neighbour's key cannot pass.
       lastWeek: {
-        registrations: 4, sessionsStarted: 9, sessionsPlayed: 7, sessionsCancelled: 1,
+        registrations: 4, activeAccounts: 11, sessionsStarted: 9, sessionsPlayed: 7, sessionsCancelled: 1,
         sessionsImported: 14, roundsShared: 2, friendships: 3,
       },
     },
@@ -302,6 +302,7 @@ test('every card renders exactly: parent first, then count + share of its parent
       total: '',
       lines: [
         ['Neuregistrierungen', '4', '', 0],
+        ['Aktive Konten', '11', '', 0],
         ['Gestartete Sessions', '9', '', 0],
         ['Als gespielt markierte Sessions', '7', '', 0],
         ['Abgebrochene Sessions', '1', '', 0],
@@ -502,7 +503,7 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
   assert.equal(/0 \/ 0/.test(text), false, 'a 0 / 0 claims a share of nothing');
   // The five population cards — the seven-day card and the rest card have no parent.
   assert.deepEqual(cardOf(doc, 'Letzte sieben Tage').lines.map(([, n, share]) => [n, share]),
-    Array(7).fill(['0', '']), 'a quiet week reads 0, never a share');
+    Array(8).fill(['0', '']), 'a quiet week reads 0, never a share');
   for (const card of cards.slice(1, 6)) {
     assert.equal(card.total, '0', `${card.title}: a zero population still reads 0`);
     for (const [label, n, share] of card.lines) {

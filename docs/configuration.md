@@ -342,7 +342,8 @@ several replicas the card shows the answering process's share, not a global sum)
 the **quota ceilings paired with the highest value anyone currently holds**
 against each, and the Node version the answering process is running.
 **Funktionsnutzung** answers "is any of this being used". It opens on
-**Letzte sieben Tage** — registrations, sessions started / played / cancelled
+**Letzte sieben Tage** — registrations, active accounts (a session token issued
+in the window, so app use rather than logins), sessions started / played / cancelled
 (imports excluded) and imported, newly shared rounds and new friendships over
 the last 7 × 24 hours — then one card per
 population (issue #1480): **Konten** (verified / unverified / suspended, then
