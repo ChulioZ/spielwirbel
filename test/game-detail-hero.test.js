@@ -307,6 +307,11 @@ test('the action bar can actually pin, at both ends of the split', () => {
   assert.match(bar, /bottom:\s*\d+px/, 'a sticky bar with no `bottom` inset never sticks');
   /* It rides up over the history rows, so it has to paint above them. */
   assert.match(bar, /z-index:\s*[1-9]/, 'an opaque bar over scrolling rows needs a z-index');
+  /* A guest game's bar holds three actions (#1751); unwrapped, their nowrap
+     labels pushed a 375px page 101px wide — measured in every design. */
+  assert.match(bar, /flex-wrap:\s*wrap/, 'the bar must wrap, or three actions overflow a phone');
+  assert.match(bodyOf('.gd-bar .btn--primary:not(:only-child)') || '', /flex-basis:\s*100%/,
+    'a primary beside other actions takes its own row');
 
   const promoted = bodyOf('.pass__table', rulesUnder(/max-width:\s*859px/));
   assert.ok(promoted, 'nothing retunes .pass__table below the split');

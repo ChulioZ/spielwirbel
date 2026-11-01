@@ -7812,6 +7812,7 @@ a.k-tile:focus-visible,
   bottom: 12px;
   z-index: 2;
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: auto;
   padding: 12px;
@@ -7820,6 +7821,15 @@ a.k-tile:focus-visible,
   box-shadow: var(--shadow-2);
 }
 .gd-bar .btn { flex: 1 1 auto; justify-content: center; }
+/* A guest game's bar holds three actions (#1751) — „Jetzt spielen" plus both
+   ways out — where every other state holds one. Unwrapped, the three nowrap
+   labels pushed the page 101px past a 375px viewport (and the narrow desktop
+   column past its own), so the bar wraps and the primary takes its own row
+   whenever it is not alone, leaving the two secondaries to share the next.
+   Ocean sets its own `flex` on these buttons (auto width, under the title) at
+   higher specificity, so there they simply wrap. The `flex-wrap` sits in the
+   `.gd-bar` rule above. */
+.gd-bar .btn--primary:not(:only-child) { flex-basis: 100%; }
 
 /* The score, on the cover's top-right corner — exactly where every Regal card
    already puts it. `.score-pill` is `position: absolute; top: 8px; right: 8px`

@@ -953,7 +953,8 @@ async function showGameDetail(rid, gameId) {
   //
   // A game is Active, Retired, Completed (#250) or Wished-for (#560), and the
   // repo enforces that those four are mutually exclusive — so the branches are
-  // too: a game that is off the shelf offers only the way onto it.
+  // too: a game that is off the shelf offers only the way onto it — except a
+  // guest game, which can also be played as it is (#1751).
   // Built by a function because Die Brücke places it twice, one copy per width.
   const makeBar = (cls = '') => {
     const bar = h(`<div class="gd-bar${cls}"></div>`);
@@ -973,6 +974,13 @@ async function showGameDetail(rid, gameId) {
       });
       bar.appendChild(restore);
     };
+    // Direct launch: skip the vote and play this game right away. One builder
+    // for the two branches that offer it, so they cannot drift (#1751).
+    const addPlay = () => {
+      const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
+      play.addEventListener('click', () => startDirectSession(round, game));
+      bar.appendChild(play);
+    };
     if (game.retired) {
       restoreFrom('retired', 'retire', { retired: false });
     } else if (game.completed) {
@@ -990,18 +998,17 @@ async function showGameDetail(rid, gameId) {
       // button and an English server error.
       restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
     } else if (game.guestGame) {
-      // A guest game (#1681) has two ways out and no third: the Regal (an
-      // acquisition) or the wish list. „Direkt spielen" stays off it for the
-      // wish's reason — the direct pick refuses a guest game.
+      // A guest game (#1681) has two ways out — the Regal (an acquisition) or
+      // the wish list — and, unlike a wish, it can be played: the direct pick
+      // admits a guest game since #1682, so „Jetzt spielen" leads here (#1751)
+      // and the two ways out follow as secondary buttons.
+      addPlay();
       restoreFrom('guest', 'guest-game', { to: 'shelf' }, { icon: 'ti-cards', label: t('guest.restore') });
       const toWish = h(`<button class="btn btn--lg"><i class="ti ti-heart" aria-hidden="true"></i> ${esc(t('guest.toWish'))}</button>`);
       toWish.addEventListener('click', () => releaseGuestGame(round, game, 'wish', () => showGameDetail(rid, gameId)));
       bar.appendChild(toWish);
     } else {
-      // Direct launch: skip the vote and play this game right away.
-      const play = h(`<button class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>`);
-      play.addEventListener('click', () => startDirectSession(round, game));
-      bar.appendChild(play);
+      addPlay();
     }
     return bar;
   };

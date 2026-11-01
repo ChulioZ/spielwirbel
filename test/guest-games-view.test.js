@@ -231,3 +231,89 @@ test('the Chronik names a guest game and who brought it, in the entry itself', a
   assert.ok(entry, 'no session entry rendered');
   assert.match(entry.textContent, /Azul\s+mitgebracht von Dana/);
 });
+
+// #1751: since #1682 the direct pick admits a guest game, so the two screens
+// that show ONE guest game offer „Jetzt spielen" on it — and only on it: wish,
+// retired and completed games stay unplayable (the server refuses them).
+const playStub = () => {
+  const started = [];
+  dom.set('startDirectSession', (round, game) => started.push(game.id));
+  return started;
+};
+const playBtn = (root) => [...root.querySelectorAll('button')]
+  .find((b) => b.querySelector('.ti-player-play'));
+
+test('a guest game\'s detail page leads with „Jetzt spielen", beside both ways out', async () => {
+  const round = roundFixture();
+  dom.set('api', async (method, url) => (/\/activities$/.test(url) ? [] : round));
+  const started = playStub();
+  dom.app.innerHTML = '';
+  await dom.call('showGameDetail', round.id, 'x1');
+  const bar = dom.app.querySelector('.gd-bar');
+  assert.ok(bar, 'the action bar renders');
+  const play = playBtn(bar);
+  assert.ok(play, 'no „Jetzt spielen" on a guest game\'s detail page');
+  assert.equal(bar.firstElementChild, play, '„Jetzt spielen" is not the leading action');
+  assert.ok(play.classList.contains('btn--primary'), '„Jetzt spielen" is not the primary button');
+  assert.equal(bar.querySelectorAll('.btn--primary').length, 1, 'more than one primary in the bar');
+  assert.match(bar.textContent, /Ins Regal/);
+  assert.match(bar.textContent, /Wunschliste/);
+  play.click();
+  assert.deepEqual(started, ['x1']);
+});
+
+test('wish, retired and completed detail pages still offer no „Jetzt spielen"', async () => {
+  const round = roundFixture({
+    games: [
+      { id: 'w', title: 'Wunsch', wish: true },
+      { id: 'r', title: 'Alt', retired: true },
+      { id: 'c', title: 'Fertig', completed: true },
+    ],
+  });
+  dom.set('api', async (method, url) => (/\/activities$/.test(url) ? [] : round));
+  for (const gid of ['w', 'r', 'c']) {
+    dom.app.innerHTML = '';
+    await dom.call('showGameDetail', round.id, gid);
+    const bar = dom.app.querySelector('.gd-bar');
+    assert.ok(bar, `no action bar for ${gid}`);
+    assert.equal(playBtn(bar), undefined, `„Jetzt spielen" offered on ${gid}`);
+  }
+});
+
+test('every Gastspiele row leads with „Jetzt spielen"; „Ins Regal" drops to secondary', async () => {
+  const round = roundFixture();
+  dom.set('api', async () => round);
+  const started = playStub();
+  dom.app.innerHTML = '';
+  await dom.call('showGuestGames', round.id);
+  const rows = [...dom.app.querySelectorAll('.archive-row')];
+  assert.equal(rows.length, 2);
+  for (const row of rows) {
+    const actions = row.querySelector('.archive-row__actions');
+    const play = actions.querySelector('[data-act="play"]');
+    assert.ok(play, 'a Gastspiele row has no „Jetzt spielen"');
+    assert.equal(actions.firstElementChild, play, '„Jetzt spielen" does not lead the row');
+    assert.ok(play.classList.contains('btn--primary'));
+    assert.equal(actions.querySelector('[data-act="restore"]').classList.contains('btn--primary'), false,
+      '„Ins Regal" is still a second filled primary');
+  }
+  rows[1].querySelector('[data-act="play"]').click();
+  assert.deepEqual(started, ['x2']);
+});
+
+test('the wish list and both archives have no „Jetzt spielen" on their rows', async () => {
+  const round = roundFixture({
+    games: [
+      { id: 'w', title: 'Wunsch', wish: true },
+      { id: 'r', title: 'Alt', retired: true },
+      { id: 'c', title: 'Fertig', completed: true },
+    ],
+  });
+  dom.set('api', async () => round);
+  for (const show of ['showWishlist', 'showRetired', 'showCompleted']) {
+    dom.app.innerHTML = '';
+    await dom.call(show, round.id);
+    assert.equal(dom.app.querySelectorAll('.archive-row').length, 1, `${show} rendered no row`);
+    assert.equal(dom.app.querySelector('[data-act="play"]'), null, `${show} offers „Jetzt spielen"`);
+  }
+});
