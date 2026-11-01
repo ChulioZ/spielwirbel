@@ -151,8 +151,10 @@ What the app does, in detail. For a short overview see the
   and every list at every screen size, the current one marked, each a real
   link to its own page. A fourth list, **Gastspiele**, joins the strip once a
   guest has brought a game along (see *Guests*): those games stay off the shelf
-  and out of every later draw, and from the list, the game's own page or the
-  finished session's results they can go **Ins Regal** — counted as an
+  and out of every later draw, but the list and the game's own page lead with
+  **„Jetzt spielen"**, so a box a guest brings again is played without a detour
+  through the Start tab. From the list, the game's own page or the finished
+  session's results they can also go **Ins Regal** — counted as an
   acquisition, like a wish — or **onto the Wunschliste**.
   Where the instance has it switched on (`PRICES_ENABLED`), opening a wished game
   that carries a provider link also shows **what it costs right now** — the

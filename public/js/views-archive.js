@@ -90,7 +90,11 @@ const ARCHIVES = {
     endpoint: (rid, gid) => `/api/rounds/${rid}/games/${gid}/guest-game`,
     body: { to: 'shelf' },
     restoreIcon: 'ti-cards',
-    primaryRestore: true,
+    // The one list whose games can be played straight from the row (#1751): the
+    // direct pick admits a guest game since #1682, so „Jetzt spielen" leads as
+    // the filled primary and „Ins Regal" drops to a plain secondary — which is
+    // why `primaryRestore` is NOT set here, unlike on the wish list.
+    play: true,
     alt: { key: 'guest.toWish', icon: 'ti-heart', body: { to: 'wish' } },
   },
 };
@@ -180,6 +184,7 @@ async function showArchive(rid, kind, seg = kind) {
              ${note ? `<div class="muted archive-row__meta">${esc(note)}</div>` : ''}
            </div>
            <div class="archive-row__actions">
+             ${a.play ? `<button class="btn btn--primary" data-act="play"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.button'))}</button>` : ''}
              <button class="btn${a.primaryRestore ? ' btn--primary' : ''}" data-act="restore"><i class="ti ${a.restoreIcon || 'ti-arrow-back-up'}" aria-hidden="true"></i> ${esc(t(`${kind}.restore`))}</button>
              ${a.alt ? `<button class="btn" data-act="alt"><i class="ti ${a.alt.icon}" aria-hidden="true"></i> ${esc(t(a.alt.key))}</button>` : ''}
              ${roundCan(round, 'game.delete') ? `<button class="btn${a.quietDelete ? '' : ' btn--danger'}"${a.quietDelete ? ' style="color:var(--danger)"' : ''} data-act="delete"><i class="ti ${a.deleteIcon || 'ti-trash'}" aria-hidden="true"></i> ${esc(t(`${kind}.delete`))}</button>` : ''}
@@ -211,6 +216,8 @@ async function showArchive(rid, kind, seg = kind) {
           showArchive(rid, kind, seg);
         } catch (e) { toast(e.message, { tone: 'error' }); }
       });
+      const playBtn = row.querySelector('[data-act="play"]');
+      if (playBtn) playBtn.addEventListener('click', () => startDirectSession(round, g));
       const altBtn = row.querySelector('[data-act="alt"]');
       if (altBtn) altBtn.addEventListener('click', async () => {
         try {
