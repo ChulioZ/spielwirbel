@@ -474,6 +474,25 @@
     const sessions = a.sessionsTotal;
     const line = (label, n, of, depth = 0) => ({ label, n, of, depth });
 
+    /* What happened in the last seven days — bare counts, no parent: a week's
+       registrations are not a share of every account ever made. Imported
+       sessions are counted apart and in none of the three session lines (the
+       repo's lastWeekOf says why). */
+    const w = a.lastWeek;
+    const woche = {
+      title: 'Letzte sieben Tage',
+      total: null,
+      lines: [
+        line('Neuregistrierungen', w.registrations, null),
+        line('Gestartete Sessions', w.sessionsStarted, null),
+        line('Als gespielt markierte Sessions', w.sessionsPlayed, null),
+        line('Abgebrochene Sessions', w.sessionsCancelled, null),
+        line('Importierte Sessions', w.sessionsImported, null),
+        line('Geteilte Runden', w.roundsShared, null),
+        line('Neue Freundschaften', w.friendships, null),
+      ],
+    };
+
     const konten = {
       title: 'Konten',
       total: accounts,
@@ -613,7 +632,7 @@
       ],
     };
 
-    return [konten, designs, runden, spiele, sessionen, rest];
+    return [woche, konten, designs, runden, spiele, sessionen, rest];
   }
 
   async function loadStatus() {

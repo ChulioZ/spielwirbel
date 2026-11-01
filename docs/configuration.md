@@ -341,7 +341,10 @@ outbound mail against the `MAIL_DAILY_MAX` budget (a per-process counter — wit
 several replicas the card shows the answering process's share, not a global sum),
 the **quota ceilings paired with the highest value anyone currently holds**
 against each, and the Node version the answering process is running.
-**Funktionsnutzung** answers "is any of this being used", as one card per
+**Funktionsnutzung** answers "is any of this being used". It opens on
+**Letzte sieben Tage** — registrations, sessions started / played / cancelled
+(imports excluded) and imported, newly shared rounds and new friendships over
+the last 7 × 24 hours — then one card per
 population (issue #1480): **Konten** (verified / unverified / suspended, then
 passkey, BGG username, profile picture, BG Stats hand-off, no round yet), the
 accounts that **answered the design chooser** (one line per offered design),

@@ -71,7 +71,8 @@ allowlists over denylists (`.claude/rules/ci-aggregate-gate.md`).
 
 ## What the cards no longer carry (#941, #1124)
 
-#941 removed `accounts.new7d`, `accounts.new30d` and `rounds.tenants` from
+#941 removed `accounts.new7d` (a 7-day count is back since 2026-11 as
+`adoption.lastWeek`, `funktionsnutzung-shares-and-funnel.md`), `accounts.new30d` and `rounds.tenants` from
 `instanceMetrics` in both backends. **#1124 removed the two weekly series with
 their charts** (`accounts.history`, `content.sessionHistory`, and the
 `metrics-history` bucketing module with them) and `content.sessions30d`, and dropped the

@@ -170,6 +170,8 @@ lib/
                      where the demo exists
   guide-text/        the guide's prose, one file per locale (de.js is the
                      reference text every translation is made from)
+  last-week.js       the rolling seven-day window behind the panel's „Letzte
+                     sieben Tage" card, derived once for both repo backends
   link-preview.js    the SPA shell's preview card per `?lang=` (#1727): the
                      static German head rewritten from the lang tables, one
                      shell per locale rendered at startup

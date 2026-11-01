@@ -77,6 +77,12 @@ const STATUS = (over = {}) => ({
       },
       // Sums to roundsTotal, which the tile's own test asserts.
       roundsByFinished: { none: 5, one: 3, many: 2 },
+      // „Letzte sieben Tage": bare counts, each value distinct so a line
+      // reading its neighbour's key cannot pass.
+      lastWeek: {
+        registrations: 4, sessionsStarted: 9, sessionsPlayed: 7, sessionsCancelled: 1,
+        sessionsImported: 14, roundsShared: 2, friendships: 3,
+      },
     },
     designAdoption: { byDesign: { ...DESIGNS } },
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
@@ -208,9 +214,9 @@ test('each figure lands on the card whose question it answers', async (t) => {
     ['Demo-Konten', 'Mail-Budget', 'Kontingente', 'Node'],
     '„Grenzen & Kontingente" is what is close to refusing a user, plus the runtime');
   assert.deepEqual(groups(doc).map((c) => c.title),
-    ['Konten', 'Design-Auswahl beantwortet', 'Runden', 'Spiele', 'Sessions',
+    ['Letzte sieben Tage', 'Konten', 'Design-Auswahl beantwortet', 'Runden', 'Spiele', 'Sessions',
       'Freundschaften & Einladungen'],
-    '„Funktionsnutzung" is one card per parent population, in the #1480 order');
+    '„Funktionsnutzung" opens on the seven-day card, then one card per parent population (#1480)');
 });
 
 test('no „Kennzahlen" heading remains, and both cards carry the privacy sentence', async (t) => {
@@ -290,6 +296,20 @@ test('every card renders exactly: parent first, then count + share of its parent
   const { doc, dom } = await panel();
   t.after(() => dom.window.close());
   assert.deepEqual(groups(doc), [
+    {
+      // FIRST, and parentless: a seven-day count is not a share of anything.
+      title: 'Letzte sieben Tage',
+      total: '',
+      lines: [
+        ['Neuregistrierungen', '4', '', 0],
+        ['Gestartete Sessions', '9', '', 0],
+        ['Als gespielt markierte Sessions', '7', '', 0],
+        ['Abgebrochene Sessions', '1', '', 0],
+        ['Importierte Sessions', '14', '', 0],
+        ['Geteilte Runden', '2', '', 0],
+        ['Neue Freundschaften', '3', '', 0],
+      ],
+    },
     {
       title: 'Konten',
       total: '40',
@@ -467,6 +487,7 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
       ...Object.fromEntries(Object.keys(zero.adoption).map((k) => [k, 0])),
       funnel: Object.fromEntries(Object.keys(zero.adoption.funnel).map((k) => [k, 0])),
       roundsByFinished: { none: 0, one: 0, many: 0 },
+      lastWeek: Object.fromEntries(Object.keys(zero.adoption.lastWeek).map((k) => [k, 0])),
     },
     designAdoption: { byDesign: { klassisch: 0 } },
     social: { sharedRounds: 0, invitationsOpen: 0, friendships: 0 },
@@ -475,11 +496,14 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
   t.after(() => dom.window.close());
 
   const cards = groups(doc);
-  assert.equal(cards.length, 6, 'the adoption card did not render at all on empty data');
+  assert.equal(cards.length, 7, 'the adoption card did not render at all on empty data');
   const text = doc.getElementById('adoptionGrid').textContent;
   assert.equal(/NaN|Infinity/.test(text), false, `the empty card rendered ${text}`);
   assert.equal(/0 \/ 0/.test(text), false, 'a 0 / 0 claims a share of nothing');
-  for (const card of cards.slice(0, 5)) {
+  // The five population cards — the seven-day card and the rest card have no parent.
+  assert.deepEqual(cardOf(doc, 'Letzte sieben Tage').lines.map(([, n, share]) => [n, share]),
+    Array(7).fill(['0', '']), 'a quiet week reads 0, never a share');
+  for (const card of cards.slice(1, 6)) {
     assert.equal(card.total, '0', `${card.title}: a zero population still reads 0`);
     for (const [label, n, share] of card.lines) {
       if (n === '') continue;
