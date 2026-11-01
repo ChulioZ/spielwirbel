@@ -133,6 +133,14 @@ jsonb_array_elements_text('[]'))` is an empty set, so the predicate is TRUE for
 everybody — which means CI, where the variable is never set, exercises the real
 expression rather than a `true` shortcut it would never take in anger.
 
+## „Letzte sieben Tage" is parentless, and imports are counted apart
+
+The card's first entry (operator, 2026-11-01) is bare counts over
+`lib/last-week.js`'s rolling window. Stamps compare as TEXT, never cast
+(`admin-kennzahlen-card.md`'s time-series paragraph); an import is dated by
+its `imported` event, since its `createdAt` is the play date, and is in none
+of the three session lines.
+
 **Related:** `.claude/rules/admin-kennzahlen-card.md` (the cards, the tile
 shapes, the two sweeps and the `atx()` contract — including why „Konten ohne
 Runde" is the sharpest instance of it),

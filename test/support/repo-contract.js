@@ -6102,6 +6102,77 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
     });
 
+    await t.test('„Letzte sieben Tage" counts what happened in the window, imports apart', async () => {
+      /* Against the REAL clock, not NOW above: the window is the last 7 × 24 h
+         before the call. Every case sits clearly inside or outside it, and the
+         figures are read as deltas because the database is shared. */
+      const ago = (d) => new Date(Date.now() - d * 86400000).toISOString();
+      const recent = ago(2);
+      const old = ago(8);
+      const tn = `lw-${Math.random().toString(16).slice(2)}`;
+      const mid = await repo.instanceMetrics();
+
+      // Registrations: one inside, one outside, one demo inside.
+      await repo.createUser({ ...userFields(), tenantId: tn, createdAt: recent });
+      await repo.createUser({ ...userFields(), tenantId: tn, createdAt: old });
+      await repo.createUser({ ...userFields(), tenantId: `demo-${tn}`, createdAt: recent });
+
+      const r = await repo.createRound(tn, { name: 'Woche', members: ['Ann', 'Bo'] });
+      const s = (fields) => repo.createSession(tn, r.id, { gameIds: [], votes: {}, ...fields });
+      await s({ createdAt: recent, finished: false }); // started
+      await s({ createdAt: old, finished: true, finishedAt: recent }); // played, started earlier
+      await s({ createdAt: recent, cancelled: true, cancelledAt: recent }); // started + cancelled
+      await s({ createdAt: old, finished: true, finishedAt: old }); // nothing
+      // An import counts ONLY as an import, dated by its `imported` event — its
+      // createdAt/finishedAt are the PLAY date, not the moment it was imported.
+      await s({
+        createdAt: recent, finished: true, finishedAt: recent, importRef: { source: 'bgg', id: '1' },
+        events: [{ at: recent, type: 'imported', source: 'bgg' }],
+      });
+      await s({
+        createdAt: recent, finished: true, finishedAt: recent, importRef: { source: 'bgstats', id: '2' },
+        events: [{ at: old, type: 'imported', source: 'bgstats' }],
+      });
+      // A split parent is outside the funnel, and so outside this card.
+      await s({ createdAt: recent, childSessionIds: ['child'] });
+      // A malformed stamp counts as nothing — and must not error the query.
+      // ('t' sorts AFTER every digit, so only the upper bound keeps it out.)
+      await s({ createdAt: 't', finished: true, finishedAt: 'later', cancelled: true, cancelledAt: 't' });
+
+      // Rounds shared: one round with two grants is ONE shared round.
+      const a = await repo.createUser({ ...userFields(), tenantId: `${tn}-a` });
+      const b = await repo.createUser({ ...userFields(), tenantId: `${tn}-b` });
+      await repo.createGrant({ roundId: r.id, ownerTenantId: tn, userId: a.id });
+      await repo.createGrant({ roundId: r.id, ownerTenantId: tn, userId: b.id });
+
+      // Friendships: accepted counts, pending does not.
+      const req = await repo.createFriendRequest({ requesterUserId: a.id, addresseeUserId: b.id });
+      await repo.acceptFriendRequest(req.id, b.id);
+      const c = await repo.createUser({ ...userFields(), tenantId: `${tn}-c` });
+      await repo.createFriendRequest({ requesterUserId: a.id, addresseeUserId: c.id });
+
+      const m = await repo.instanceMetrics();
+      const d = (k) => m.adoption.lastWeek[k] - mid.adoption.lastWeek[k];
+      assert.deepEqual(
+        Object.fromEntries(Object.keys(m.adoption.lastWeek).map((k) => [k, d(k)])),
+        {
+          registrations: 1, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
+          sessionsImported: 1, roundsShared: 1, friendships: 1,
+        },
+      );
+
+      // ADMIN_EXCLUDE_TENANTS reaches the card like every other figure. The
+      // friendship's two accounts sit in their own tenants, so exclude those too.
+      process.env.ADMIN_EXCLUDE_TENANTS = [tn, `${tn}-a`, `${tn}-b`].join(',');
+      let hidden;
+      try {
+        hidden = await repo.instanceMetrics();
+      } finally {
+        delete process.env.ADMIN_EXCLUDE_TENANTS;
+      }
+      assert.deepEqual(hidden.adoption.lastWeek, mid.adoption.lastWeek);
+    });
+
     await t.test('an automa without points counts as automa only (#1675)', async () => {
       /* #1672 stores an automa with nobody's points, so „mit Automa" is a share
          of the Sessions card, never a subset of „mit Punkten". */
