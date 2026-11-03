@@ -104,6 +104,9 @@ lib/
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
+    card-patch.js    which of a provider's cover + player range may fill an
+                     existing game (never overwrite) — shared by both backends'
+                     fillGameCards
     tile-histograms.js  one sort order for the Discover aggregate's per-evening
                      histograms (#1721), so both backends fold the same sum
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
@@ -369,6 +372,9 @@ lib/
                      Kontingente card and the grouped Funktionsnutzung cards
                      (issues #274/#404/#1124/#1480) —
                      counts only, never a secret value and never personal data
+  provider-cards.js  fills BGG's cover and player range onto games the play
+                     import (#1665) created from a BGG id, after the write and
+                     fire-and-forget — only where the game still lacks them
   provider-info.js   lazy backfill of BGG's standard metadata onto linked
                      games (issues #717/#724/#736/#828/#829): eligibility (a
                      TTL-stamped attempt marker) and the best-effort fill every

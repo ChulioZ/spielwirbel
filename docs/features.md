@@ -742,7 +742,8 @@ What the app does, in detail. For a short overview see the
   source player is matched once to a member, a new member, a guest or nobody
   (name matches pre-selected, regulars suggested as members and one-offs as
   guests); games the round lacks are created **retired** unless put on the
-  shelf. Each play becomes a finished session on its date with winners, points,
+  shelf, and a game known by its BGG id gets BGG's cover and player range a
+  moment after the import. Each play becomes a finished session on its date with winners, points,
   teams and a co-op loss — never ratings. A re-import skips what is already
   there, and a play that looks like one this app pushed to BG Stats starts
   unchecked. Like a logged session, nothing is announced to friends.
