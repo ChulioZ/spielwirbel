@@ -8932,6 +8932,18 @@ a.k-tile:focus-visible,
    announced when it fills (.claude/rules/accessibility-contrast-and-modals.md §4). */
 .play-import__dropped:empty { margin: 0; }
 
+/* ---- Myludo shelf import (#1758) ----
+   The BGG import's sheet and rows, plus each row's BGG-match <select>: a
+   sibling of the row's <label> (inside it, choosing a hit would toggle the
+   row), indented to sit under the title rather than under the 44px thumb. */
+.myludo-import__match { width: calc(100% - 54px); margin-left: 54px; }
+/* Its state line says more than the BGG import's („Kein BGG-Treffer – wird ohne
+   Verknüpfung importiert"), and beside the title as `flex: none` it squeezed
+   the title down to „For…". So here the state sits UNDER the title and may wrap. */
+.myludo-import .bgg-import__row .ds-row__main { flex-direction: column; align-items: flex-start; gap: 2px; }
+.myludo-import .bgg-import__name { max-width: 100%; }
+.myludo-import .bgg-import__state { max-width: 100%; }
+
 /* ---- Edition-cover picker (#519) ---- */
 
 /* Shown inline inside whatever field opened it (the add-game sheet, an import

@@ -385,3 +385,40 @@ test('expansions degrade to an empty list without a token, and 502 on an outage'
     assert.equal(res.status, 502);
   });
 });
+
+// #1758: the Myludo import's preview asks for its matches' covers and ranges
+// in one /thing call. The cover passes the host allowlist here, because the
+// client renders it into `background-image`.
+const BGG_CARDS_XML = `<?xml version="1.0" encoding="utf-8"?>
+<items>
+  <item type="boardgame" id="901">
+    <thumbnail>https://cf.geekdo-images.com/a__thumb/img/x=/pic1.jpg</thumbnail>
+    <name type="primary" sortindex="1" value="Azul"/>
+    <minplayers value="2"/><maxplayers value="4"/>
+  </item>
+  <item type="boardgame" id="902">
+    <thumbnail>https://evil.example/pic2.jpg</thumbnail>
+    <name type="primary" sortindex="1" value="Elsewhere"/>
+    <minplayers value="0"/><maxplayers value="0"/>
+  </item>
+</items>`;
+
+test('GET …/lookup/cards returns each id\'s cover and range from ONE plain /thing call (#1758)', async () => {
+  await withToken('test-token', async () => {
+    const seen = [];
+    stubFetch((url) => { seen.push(url); return htmlRes(BGG_CARDS_XML); });
+    const res = await request(app).get(L('/cards?provider=bgg&ids=902,901,901'));
+    assert.equal(res.status, 200);
+    assert.equal(seen.length, 1, 'one request for the whole batch');
+    const asked = new URL(seen[0]).searchParams;
+    assert.equal(asked.get('id'), '901,902', 'deduped');
+    assert.equal(asked.get('stats'), null, 'no stats=1 — the backfill fills those later');
+    assert.deepEqual(res.body.cards, [
+      { providerId: '901', minPlayers: 2, maxPlayers: 4, imageUrl: 'https://cf.geekdo-images.com/a__thumb/img/x=/pic1.jpg' },
+      { providerId: '902', minPlayers: null, maxPlayers: null, imageUrl: null },
+    ]);
+    const tooMany = Array.from({ length: 21 }, (_, i) => 1000 + i).join(',');
+    assert.equal((await request(app).get(L(`/cards?provider=bgg&ids=${tooMany}`))).status, 400);
+    assert.deepEqual((await request(app).get(L('/cards?provider=bgg&ids='))).body, { cards: [] });
+  });
+});

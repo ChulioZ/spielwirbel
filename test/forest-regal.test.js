@@ -327,13 +327,13 @@ test('a wish keeps no score and no figures, and offers „Ins Regal"', async (t)
 
 // --- the lookup --------------------------------------------------------------
 
-test('Forest opens the search-first lookup with the app\'s two ways out and a linked BGG badge', async (t) => {
+test('Forest opens the search-first lookup with the app\'s three ways out and a linked BGG badge', async (t) => {
   const dom = boot(t, 'forest');
   dom.call('showAddGame', roundWith());
   const sheet = dom.document.querySelector('.sheet.add-search');
   assert.ok(sheet, 'Forest went straight to the form');
   assert.deepEqual([...sheet.querySelectorAll('.add-search__way')].map(text),
-    [dom.run("t('bggImport.tile')"), dom.run("t('addGame.selfEntry')")]);
+    [dom.run("t('bggImport.tile')"), dom.run("t('myludoImport.tile')"), dom.run("t('addGame.selfEntry')")]);
   const credit = sheet.querySelector('.add-search__query + .add-search__credit a.forest-bgg-link');
   assert.ok(credit, 'no BGG badge under the query');
   assert.equal(credit.getAttribute('href'), 'https://boardgamegeek.com');

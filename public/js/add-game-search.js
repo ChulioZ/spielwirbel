@@ -53,6 +53,7 @@ function showAddGameSearch(round, { wish = false } = {}) {
         <ul class="add-search__list" aria-label="${esc(t('lookup.suggestions'))}"></ul>
         <div class="add-search__ways">
           ${canImportBgg() ? `<button type="button" class="btn add-search__way" id="addSearchImport"><i class="ti ti-cards" aria-hidden="true"></i> ${esc(importLabel)}</button>` : ''}
+          ${wish ? '' : `<button type="button" class="btn add-search__way" id="addSearchMyludo"><i class="ti ti-file-upload" aria-hidden="true"></i> ${esc(t('myludoImport.tile'))}</button>`}
           <button type="button" class="btn add-search__way" id="addSearchSelf"><i class="ti ti-pencil" aria-hidden="true"></i> ${esc(t('addGame.selfEntry'))}</button>
         </div>
         ${designIs('bruecke') ? '<img class="add-search__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />' : ''}
@@ -86,6 +87,10 @@ function showAddGameSearch(round, { wish = false } = {}) {
   // (.claude/rules/sheet-history-back-dismissal.md §2).
   const importBtn = sheet.querySelector('#addSearchImport');
   if (importBtn) importBtn.addEventListener('click', () => showBggImport(round, wish ? 'wishlist' : 'own'));
+  // The Myludo file import (#1758): the Regal only — a Myludo shelf is what
+  // the group owns, and it needs no account, so it is offered wherever this is.
+  const myludoBtn = sheet.querySelector('#addSearchMyludo');
+  if (myludoBtn) myludoBtn.addEventListener('click', () => showMyludoImport(round));
   sheet.querySelector('#addSearchSelf').addEventListener('click', () =>
     showAddGameForm(round, { wish, title: input.value.trim(), dirty: addedWhileOpen }));
 

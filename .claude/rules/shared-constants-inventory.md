@@ -788,6 +788,23 @@ other's files executable, with nothing red. `test/csv.test.js` and
 `test/round-export.test.js` each sweep every ASCII lead through their writer
 against the shared set.
 
+**The thirty-fourth is `public/js/myludo-import.js`** (#1758):
+`MYLUDO_IMPORT_MAX`, `MYLUDO_TITLE_MAX` and `MYLUDO_EXPANSIONS_MAX`, required by
+`lib/routes/game-import.js`. The plain offer/validate shape: the parser refuses
+a file over the row cap and the route bounds its body by the same number, so a
+drifted server cap would 400 a whole shelf the preview had just offered. The
+parser, the match suggestion and the body builder in the same file are
+client-only.
+
+**The thirty-fifth is `public/js/lookup-score.js`** (#1758): `foldTitle`, the
+one title fold. The client folds to decide which Myludo rows the preview
+reports as already on the shelf; the route folds to compute each unlinked row's
+`titleKey`, and both repo backends fold the shelf inside `createGames` to skip a
+duplicate atomically. Logic, and the failure is the quiet direction: a second
+fold on either side (say, a plain `toLowerCase`) would let the preview call
+„Café International" new while the write skips it as „Cafe International", or
+the reverse — a game the user saw as present landing twice, with nothing red.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

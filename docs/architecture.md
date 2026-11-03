@@ -493,7 +493,9 @@ lib/
                                             scored from the BGG corpus — #682)
     lookup.js        …/lookup               (search/game — provider proxy for
                                              BoardGameGeek; round-scoped, plus the
-                                             BGG-only covers/expansions/import/plays hops)
+                                             BGG-only covers/expansions/cards/import/plays hops)
+    game-import.js   …/games/import         (a shelf from a Myludo file: the rows the
+                                             user picked, in one write — #1758)
     session-import.js …/sessions/import     (a play history from BG Stats or BGG,
                                              written as finished sessions — #1665)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
@@ -809,6 +811,9 @@ public/
     play-import.js   the pure half of the play-history import: the BG Stats
                      export parser, the BGG normaliser, who-is-who and which
                      game suggestions, duplicates and request batches (#1665)
+    myludo-import.js the pure half of the Myludo shelf import: the export
+                     parser, the BGG match suggestion, which base game an
+                     expansion joins, and the request body (#1758)
     point-records.js per-player points on a finished session: the bounds the
                      route also validates with, and the personal bests and group
                      records derived from the sessions, never stored (issue #1630),
@@ -1045,6 +1050,8 @@ public/
                      „Session nachtragen" game picker (issue #1616)
     play-import-view.js „Partien importieren": the sheet that brings a BG
                      Stats or BGG play history into the round (#1665)
+    myludo-import-view.js „Aus Myludo importieren": the sheet that matches a
+                     Myludo shelf export on BGG and imports the picked games (#1758)
     session-points.js a finished session's points: the sheet that enters
                      them, the result's points block and the game page's record
                      line (issue #1630)

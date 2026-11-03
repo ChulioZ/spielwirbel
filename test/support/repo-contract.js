@@ -928,6 +928,37 @@ module.exports = function repoContract(repo) {
     assert.equal(plain.created.length, 2);
   });
 
+  // #1758: a FILE import's three extras. An unlinked row carries the folded
+  // title the route computed and is skipped against the shelf (in any state,
+  // linked or not) and against earlier rows of the same batch; the playing time
+  // and the owned expansions land on the row, and stay absent on every other.
+  test('createGames dedupes unlinked rows by titleKey and stores playtime + expansions (#1758)', async () => {
+    const round = await freshRound();
+    await repo.createGame(T, round.id, gameFields({ title: 'Café International' }));
+    await repo.createGames(T, round.id, [bggFields('13', { title: 'CATAN' })]);
+    const res = await repo.createGames(T, round.id, [
+      gameFields({ title: 'Cafe international', titleKey: 'cafe international' }),
+      gameFields({ title: 'Catan', titleKey: 'catan' }),
+      gameFields({ title: 'Forêt Mixte', titleKey: 'foret mixte', playtimeOverride: { min: 30, max: 45 },
+        expansions: [{ title: 'Alpes', source: null, minPlayers: 1, maxPlayers: 5 }] }),
+      gameFields({ title: 'FORET MIXTE', titleKey: 'foret mixte' }),
+      // No key: never matched by title, like every pre-#1758 caller.
+      gameFields({ title: 'Catan' }),
+    ]);
+    assert.deepEqual(res.created.map((g) => g.title), ['Forêt Mixte', 'Catan']);
+    assert.equal(res.skipped, 3);
+    const stored = (await repo.getRound(T, round.id)).games;
+    const foret = stored.find((g) => g.title === 'Forêt Mixte');
+    assert.deepEqual(foret.playtimeOverride, { min: 30, max: 45 });
+    assert.equal(foret.expansions.length, 1);
+    assert.equal(foret.expansions[0].title, 'Alpes');
+    assert.ok(foret.expansions[0].id && foret.expansions[0].addedAt, 'an expansion is minted like the editor mints one');
+    assert.equal('titleKey' in foret, false, 'the dedupe key is never stored');
+    const plainCatan = stored.find((g) => g.title === 'Catan' && !g.source);
+    assert.equal('playtimeOverride' in plainCatan, false);
+    assert.equal('expansions' in plainCatan, false);
+  });
+
   test('createGames refuses the WHOLE import over quota, writing nothing (#481)', async () => {
     const round = await freshRound();
     await repo.createGames(T, round.id, [bggFields('1'), bggFields('2')]);

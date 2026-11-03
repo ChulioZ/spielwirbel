@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1758, the Myludo shelf import. A capability that did not exist: a
+   * collection kept in Myludo could only reach the Regal one game at a time.
+   */
+  {
+    revision: '2026-11-03',
+    kind: 'new',
+    de: {
+      title: 'Eure Ludothek aus Myludo übernehmen',
+      body: 'Führt ihr eure Spiele in Myludo? Exportiert die Ludothek dort als JSON und wählt die Datei unter „Spiel hinzufügen“ → „Aus Myludo importieren“. Jedes Spiel wird auf BoardGameGeek gesucht, ihr prüft die Treffer, und Erweiterungen landen bei ihrem Grundspiel. Die Datei bleibt auf eurem Gerät.',
+    },
+    en: {
+      title: 'Bring your collection over from Myludo',
+      body: 'Keep your games in Myludo? Export your collection there as JSON and choose the file under “Add game” → “Import from Myludo”. Each game is looked up on BoardGameGeek, you check the matches, and expansions join their base game. The file stays on your device.',
+    },
+    es: {
+      title: 'Trae tu ludoteca desde Myludo',
+      body: '¿Llevas tus juegos en Myludo? Exporta allí tu ludoteca como JSON y elige el archivo en «Añadir un juego» → «Importar desde Myludo». Cada juego se busca en BoardGameGeek, revisas las coincidencias y las expansiones van con su juego base. El archivo se queda en tu dispositivo.',
+    },
+    fr: {
+      title: 'Reprenez votre ludothèque depuis Myludo',
+      body: 'Vous suivez vos jeux dans Myludo ? Exportez-y votre ludothèque en JSON et choisissez le fichier sous « Ajouter un jeu » → « Importer depuis Myludo ». Chaque jeu est recherché sur BoardGameGeek, vous vérifiez les correspondances, et les extensions rejoignent leur jeu de base. Le fichier reste sur votre appareil.',
+    },
+    it: {
+      title: 'Porta la tua ludoteca da Myludo',
+      body: 'Tieni i tuoi giochi su Myludo? Esporta lì la ludoteca in JSON e scegli il file in «Aggiungi un gioco» → «Importa da Myludo». Ogni gioco viene cercato su BoardGameGeek, controlli le corrispondenze e le espansioni finiscono con il loro gioco base. Il file resta sul tuo dispositivo.',
+    },
+    nl: {
+      title: 'Haal je collectie over uit Myludo',
+      body: 'Houd je je spellen bij in Myludo? Exporteer daar je collectie als JSON en kies het bestand onder „Spel toevoegen” → „Importeren uit Myludo”. Elk spel wordt op BoardGameGeek gezocht, jij controleert de treffers en uitbreidingen komen bij hun basisspel. Het bestand blijft op je apparaat.',
+    },
+    pt: {
+      title: 'Traz a tua coleção do Myludo',
+      body: 'Guardas os teus jogos no Myludo? Exporta lá a coleção em JSON e escolhe o ficheiro em «Adicionar jogo» → «Importar do Myludo». Cada jogo é procurado no BoardGameGeek, verificas as correspondências e as expansões ficam com o jogo base. O ficheiro fica no teu dispositivo.',
+    },
+    fi: {
+      title: 'Tuo kokoelmasi Myludosta',
+      body: 'Pidätkö pelisi Myludossa? Vie kokoelma sieltä JSON-muodossa ja valitse tiedosto kohdasta ”Lisää peli” → ”Tuo Myludosta”. Jokainen peli haetaan BoardGameGeekistä, sinä tarkistat osumat, ja laajennukset liitetään peruspeliinsä. Tiedosto pysyy laitteellasi.',
+    },
+    ko: {
+      title: 'Myludo 컬렉션 가져오기',
+      body: 'Myludo에서 게임을 관리하나요? 그곳에서 컬렉션을 JSON으로 내보낸 뒤 „게임 추가” → „Myludo에서 가져오기”에서 파일을 선택하세요. 각 게임을 BoardGameGeek에서 찾고, 결과를 직접 확인하며, 확장은 기본 게임에 붙습니다. 파일은 기기에 그대로 남습니다.',
+    },
+  },
+  /*
    * #1726, the share that follows the session. A capability that did not
    * exist: who won and with how many points could not be shared at all, and
    * the ranking before a pick carried no detail beyond one score.
