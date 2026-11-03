@@ -64,8 +64,9 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
           <div class="muted field__hint">${esc(t('addGame.searchHint'))}</div>
           <div class="field__hint field__hint--dup" id="dupHint" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
-        ${canImportBgg() && !guest ? `<div class="toolbar" style="margin:-8px 0 18px">
-          <button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(wish ? t('bggImport.wishLink') : t('bggImport.link'))}</button>
+        ${!guest && (canImportBgg() || !wish) ? `<div class="toolbar" style="margin:-8px 0 18px">
+          ${canImportBgg() ? `<button type="button" id="bggImportFromAdd" class="link-btn"><i class="ti ti-download" aria-hidden="true"></i> ${esc(wish ? t('bggImport.wishLink') : t('bggImport.link'))}</button>` : ''}
+          ${wish ? '' : `<button type="button" id="myludoImportFromAdd" class="link-btn"><i class="ti ti-file-upload" aria-hidden="true"></i> ${esc(t('myludoImport.title'))}</button>`}
         </div>` : ''}
         <div class="field">
           <label>${esc(t('addGame.playersLabel'))}</label>
@@ -162,6 +163,9 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
   // (.claude/rules/sheet-history-back-dismissal.md §2).
   const importFromAdd = form.querySelector('#bggImportFromAdd');
   if (importFromAdd) importFromAdd.addEventListener('click', () => showBggImport(round, wish ? 'wishlist' : 'own'));
+  // The Myludo file import (#1758) — the Regal only, and no account needed.
+  const myludoFromAdd = form.querySelector('#myludoImportFromAdd');
+  if (myludoFromAdd) myludoFromAdd.addEventListener('click', () => showMyludoImport(round));
 
   // Custom round tags (#238): toggle the round's existing tags onto the new
   // game, or create one inline (added to the round's tag list immediately; a

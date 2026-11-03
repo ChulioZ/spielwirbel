@@ -112,6 +112,20 @@ What the app does, in detail. For a short overview see the
   before you confirm. It is **one-shot and on demand** — never a background
   sync — and it needs no BGG password: a username is enough, and you can unlink
   it again at any time. Accounts mode only.
+- **Import a Myludo collection** (issue #1758) – „Aus Myludo importieren" in
+  the add-game sheet (Regal only) takes the JSON file Myludo exports of a
+  ludothèque. The file is read **on the device and never uploaded**; only the
+  games you pick are sent. Myludo's file names games by title and carries no
+  BoardGameGeek id, so each game is searched on BGG and a match suggested —
+  same title and year preselected, anything less certain marked to check — with
+  its cover shown, and you can pick another hit or import it unlinked. A linked
+  game arrives like a BGG import (BGG's cover, player range and metadata); an
+  unlinked one keeps the file's player count and playing time. Expansions join
+  their base game as owned expansions, matched by Myludo's product line or by
+  title (a base already on the shelf counts too); one that matches no base is
+  listed as skipped. Games already in the round are not imported twice. Works
+  in every mode and in the guest demo — no account is involved. JSON only: the
+  CSV and Excel exports pack players and scores into one field.
 - **Provider cover art is hotlinked, not copied:** the picture is loaded straight
   from the provider's own servers rather than downloaded onto this instance,
   because re-hosting third-party box art on a public service needs a licence

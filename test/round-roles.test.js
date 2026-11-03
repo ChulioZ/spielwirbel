@@ -114,6 +114,7 @@ test('roundCan treats a round with NO role key as owned, not as the lowest role'
 // (.claude/rules/frontend-helper-modules-and-coverage.md).
 const MOUNTS = [
   ['', '../lib/routes/rounds'],
+  ['/games/import', '../lib/routes/game-import'],
   ['/games', '../lib/routes/games'],
   ['/members', '../lib/routes/members'],
   ['/sessions', '../lib/routes/sessions'],

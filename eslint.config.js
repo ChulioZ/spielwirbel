@@ -624,6 +624,11 @@ const frontendGlobals = {
   normaliseBggPlays: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
   duplicateState: 'readonly', playMemberIds: 'readonly', playPassesFilter: 'readonly',
   buildImportBatches: 'readonly', resolveCreated: 'readonly', showPlayImport: 'readonly',
+  // The Myludo shelf import (#1758): the pure half and its sheet.
+  MYLUDO_IMPORT_MAX: 'readonly', MYLUDO_TITLE_MAX: 'readonly', MYLUDO_EXPANSIONS_MAX: 'readonly',
+  parseMyludoRange: 'readonly', parseMyludoShelf: 'readonly', myludoMatch: 'readonly',
+  attachMyludoExpansions: 'readonly', myludoShelfMatch: 'readonly', buildMyludoImport: 'readonly',
+  showMyludoImport: 'readonly',
   showLogSessionPicker: 'readonly', openResultPickerOnce: 'readonly', takeResultPickerOpen: 'readonly',
   showLinkProvider: 'readonly', attachLookup: 'readonly', searchProvider: 'readonly',
   lookupDetail: 'readonly',
