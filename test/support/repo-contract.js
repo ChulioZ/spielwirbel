@@ -1239,6 +1239,42 @@ module.exports = function repoContract(repo) {
       null, 'an unknown round must answer null, not pretend to have written');
   });
 
+  test('fillGameCards fills a missing cover and range, never what is already set', async () => {
+    /* The play import's follow-up (lib/provider-cards.js) lands behind a
+     * response already sent, so a user's edit in between must win: a stored
+     * cover is kept, and a range is filled only as a pair, only when neither
+     * end is set (a half-set range is an edit; topping it up could invert it). */
+    const round = await freshRound();
+    const bare = await repo.createGame(T, round.id, gameFields({ minPlayers: null, maxPlayers: null }));
+    const set = await repo.createGame(T, round.id, gameFields({ image: 'https://cf.geekdo-images.com/mine.jpg' }));
+    const half = await repo.createGame(T, round.id, gameFields({ minPlayers: 3, maxPlayers: null }));
+    const card = { image: 'https://cf.geekdo-images.com/bgg.jpg', minPlayers: 2, maxPlayers: 5 };
+
+    const out = await repo.fillGameCards(T, round.id, [
+      { gameId: bare.id, ...card },
+      { gameId: set.id, ...card },
+      { gameId: half.id, ...card, image: null },
+      { gameId: 'no-such-game', ...card },
+    ]);
+    assert.deepEqual(out, { updated: 1 }, 'only bare changes: set and half have nothing left to fill');
+
+    const byId = new Map((await repo.getRound(T, round.id)).games.map((g) => [g.id, g]));
+    assert.equal(byId.get(bare.id).image, card.image);
+    assert.equal(byId.get(bare.id).minPlayers, 2);
+    assert.equal(byId.get(bare.id).maxPlayers, 5);
+    assert.equal(byId.get(set.id).image, 'https://cf.geekdo-images.com/mine.jpg', 'a stored cover was overwritten');
+    assert.equal(byId.get(set.id).minPlayers, 1, 'a stored range was overwritten');
+    assert.equal(byId.get(set.id).maxPlayers, 4);
+    assert.equal(byId.get(half.id).minPlayers, 3);
+    assert.equal(byId.get(half.id).maxPlayers, null, 'a half-set range was topped up');
+    assert.equal(byId.get(half.id).image, null);
+
+    assert.deepEqual(await repo.fillGameCards(T, round.id, []), { updated: 0 });
+    assert.equal(await repo.fillGameCards(T, 'no-such-round', [{ gameId: bare.id, ...card }]), null);
+    assert.equal(await repo.fillGameCards(OTHER, round.id, [{ gameId: bare.id, ...card }]), null,
+      'another tenant must not reach the round');
+  });
+
   test('createGame stores resolved provider info; free-text games stay byte-identical', async () => {
     const round = await freshRound();
     const withInfo = await repo.createGame(T, round.id, gameFields({
