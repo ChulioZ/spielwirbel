@@ -169,6 +169,13 @@ function recapCardBlocks(model) {
   if (model.rated && model.rated.length) {
     rows.push({ label: model.ratedLabel || t('pokale.bestRated'), value: model.rated.join(' · '), sub: model.ratedScore });
   }
+  // Hours played (#1772) — only on a period with a timed session, so a model
+  // that carries no `timePlayed` (the account's own recap) draws what it did.
+  // Every design reads this row list except Der Tisch and Die Brücke, which
+  // place the same two strings themselves.
+  if (model.timePlayed) {
+    rows.push({ label: t('periodRecap.label.timePlayed'), value: model.timePlayed, sub: model.timedNote || '' });
+  }
   const shelf = (Array.isArray(model.shelf) ? model.shelf : []).filter((s) => s.n > 0);
   return { rows, shelf, shelfLabel: model.shelfLabel || t('periodRecap.label.shelf') };
 }

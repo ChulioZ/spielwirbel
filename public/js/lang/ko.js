@@ -295,6 +295,7 @@ I18N.ko = {
   'pokale.streak': '연승',
   'pokale.streakN': '{n}연승',
   'pokale.dusty': '먼지만 쌓이는 중',
+  'pokale.longest': '가장 긴 세션',
   'pokale.dustyAt': '마지막 플레이 {when}',
   'pokale.dustyNever': '아직 플레이한 적 없음',
 
@@ -331,6 +332,10 @@ I18N.ko = {
   'periodRecap.thin': '이 기간에는 아무것도 플레이하지 않았어요 — 선반만 바뀌었어요.',
   'periodRecap.label.sessions': '세션',
   'periodRecap.label.gamesPlayed': '플레이한 게임',
+  'periodRecap.label.timePlayed': '플레이 시간',
+  'periodRecap.hoursValue': '{h}시간',
+  'periodRecap.hoursPlayed': '{time} 플레이',
+  'periodRecap.timedPartial': '세션 {total}회 중 {n}회 기준',
   'periodRecap.label.added': '추가',
   'periodRecap.label.retired': '정리',
   'periodRecap.label.completed': '완료',

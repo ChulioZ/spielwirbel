@@ -315,6 +315,7 @@ I18N.de = {
   'pokale.streak': 'Siegesserie',
   'pokale.streakN': '{n} Siege in Folge',
   'pokale.dusty': 'Staubfänger',
+  'pokale.longest': 'Längste Session',
   'pokale.dustyAt': 'zuletzt im {when}',
   'pokale.dustyNever': 'noch nie gespielt',
 
@@ -352,6 +353,10 @@ I18N.de = {
   'periodRecap.thin': 'In diesem Zeitraum wurde nichts gespielt — nur das Regal hat sich verändert.',
   'periodRecap.label.sessions': 'Sessions',
   'periodRecap.label.gamesPlayed': 'Spiele gespielt',
+  'periodRecap.label.timePlayed': 'Spielzeit',
+  'periodRecap.hoursValue': '{h} Std.',
+  'periodRecap.hoursPlayed': '{time} gespielt',
+  'periodRecap.timedPartial': 'aus {n} von {total} Sessions',
   'periodRecap.label.added': 'hinzugefügt',
   'periodRecap.label.retired': 'aussortiert',
   'periodRecap.label.completed': 'durchgespielt',

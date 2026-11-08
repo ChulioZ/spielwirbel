@@ -817,8 +817,9 @@ rather than two copies of a three-line function: the floor
 (`DURATION_TIMER_FLOOR`) and the "never over a recorded figure" rule decide what
 lands on disk, so a backend that restated them differently would store a
 different duration for the same evening, depending on `DATABASE_URL`, with the
-repo contract the only witness. `roundGameDuration` (the Spielepass median) is
-client-only today; #1771/#1772 are its expected second readers.
+repo contract the only witness. `roundGameDuration` (the Spielepass median),
+`sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
+(Pokale's „Längste Session") are client-only.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

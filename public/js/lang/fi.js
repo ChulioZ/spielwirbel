@@ -294,6 +294,7 @@ I18N.fi = {
   'pokale.streak': 'Voittoputki',
   'pokale.streakN': '{n} voittoa putkeen',
   'pokale.dusty': 'Pölyttyy',
+  'pokale.longest': 'Pisin sessio',
   'pokale.dustyAt': 'viimeksi pelattu {when}',
   'pokale.dustyNever': 'ei vielä koskaan pelattu',
 
@@ -330,6 +331,10 @@ I18N.fi = {
   'periodRecap.thin': 'Tällä jaksolla ei pelattu mitään — vain hylly muuttui.',
   'periodRecap.label.sessions': 'Sessiot',
   'periodRecap.label.gamesPlayed': 'Pelattuja pelejä',
+  'periodRecap.label.timePlayed': 'Peliaika',
+  'periodRecap.hoursValue': '{h} h',
+  'periodRecap.hoursPlayed': '{time} pelattu',
+  'periodRecap.timedPartial': '{n}/{total} sessiosta',
   'periodRecap.label.added': 'lisätty',
   'periodRecap.label.retired': 'karsittu',
   'periodRecap.label.completed': 'läpipelattu',

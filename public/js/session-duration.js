@@ -69,9 +69,46 @@ function roundGameDuration(sessions, gameId) {
   return { minutes: Math.max(5, Math.round(median / 5) * 5), count: mins.length };
 }
 
+// How long a set of played sessions took together (#1772): the period recap's
+// „12 Std. gespielt". Only sessions with a recorded duration contribute — an
+// untimed evening is not zero minutes, it is unknown — so `timed` travels with
+// the sum and the recap can say how many of `played` it covers. A split parent
+// is not finished (its tables are), so a split evening counts per table, as
+// the Chronik shows it.
+function sessionsPlayTime(sessions) {
+  let minutes = 0;
+  let timed = 0;
+  let played = 0;
+  (sessions || []).forEach((s) => {
+    if (!s || !s.finished || s.cancelled) return;
+    played += 1;
+    if (!isValidDuration(s.durationMinutes)) return;
+    minutes += s.durationMinutes;
+    timed += 1;
+  });
+  return { minutes, timed, played };
+}
+
+// The round's longest played session (#1772, Pokale's „Längste Session"),
+// among those whose game still exists — the card names it, and a deleted game
+// has nothing to name. Null until the first timed session. On a tie the most
+// recent session wins: the card names ONE evening (its date is on it), and the
+// fresher one is the one the group remembers.
+function longestSession(sessions, games) {
+  const known = new Set((games || []).map((g) => g.id));
+  let best = null;
+  (sessions || []).forEach((s) => {
+    if (!s || !s.finished || s.cancelled || !known.has(s.chosenGameId) || !isValidDuration(s.durationMinutes)) return;
+    if (!best || s.durationMinutes > best.durationMinutes
+      || (s.durationMinutes === best.durationMinutes && String(s.createdAt) > String(best.createdAt))) best = s;
+  });
+  return best;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DURATION_MIN, DURATION_MAX, DURATION_TIMER_FLOOR, DURATION_MEDIAN_MIN_SESSIONS,
     isValidDuration, elapsedMinutes, settlePlayDuration, roundGameDuration,
+    sessionsPlayTime, longestSession,
   };
 }

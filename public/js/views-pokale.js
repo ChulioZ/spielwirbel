@@ -552,6 +552,18 @@ function renderPokaleTab(round) {
     );
   }
 
+  // Längste Session (#1772): the round's longest timed session, from the first
+  // one (session-duration.js). A record of an evening that happened, like
+  // Meistgespielt, so a retired game may hold it. Called „Session", not
+  // „Abend": the entity's name in every UI language (test/session-naming).
+  const longest = longestSession(finished, round.games);
+  if (longest) {
+    cards.appendChild(
+      pokaleGameCard(round, 'ti-clock', t('pokale.longest'), recapGames(round, [longest.chosenGameId]),
+        `${fmtPlayMinutes(longest.durationMinutes)} · ${fmtDate(longest.createdAt)}`, loadCover)
+    );
+  }
+
   // Gathering dust: the active game whose last night is longest ago (or never).
   const lastAt = {};
   finished.forEach((s) => {

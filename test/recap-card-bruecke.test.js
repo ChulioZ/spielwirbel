@@ -331,3 +331,13 @@ test('the results screen shares Die Brücke’s session card — a split evening
     assert.deepEqual(JSON.parse(dom.run('JSON.stringify(__canvases.map((c) => [c.width, c.height]))')), [[1080, 1080]]);
   } finally { dom.close(); }
 });
+
+test('spec: the hours played (#1772) take the fourth figure, ahead of the shelf', () => {
+  const dom = boot();
+  try {
+    const s = spec(dom, { ...PERIOD, timePlayed: '12 Std.', timedNote: 'aus 5 von 23 Sessions' });
+    assert.deepEqual(s.figures.map((f) => f.value), ['23', '14', 'Kartographen', '12 Std.']);
+    assert.equal(s.figures[3].label, `${dom.run("t('periodRecap.label.timePlayed')")} · aus 5 von 23 Sessions`);
+    assert.equal(s.figures[3].accent, false);
+  } finally { dom.close(); }
+});

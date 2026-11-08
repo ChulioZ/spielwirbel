@@ -123,7 +123,14 @@ function renderPeriodRecapSection(round, activities) {
     playsOf: playCounts,
     minRatings: RECAP_MIN_RATINGS,
     isActive: isActiveGame,
+    playTimeOf: sessionsPlayTime,
   };
+
+  // „aus 5 von 8 Sessions" when not every played session has a duration — a
+  // sum over some of the evenings must say so, or it reads as the whole period
+  // (#1772). Empty when the coverage is complete.
+  const timedNote = (time) => (time.timed < time.played
+    ? t('periodRecap.timedPartial', { n: time.timed, total: time.played }) : '');
 
   // What the card would say, built from the SAME numbers the screen is showing
   // — the session share button's rule (#526): the image can never claim more
@@ -138,6 +145,9 @@ function renderPeriodRecapSection(round, activities) {
     rated: rec.topRated ? recapGames(round, rec.topRated.gameIds).map((g) => g.title) : [],
     ratedScore: rec.topRated ? fmtAvg(displayScore(rec.topRated.score)) : '',
     shelf: recapShelfEntries(rec),
+    // The hours line (#1772), absent while no session in the period is timed.
+    timePlayed: rec.time.timed ? fmtPlayHours(rec.time.minutes) : '',
+    timedNote: rec.time.timed ? timedNote(rec.time) : '',
     // A year's twelve bars, for Die Brücke's card (#1247); null for a month.
     monthly: periodMonths(playedSessions(round).map((s) => s.createdAt), period),
   });
@@ -179,6 +189,16 @@ function renderPeriodRecapSection(round, activities) {
     const totals = h('<div class="recap__totals"></div>');
     totals.appendChild(chip('ti-confetti', tn(rec.sessions, 'home.chip.sessionsOne', 'home.chip.sessions'), rec.sessions, 'periodRecap.label.sessions'));
     totals.appendChild(chip('ti-cards', tn(rec.gamesPlayed, 'periodRecap.playedOne', 'periodRecap.played'), rec.gamesPlayed, 'periodRecap.label.gamesPlayed'));
+    // Hours played (#1772), from the first timed session in the period. Not
+    // through `chip`: the figure is a formatted duration, and the coverage note
+    // has to ride along in both presentations.
+    if (rec.time.timed) {
+      const time = fmtPlayHours(rec.time.minutes);
+      const note = timedNote(rec.time);
+      totals.appendChild(ocean
+        ? h(`<span class="stat-chip stat-chip--tile precap__time"><span class="stat-chip__n">${esc(time)}</span><span class="stat-chip__label">${esc([t('periodRecap.label.timePlayed'), note].filter(Boolean).join(' · '))}</span></span>`)
+        : h(`<span class="stat-chip precap__time"><i class="ti ti-clock" aria-hidden="true"></i>${esc([t('periodRecap.hoursPlayed', { time }), note].filter(Boolean).join(' · '))}</span>`));
+    }
     // Only the non-zero shelf numbers, the call the Rückblick's archive chip
     // already makes: "0 aussortiert" is noise on a quiet month.
     if (rec.added) totals.appendChild(chip('ti-plus', tn(rec.added, 'periodRecap.addedOne', 'periodRecap.added'), rec.added, 'periodRecap.label.added'));
@@ -219,6 +239,21 @@ function renderPeriodRecapSection(round, activities) {
   picker.addEventListener('change', renderBody);
   renderBody();
   return sec;
+}
+
+// A sum of played minutes as hours, „12 Std." / "1.5 h" (#1772). One decimal
+// below ten hours, where half an hour is a real part of the figure; whole hours
+// above, where it is noise. Through Intl so the decimal mark is the locale's.
+function fmtPlayHours(minutes) {
+  const hours = minutes / 60;
+  const n = hours < 10 ? Math.round(hours * 10) / 10 : Math.round(hours);
+  let shown;
+  try {
+    shown = new Intl.NumberFormat(localeTag(locale), { maximumFractionDigits: 1 }).format(n);
+  } catch {
+    shown = String(n);
+  }
+  return t('periodRecap.hoursValue', { h: shown });
 }
 
 // Can this browser deliver the PNG at all? Two independent paths, and the share
