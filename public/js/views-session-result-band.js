@@ -156,6 +156,11 @@ function resultRenderBand(rs) {
     main.appendChild(h(`<div class="tisch__note">${iconText('ti-user', t('result.ownedBy', { names: bringers.join(', ') }))}</div>`));
   }
 
+  // The play's clock (#1770): running while the game is on the table, the
+  // recorded minutes once it was played — on the picture, never in the picker.
+  const clock = !rs.finished ? playTimerNote(session) : (rs.pickerOpen ? null : playDurationNote(session));
+  if (clock) main.appendChild(clock);
+
   const actions = h('<div class="tisch__actions"></div>');
   let restoreChip = null;
 
@@ -176,6 +181,7 @@ function resultRenderBand(rs) {
           await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
           rs.chosenId = null;
           session.chosenGameId = null;
+          syncPlayClock(session, null);
           resultUpdateChosen(rs);
           toast(t('result.toast.choiceCleared'));
         } catch (e) { toast(e.message, { tone: 'error' }); }
@@ -370,6 +376,8 @@ async function resultSaveWinners(rs, ids, nextEnding) {
     // report the evening as having happened when the draw started, until the
     // next reload.
     session.finishedAt = saved.finishedAt || session.finishedAt;
+    // The timer's reading is stamped by the server on the transition (#1770).
+    syncPlayClock(session, saved);
     toast(t('result.toast.saved'));
     resultRenderBand(rs);
   } catch (e) {

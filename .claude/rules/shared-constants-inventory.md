@@ -807,6 +807,19 @@ fold on either side (say, a plain `toLowerCase`) would let the preview call
 „Café International" new while the write skips it as „Cafe International", or
 the reverse — a game the user saw as present landing twice, with nothing red.
 
+**The thirty-sixth is `public/js/session-duration.js`** (#1770): a played
+session's minutes — `DURATION_MIN`/`DURATION_MAX` and `isValidDuration`, which
+the results screen's minutes sheet offers and `PUT …/sessions/:sid/duration`
+(and a logged create) validates — plus `settlePlayDuration`, the finish
+transition's timer stamp, which BOTH repo backends run inside their session lock.
+The value half is the palette shape; the logic half is the reason it is one file
+rather than two copies of a three-line function: the floor
+(`DURATION_TIMER_FLOOR`) and the "never over a recorded figure" rule decide what
+lands on disk, so a backend that restated them differently would store a
+different duration for the same evening, depending on `DATABASE_URL`, with the
+repo contract the only witness. `roundGameDuration` (the Spielepass median) is
+client-only today; #1771/#1772 are its expected second readers.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

@@ -614,6 +614,13 @@ const frontendGlobals = {
   // route) and session-points.js (the sheet and the result's block).
   POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
+  // A session's playing time (#1770): session-duration.js (pure, shared with the
+  // route and both repo backends).
+  DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
+  isValidDuration: 'readonly', elapsedMinutes: 'readonly', settlePlayDuration: 'readonly', roundGameDuration: 'readonly',
+  // session-playtime.js (#1770): the band's timer and record lines, the sheet.
+  fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',
+  parseDurationInput: 'readonly', durationField: 'readonly', durationInvalidToast: 'readonly', showSessionDurationSheet: 'readonly',
   // views-member-points.js (#1631)
   memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
