@@ -824,6 +824,9 @@ public/
                      route also validates with, and the personal bests and group
                      records derived from the sessions, never stored (issue #1630),
                      and the automa opponent's shape, which no record can see (#1672)
+    session-duration.js a played session's minutes: the bounds the route also
+                     validates with, the timer's stamp both repo backends run
+                     on the finish, and the round's median per game (#1770)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -1054,6 +1057,9 @@ public/
     session-date.js  a session's day when it is not today: the „Wann?" field,
                      „Datum ändern" on a played session and the Chronik's
                      „Session nachtragen" game picker (issue #1616)
+    session-playtime.js the play's clock on the results band („Läuft seit …"),
+                     its recorded minutes, their sheet and the logged
+                     evening's minutes field (#1770)
     play-import-view.js „Partien importieren": the sheet that brings a BG
                      Stats or BGG play history into the round (#1665)
     myludo-import-view.js „Aus Myludo importieren": the sheet that matches a
