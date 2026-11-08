@@ -77,11 +77,13 @@ skill's checks per PR, and merge it **during** the batch only when all hold:
   scratch merge of `origin/main` + every bump (catches pairwise conflicts).
 
 `main` is `strict`, so a Dependabot PR behind `main` is refused (`405 … required
-status checks are expected`). Comment `@dependabot rebase` (attribution footer
-included), wait for its fresh CI, then merge — **one PR at a time**, since each
-merge puts the rest behind again. Never use "update branch": the merge commit is
-no longer purely Dependabot's change. Any PR that needed a fix, or that you are
-not sure about, goes into the closing interview instead.
+status checks are expected`). Bring it up to date, wait for its fresh CI, then
+merge — **one PR at a time**, since each merge puts the rest behind again.
+`@dependabot rebase` only works from `gh`/the web UI: the GitHub MCP comment tool
+defuses `@`-mentions, so the bot never sees it. Through MCP use
+`mcp__github__update_pull_request_branch` — a merge of `main` adds no diff of
+its own, so the PR still carries only Dependabot's change. Any PR that needed a
+fix, or that you are not sure about, goes into the closing interview instead.
 
 ## 3. Build in parallel — one background agent per item
 
