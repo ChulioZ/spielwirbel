@@ -201,16 +201,18 @@ test('the Spielepass prints the round\'s median from the second timed play on', 
     return {};
   });
   const ownNote = () => {
-    const el = dom.app.querySelector('.gd-facts .fact__note--own');
+    const el = dom.app.querySelector('.gd-facts .fact__note--measured');
     return el ? el.textContent : null;
   };
   await dom.call('showGameDetail', round.id, 'g1');
   assert.equal(ownNote(), null, 'one timed play is not „bei euch" yet');
   round.sessions.push(played('b', 121));
   await dom.call('showGameDetail', round.id, 'g1');
-  assert.equal(ownNote(), 'Bei euch: ~110 Min.');
-  const pill = dom.app.querySelector('.gd-facts .fact__note--own').closest('.fact');
-  assert.equal(pill.querySelector('.fact__value').textContent, '60 Min.', 'the box figure stays the value');
+  assert.equal(ownNote(), 'bei euch gemessen · Schachtel: 60 Min.');
+  const pill = dom.app.querySelector('.gd-facts .fact__note--measured').closest('.fact');
+  // Since #1771 the draw filter goes by the measured figure, so it is the value
+  // and the box figure moves into the note — the override's shape.
+  assert.equal(pill.querySelector('.fact__value').textContent, '~110 Min.', 'the measured figure is the value');
 });
 
 test('with no box figure, the round\'s own duration is the pill\'s value', async () => {
@@ -223,5 +225,5 @@ test('with no box figure, the round\'s own duration is the pill\'s value', async
   });
   await dom.call('showGameDetail', round.id, 'g2');
   const values = [...dom.app.querySelectorAll('.gd-facts .fact__value')].map((v) => v.textContent);
-  assert.ok(values.includes('Bei euch: ~35 Min.'), values.join(' | '));
+  assert.ok(values.includes('~35 Min.'), values.join(' | '));
 });

@@ -29,11 +29,14 @@ function setupPoolPreview(setup) {
   // above, so the preview cannot promise a pool the draw would refuse.
   // The clauses about THIS TABLE, which brought guest games (#1681) take too;
   // they skip the tag filter and the owner clause, exactly as `drawPool` does.
+  // The round's timed figures (#1771), read before the box time — the same Map
+  // the server draw builds, so the preview count is the pool it will draw from.
+  const measured = roundGameDurations(round.sessions);
   const fitsTable = (g) =>
     (tableState.multiTable
       ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
       : fitsPlayerCount(g, playerCount())) &&
-    fitsMetadataFilters(g, metaFilters) &&
+    fitsMetadataFilters(g, metaFilters, measured) &&
     (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended));
   // Read live: a guest's sheet pushes a newly created guest game onto
   // `round.games`, so the brought list is re-derived on every update.
@@ -65,7 +68,7 @@ function setupPoolPreview(setup) {
         (tableState.multiTable
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
           : fitsPlayerCount(g, playerCount())) &&
-        fitsMetadataFilters(g, metaFilters) &&
+        fitsMetadataFilters(g, metaFilters, measured) &&
         (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         !ownedByParty(g, shelfSeats())
     ).length;

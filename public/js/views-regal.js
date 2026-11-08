@@ -69,7 +69,10 @@ function renderRegalTab(round, activeGames) {
   // for a freshly reset round, and it drops a category whose last game has since
   // been archived — the counterpart of the deleted-tag pruning below, and what
   // stops a filter surviving as an active count over a chip nobody can see.
-  regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
+  // The round's timed figures (#1771): the filter reads a game's measured median
+  // before its box time, exactly as the server draw does.
+  const measured = roundGameDurations(round.sessions);
+  regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames, measured));
   // The owner filter (#1433), over the members who own a game on THIS shelf —
   // none on an unmarked shelf, which is what keeps the section away there (the
   // setup screen's `shelfIsMarked` question; no second check, it would be
@@ -369,6 +372,7 @@ function renderRegalTab(round, activeGames) {
         countBadge: composed,
         owners: { round, members: ownerMembers, picked: ownerPicks },
         players: shelfHasPlayerCounts ? playerPick : null,
+        measured,
       });
       if (filterPanel) filterWrap.appendChild(filterPanel.el);
       filterWrap.hidden = !filterPanel;
@@ -480,7 +484,7 @@ function renderRegalTab(round, activeGames) {
       // The same predicate the draw applies (#725) — the Regal filters in the
       // browser only, so there is no route change here, but the semantics must
       // be the shelf's and the draw's alike.
-      if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
+      if (!fitsMetadataFilters(g, regalFilters.metadata, measured)) return false;
       if (!matchesOwnerFilter(ownerPicks, g.ownerIds)) return false;
       if (!matchesPlayerFilter(g, playerPick.count)) return false;
       const q = query.trim().toLowerCase();

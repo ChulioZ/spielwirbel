@@ -265,7 +265,10 @@ function suggestScore(stats, game, neutral) {
    one decision rather than two. */
 function quickPresets(activeGames, deps) {
   const shelf = activeGames || [];
-  const options = deps.filterOptions(shelf);
+  // `deps.measured` (#1771): the round's timed figures, so a shelf only the
+  // round has timed still offers „bis 60 Min." and the chip's pool is the one
+  // the draw will produce.
+  const options = deps.filterOptions(shelf, deps.measured);
   const candidates = [
     { id: 'short', metadata: { maxPlaytime: 60 }, needs: options.playtimeMax },
     { id: 'light', metadata: { weightMax: 2 }, needs: options.weight },
@@ -276,7 +279,7 @@ function quickPresets(activeGames, deps) {
     .filter((c) => c.needs)
     .map((c) => ({ id: c.id, metadata: deps.normalizeMetadata(c.metadata, options) }))
     .filter((c) => {
-      const n = shelf.filter((g) => deps.fitsMetadata(g, c.metadata)).length;
+      const n = shelf.filter((g) => deps.fitsMetadata(g, c.metadata, deps.measured)).length;
       return n > 0 && n < shelf.length;
     })
     .slice(0, 3);

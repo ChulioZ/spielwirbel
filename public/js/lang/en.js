@@ -964,7 +964,12 @@ I18N.en = {
   'detail.setPlaytime': 'Set playing time',
   'detail.playtimeOwn': 'own value',
   'detail.playtimeOwnBgg': 'own value · BGG: {value}',
-  'detail.ownDuration': 'Your group: ~{time}',
+  // The round's measured median as the playing-time value (#1771), and the
+  // note naming that source beside the box figure or the round's own value.
+  'detail.playtimeMeasuredValue': '~{time}',
+  'detail.playtimeMeasured': 'measured by your group',
+  'detail.playtimeMeasuredBox': 'measured by your group · box: {value}',
+  'detail.playtimeMeasuredOwn': 'measured by your group · own value: {value}',
   'detail.playtimeLabel': 'Minutes (from–to)',
   'detail.playtimeFrom': 'from',
   'detail.playtimeTo': 'to',

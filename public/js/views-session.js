@@ -206,9 +206,12 @@ function showStartSession(round, prefill) {
   // more — the exact counterpart of the deleted-tag drop above, and the reason a
   // filter can never survive as an invisible active count over a control the
   // disclosure no longer renders.
+  // `measured` (#1771): the round's timed figures, read before the box time by
+  // the options here, the pool preview and the draw alike.
+  const measured = roundGameDurations(round.sessions);
   const metaFilters = normalizeMetadataFilters(
     preset && preset.metadata,
-    metadataFilterOptions(activeGames)
+    metadataFilterOptions(activeGames, measured)
   );
   // All members join by default; the number of people joining filters the games
   // by their player count.
@@ -484,7 +487,7 @@ function showStartSession(round, prefill) {
     // `partyCount`: a thunk, so the toggle's own label and its applied chip can
     // state the number they are filtering on rather than saying „hier".
     setup.filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection,
-      { tableSized: !tableState.multiTable, partyCount: playerCount });
+      { tableSized: !tableState.multiTable, partyCount: playerCount, measured });
     filterMount.replaceChildren();
     if (setup.filterPanel) filterMount.appendChild(setup.filterPanel.el);
     filterMount.hidden = !setup.filterPanel;

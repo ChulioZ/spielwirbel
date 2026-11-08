@@ -302,7 +302,7 @@ const WEIGHT_CHOICES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 // instance without BGG_API_TOKEN) the entire shelf. Under-filtering is
 // recoverable — the user sees a game they can skip; over-filtering hides games
 // with nothing on screen to say so.
-function fitsMetadataFilters(game, filters) {
+function fitsMetadataFilters(game, filters, measured = null) {
   const f = filters || {};
   const g = game || {};
   // Playing time is a CONTAINMENT test (#1025), reversing the overlap doctrine
@@ -327,7 +327,10 @@ function fitsMetadataFilters(game, filters) {
   //
   // Both bounds stay INCLUSIVE: a game pinned at the ceiling (120–120 under "at
   // most 120") takes exactly two hours and belongs in the pool.
-  const pt = gamePlaytime(g);
+  //
+  // `measured` (#1771) is the round's own timed figures (`roundGameDurations`,
+  // session-duration.js); absent, the clause reads exactly what it did before.
+  const pt = effectivePlaytime(g, measured);
   if (isFiniteNum(f.maxPlaytime) && isFiniteNum(pt.maxPlaytime) && pt.maxPlaytime > f.maxPlaytime)
     return false;
   if (isFiniteNum(f.minPlaytime) && isFiniteNum(pt.minPlaytime) && pt.minPlaytime < f.minPlaytime)
@@ -348,9 +351,10 @@ function fitsMetadataFilters(game, filters) {
 
 // The playing time a ROUND goes by (#1627): its own hand-set correction when it
 // has one, else the provider's pair. Every reader of a game's playing time goes
-// through this — the filter clause below, its shelf options, the vote card, the
-// ⓘ sheet, the Regal, the shared-vote ballot and the shelf profile — so the
-// number a group typed is the number every screen and the draw agree on.
+// through this — the vote card, the ⓘ sheet, the Regal, the shared-vote ballot
+// and the shelf profile — so the number a group typed is the number every screen
+// agrees on. The FILTER clause and its shelf options read `effectivePlaytime`
+// below instead (#1771), which puts the round's measured median in front of this.
 //
 // A SEPARATE `playtimeOverride: { min, max }` rather than writing into
 // `minPlaytime`/`maxPlaytime`, and that is load-bearing: `assignProviderInfo`
@@ -374,6 +378,42 @@ function gamePlaytime(game) {
     minPlaytime: isFiniteNum(g.minPlaytime) ? g.minPlaytime : null,
     maxPlaytime: isFiniteNum(g.maxPlaytime) ? g.maxPlaytime : null,
     overridden: false,
+  };
+}
+
+// The playing time a round's DRAW FILTER goes by (#1771): the round's measured
+// median when it has one (two timed sessions, see `roundGameDurations` in
+// session-duration.js), else `gamePlaytime` — the override, then BGG's box.
+// Every filter path reads through this one function: the server draw and its
+// options gate (lib/draw.js, lib/draw-filters.js), the Regal and setup-screen
+// filters, and the Start tab's automatic chips — so a chip cannot draw a game
+// the Regal had filtered away.
+//
+// Measured beats the override on purpose: the override is what someone TYPED
+// about this group, the median is what this group then actually played, and the
+// question a filter asks („do we finish inside an hour?") is about the latter.
+// The median is one number, so it is both ends of the pair — the containment
+// test then asks whether this group's usual evening fits.
+//
+// `measured` is the Map the caller built for this round, never looked up here:
+// this file has no sessions, and a Map built once per shelf keeps a filter over
+// N games from walking every session N times. Absent → the pre-#1771 answer.
+//
+// `source` names the figure for the Spielepass („gemessen", „eigene Angabe",
+// the box), and is null when the game carries no time at all.
+function effectivePlaytime(game, measured = null) {
+  const g = game || {};
+  const m = measured && g.id != null ? measured.get(g.id) : null;
+  if (m && isFiniteNum(m.minutes)) {
+    return { minPlaytime: m.minutes, maxPlaytime: m.minutes, source: 'measured', count: m.count };
+  }
+  const pt = gamePlaytime(g);
+  const known = pt.minPlaytime != null || pt.maxPlaytime != null;
+  return {
+    minPlaytime: pt.minPlaytime,
+    maxPlaytime: pt.maxPlaytime,
+    source: pt.overridden ? 'override' : known ? 'box' : null,
+    count: 0,
   };
 }
 
@@ -431,12 +471,14 @@ function excludesAnyOf(values, excluded) {
 // A shelf carrying none of a field reports it unavailable, and the UI drops that
 // control entirely rather than rendering an empty one — the same thing the tag
 // field already does with no round tags.
-function metadataFilterOptions(games) {
+function metadataFilterOptions(games, measured = null) {
   const list = Array.isArray(games) ? games : [];
   const anyNumber = (key) => list.some((g) => isFiniteNum((g || {})[key]));
-  // Through gamePlaytime, so a hand-set time on a game BGG has none for still
-  // offers the control that filters on it.
-  const anyPlaytime = (key) => list.some((g) => isFiniteNum(gamePlaytime(g)[key]));
+  // Through effectivePlaytime, so a hand-set time — or since #1771 a measured
+  // one — on a game BGG has none for still offers the control that filters on
+  // it. Without that, normalization would drop the bound as unofferable and the
+  // draw would quietly ignore it on an all-hand-typed shelf.
+  const anyPlaytime = (key) => list.some((g) => isFiniteNum(effectivePlaytime(g, measured)[key]));
   const valuesOf = (key) => {
     const seen = new Set();
     list.forEach((g) => {
@@ -601,6 +643,7 @@ if (typeof module !== 'undefined' && module.exports) {
     EXPANSION_TITLE_MAX,
     fitsMetadataFilters,
     gamePlaytime,
+    effectivePlaytime,
     PLAYTIME_OVERRIDE_MAX,
     metadataFilterOptions,
     hasMetadataFilterOptions,

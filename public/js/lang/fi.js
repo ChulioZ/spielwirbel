@@ -919,7 +919,12 @@ I18N.fi = {
   'detail.setPlaytime': 'Aseta peliaika',
   'detail.playtimeOwn': 'oma arvo',
   'detail.playtimeOwnBgg': 'oma arvo · BGG: {value}',
-  'detail.ownDuration': 'Teillä: ~{time}',
+  // The round's measured median as the playing-time value (#1771), and the
+  // note naming that source beside the box figure or the round's own value.
+  'detail.playtimeMeasuredValue': '~{time}',
+  'detail.playtimeMeasured': 'teillä mitattu',
+  'detail.playtimeMeasuredBox': 'teillä mitattu · laatikko: {value}',
+  'detail.playtimeMeasuredOwn': 'teillä mitattu · oma arvo: {value}',
   'detail.playtimeLabel': 'Minuutit (alkaen–asti)',
   'detail.playtimeFrom': 'alkaen',
   'detail.playtimeTo': 'asti',

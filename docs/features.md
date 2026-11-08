@@ -80,10 +80,14 @@ What the app does, in detail. For a short overview see the
   duration filter, the draw, both voting screens and the Regal then all use the
   round's number, the page notes „eigene Angabe · BGG: …" beside it, and one tap
   goes back to BGG's value. A later BGG refresh never overwrites the correction. Once a game has
-  **two played sessions with a recorded duration** (#1770), its page adds the
-  round's own typical length under the box figure — „Bei euch: ~110 Min.", the
-  median rounded to 5 minutes, computed from the sessions (so deleting one or
-  clearing its minutes corrects it). BGG's **community rating** is shown on the detail page
+  **two played sessions with a recorded duration** (#1770), that median —
+  rounded to 5 minutes, computed from the sessions (so deleting one or clearing
+  its minutes corrects it) — is what the round goes by when it **filters** (#1771):
+  the duration filter on the Regal and the setup screen, the draw, and the Start
+  tab's „bis 60 Min." chip all read it before the hand-set figure and the box.
+  The page's playing-time pill then shows it as the value, „~110 Min.", and names
+  the source beside it („bei euch gemessen · Schachtel: 60 Min."). The Regal's
+  shelf cards and the voting screens still print the box (or hand-set) figure. BGG's **community rating** is shown on the detail page
   only, and never on either voting screen — a score next to a ballot anchors the
   vote. BGG's *rank* and *geek rating* are not imported at all, and neither is
   the game's **description** — publisher blurbs turned out to put readers off

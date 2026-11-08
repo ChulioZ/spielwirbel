@@ -84,7 +84,9 @@ function clearMetadataFilters(state) {
 // rebuilding them — what the applied chips and the escape hatch need when they
 // change a filter from outside this body.
 function renderMetadataFilter(games, state, onChange, opts) {
-  const options = metadataFilterOptions(games);
+  // `opts.measured` (#1771): the round's timed figures, so a playtime row is
+  // offered for a game only the round has timed.
+  const options = metadataFilterOptions(games, opts && opts.measured);
   // The recommendation toggle needs a TABLE SIZE, which only the setup screen
   // has — the Regal filters a shelf, not an evening. Two gates, deliberately:
   // the shelf must carry a poll (`options.recommended`) AND the screen must be
@@ -483,7 +485,7 @@ function renderFilterPanel(games, state, onChange, tagSection, opts) {
   // The „Personen" section (#1667) is the Regal's opt-in too, passed only on a
   // shelf where some game declares a player count.
   const players = opts && opts.players ? opts.players : null;
-  if (!hasMetadataFilterOptions(metadataFilterOptions(games)) && !tagSection && !owners && !players) return null;
+  if (!hasMetadataFilterOptions(metadataFilterOptions(games, opts && opts.measured)) && !tagSection && !owners && !players) return null;
   // Same thunk the body reads, because the applied chip states the count too and
   // the two must never name different numbers.
   const partyCount = (opts && opts.partyCount) || (() => 0);

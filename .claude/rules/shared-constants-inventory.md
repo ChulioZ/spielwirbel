@@ -140,7 +140,12 @@ logic half: a round's hand-set playing time beats BGG's pair, and the filter
 clause, the shelf options, the vote-link ballot (`lib/routes/vote-link.js`) and
 every client surface read through it — a reader that skipped it would filter on
 one number while the page shows another. The ceiling is the value half: the
-route's zod bound and the editor's input.
+route's zod bound and the editor's input. **#1771 put `effectivePlaytime` in
+front of it for the FILTER only**: the round's measured median (a Map the caller
+builds with `roundGameDurations`, session-duration.js), then `gamePlaytime`.
+`lib/draw.js` and `lib/draw-filters.js` pass that Map exactly as the Regal, the
+setup screen and the quick chips do, so the server draw cannot answer differently
+from the screen that previewed it. Display surfaces still read `gamePlaytime`.
 
 **#743 gave the ladders a third reader, `lib/quiz-generate.js`**: the weekly quiz
 asks for a game's weight and playing time in bands cut from `WEIGHT_CHOICES` and
@@ -817,8 +822,10 @@ rather than two copies of a three-line function: the floor
 (`DURATION_TIMER_FLOOR`) and the "never over a recorded figure" rule decide what
 lands on disk, so a backend that restated them differently would store a
 different duration for the same evening, depending on `DATABASE_URL`, with the
-repo contract the only witness. `roundGameDuration` (the Spielepass median) is
-client-only today; #1771/#1772 are its expected second readers.
+repo contract the only witness. `roundGameDurations` (the per-game median, the
+Spielepass figure) gained its server readers in #1771: `lib/draw.js` and
+`lib/draw-filters.js` build the Map the draw filter reads, so a median computed
+twice could not drift between the Regal and the draw.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

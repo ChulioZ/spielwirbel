@@ -945,7 +945,12 @@ I18N.nl = {
   'detail.setPlaytime': 'Speelduur instellen',
   'detail.playtimeOwn': 'eigen waarde',
   'detail.playtimeOwnBgg': 'eigen waarde · BGG: {value}',
-  'detail.ownDuration': 'Bij jullie: ~{time}',
+  // The round's measured median as the playing-time value (#1771), and the
+  // note naming that source beside the box figure or the round's own value.
+  'detail.playtimeMeasuredValue': '~{time}',
+  'detail.playtimeMeasured': 'bij jullie gemeten',
+  'detail.playtimeMeasuredBox': 'bij jullie gemeten · doos: {value}',
+  'detail.playtimeMeasuredOwn': 'bij jullie gemeten · eigen waarde: {value}',
   'detail.playtimeLabel': 'Minuten (van–tot)',
   'detail.playtimeFrom': 'van',
   'detail.playtimeTo': 'tot',

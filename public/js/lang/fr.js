@@ -950,7 +950,12 @@ I18N.fr = {
   'detail.setPlaytime': 'Indiquer la durée',
   'detail.playtimeOwn': 'valeur personnalisée',
   'detail.playtimeOwnBgg': 'valeur personnalisée · BGG : {value}',
-  'detail.ownDuration': 'Chez vous : ~{time}',
+  // The round's measured median as the playing-time value (#1771), and the
+  // note naming that source beside the box figure or the round's own value.
+  'detail.playtimeMeasuredValue': '~{time}',
+  'detail.playtimeMeasured': 'mesuré chez vous',
+  'detail.playtimeMeasuredBox': 'mesuré chez vous · boîte : {value}',
+  'detail.playtimeMeasuredOwn': 'mesuré chez vous · valeur personnalisée : {value}',
   'detail.playtimeLabel': 'Minutes (de–à)',
   'detail.playtimeFrom': 'de',
   'detail.playtimeTo': 'à',

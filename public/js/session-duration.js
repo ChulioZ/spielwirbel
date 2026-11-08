@@ -5,9 +5,11 @@
  * the timer measured, or what someone typed. This file holds the rules both ends
  * share — the bounds the result's field offers and `PUT …/sessions/:sid/duration`
  * validates, the timer's own reading, and the round's typical figure the
- * Spielepass prints — so the client and the route cannot disagree about any of
- * them (.claude/rules/shared-constants-across-the-stack.md). Pure and
- * dependency-free; both repo backends require it for `settlePlayDuration`.
+ * Spielepass prints and the draw filter reads (#1771) — so the client and the
+ * route cannot disagree about any of them
+ * (.claude/rules/shared-constants-across-the-stack.md). Pure and
+ * dependency-free; both repo backends require it for `settlePlayDuration`, and
+ * lib/draw.js + lib/draw-filters.js for `roundGameDurations`.
  *
  * Part of the frontend; all files share one global script scope (load order: see
  * index.html). */
@@ -58,20 +60,40 @@ function settlePlayDuration(s, nowIso) {
 // clearing its minutes removes its effect.
 const DURATION_MEDIAN_MIN_SESSIONS = 2;
 
-function roundGameDuration(sessions, gameId) {
-  const mins = (sessions || [])
-    .filter((s) => s && s.finished && !s.cancelled && s.chosenGameId === gameId && isValidDuration(s.durationMinutes))
-    .map((s) => s.durationMinutes)
-    .sort((a, b) => a - b);
+function medianDuration(mins) {
   if (mins.length < DURATION_MEDIAN_MIN_SESSIONS) return null;
-  const mid = mins.length >> 1;
-  const median = mins.length % 2 ? mins[mid] : (mins[mid - 1] + mins[mid]) / 2;
-  return { minutes: Math.max(5, Math.round(median / 5) * 5), count: mins.length };
+  const sorted = mins.slice().sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return { minutes: Math.max(5, Math.round(median / 5) * 5), count: sorted.length };
+}
+
+// Every game's figure in one pass over the sessions: Map<gameId, { minutes,
+// count }>, holding only the games that reached the two-session floor. This is
+// what the draw filter reads (#1771, `effectivePlaytime` in draw-pool.js) — built
+// once per shelf, so a filter over N games does not walk the sessions N times.
+function roundGameDurations(sessions) {
+  const byGame = new Map();
+  (sessions || []).forEach((s) => {
+    if (!s || !s.finished || s.cancelled || !s.chosenGameId || !isValidDuration(s.durationMinutes)) return;
+    if (!byGame.has(s.chosenGameId)) byGame.set(s.chosenGameId, []);
+    byGame.get(s.chosenGameId).push(s.durationMinutes);
+  });
+  const out = new Map();
+  byGame.forEach((mins, gameId) => {
+    const d = medianDuration(mins);
+    if (d) out.set(gameId, d);
+  });
+  return out;
+}
+
+function roundGameDuration(sessions, gameId) {
+  return roundGameDurations(sessions).get(gameId) || null;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DURATION_MIN, DURATION_MAX, DURATION_TIMER_FLOOR, DURATION_MEDIAN_MIN_SESSIONS,
-    isValidDuration, elapsedMinutes, settlePlayDuration, roundGameDuration,
+    isValidDuration, elapsedMinutes, settlePlayDuration, roundGameDuration, roundGameDurations,
   };
 }

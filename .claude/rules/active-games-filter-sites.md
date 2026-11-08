@@ -84,7 +84,11 @@ before assuming you have them all:
   which of the two questions it is looking at. Its absent-value rule is the
   *base game's*, not the expansion's: a game the provider knows nothing about
   passes every filter. See
-  `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md`.
+  `.claude/rules/provider-metadata-is-a-filter-not-a-tag.md`. Since #1771 it
+  takes a third argument, the round's measured times (`roundGameDurations`), and
+  so does `metadataFilterOptions` — every site passes the SAME map, and the
+  Start tab's quick chips (`quickPresets`) are a fourth reader. A site that drops
+  it filters on the box while the others filter on the evening.
 
   **A FOURTH predicate joined the same three sites in #796 — and it is NOT in
   this file.** `fitsSomeTable` is the pool clause a multi-table session draws

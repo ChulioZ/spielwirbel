@@ -33,8 +33,10 @@
 /* The siblings hub-insights.js needs, gathered in one place so the six cards
    below cannot each assemble a slightly different set. Every entry is the app's
    own function, passed through rather than restated — the injection shape
-   hub-insights.js's header explains. */
-const hubDeps = () => ({
+   hub-insights.js's header explains.
+   `round` is optional: only `quickPresets` reads `measured` (#1771), the round's
+   timed figures, and every other card ignores it. */
+const hubDeps = (round = null) => ({
   outcomeOf: sessionOutcome,
   endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
@@ -45,6 +47,7 @@ const hubDeps = () => ({
   normalizeMetadata: normalizeMetadataFilters,
   fitsMetadata: fitsMetadataFilters,
   newestFirst: newestSessionsFirst,
+  measured: roundGameDurations(round && round.sessions),
 });
 
 // One card frame. The title is a real <h2> so the grid reads as a set of
@@ -253,7 +256,7 @@ function hubSuggestRow(round, { game, reason }) {
    where the write lives, not a guard this code has to remember. */
 function hubPresetChips(round, activeGames) {
   const saved = Array.isArray(round.savedFilters) ? round.savedFilters : [];
-  const chips = saved.length ? [] : quickPresets(activeGames, hubDeps());
+  const chips = saved.length ? [] : quickPresets(activeGames, hubDeps(round));
   if (!saved.length && !chips.length) return null;
   const row = h(`<div class="hub-presets" role="group" aria-label="${esc(t('hub.preset.label'))}"></div>`);
   // The Start tab's copy is `rail-owned` (see the caller); the rail builds its

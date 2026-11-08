@@ -911,7 +911,12 @@ I18N.ko = {
   'detail.setPlaytime': '플레이 시간 설정',
   'detail.playtimeOwn': '직접 입력',
   'detail.playtimeOwnBgg': '직접 입력 · BGG: {value}',
-  'detail.ownDuration': '우리 모임: ~{time}',
+  // The round's measured median as the playing-time value (#1771), and the
+  // note naming that source beside the box figure or the round's own value.
+  'detail.playtimeMeasuredValue': '~{time}',
+  'detail.playtimeMeasured': '우리 모임 측정',
+  'detail.playtimeMeasuredBox': '우리 모임 측정 · 상자: {value}',
+  'detail.playtimeMeasuredOwn': '우리 모임 측정 · 직접 입력: {value}',
   'detail.playtimeLabel': '분 (최소–최대)',
   'detail.playtimeFrom': '최소',
   'detail.playtimeTo': '최대',

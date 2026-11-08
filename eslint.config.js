@@ -168,7 +168,7 @@ const frontendGlobals = {
   // draw-pool.js's metadata filters (issue #725) — also required by lib/draw.js
   // and lib/routes/sessions.js
   fitsMetadataFilters: 'readonly', metadataFilterOptions: 'readonly',
-  gamePlaytime: 'readonly', PLAYTIME_OVERRIDE_MAX: 'readonly',
+  gamePlaytime: 'readonly', effectivePlaytime: 'readonly', PLAYTIME_OVERRIDE_MAX: 'readonly',
   hasMetadataFilterOptions: 'readonly', normalizeMetadataFilters: 'readonly',
   countMetadataFilters: 'readonly', isFiniteNum: 'readonly',
   PLAYTIME_CHOICES: 'readonly', AGE_CHOICES: 'readonly', WEIGHT_CHOICES: 'readonly',
@@ -617,7 +617,7 @@ const frontendGlobals = {
   // A session's playing time (#1770): session-duration.js (pure, shared with the
   // route and both repo backends).
   DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
-  isValidDuration: 'readonly', elapsedMinutes: 'readonly', settlePlayDuration: 'readonly', roundGameDuration: 'readonly',
+  isValidDuration: 'readonly', elapsedMinutes: 'readonly', settlePlayDuration: 'readonly', roundGameDuration: 'readonly', roundGameDurations: 'readonly',
   // session-playtime.js (#1770): the band's timer and record lines, the sheet.
   fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',
   parseDurationInput: 'readonly', durationField: 'readonly', durationInvalidToast: 'readonly', showSessionDurationSheet: 'readonly',

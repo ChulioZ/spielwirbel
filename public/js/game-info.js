@@ -274,33 +274,42 @@ function openGameInfoSheet(game) {
 // so beside the number, with BGG's own figure, so nobody wonders why the page
 // disagrees with BGG. A voter never sees that note: only this page renders it.
 //
-// `own` (#1770) is the round's measured duration for this game (roundGameDuration,
-// session-duration.js) — „Bei euch: ~110 Min." under the box figure, the pill's
-// value staying the box's (or the round's own override). Detail page only.
+// `own` (#1770) is the round's measured duration for this game (the
+// `roundGameDurations` entry, session-duration.js). Since #1771 the draw filter
+// goes by it before the override and the box (`effectivePlaytime`, draw-pool.js),
+// so it is the pill's VALUE — „~110 Min." — and the note names the source and
+// the figure it displaced („bei euch gemessen · Schachtel: 60 Min."). The same
+// shape the override already had: the value is what the round goes by, the note
+// is where that differs. Detail page only.
 function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false, own = null } = {}) {
   const box = h('<div class="gd-facts"></div>');
   if (game.weight != null) {
     box.appendChild(h(`<span class="fact fact--weight">${weightInner(game)}</span>`));
   }
   const playtime = playtimeText(game);
-  if (playtime || (editPlaytime && offerEmpty) || own) {
+  const measured = own ? t('detail.playtimeMeasuredValue', { time: fmtPlayMinutes(own.minutes) }) : null;
+  if (playtime || measured || (editPlaytime && offerEmpty)) {
     // The empty pill is its own invitation, like the dashed players chip — a
     // label beside „Spieldauer angeben" would say the word twice.
-    // With no box figure at all, the round's own measurement IS the value.
-    const ownText = own ? t('detail.ownDuration', { time: fmtPlayMinutes(own.minutes) }) : null;
-    const value = playtime || ownText || t('detail.setPlaytime');
-    const pill = factPill(playtime || ownText ? t('gameInfo.playtime') : null, value, editPlaytime);
-    if (!playtime && !ownText) pill.classList.add('fact--empty');
-    if (gamePlaytime(game).overridden) {
+    const value = measured || playtime || t('detail.setPlaytime');
+    const pill = factPill(measured || playtime ? t('gameInfo.playtime') : null, value, editPlaytime);
+    if (!measured && !playtime) pill.classList.add('fact--empty');
+    const overridden = gamePlaytime(game).overridden;
+    let noteText = null;
+    if (measured) {
+      // The displaced figure is the one the round would otherwise go by: its own
+      // override when it set one, else the box. Neither → the source alone.
+      noteText = !playtime ? t('detail.playtimeMeasured')
+        : overridden ? t('detail.playtimeMeasuredOwn', { value: playtime })
+          : t('detail.playtimeMeasuredBox', { value: playtime });
+    } else if (overridden) {
       const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime ?? null, maxPlaytime: game.maxPlaytime ?? null });
-      const note = h('<span class="fact__note"></span>');
-      note.textContent = bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn');
-      pill.appendChild(note);
+      noteText = bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn');
     }
-    if (playtime && ownText) {
-      const ownNote = h('<span class="fact__note fact__note--own"></span>');
-      ownNote.textContent = ownText;
-      pill.appendChild(ownNote);
+    if (noteText) {
+      const note = h(`<span class="fact__note${measured ? ' fact__note--measured' : ''}"></span>`);
+      note.textContent = noteText;
+      pill.appendChild(note);
     }
     box.appendChild(pill);
   }
