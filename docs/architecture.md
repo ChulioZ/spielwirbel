@@ -502,7 +502,7 @@ lib/
                                              BGG-only covers/expansions/cards/import/plays hops)
     game-import.js   …/games/import         (a shelf from a Myludo file: the rows the
                                              user picked, in one write — #1758)
-    session-import.js …/sessions/import     (a play history from BG Stats or BGG,
+    session-import.js …/sessions/import     (a play history from BG Stats, Myludo or BGG,
                                              written as finished sessions — #1665)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
@@ -815,7 +815,7 @@ public/
                      it with the same file, and whether a session is shown by
                      date only is read here too (issues #1616, #1629)
     play-import.js   the pure half of the play-history import: the BG Stats
-                     export parser, the BGG normaliser, who-is-who and which
+                     and Myludo export parsers (#1759), the BGG normaliser, who-is-who and which
                      game suggestions, duplicates and request batches (#1665)
     myludo-import.js the pure half of the Myludo shelf import: the export
                      parser, the BGG match suggestion, which base game an

@@ -735,8 +735,10 @@ What the app does, in detail. For a short overview see the
   group that votes days ahead files the play under the day it was played;
   correcting a winner afterwards does not move it again.
 - **Partien importieren** (import plays, #1665) – beside „Session nachtragen",
-  the Chronik brings in a whole play history: from a **BG Stats** export file
-  (read in the browser, never uploaded) or, with a BGG name linked to the
+  the Chronik brings in a whole play history: from a **BG Stats** export file,
+  from a **Myludo** plays export (JSON, #1759 — date-only, players matched by
+  name, games by title; both files read in the browser, never uploaded) or,
+  with a BGG name linked to the
   account, from the plays logged on **BoardGameGeek**. A preview filters by
   date range, location and „only plays with someone from this round"; each
   source player is matched once to a member, a new member, a guest or nobody

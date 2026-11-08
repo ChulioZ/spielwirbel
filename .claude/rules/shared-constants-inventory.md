@@ -765,8 +765,10 @@ broken.
 builds keys up to the cap and splits a selection into batches of the size the
 route accepts, so a drifted server bound would 400 the last batch of a large
 import after the first had already been written. `IMPORT_SOURCES` is the
-`importRef.source` vocabulary, and a source the route does not know is a
-whole import refused. The parsers in the same file are client-only.
+`importRef.source` vocabulary (`bgstats`, `bgg`, `myludo` since #1759), and a
+source the route does not know is a whole import refused. A new source must
+also join the operator panel's per-source figures (both repo backends), since
+„importiert" is their sum. The parsers in the same file are client-only.
 
 **The thirty-second is `public/js/tag-name-policy.js`** (2026-10-27 audit):
 `TAG_NAME_MAX`, the longest name a round tag may have. The plain

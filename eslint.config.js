@@ -620,8 +620,8 @@ const frontendGlobals = {
   renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
-  importScore: 'readonly', importDayInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
-  normaliseBggPlays: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
+  importScore: 'readonly', importDayInRange: 'readonly', importDayKeyInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
+  normaliseBggPlays: 'readonly', parseMyludoPlays: 'readonly', MYLUDO_SELF_NAMES: 'readonly', myludoYes: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
   duplicateState: 'readonly', playMemberIds: 'readonly', playPassesFilter: 'readonly',
   buildImportBatches: 'readonly', resolveCreated: 'readonly', showPlayImport: 'readonly',
   // The Myludo shelf import (#1758): the pure half and its sheet.

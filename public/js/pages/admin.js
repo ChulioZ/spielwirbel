@@ -614,6 +614,7 @@
         line('importiert', a.sessionsImported, sessions),
         line('aus BG Stats', a.sessionsImportedBgStats, a.sessionsImported, 1),
         line('aus BoardGameGeek', a.sessionsImportedBgg, a.sessionsImported, 1),
+        line('aus Myludo', a.sessionsImportedMyludo, a.sessionsImported, 1),
         line('gestartet (ohne Split-Eltern)', f.started, sessions),
         line('als gespielt markiert', f.played, f.started, 1),
         line('von ≥2 bewertet', f.rated, f.started, 1),

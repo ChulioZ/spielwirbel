@@ -110,6 +110,13 @@ test('plays before the floor or in the future are left out of the preview', () =
   assert.deepEqual(normaliseBggPlays(raw, { playedOnInstant, minDay: '2000-01-01', now }).map((p) => p.sourceId), ['2']);
 });
 
+test('a BGG play logged for a future day is left out, not moved to today', () => {
+  const now = new Date(2026, 0, 1, 12);
+  const raw = [{ id: 'today', date: '2026-01-01', quantity: 1, game: { bggId: 1, title: 'X' }, players: [] },
+    { id: 'tomorrow', date: '2026-01-02', quantity: 1, game: { bggId: 1, title: 'X' }, players: [] }];
+  assert.deepEqual(normaliseBggPlays(raw, { playedOnInstant, now }).map((p) => p.sourceId), ['today']);
+});
+
 test('parseBgStatsExport refuses a file that is not an export, and lets JSON errors through', () => {
   assert.throws(() => parseBgStatsExport('{"games": []}'), /not_bgstats/);
   assert.throws(() => parseBgStatsExport('[]'), /not_bgstats/);
