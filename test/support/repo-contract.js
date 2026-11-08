@@ -6169,6 +6169,20 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
     });
 
+    await t.test('a Myludo import counts under its own source, and in the total (#1759)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `adm-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Myludo', members: ['Ann'] });
+      await repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true,
+        importRef: { source: 'myludo', id: '1915@2025-03-07@ann' },
+      });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.sessionsImportedMyludo, mid.adoption.sessionsImportedMyludo + 1);
+      assert.equal(m.adoption.sessionsImportedBgg, mid.adoption.sessionsImportedBgg);
+      assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
+    });
+
     await t.test('„Letzte sieben Tage" counts what happened in the window, imports apart', async () => {
       /* Against the REAL clock, not NOW above: the window is the last 7 × 24 h
          before the call. Every case sits clearly inside or outside it, and the
