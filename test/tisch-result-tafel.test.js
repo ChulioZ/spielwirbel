@@ -304,9 +304,10 @@ test('a played session keeps „Datum ändern" behind „Mehr", ahead of the des
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
   foot.querySelector('.result-foot__more').click();
   const opts = [...dom.document.querySelectorAll('.popover__opt')];
-  // „Punkte eintragen" (#1630) is the other correction, so it sorts with it.
-  assert.deepEqual(opts.map(text), ['Punkte eintragen', 'Datum ändern']);
-  assert.deepEqual(opts.map((o) => o.dataset.kind), ['edit', 'edit']);
+  // „Punkte eintragen" (#1630) and „Spieldauer eintragen" (#1770) are the other
+  // corrections, so they sort with it.
+  assert.deepEqual(opts.map(text), ['Punkte eintragen', 'Spieldauer eintragen', 'Datum ändern']);
+  assert.deepEqual(opts.map((o) => o.dataset.kind), ['edit', 'edit', 'edit']);
 });
 
 /* ------------------------- the setup's `memberIds` prefill ------------------------- */

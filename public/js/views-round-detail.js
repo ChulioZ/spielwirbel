@@ -644,7 +644,7 @@ async function showGameDetail(rid, gameId) {
       if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
-      factsNode = swap(factsNode, gameGlanceFacts(game, { editPlaytime, offerEmpty: !sparse && !game.wish }));
+      factsNode = swap(factsNode, gameGlanceFacts(game, { editPlaytime, offerEmpty: !sparse && !game.wish, own: roundGameDuration(round.sessions, game.id) }));
       restNode = swap(restNode, gameInfoRest(game));
       ensureMore();
     };

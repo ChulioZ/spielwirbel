@@ -11,8 +11,8 @@
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
    copy of any rule. `deps` is { peopleOf, scoreOf, eveningsOf, shelfOf, playsOf,
-   minRatings,
-   isActive } — sessionPeople (session-people.js), scoreRatings
+   minRatings, isActive, playTimeOf } — sessionPeople (session-people.js),
+   sessionsPlayTime (session-duration.js, #1772), scoreRatings
    (vote-score.js) and RECAP_MIN_RATINGS
    (recap.js). The threshold is injected rather than re-declared here precisely
    because a second `3` is the drift
@@ -290,6 +290,10 @@ function periodRecap(round, activities, period, deps) {
     gamesPlayed: plays.size,
     topPlayed: max > 0 ? { gameIds: [...plays.keys()].filter((gid) => plays.get(gid) === max), count: max } : null,
     topRated: bestRated(round, sessions, deps),
+    // { minutes, timed, played } over the same sessions (#1772) — injected
+    // (sessionsPlayTime, session-duration.js) so the recap and the duration
+    // bounds cannot disagree about which recorded minutes are real.
+    time: deps.playTimeOf(sessions),
     ...shelf,
   };
 }

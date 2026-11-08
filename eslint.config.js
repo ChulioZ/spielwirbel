@@ -614,14 +614,22 @@ const frontendGlobals = {
   // route) and session-points.js (the sheet and the result's block).
   POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
+  // A session's playing time (#1770): session-duration.js (pure, shared with the
+  // route and both repo backends).
+  DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
+  isValidDuration: 'readonly', elapsedMinutes: 'readonly', settlePlayDuration: 'readonly', roundGameDuration: 'readonly',
+  sessionsPlayTime: 'readonly', longestSession: 'readonly', fmtPlayHours: 'readonly',
+  // session-playtime.js (#1770): the band's timer and record lines, the sheet.
+  fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',
+  parseDurationInput: 'readonly', durationField: 'readonly', durationInvalidToast: 'readonly', showSessionDurationSheet: 'readonly',
   // views-member-points.js (#1631)
   memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
   renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
-  importScore: 'readonly', importDayInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
-  normaliseBggPlays: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
+  importScore: 'readonly', importDayInRange: 'readonly', importDayKeyInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
+  normaliseBggPlays: 'readonly', parseMyludoPlays: 'readonly', MYLUDO_SELF_NAMES: 'readonly', myludoYes: 'readonly', suggestPeople: 'readonly', suggestGames: 'readonly',
   duplicateState: 'readonly', playMemberIds: 'readonly', playPassesFilter: 'readonly',
   buildImportBatches: 'readonly', resolveCreated: 'readonly', showPlayImport: 'readonly',
   // The Myludo shelf import (#1758): the pure half and its sheet.

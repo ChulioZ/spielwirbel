@@ -250,3 +250,16 @@ test('the results screen’s share: the card with the text, and the text share a
     assert.equal(await dom.run('shareResultCard(__model, "msg")'), false);
   } finally { dom.close(); }
 });
+
+test('period spec: the hours played (#1772) are one plain row before the shelf, with the coverage note', () => {
+  const dom = loadApp();
+  try {
+    const s = spec(dom, 'period', { ...PERIOD, timePlayed: '12 Std.', timedNote: 'aus 5 von 14 Sessions' });
+    const label = dom.run("t('periodRecap.label.timePlayed')");
+    assert.deepEqual(s.rows.map((r) => r.title.split(' · ')[0]),
+      [dom.run("t('pokale.bestRated')"), label, dom.run("t('periodRecap.label.shelf')")]);
+    assert.equal(s.rows[1].title, `${label} · 12 Std. · aus 5 von 14 Sessions`);
+    assert.equal(s.rows[1].gold, false);
+    assert.equal(spec(dom, 'period', { ...PERIOD, timePlayed: '1 Std.', timedNote: '' }).rows[1].title, `${label} · 1 Std.`);
+  } finally { dom.close(); }
+});

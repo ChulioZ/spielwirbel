@@ -765,8 +765,10 @@ broken.
 builds keys up to the cap and splits a selection into batches of the size the
 route accepts, so a drifted server bound would 400 the last batch of a large
 import after the first had already been written. `IMPORT_SOURCES` is the
-`importRef.source` vocabulary, and a source the route does not know is a
-whole import refused. The parsers in the same file are client-only.
+`importRef.source` vocabulary (`bgstats`, `bgg`, `myludo` since #1759), and a
+source the route does not know is a whole import refused. A new source must
+also join the operator panel's per-source figures (both repo backends), since
+„importiert" is their sum. The parsers in the same file are client-only.
 
 **The thirty-second is `public/js/tag-name-policy.js`** (2026-10-27 audit):
 `TAG_NAME_MAX`, the longest name a round tag may have. The plain
@@ -804,6 +806,20 @@ duplicate atomically. Logic, and the failure is the quiet direction: a second
 fold on either side (say, a plain `toLowerCase`) would let the preview call
 „Café International" new while the write skips it as „Cafe International", or
 the reverse — a game the user saw as present landing twice, with nothing red.
+
+**The thirty-sixth is `public/js/session-duration.js`** (#1770): a played
+session's minutes — `DURATION_MIN`/`DURATION_MAX` and `isValidDuration`, which
+the results screen's minutes sheet offers and `PUT …/sessions/:sid/duration`
+(and a logged create) validates — plus `settlePlayDuration`, the finish
+transition's timer stamp, which BOTH repo backends run inside their session lock.
+The value half is the palette shape; the logic half is the reason it is one file
+rather than two copies of a three-line function: the floor
+(`DURATION_TIMER_FLOOR`) and the "never over a recorded figure" rule decide what
+lands on disk, so a backend that restated them differently would store a
+different duration for the same evening, depending on `DATABASE_URL`, with the
+repo contract the only witness. `roundGameDuration` (the Spielepass median),
+`sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
+(Pokale's „Längste Session") are client-only.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

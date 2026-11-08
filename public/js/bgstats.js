@@ -144,9 +144,12 @@ function bgStatsPlay(model) {
     sourceName: BGSTATS_SOURCE,
     sourcePlayId: session.id,
     playDate,
-    // durationMin is deliberately absent: `finishedAt - createdAt` spans the
-    // voting as well as the play, so it would overstate every game's length, and
-    // we measure no play time anywhere.
+    // The play's own minutes (#1770) — the timer's reading or a typed figure,
+    // validated on the way in. Never `finishedAt - createdAt`: that spans the
+    // voting as well as the play and would overstate every game's length. An
+    // untimed play sends no duration rather than a guess.
+    ...(Number.isInteger(session.durationMinutes) && session.durationMinutes > 0
+      ? { durationMin: session.durationMinutes } : {}),
     game: {
       name: game.title,
       // Round-scoped, so the same physical game in two rounds is matched twice.

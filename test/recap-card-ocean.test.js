@@ -340,3 +340,13 @@ test('the results screen’s share: portrait on a phone, landscape on a wide scr
     assert.deepEqual([...dom.context.__reports], ['recap_export'], 'and the failure reaches the operator');
   } finally { dom.close(); }
 });
+
+test('period spec: the hours played (#1772) are a named row after the two games', () => {
+  const dom = boot();
+  try {
+    const s = spec(dom, 'period', { ...PERIOD, timePlayed: '12 Std.', timedNote: 'aus 5 von 23 Sessions' });
+    assert.deepEqual(s.named.map((r) => r.value), ['Nordlichter', 'Kartographen', '12 Std.']);
+    assert.equal(s.named[2].label, dom.run("t('periodRecap.label.timePlayed')"));
+    assert.equal(s.named[2].sub, 'aus 5 von 23 Sessions');
+  } finally { dom.close(); }
+});

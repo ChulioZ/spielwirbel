@@ -273,22 +273,34 @@ function openGameInfoSheet(game) {
 // sparse page whose onboarding panel is the way in), and an overridden one says
 // so beside the number, with BGG's own figure, so nobody wonders why the page
 // disagrees with BGG. A voter never sees that note: only this page renders it.
-function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false } = {}) {
+//
+// `own` (#1770) is the round's measured duration for this game (roundGameDuration,
+// session-duration.js) — „Bei euch: ~110 Min." under the box figure, the pill's
+// value staying the box's (or the round's own override). Detail page only.
+function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false, own = null } = {}) {
   const box = h('<div class="gd-facts"></div>');
   if (game.weight != null) {
     box.appendChild(h(`<span class="fact fact--weight">${weightInner(game)}</span>`));
   }
   const playtime = playtimeText(game);
-  if (playtime || (editPlaytime && offerEmpty)) {
+  if (playtime || (editPlaytime && offerEmpty) || own) {
     // The empty pill is its own invitation, like the dashed players chip — a
     // label beside „Spieldauer angeben" would say the word twice.
-    const pill = factPill(playtime ? t('gameInfo.playtime') : null, playtime || t('detail.setPlaytime'), editPlaytime);
-    if (!playtime) pill.classList.add('fact--empty');
+    // With no box figure at all, the round's own measurement IS the value.
+    const ownText = own ? t('detail.ownDuration', { time: fmtPlayMinutes(own.minutes) }) : null;
+    const value = playtime || ownText || t('detail.setPlaytime');
+    const pill = factPill(playtime || ownText ? t('gameInfo.playtime') : null, value, editPlaytime);
+    if (!playtime && !ownText) pill.classList.add('fact--empty');
     if (gamePlaytime(game).overridden) {
       const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime ?? null, maxPlaytime: game.maxPlaytime ?? null });
       const note = h('<span class="fact__note"></span>');
       note.textContent = bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn');
       pill.appendChild(note);
+    }
+    if (playtime && ownText) {
+      const ownNote = h('<span class="fact__note fact__note--own"></span>');
+      ownNote.textContent = ownText;
+      pill.appendChild(ownNote);
     }
     box.appendChild(pill);
   }

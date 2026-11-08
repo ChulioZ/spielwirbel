@@ -1,7 +1,8 @@
 /* Spielwirbel – importing a play history (#1665): the pure half.
 
-   Two sources, one shape. A BG Stats export is parsed HERE, in the browser —
-   the file never leaves the device, only the plays the user picked do. BGG
+   Three sources, one shape. A BG Stats export and a Myludo plays export
+   (#1759) are parsed HERE, in the browser — the file never leaves the device,
+   only the plays the user picked do. BGG
    plays arrive already parsed from `GET …/lookup/plays` (lib/providers/bgg.js
    `parsePlays`) and are normalised here into the same shape:
 
@@ -27,7 +28,7 @@
 'use strict';
 
 // The sources a session's `importRef` may name — validated by the route.
-const IMPORT_SOURCES = ['bgstats', 'bgg'];
+const IMPORT_SOURCES = ['bgstats', 'bgg', 'myludo'];
 // Plays per request. The client splits a larger selection into batches; the
 // route refuses more, and lib/app.js gives this path a 1 MB body ceiling.
 const IMPORT_BATCH_MAX = 200;
@@ -73,6 +74,15 @@ function dayKeyOf(iso) {
 function importDayInRange(playedOn, { minDay, now = new Date() }) {
   if (minDay && dayKeyOf(playedOn) < minDay) return false;
   return Date.parse(playedOn) <= now.getTime();
+}
+
+// The same check for a source that gives a DAY only. `playedOnInstant` caps a
+// future day at now, so its instant always passes the check above — the day
+// itself has to be compared with today's (local) key, or a play logged for
+// tomorrow lands on today.
+function importDayKeyInRange(dayKey, { minDay, now = new Date() }) {
+  if (minDay && dayKey < minDay) return false;
+  return dayKey <= dayKeyOf(now.toISOString());
 }
 
 // A BG Stats backup → normalised plays plus the location names (the preview's
@@ -138,8 +148,9 @@ function normaliseBggPlays(raw, { playedOnInstant, minDay = null, now = new Date
   const plays = [];
   for (const play of raw || []) {
     if (!play || !play.date || !play.game || !play.game.title) continue;
+    if (!importDayKeyInRange(play.date, { minDay, now })) continue;
     const playedOn = playedOnInstant(play.date, now);
-    if (!playedOn || !importDayInRange(playedOn, { minDay, now })) continue;
+    if (!playedOn) continue;
     const bggId = play.game.bggId || null;
     const players = (play.players || []).map((p, i) => ({
       // BGG has no stable id for a non-user player, only the name typed in —
@@ -167,6 +178,81 @@ function normaliseBggPlays(raw, { playedOnInstant, minDay = null, now = new Date
     }
   }
   return plays;
+}
+
+// The names Myludo gives the exporting user in its plays export — localized to
+// the Myludo interface language („Ich" observed in a German one, #1759). Such a
+// player is marked `me`, so suggestPeople offers the account's own seat. Kept
+// short on purpose: a false hit only pre-selects a choice the user can change.
+const MYLUDO_SELF_NAMES = ['moi', 'ich', 'me', 'yo', 'io', 'ik', 'eu'];
+// Myludo's yes/no flags are capitalised strings („Oui"/„Non"), unlike the
+// shelf export's lowercase ones — so compare folded.
+const myludoYes = (v) => v === true || importFold(v) === 'oui';
+
+// A Myludo plays export (JSON) → normalised plays plus location names. The
+// file is one top-level ARRAY, one object per play, keys in French: `ID` (the
+// GAME's Myludo id — not a play id, not a BGG id), `Titre`, `Date` (a day only),
+// `Lieu`, `Joueurs[{ Nom, Score, Victoire }]`, `Incomplète`, `Coop`,
+// `Coop Victoire`. Players have no ids, so the folded name is the key, as for a
+// BGG play. Throws `not_myludo` for anything that is not an array of plays —
+// including a Myludo SHELF export, which is an array too but whose rows carry
+// no `Date`. An empty array is a valid export with nothing in it.
+function parseMyludoPlays(json, { playedOnInstant, minDay = null, now = new Date() }) {
+  const data = typeof json === 'string' ? JSON.parse(json) : json;
+  const rows = Array.isArray(data) ? data.filter((r) => r && typeof r === 'object' && !Array.isArray(r)) : null;
+  if (!rows || (data.length && !rows.some((r) => 'Titre' in r && 'Date' in r))) {
+    throw new Error('not_myludo');
+  }
+  const plays = [];
+  const seen = new Map(); // base source id -> how often it occurred so far
+  for (const row of rows) {
+    const title = typeof row.Titre === 'string' || typeof row.Titre === 'number' ? String(row.Titre).trim() : '';
+    const day = typeof row.Date === 'string' ? row.Date.trim().slice(0, 10) : '';
+    if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
+    if (!importDayKeyInRange(day, { minDay, now })) continue;
+    const playedOn = playedOnInstant(day, now);
+    if (!playedOn) continue;
+    const coop = myludoYes(row.Coop);
+    const players = [];
+    for (const [i, p] of (Array.isArray(row.Joueurs) ? row.Joueurs : []).entries()) {
+      if (!p || typeof p !== 'object') continue;
+      const name = String(p.Nom || '').trim();
+      const key = importKey('myl', importFold(name) || `#${i}`);
+      if (players.some((x) => x.key === key)) continue; // one seat per name
+      players.push({
+        key,
+        name: name || `#${i + 1}`,
+        win: p.Victoire === true || myludoYes(p.Victoire),
+        score: importScore(p.Score),
+        ...(MYLUDO_SELF_NAMES.includes(importFold(name)) ? { me: true } : {}),
+      });
+    }
+    const coopWon = coop && myludoYes(row['Coop Victoire']);
+    const coopLost = coop && !coopWon && players.length > 0;
+    // A co-op the table won with nobody flagged: everyone at it won.
+    if (coopWon && !players.some((p) => p.win)) players.forEach((p) => { p.win = true; });
+    // Several plays of one game on one day are possible, so the id is built
+    // from game, day and table, and a repeat within the file is numbered. Stable
+    // across re-exports, which is what duplicateState's exact match needs.
+    const base = `${row.ID !== undefined ? row.ID : importFold(title)}@${day}@${players.map((p) => p.key.slice(4)).sort().join(',')}`;
+    const n = (seen.get(base) || 0) + 1;
+    seen.set(base, n);
+    const location = typeof row.Lieu === 'string' ? row.Lieu.trim() : '';
+    plays.push({
+      source: 'myludo',
+      sourceId: (n > 1 ? `${base}#${n}` : base).slice(-IMPORT_KEY_MAX),
+      playedOn,
+      dateOnly: true,
+      dayKey: day,
+      incomplete: myludoYes(row['Incomplète']),
+      location,
+      game: { key: importKey('title', importFold(title)), bggId: null, title, coop },
+      players: coopLost ? players.map((p) => ({ ...p, win: false })) : players,
+      ...(coopLost ? { ending: 'lost' } : {}),
+    });
+  }
+  const locations = [...new Set(plays.map((p) => p.location).filter(Boolean))].sort();
+  return { plays, locations };
 }
 
 // Who each distinct source player is in this round, pre-selected: a member
@@ -314,9 +400,12 @@ if (typeof module !== 'undefined' && module.exports) {
     IMPORT_KEY_MAX,
     importScore,
     importDayInRange,
+    importDayKeyInRange,
     localStampToIso,
     parseBgStatsExport,
     normaliseBggPlays,
+    parseMyludoPlays,
+    MYLUDO_SELF_NAMES,
     suggestPeople,
     suggestGames,
     duplicateState,
