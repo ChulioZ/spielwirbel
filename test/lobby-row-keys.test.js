@@ -15,7 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf, declaredValue, mediaBlocks } = require('./support/css');
+const { rulesOf, declaredValue, mediaBlocks, topLevel } = require('./support/css');
 
 const ME = 'user-me';
 const roundFixture = () => ({
@@ -104,12 +104,17 @@ test('the list carries its count, read from who has voted', async (t) => {
 /* CSS: who SHOWS the count and the panel. The view renders both for every
    design; the designs that compose a count of their own leave this one hidden. */
 const read = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-const shows = (css, sel) => rulesOf(css).some(([s, body]) => s.trim() === sel && declaredValue(body, 'display') === 'block');
+/* Existence is looked up in topLevel(), never the whole sheet: rulesOf() sees
+   through @media, so a rule deleted from the top level would be answered by a
+   media-only one and the test would stay green
+   (.claude/rules/css-rule-lookup-answers-with-the-media-reset.md). The 860px
+   check below reads mediaBlocks() on purpose — there the block IS the subject. */
+const shows = (css, sel) => rulesOf(topLevel(css)).some(([s, body]) => s.trim() === sel && declaredValue(body, 'display') === 'block');
 const K = ':root[data-design="klassisch"]';
 
 test('the count is hidden by default and shown by Klassisch, Der Tisch and Ocean', () => {
   const base = read('public/styles.css');
-  assert.ok(rulesOf(base).some(([s, body]) => s.split(',').map((x) => x.trim()).includes('.live-vote__count')
+  assert.ok(rulesOf(topLevel(base)).some(([s, body]) => s.split(',').map((x) => x.trim()).includes('.live-vote__count')
     && declaredValue(body, 'display') === 'none'), 'hidden unless a design shows it');
   assert.ok(shows(base, `${K} .live-vote__count`), 'Klassisch shows it');
   assert.ok(shows(read('public/css/designs/tisch.css'), ':root[data-design="tisch"][data-scheme="dark"] .live-vote__count'), 'Der Tisch shows it');
