@@ -373,3 +373,13 @@ test('the results screen adds the edition under Das Programmheft and nowhere els
     assert.ok(!(key in classic), `Klassisch's model carries no ${key}`);
   }
 });
+
+test('period spec: the hours played (#1772) are a row after the two games', () => {
+  const dom = boot();
+  try {
+    const s = spec(dom, 'period', { ...PERIOD, timePlayed: '12 Std.', timedNote: '' });
+    assert.deepEqual(s.rows.map((r) => r.title), ['Nordlichter', 'Kartographen', '12 Std.']);
+    assert.equal(s.rows[2].label, dom.run("t('periodRecap.label.timePlayed')"));
+    assert.equal(s.rows[2].score, '');
+  } finally { dom.close(); }
+});

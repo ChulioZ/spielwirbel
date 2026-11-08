@@ -317,6 +317,7 @@ I18N.nl = {
   'pokale.streak': 'Reeks overwinningen',
   'pokale.streakN': '{n} keer op rij gewonnen',
   'pokale.dusty': 'Staat stof te vangen',
+  'pokale.longest': 'Langste sessie',
   'pokale.dustyAt': 'laatst gespeeld in {when}',
   'pokale.dustyNever': 'nog nooit gespeeld',
 
@@ -353,6 +354,10 @@ I18N.nl = {
   'periodRecap.thin': 'In deze periode is er niets gespeeld — alleen de kast veranderde.',
   'periodRecap.label.sessions': 'Sessies',
   'periodRecap.label.gamesPlayed': 'Gespeelde spellen',
+  'periodRecap.label.timePlayed': 'Speeltijd',
+  'periodRecap.hoursValue': '{h} uur',
+  'periodRecap.hoursPlayed': '{time} gespeeld',
+  'periodRecap.timedPartial': 'uit {n} van {total} sessies',
   'periodRecap.label.added': 'toegevoegd',
   'periodRecap.label.retired': 'opzijgelegd',
   'periodRecap.label.completed': 'uitgespeeld',

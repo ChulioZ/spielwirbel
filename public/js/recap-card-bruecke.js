@@ -115,6 +115,15 @@ function brueckeCardSpec(model) {
       accent: true,
     });
   }
+  // Hours played (#1772) ahead of the shelf: a figure about the evenings
+  // outranks one about the boxes when the four slots run out.
+  if (model.timePlayed) {
+    figures.push({
+      value: model.timePlayed,
+      label: [t('periodRecap.label.timePlayed'), model.timedNote].filter(Boolean).join(' · '),
+      accent: false,
+    });
+  }
   blocks.shelf.forEach((s) => figures.push({ value: `${s.plus ? '+' : ''}${s.n}`, label: s.label, accent: true }));
 
   // The bars: a year's twelve months (periodMonths), each labelled with its

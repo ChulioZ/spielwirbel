@@ -319,6 +319,7 @@ I18N.pt = {
   'pokale.streak': 'Sequência de vitórias',
   'pokale.streakN': '{n} vitórias seguidas',
   'pokale.dusty': 'Juntando poeira',
+  'pokale.longest': 'Sessão mais longa',
   'pokale.dustyAt': 'jogado por último em {when}',
   'pokale.dustyNever': 'nunca jogado',
 
@@ -355,6 +356,10 @@ I18N.pt = {
   'periodRecap.thin': 'Nada foi jogado neste período — só a estante mudou.',
   'periodRecap.label.sessions': 'Sessões',
   'periodRecap.label.gamesPlayed': 'Jogos jogados',
+  'periodRecap.label.timePlayed': 'Tempo de jogo',
+  'periodRecap.hoursValue': '{h} h',
+  'periodRecap.hoursPlayed': '{time} de jogo',
+  'periodRecap.timedPartial': 'de {n} de {total} sessões',
   'periodRecap.label.added': 'adicionados',
   'periodRecap.label.retired': 'aposentados',
   'periodRecap.label.completed': 'concluídos',

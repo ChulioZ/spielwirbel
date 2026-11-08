@@ -312,6 +312,7 @@ I18N.en = {
   'pokale.streak': 'Winning streak',
   'pokale.streakN': '{n} wins in a row',
   'pokale.dusty': 'Gathering dust',
+  'pokale.longest': 'Longest session',
   'pokale.dustyAt': 'last played in {when}',
   'pokale.dustyNever': 'never played yet',
 
@@ -349,6 +350,10 @@ I18N.en = {
   'periodRecap.thin': 'Nothing was played in this period — only the shelf changed.',
   'periodRecap.label.sessions': 'Sessions',
   'periodRecap.label.gamesPlayed': 'Games played',
+  'periodRecap.label.timePlayed': 'Time played',
+  'periodRecap.hoursValue': '{h} h',
+  'periodRecap.hoursPlayed': '{time} played',
+  'periodRecap.timedPartial': 'from {n} of {total} sessions',
   'periodRecap.label.added': 'added',
   'periodRecap.label.retired': 'retired',
   'periodRecap.label.completed': 'completed',

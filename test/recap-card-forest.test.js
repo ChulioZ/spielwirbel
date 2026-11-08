@@ -346,3 +346,12 @@ test('the results screen adds the long date and its fact line under Forest, and 
     ['bringers', 'cancelled', 'day', 'ending', 'finished', 'people', 'playedTitle', 'points', 'roundName', 'rows', 'when', 'winnerNames'],
     'Klassisch’s share model carries only what every card reads');
 });
+
+test('period spec: the hours played (#1772) are a line after the two games', () => {
+  const dom = boot();
+  try {
+    const s = spec(dom, 'period', { ...PERIOD, timePlayed: '12 Std.', timedNote: 'aus 5 von 8 Sessions' });
+    assert.deepEqual(s.lines.map((l) => [l.title, l.sub]),
+      [['Nordlichter', '5 Sessions'], ['Kartographen', '4,6'], ['12 Std.', 'aus 5 von 8 Sessions']]);
+  } finally { dom.close(); }
+});

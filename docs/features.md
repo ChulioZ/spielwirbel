@@ -474,7 +474,9 @@ What the app does, in detail. For a short overview see the
     and renames stay rows of their own. The „Regal-Änderungen" filter lists the
     same shelf changes. Beside the timeline on a desktop (above it on a phone, where it
     starts as one line in some designs), a **period recap** sums up one calendar month or year — sessions played,
-    distinct games, the period's most-played and best-rated game, and what was
+    distinct games, the hours played (summed over the sessions with a recorded
+    duration, #1772, saying „aus 5 von 8 Sessions" when not all have one), the
+    period's most-played and best-rated game, and what was
     added, retired or completed — over a picker offering only periods that
     actually have something in them. Any of them can be shared as an image: the
     card is drawn on the device and handed to the share sheet (or saved), so
@@ -482,8 +484,9 @@ What the app does, in detail. For a short overview see the
   - **Pokale** (trophies) – a winners' podium (three pedestals, `[2 | 1 | 3]`
     with the crown in the middle; members tied on a place stand side by side on
     one step, and nobody is capped off it) plus stat
-    tiles: most played, best rated, current winning streak, and the
-    "Staubfänger" — the game gathering dust the longest. Below the standings,
+    tiles: most played, best rated, current winning streak, the „Längste
+    Session" (the round's longest timed session, once one has a duration,
+    #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
     most, and every member's own favourite. Pokale is the all-time record; the
@@ -823,8 +826,9 @@ What the app does, in detail. For a short overview see the
   game played before or long after playing it. „Mehr" → „Spieldauer ändern" /
   „eintragen" corrects or clears the figure on any played session, and „Session
   nachtragen" asks for it as an optional field. The minutes travel in the
-  round export (`sessions.csv`, `duration_min`) and the BG Stats push. Out:
-  pausing, laps, lock-screen timers.
+  round export (`sessions.csv`, `duration_min`) and the BG Stats push, and feed
+  the Chronik's period recap (hours played) and Pokale's „Längste Session"
+  (#1772). Out: pausing, laps, lock-screen timers.
 - **Punkte eintragen** (enter points, #1630) – a played session can record each
   player's score: one field per person, or per team when the session had teams
   (a team's score never becomes a member's personal best). Whole numbers,
