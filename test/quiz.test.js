@@ -25,6 +25,21 @@ const quiz = require('../lib/quiz');
 const corpusCache = require('../lib/corpus-cache');
 const { weekKey } = require('../lib/calendar-periods');
 
+/* N calendar weeks before today's BERLIN date, at noon UTC (13:00/14:00 in
+   Berlin, so always on that same date). Never `Date.now() - n * 7 * 86400000`:
+   across a DST switch that instant is an hour off a whole number of days, and
+   run late on a Sunday it lands on the following Monday, i.e. in the NEXT ISO
+   week. The retention test went red that way on 2026-11-08 at 23:31 CET (nine
+   weeks back crossed the October switch and landed in the cutoff week itself).
+   lib/calendar-periods.js steps on calendar dates for the same reason; the
+   fixtures have to as well (.claude/rules/server-computed-calendar-periods.md §3).
+   Negative n is a week ahead. */
+const berlinDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit', day: '2-digit' });
+const weeksAgo = (n) => {
+  const [y, m, d] = berlinDate.format(new Date()).split('-').map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 7 * n, 12));
+};
+
 const PASSWORD = 'correct horse battery';
 const handle = (email) => email.split('@')[0].replace(/[^a-zA-Z0-9_-]/g, '-');
 const auth = (token) => ({ Authorization: `Bearer ${token}` });
@@ -200,7 +215,7 @@ test('opening a round tells past players — once, in the inbox, and never by ma
   const player = await account('player');
   const newcomer = await account('newcomer');
   // Last week's round, played by one account.
-  const lastWeek = new Date(Date.now() - 7 * 86400000);
+  const lastWeek = weeksAgo(1);
   await quiz.ensureRound(lastWeek);
   await repo.recordQuizAnswer(player.user.id, weekKey(lastWeek.toISOString()), 0, 5, { choice: 0, correct: false });
   // A suspended past player is skipped: withTenant refuses it the quiz anyway.
@@ -227,7 +242,7 @@ test('opening a round tells past players — once, in the inbox, and never by ma
   assert.equal(items(player.user.id)[0].payload.week, weekKey());
 
   // Next week's round replaces the item rather than stacking a second one.
-  const nextWeek = new Date(Date.now() + 7 * 86400000);
+  const nextWeek = weeksAgo(-1);
   await quiz.openQuizRound({ now: nextWeek });
   assert.equal(items(player.user.id).length, 1);
   assert.equal(items(player.user.id)[0].payload.week, weekKey(nextWeek.toISOString()));
@@ -237,7 +252,7 @@ test('one recipient failing does not cost the others their announcement', async 
   await seedCorpus();
   const a = await account('fails');
   const b = await account('fine');
-  const lastWeek = new Date(Date.now() - 7 * 86400000);
+  const lastWeek = weeksAgo(1);
   await quiz.ensureRound(lastWeek);
   for (const who of [a, b]) await repo.recordQuizAnswer(who.user.id, weekKey(lastWeek.toISOString()), 0, 5, { choice: 0, correct: true });
   const put = repo.putQuizRoundItem;
@@ -285,8 +300,8 @@ test('the leaderboard is the caller and confirmed friends — nobody else, no de
 
 test('the retention sweep: answers after 8 weeks, rounds after a year — with the quiz switched off', async () => {
   await seedCorpus();
-  const old = new Date(Date.now() - 10 * 7 * 86400000);
-  const ancient = new Date(Date.now() - 53 * 7 * 86400000);
+  const old = weeksAgo(10);
+  const ancient = weeksAgo(53);
   await quiz.ensureRound(ancient);
   await quiz.ensureRound(old);
   await quiz.ensureRound();
@@ -301,7 +316,7 @@ test('the retention sweep: answers after 8 weeks, rounds after a year — with t
 
 test('the retention never exceeds the eight weeks the privacy policy promises', async () => {
   await seedCorpus();
-  const old = new Date(Date.now() - 9 * 7 * 86400000);
+  const old = weeksAgo(9);
   await quiz.ensureRound(old);
   await quiz.ensureRound();
   const a = await account('nine');
@@ -321,7 +336,7 @@ test('the public archive: percentages only — the running week without its key,
   assert.equal((await request(app).get('/api/quiz/archive')).status, 404, 'off: nothing published');
   process.env.QUIZ_ENABLED = 'true';
 
-  const lastWeek = new Date(Date.now() - 7 * 86400000);
+  const lastWeek = weeksAgo(1);
   const prev = await quiz.ensureRound(lastWeek);
   const cur = await quiz.ensureRound();
   const a = await account('arch-a');
