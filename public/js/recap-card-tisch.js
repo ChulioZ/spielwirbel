@@ -137,6 +137,11 @@ function tischCardSpec(kind, model) {
     if (model.rated && model.rated.length) {
       rows.push({ rank: '', title: `${model.ratedLabel || t('pokale.bestRated')} · ${model.rated.join(' · ')}`, pill: model.ratedScore, stop: null, gold: true });
     }
+    // Hours played (#1772): the same label, figure and coverage note the
+    // classic card's row carries, as one plain row.
+    if (model.timePlayed) {
+      rows.push({ rank: '', title: [t('periodRecap.label.timePlayed'), model.timePlayed, model.timedNote].filter(Boolean).join(' · '), pill: null, stop: null, gold: false });
+    }
     const shelf = blocks.shelf;
     if (shelf.length) {
       rows.push({ rank: '', title: `${blocks.shelfLabel} · ${shelf.map((s) => `${s.plus ? '+' : ''}${s.n} ${s.label}`).join(' · ')}`, pill: null, stop: null, gold: false });

@@ -80,7 +80,14 @@ function startDirectSession(round, game, opts = {}) {
   const dateField = playedOnField(opts.dayKey);
   sheet.querySelector('#playedOnMount').replaceWith(dateField);
   const logs = () => isPastDay(dateField.value()) || !!dateField.time();
+  // How long it took (#1770) — asked only while LOGGING: an evening played now
+  // is timed from the moment the sheet creates it. Attached and detached rather
+  // than `hidden`, since `.field` carries a display rule of its own
+  // (.claude/rules/hidden-attribute-vs-display-rule.md).
+  const durField = durationField();
   const relabel = () => {
+    if (logs() && !durField.isConnected) dateField.after(durField);
+    else if (!logs() && durField.isConnected) durField.remove();
     sheet.querySelector('#startDirect').innerHTML = logs()
       ? `<i class="ti ti-calendar-plus" aria-hidden="true"></i> ${esc(t('directPlay.log'))}`
       : `<i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}`;
@@ -113,6 +120,8 @@ function startDirectSession(round, game, opts = {}) {
     if (joining.size === 0) return toast(t('startSession.toast.noMembers'));
     const picked = readPlayedOn(dateField);
     if (!picked) return;
+    const minutes = logs() ? durField.read() : { value: null };
+    if (minutes.error) return durationInvalidToast();
     // Only a PAST day or an entered time is sent: today with no time stays the
     // ordinary direct play, stamped now by the server, with its feed line and
     // its running results screen. `dateOnly` says whether the instant is the
@@ -127,6 +136,7 @@ function startDirectSession(round, game, opts = {}) {
         guests: guestList.guests, // names only; the server mints the ids (#458)
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         ...(playedOn ? { playedOn, dateOnly: !picked.time } : {}),
+        ...(playedOn && minutes.value != null ? { durationMinutes: minutes.value } : {}),
       });
       // A logged evening lands with the winner picker OPEN: the one question
       // left about it is who won.

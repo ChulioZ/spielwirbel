@@ -50,7 +50,7 @@ function roundFixture() {
         teams: [{ id: 'tm1', personIds: ['m1', 'gu1'] }],
         gameIds: ['g1', 'g2'], chosenGameId: 'g1', finished: true, winnerIds: ['m1', 'gu1'],
         votes: { m1: { g1: { rating: 5 }, g2: { rating: 2 } }, m2: { g1: { rating: 4 } }, gu1: { g1: { rating: 3 } } },
-        scores: { m1: 42, m2: -3, gu1: 40 } },
+        scores: { m1: 42, m2: -3, gu1: 40 }, durationMinutes: 110 },
       { id: 's2', createdAt: '2026-08-09T18:00:00.000Z', memberIds: ['m1', 'm4'], dateOnly: true,
         events: [{ type: 'logged' }], gameIds: ['g1'], chosenGameId: 'g1', finished: true,
         winnerIds: [], ending: 'noWinner', votes: {} },
@@ -121,6 +121,13 @@ test('games.csv states the Regal\'s own score and play count for every game (#17
   }
   assert.ok(expected.some((e) => e.score !== ''), 'the fixture must actually score something');
   assert.ok(expected.some((e) => e.plays !== '0'), 'and actually play something');
+});
+
+test('sessions.csv carries the play\'s minutes, empty where none were recorded (#1770)', (t) => {
+  const { dom } = boot(t);
+  const rows = Object.fromEntries(parseCsv(tables(dom)['sessions.csv']).map((s) => [s.session_id, s]));
+  assert.equal(rows.s1.duration_min, '110');
+  assert.equal(rows.s2.duration_min, '');
 });
 
 test('games.csv labels every state and reads playtime through the override (#1702)', (t) => {

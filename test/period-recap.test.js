@@ -11,6 +11,7 @@ const { sessionPeople } = require('../public/js/session-people');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
 const { scoreRatings, eveningEvidence, shelfScore, playCounts } = require('../public/js/vote-score');
 const { isActiveGame } = require('../public/js/draw-pool');
+const { sessionsPlayTime } = require('../public/js/session-duration');
 
 const deps = {
   peopleOf: sessionPeople, scoreOf: scoreRatings,
@@ -18,6 +19,7 @@ const deps = {
   // is exactly the drift this file's injection discipline exists to prevent.
   shelfOf: shelfScore, eveningsOf: eveningEvidence, playsOf: playCounts,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
+  playTimeOf: sessionsPlayTime,
 };
 
 // ---- fixtures -------------------------------------------------------------
@@ -422,4 +424,18 @@ test('a period whose only rated games are archived crowns nothing', () => {
     sessions: [session(at(2026, 7, 2), { m1: { g2: 5 }, m2: { g2: 5 }, m3: { g2: 5 } }, { chosen: 'g2' })],
   });
   assert.equal(periodRecap(r, [], month('2026-07'), deps).topRated, null);
+});
+
+// ---- hours played (#1772) ---------------------------------------------------
+
+test('a period counts the played minutes of ITS sessions only, with the coverage', () => {
+  const r = round({ sessions: [
+    { ...session(at(2026, 7, 3), {}, { chosen: 'g1' }), durationMinutes: 90 },
+    { ...session(at(2026, 7, 9), {}, { chosen: 'g1' }), durationMinutes: 30 },
+    session(at(2026, 7, 20), {}, { chosen: 'g1' }),
+    // August's evening must not leak into July.
+    { ...session(at(2026, 8, 2), {}, { chosen: 'g1' }), durationMinutes: 600 },
+  ] });
+  assert.deepEqual(periodRecap(r, [], month('2026-07'), deps).time, { minutes: 120, timed: 2, played: 3 });
+  assert.deepEqual(periodRecap(r, [], year('2026'), deps).time, { minutes: 720, timed: 3, played: 4 });
 });

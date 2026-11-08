@@ -1,6 +1,6 @@
 'use strict';
 
-/* „Partien importieren" (#1665): bring a play history from BG Stats or BGG
+/* „Partien importieren" (#1665): bring a play history from BG Stats, Myludo (#1759) or BGG
    into the round as finished sessions. Reached from the Chronik, beside
    „Session nachtragen", in every design (one renderer serves them all).
 
@@ -66,15 +66,25 @@ async function showPlayImport(round) {
   function renderSource() {
     body.replaceChildren(h(`<p class="muted">${esc(t('playImport.intro'))}</p>`));
     const file = h('<input type="file" accept=".json,application/json" hidden />');
-    file.addEventListener('change', () => { if (file.files[0]) loadFile(file.files[0]); });
+    // One input serves both file sources; the button that opened it says which.
+    let fileSource = 'bgstats';
+    file.addEventListener('change', () => { if (file.files[0]) loadFile(file.files[0], fileSource); });
     const opts = h('<div class="play-import__sources"></div>');
     const bgs = h(`<button type="button" class="ds-row play-import__source">
         <span class="ds-row__main"><i class="ti ti-file-upload" aria-hidden="true"></i>
           <span><strong>${esc(t('playImport.source.bgstats'))}</strong><span class="muted">${esc(t('playImport.source.bgstatsHint'))}</span></span>
         </span>
       </button>`);
-    bgs.addEventListener('click', () => file.click());
-    opts.append(bgs, file);
+    bgs.addEventListener('click', () => { fileSource = 'bgstats'; file.click(); });
+    // Myludo (#1759): its plays export, JSON only — the CSV/XLSX pack players
+    // and scores into one string.
+    const myl = h(`<button type="button" class="ds-row play-import__source">
+        <span class="ds-row__main"><i class="ti ti-file-upload" aria-hidden="true"></i>
+          <span><strong>${esc(t('playImport.source.myludo'))}</strong><span class="muted">${esc(t('playImport.source.myludoHint'))}</span></span>
+        </span>
+      </button>`);
+    myl.addEventListener('click', () => { fileSource = 'myludo'; file.click(); });
+    opts.append(bgs, myl, file);
     // BGG plays hang off the ACCOUNT's linked handle, so accounts mode only;
     // the BG Stats file works in every mode.
     if (accountsActive()) {
@@ -89,20 +99,24 @@ async function showPlayImport(round) {
     body.appendChild(opts);
   }
 
-  async function loadFile(f) {
+  async function loadFile(f, source) {
     body.replaceChildren(h(`<p class="muted">${esc(t('playImport.loading'))}</p>`));
     let parsed;
     try {
-      parsed = parseBgStatsExport(await f.text(), { minDay: PLAYED_ON_MIN });
+      const text = await f.text();
+      parsed = source === 'myludo'
+        ? parseMyludoPlays(text, { playedOnInstant, minDay: PLAYED_ON_MIN })
+        : parseBgStatsExport(text, { minDay: PLAYED_ON_MIN });
     } catch (err) {
       // A wrong file is the user's to fix and says so; anything else is ours.
-      const wrongFile = err && (err.message === 'not_bgstats' || err.name === 'SyntaxError');
+      const wrongFile = err && (err.message === 'not_bgstats' || err.message === 'not_myludo' || err.name === 'SyntaxError');
       if (!wrongFile) reportClientError('play_import_parse', err);
-      body.replaceChildren(msg(t(wrongFile ? 'playImport.error.notBgStats' : 'playImport.error.read'), null, 'ti-file-alert'));
+      const wrongKey = source === 'myludo' ? 'playImport.error.notMyludo' : 'playImport.error.notBgStats';
+      body.replaceChildren(msg(t(wrongFile ? wrongKey : 'playImport.error.read'), null, 'ti-file-alert'));
       body.appendChild(actions(button(t('playImport.back'), renderSource)));
       return;
     }
-    start('bgstats', parsed.plays, parsed.locations);
+    start(source, parsed.plays, parsed.locations);
   }
 
   async function loadBgg() {

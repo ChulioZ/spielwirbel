@@ -77,9 +77,11 @@ function resultRenderAction(rs, { gameId, game, actionEl, titleId }) {
     const btn = h(`<button class="btn play-btn" aria-describedby="${titleId}">${iconText('ti-player-play', t('result.play'))}</button>`);
     btn.addEventListener('click', async () => {
       try {
-        await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
+        const chosen = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
         rs.chosenId = gameId;
         session.chosenGameId = gameId;
+        // The server starts the play's clock with the choice (#1770).
+        syncPlayClock(session, chosen);
         rs.freshChoice = true;
         resultUpdateChosen(rs);
         // The row lifts as it hands its game to the table (#1058). Added
@@ -113,6 +115,7 @@ function resultRenderAction(rs, { gameId, game, actionEl, titleId }) {
         await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId: null });
         rs.chosenId = null;
         session.chosenGameId = null;
+        syncPlayClock(session, null);
         resultUpdateChosen(rs);
         toast(t('result.toast.choiceCleared'));
       } catch (e) { toast(e.message, { tone: 'error' }); }
@@ -225,6 +228,11 @@ function resultRenderFoot(rs) {
   // A correction, not a loss — so `edit`, which sorts first (#1616, #1630).
   if (rs.finished && rs.chosenId) {
     more.push({ icon: 'ti-target', label: sessionPointsLabel(session), kind: 'edit', run: () => resultEditPoints(rs) });
+  }
+  if (rs.finished && rs.chosenId) {
+    // The play's minutes (#1770): the timer's reading, or one typed in.
+    const label = isValidDuration(session.durationMinutes) ? 'result.durationChange' : 'result.durationAdd';
+    more.push({ icon: 'ti-clock', label: t(label), kind: 'edit', run: () => showSessionDurationSheet(round, session, rs.reopen) });
   }
   if (rs.finished) {
     more.push({ icon: 'ti-calendar-event', label: t('result.changeDate'), kind: 'edit', run: () => resultChangeDate(rs) });

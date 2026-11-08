@@ -98,10 +98,17 @@ test('ratings do not travel: noPoints, and no score or rank on any player', () =
   }
 });
 
-test('durationMin and comments are omitted — we measure neither', () => {
+test('an untimed play sends no durationMin, and comments never travel', () => {
+  // The fixture's finishedAt − createdAt is 136 minutes — and must NOT be sent:
+  // it spans the vote as well as the play.
   const play = bgStatsPlay(model());
   assert.equal('durationMin' in play, false);
   assert.equal('comments' in play, false);
+});
+
+test('a play with recorded minutes sends them as durationMin (#1770)', () => {
+  const play = bgStatsPlay(model({ session: { ...session, durationMinutes: 95 } }));
+  assert.equal(play.durationMin, 95);
 });
 
 test('the bggId rides along only for a BGG-linked game, as a number', () => {

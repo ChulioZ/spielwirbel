@@ -79,7 +79,11 @@ What the app does, in detail. For a short overview see the
   variant, a slow table — or set one for a game BGG knows nothing about; the
   duration filter, the draw, both voting screens and the Regal then all use the
   round's number, the page notes „eigene Angabe · BGG: …" beside it, and one tap
-  goes back to BGG's value. A later BGG refresh never overwrites the correction. BGG's **community rating** is shown on the detail page
+  goes back to BGG's value. A later BGG refresh never overwrites the correction. Once a game has
+  **two played sessions with a recorded duration** (#1770), its page adds the
+  round's own typical length under the box figure — „Bei euch: ~110 Min.", the
+  median rounded to 5 minutes, computed from the sessions (so deleting one or
+  clearing its minutes corrects it). BGG's **community rating** is shown on the detail page
   only, and never on either voting screen — a score next to a ballot anchors the
   vote. BGG's *rank* and *geek rating* are not imported at all, and neither is
   the game's **description** — publisher blurbs turned out to put readers off
@@ -470,7 +474,9 @@ What the app does, in detail. For a short overview see the
     and renames stay rows of their own. The „Regal-Änderungen" filter lists the
     same shelf changes. Beside the timeline on a desktop (above it on a phone, where it
     starts as one line in some designs), a **period recap** sums up one calendar month or year — sessions played,
-    distinct games, the period's most-played and best-rated game, and what was
+    distinct games, the hours played (summed over the sessions with a recorded
+    duration, #1772, saying „aus 5 von 8 Sessions" when not all have one), the
+    period's most-played and best-rated game, and what was
     added, retired or completed — over a picker offering only periods that
     actually have something in them. Any of them can be shared as an image: the
     card is drawn on the device and handed to the share sheet (or saved), so
@@ -478,8 +484,9 @@ What the app does, in detail. For a short overview see the
   - **Pokale** (trophies) – a winners' podium (three pedestals, `[2 | 1 | 3]`
     with the crown in the middle; members tied on a place stand side by side on
     one step, and nobody is capped off it) plus stat
-    tiles: most played, best rated, current winning streak, and the
-    "Staubfänger" — the game gathering dust the longest. Below the standings,
+    tiles: most played, best rated, current winning streak, the „Längste
+    Session" (the round's longest timed session, once one has a duration,
+    #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
     most, and every member's own favourite. Pokale is the all-time record; the
@@ -735,8 +742,10 @@ What the app does, in detail. For a short overview see the
   group that votes days ahead files the play under the day it was played;
   correcting a winner afterwards does not move it again.
 - **Partien importieren** (import plays, #1665) – beside „Session nachtragen",
-  the Chronik brings in a whole play history: from a **BG Stats** export file
-  (read in the browser, never uploaded) or, with a BGG name linked to the
+  the Chronik brings in a whole play history: from a **BG Stats** export file,
+  from a **Myludo** plays export (JSON, #1759 — date-only, players matched by
+  name, games by title; both files read in the browser, never uploaded) or,
+  with a BGG name linked to the
   account, from the plays logged on **BoardGameGeek**. A preview filters by
   date range, location and „only plays with someone from this round"; each
   source player is matched once to a member, a new member, a guest or nobody
@@ -808,6 +817,18 @@ What the app does, in detail. For a short overview see the
   tables, and each table links back. The proposals are computed once, on the
   server, and never move afterwards, so everyone in the room is looking at the
   same split.
+- **Spieldauer** (playing time, #1770) – a session times its game: the clock
+  starts when the game is chosen (or when „Jetzt spielen" starts it) and the
+  results band reads „Läuft seit 42 Min." while it is on the table, read off the
+  stored start, so a reload or a second device shows the same figure. Marking
+  it played records the elapsed minutes („Gespielt: 110 Min."); a reading under
+  5 minutes or over a day records nothing, since that is a group that marked the
+  game played before or long after playing it. „Mehr" → „Spieldauer ändern" /
+  „eintragen" corrects or clears the figure on any played session, and „Session
+  nachtragen" asks for it as an optional field. The minutes travel in the
+  round export (`sessions.csv`, `duration_min`) and the BG Stats push, and feed
+  the Chronik's period recap (hours played) and Pokale's „Längste Session"
+  (#1772). Out: pausing, laps, lock-screen timers.
 - **Punkte eintragen** (enter points, #1630) – a played session can record each
   player's score: one field per person, or per team when the session had teams
   (a team's score never becomes a member's personal best). Whole numbers,

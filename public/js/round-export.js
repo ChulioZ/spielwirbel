@@ -141,6 +141,8 @@ function roundExportTables(round) {
       list(sessionTeams(round, s).map((tm) => tm.people.map((p) => p.name).join(' + '))),
       s.parentSessionId || '',
       list(s.childSessionIds || []),
+      // The play's minutes (#1770), empty when nobody timed or entered them.
+      isValidDuration(s.durationMinutes) ? s.durationMinutes : '',
     ]);
     // `sessionRaters`, as `rawGameStats` iterates: a person removed after
     // rating still counts for the shelf, so their votes belong in the table
@@ -164,7 +166,7 @@ function roundExportTables(round) {
     'games.csv': gamesCsv,
     'sessions.csv': exportCsv(
       ['session_id', 'date', 'time', 'outcome', 'ending', 'game_id', 'game', 'winners',
-        'members', 'guests', 'teams', 'parent_session_id', 'split_into'],
+        'members', 'guests', 'teams', 'parent_session_id', 'split_into', 'duration_min'],
       sessionRows),
     'votes.csv': exportCsv(
       ['session_id', 'date', 'person_id', 'person', 'guest', 'game_id', 'game', 'rating'], voteRows),

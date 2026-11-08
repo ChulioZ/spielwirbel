@@ -2302,6 +2302,46 @@ module.exports = function repoContract(repo) {
     assert.equal(plainDone.finishedAt, played);
   });
 
+  // A session's playing time (#1770). Choosing a game stamps the timer and
+  // clearing the choice drops it; the finish TRANSITION records the elapsed
+  // minutes (never over a figure already there); setSessionDuration sets and
+  // clears to absence, and writes nothing on an unfinished session.
+  test('the play timer: choice stamps it, finish records it, setSessionDuration sets and clears', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const session = await repo.createSession(T, round.id, {
+      createdAt: '2026-11-08T18:00:00.000Z', gameIds: [g.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions[0];
+    const chosen = await repo.setSessionChoice(T, round.id, session.id, g.id);
+    assert.equal(chosen.startedPlayingAt, chosen.chosenAt, 'the timer starts with the choice');
+    const cleared = await repo.setSessionChoice(T, round.id, session.id, null);
+    assert.equal('startedPlayingAt' in cleared, false, 'and is dropped with it');
+    await repo.setSessionChoice(T, round.id, session.id, g.id);
+
+    assert.equal((await repo.setSessionDuration(T, round.id, session.id, 50)).durationMinutes, undefined,
+      'an unfinished session takes no minutes');
+    const done = await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
+    assert.equal('durationMinutes' in done, false, 'a play under the floor records nothing');
+
+    // A start an hour back, written as the stored state a reload would read.
+    const timed = await repo.createSession(T, round.id, {
+      createdAt: 't', gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: 't',
+      startedPlayingAt: new Date(Date.now() - 61 * 60000).toISOString(),
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const finished = await repo.finishSession(T, round.id, timed.id, { finished: true, winnerIds: [] });
+    assert.equal(finished.durationMinutes, 61);
+    const tap = await repo.finishSession(T, round.id, timed.id, { finished: true, winnerIds: [] });
+    assert.equal(tap.durationMinutes, 61, 'a re-finish leaves it');
+
+    await repo.setSessionDuration(T, round.id, session.id, 95);
+    assert.equal((await read()).durationMinutes, 95);
+    await repo.setSessionDuration(T, round.id, session.id, null);
+    assert.equal('durationMinutes' in (await read()), false, 'null clears to absence');
+  });
+
   // A finished session's points (#1630). Absent-key parity both ways: an empty
   // object CLEARS the key rather than storing {}, un-finishing keeps the points,
   // and removing the played game takes them with its result. lowScoreWins on a
@@ -6166,6 +6206,20 @@ module.exports = function repoContract(repo) {
       const m = await repo.instanceMetrics();
       assert.equal(m.adoption.sessionsImportedBgg, mid.adoption.sessionsImportedBgg + 1);
       assert.equal(m.adoption.sessionsImportedBgStats, mid.adoption.sessionsImportedBgStats);
+      assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
+    });
+
+    await t.test('a Myludo import counts under its own source, and in the total (#1759)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `adm-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Myludo', members: ['Ann'] });
+      await repo.createSession(tn, r.id, {
+        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true,
+        importRef: { source: 'myludo', id: '1915@2025-03-07@ann' },
+      });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.sessionsImportedMyludo, mid.adoption.sessionsImportedMyludo + 1);
+      assert.equal(m.adoption.sessionsImportedBgg, mid.adoption.sessionsImportedBgg);
       assert.equal(m.adoption.sessionsImported, mid.adoption.sessionsImported + 1);
     });
 
