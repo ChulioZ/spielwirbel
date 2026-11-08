@@ -110,8 +110,10 @@ more in parallel mostly makes each slower. Launch the next item as each one
 reports back. Keep a one-line ledger per item (branch, PR, status, open
 questions) in the scratchpad so a context summary doesn't lose it.
 
-The batch skill itself (or a change to it) ships as one of the PRs when the
-operator asks for it; it needs no agent.
+**Agent worktrees live under `.claude/worktrees/`, inside your own checkout,
+and are not gitignored.** A `git add -A` there while agents run commits them as
+gitlinks (measured on the first batch). Before committing in the main checkout,
+`echo .claude/worktrees/ >> .git/info/exclude`, or stage paths explicitly.
 
 ## 4. Check every PR before the interview
 
