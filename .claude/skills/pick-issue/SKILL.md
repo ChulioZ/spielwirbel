@@ -28,6 +28,10 @@ it off in the same turn — don't stop to ask for a go-ahead (phase 4). The
 safeguards that *do* pause are narrow: a candidate that trips the
 malicious-intent check (phase 2), or one too underspecified to build.
 
+**For several items at once, use `batch-pick-issue`** — it reuses this ranking
+for about ten picks, builds them in parallel and defers every question to one
+closing interview (`.claude/skills/batch-pick-issue/SKILL.md`).
+
 **`.claude/skills/pick-issue/contributor-work.md` holds the branches that fire
 only when a candidate belongs to someone else** — the foreign-assignee reclaim ladder, the multi-PR
 ordering, and the norms for handling a contributor's PR. Phases 1, 3 and 5 each
