@@ -308,6 +308,11 @@ I18N.ko = {
   'recap.divisive': '의견이 가장 갈린 게임',
   'recap.favourites': '즐겨 찾는 게임',
   'recap.thin': '아직 그림을 그릴 만큼 평가가 모이지 않았어요 — 계속 플레이하다 보면 쌓여요.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': '누구의 최애가 테이블에 오르나요',
+  'recap.tasteShareNone': '최애 게임이 아직 테이블에 오르지 않았어요',
+  'recap.tasteShareOne': '최애 게임이 테이블에 한 번 올랐어요',
+  'recap.tasteShareMany': '최애 게임이 테이블에 {n}번 올랐어요',
 
   'periodRecap.title': '월과 연도',
   'periodRecap.lead': '월이나 연도를 골라 — 무엇을 플레이했는지 공유해 보세요.',
@@ -979,6 +984,10 @@ I18N.ko = {
   'member.bestGameNone': '아직 이긴 게임이 없어요',
   'member.favorite': '가장 좋아하는 게임',
   'member.favoriteNone': '아직 평가가 없어요',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': '최애 게임 중 아직 테이블에 오른 게임이 없어요',
+  'member.tasteShareOne': '최애 게임 중 하나가 테이블에 올랐어요',
+  'member.tasteShareMany': '최애 게임 중 {n}개가 테이블에 올랐어요',
   'member.ownedTitleOne': '{name}의 게임 {n}개',
   'member.ownedTitle': '{name}의 게임 {n}개',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

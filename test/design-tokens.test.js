@@ -76,7 +76,7 @@ test('the four reading steps never fall below the accessibility floor', () => {
    the assertion below, so a new literal cannot slip in beside them. */
 const GLYPH_LITERALS = [
   // avatar initials, sized to the circle
-  '.avatar', '.avatar--add', '.avatar-stack__more', '.recap-fav__who .avatar', '.result-people__person .avatar',
+  '.avatar', '.avatar--add', '.avatar-stack__more', '.recap-fav__who .avatar', '.taste-share__row .avatar', '.result-people__person .avatar',
   '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
   '.podium__avatar', '.podium__col--multi .podium__avatar',
   '.podium--single .podium__col--multi .podium__avatar',

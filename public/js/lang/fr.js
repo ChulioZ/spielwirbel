@@ -332,6 +332,11 @@ I18N.fr = {
   'recap.divisive': 'Le plus clivant',
   'recap.favourites': 'Favoris',
   'recap.thin': 'Pas encore assez de notes pour dresser un portrait — continuez à jouer, ça viendra.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Les favoris de qui arrivent sur la table',
+  'recap.tasteShareNone': 'Ses favoris ne sont pas encore arrivés sur la table',
+  'recap.tasteShareOne': 'Ses favoris sont arrivés une fois sur la table',
+  'recap.tasteShareMany': 'Ses favoris sont arrivés {n} fois sur la table',
 
   // Le bilan par période (#800) : un mois ou une année, partageable en image.
   'periodRecap.title': 'Mois et année',
@@ -1021,6 +1026,10 @@ I18N.fr = {
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Aucun des favoris n’est encore arrivé sur la table',
+  'member.tasteShareOne': 'Un des favoris est arrivé sur la table',
+  'member.tasteShareMany': '{n} des favoris sont arrivés sur la table',
   'member.ownedTitleOne': '{n} jeu de {name}',
   'member.ownedTitle': '{n} jeux de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

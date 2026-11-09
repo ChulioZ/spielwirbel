@@ -257,7 +257,7 @@ async function showMember(rid, mid) {
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : ratingMark(st.avgGiven)));
   // Under the figures: the earned Abzeichen (#1388, never the open ones), then the
   // personal bests (#1631, views-member-points.js). Each is null when empty.
-  [memberPointsPanel(round, member), memberCardBadges(round, member)].forEach((el) => el && figures.after(el));
+  [memberPointsPanel(round, member), memberCardBadges(round, member), memberTasteLine(round, mid)].forEach((el) => el && figures.after(el));
 
   const cards = card.querySelector('.member-card__games');
 
@@ -645,4 +645,20 @@ function bestGameSub(st) {
     pct: Math.round(st.bestScore * 100) + '%',
     n: st.bestPlays,
   });
+}
+
+/* „Von den Favoriten kamen 4 auf den Tisch" (#1776): how many DISTINCT
+   favourites of this member reached the table with them at it — the Pokale
+   Rückblick counts the evenings instead (taste-share.js has both). Same gates
+   as that list: the round's sixth played session, at least two favourites,
+   and an active member. Under „Einfacher Modus" it follows the Abzeichen on
+   this card, which hide with the trophies (#1646). */
+function memberTasteLine(round, mid) {
+  if (simpleHidden('trophies')) return null;
+  if (youngRoundPlayed(round, hubDeps()) < TASTE_SHARE_FROM_SESSIONS) return null;
+  const mine = tasteShare(round).find((e) => e.memberId === mid);
+  if (!mine || mine.favouriteIds.length < TASTE_SHARE_MIN_FAVOURITES) return null;
+  const n = mine.favouritesPlayed;
+  const text = n === 0 ? t('member.tasteShareNone') : tn(n, 'member.tasteShareOne', 'member.tasteShareMany');
+  return h(`<p class="member-taste">${esc(text)}</p>`);
 }

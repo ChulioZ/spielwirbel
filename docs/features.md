@@ -489,7 +489,14 @@ What the app does, in detail. For a short overview see the
     #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite. Pokale is the all-time record; the
+    most, and every member's own favourite. From the round's sixth played
+    session it also says **whose taste the table follows** (#1776): for each
+    member with at least two favourites (games their average rating draws as
+    the top face; a retired game is nobody's), how often one of them was played
+    with that member at the table, in words („Favoriten kamen 9× auf den
+    Tisch") — no percentages, no places. The member page carries the matching
+    line („Von den Favoriten kamen 4 auf den Tisch", distinct favourites), and
+    hides it with the Abzeichen under „Einfacher Modus". Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that

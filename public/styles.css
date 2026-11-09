@@ -10083,6 +10083,15 @@ kbd {
    the identity a `.pokale-card__icon` would otherwise. */
 .recap-fav__who { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
 .recap-fav__who .avatar { width: 26px; height: 26px; font-size: 11px; /* glyph, not type */ }
+/* „Wessen Favoriten auf den Tisch kommen" (#1776): one plain line per member —
+   avatar, name, sentence. A list, not tiles: it is ordered (most evenings
+   first), and the sentence wraps under the name on a phone. */
+.taste-share { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.taste-share__row { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; row-gap: 2px; }
+.taste-share__row .avatar { width: 26px; height: 26px; font-size: 11px; /* glyph, not type */ }
+.taste-share__who { font-size: var(--text-sm); font-weight: 700; }
+.taste-share__text { font-size: var(--text-sm); color: var(--ink-soft); min-width: 0; }
+.member-taste { margin: 14px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
 .recap-fav__name {
   font-size: var(--text-sm);
   font-weight: 700;

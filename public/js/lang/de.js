@@ -328,6 +328,11 @@ I18N.de = {
   'recap.divisive': 'Größte Uneinigkeit',
   'recap.favourites': 'Lieblingsspiele',
   'recap.thin': 'Noch zu wenig gewertet für ein Bild — spielt weiter, das kommt von allein.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Wessen Favoriten auf den Tisch kommen',
+  'recap.tasteShareNone': 'Favoriten kamen noch nicht auf den Tisch',
+  'recap.tasteShareOne': 'Favoriten kamen einmal auf den Tisch',
+  'recap.tasteShareMany': 'Favoriten kamen {n}× auf den Tisch',
 
   // Der Zeitraum-Rückblick (#800): ein Monat oder ein Jahr, teilbar als Bild.
   'periodRecap.title': 'Monat & Jahr',
@@ -1038,6 +1043,10 @@ I18N.de = {
   'member.bestGameNone': 'Noch kein Spiel gewonnen',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Von den Favoriten kam noch keiner auf den Tisch',
+  'member.tasteShareOne': 'Von den Favoriten kam einer auf den Tisch',
+  'member.tasteShareMany': 'Von den Favoriten kamen {n} auf den Tisch',
   'member.ownedTitleOne': '{n} Spiel von {name}',
   'member.ownedTitle': '{n} Spiele von {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

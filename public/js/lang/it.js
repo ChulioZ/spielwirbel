@@ -331,6 +331,11 @@ I18N.it = {
   'recap.divisive': 'Più divisivo',
   'recap.favourites': 'Preferiti',
   'recap.thin': 'Non ci sono ancora valutazioni sufficienti per un quadro d’insieme — continuate a giocare, arriverà.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Di chi sono i preferiti che arrivano in tavola',
+  'recap.tasteShareNone': 'I preferiti non sono ancora arrivati in tavola',
+  'recap.tasteShareOne': 'I preferiti sono arrivati in tavola una volta',
+  'recap.tasteShareMany': 'I preferiti sono arrivati in tavola {n} volte',
 
   // Il riepilogo per periodo (#800): un mese o un anno, condivisibile come immagine.
   'periodRecap.title': 'Mese e anno',
@@ -1020,6 +1025,10 @@ I18N.it = {
   'member.bestGameNone': 'Nessun gioco ancora vinto',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Nessuno dei preferiti è ancora arrivato in tavola',
+  'member.tasteShareOne': 'Uno dei preferiti è arrivato in tavola',
+  'member.tasteShareMany': '{n} dei preferiti sono arrivati in tavola',
   'member.ownedTitleOne': '{n} gioco di {name}',
   'member.ownedTitle': '{n} giochi di {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
