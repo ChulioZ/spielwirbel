@@ -657,6 +657,8 @@ const frontendGlobals = {
   composeForestSettings: 'readonly', forestNameCard: 'readonly', renderMarkerGrid: 'readonly', wireRoundNameField: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', bestGameValue: 'readonly', BEST_GAME_PRIOR_PLAYS: 'readonly', bestGameSub: 'readonly',
+  // taste-neighbour.js (#1778): die Tischkarte's closest / most different taste
+  TASTE_MIN_SHARED: 'readonly', tasteAverages: 'readonly', tasteDistance: 'readonly', tasteNeighbours: 'readonly', memberTasteLine: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   // views-badges.js (#1388) — the Klassisch rendering every design skins.

@@ -1021,6 +1021,8 @@ I18N.fr = {
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
+  'member.tasteNear': 'Goûts les plus proches :',
+  'member.tasteFar': 'Goûts les plus différents :',
   'member.ownedTitleOne': '{n} jeu de {name}',
   'member.ownedTitle': '{n} jeux de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

@@ -258,6 +258,9 @@ async function showMember(rid, mid) {
   // Under the figures: the earned Abzeichen (#1388, never the open ones), then the
   // personal bests (#1631, views-member-points.js). Each is null when empty.
   [memberPointsPanel(round, member), memberCardBadges(round, member)].forEach((el) => el && figures.after(el));
+  // Directly under the figures: whose taste is closest and furthest (#1778).
+  const taste = memberTasteLine(round, mid);
+  if (taste) figures.after(taste);
 
   const cards = card.querySelector('.member-card__games');
 
@@ -631,6 +634,30 @@ function memberPage(card, round, member, owned) {
   page.appendChild(card);
   if (aside.childElementCount) page.appendChild(aside);
   return page;
+}
+
+/* Die Tischkarte's taste line (#1778): the closest and the most different
+   member by `tasteNeighbours` (taste-neighbour.js), each a link to their page.
+   Words only — the distance that ranks them is never printed. Null when no pair
+   qualifies, so the card simply has no line rather than an empty one. Inside
+   the card in every design, so its content is identical everywhere. */
+function memberTasteLine(round, mid) {
+  const { near, far } = tasteNeighbours(round, mid);
+  if (!near.length) return null;
+  const line = h('<div class="member-taste"></div>');
+  const row = (cls, label, people) => {
+    const el = h(`<p class="member-taste__row member-taste__row--${cls}"><span class="member-taste__label">${esc(label)}</span> </p>`);
+    people.forEach((m, i) => {
+      if (i) el.appendChild(document.createTextNode(i === people.length - 1 ? ` ${t('list.and')} ` : ', '));
+      const a = h(`<a>${esc(m.name)}</a>`);
+      makeMemberLink(a, round.id, m.id);
+      el.appendChild(a);
+    });
+    line.appendChild(el);
+  };
+  row('near', t('member.tasteNear'), near);
+  if (far.length) row('far', t('member.tasteFar'), far);
+  return line;
 }
 
 /* „Stärkstes Spiel"'s sub-line, shared with the profile (views-profile.js),

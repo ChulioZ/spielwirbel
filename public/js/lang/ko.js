@@ -979,6 +979,8 @@ I18N.ko = {
   'member.bestGameNone': '아직 이긴 게임이 없어요',
   'member.favorite': '가장 좋아하는 게임',
   'member.favoriteNone': '아직 평가가 없어요',
+  'member.tasteNear': '취향이 가장 비슷한 사람:',
+  'member.tasteFar': '취향이 가장 다른 사람:',
   'member.ownedTitleOne': '{name}의 게임 {n}개',
   'member.ownedTitle': '{name}의 게임 {n}개',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

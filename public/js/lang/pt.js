@@ -1018,6 +1018,8 @@ I18N.pt = {
   'member.bestGameNone': 'Nenhum jogo ganho ainda',
   'member.favorite': 'Jogo favorito',
   'member.favoriteNone': 'Nenhuma avaliação ainda',
+  'member.tasteNear': 'Gosto mais parecido:',
+  'member.tasteFar': 'Gosto mais diferente:',
   'member.ownedTitleOne': '{n} jogo de {name}',
   'member.ownedTitle': '{n} jogos de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
