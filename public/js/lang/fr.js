@@ -1392,6 +1392,12 @@ I18N.fr = {
   'log.uncancelled': '{actor} a rétabli la session',
 
   'directPlay.button': 'Jouer maintenant',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Qui commence ?',
+  'startPlayer.again': 'Encore',
+  'startPlayer.answer': '{name} commence',
+  'startPlayer.answerTeam': '{name} commencent',
   'directPlay.title': 'Jouer à « {title} »',
   'directPlay.start': 'Démarrer',
   'directPlay.log': 'Ajouter la session',

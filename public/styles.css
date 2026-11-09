@@ -12566,3 +12566,35 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
   background: linear-gradient(90deg, var(--brand) calc(var(--pct) * 1%), var(--sunken) 0);
 }
 .badge-card__earned { font-size: var(--text-sm); }
+
+/* „Wer fängt an?" (#1769) — the start-player whirl under the table band and in
+   the direct-play sheet. Painted from the design tokens only, so every design
+   wears it in its own colours with the same markup. The seats are `aria-hidden`
+   (the answer is announced instead), and the lit step is never colour alone:
+   it also lifts and gains a ring. */
+.start-player { display: grid; gap: 10px; justify-items: start; margin: 12px 0 0; }
+.start-player[hidden] { display: none; }
+.start-player__ring { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.start-player__seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 12px 4px 4px;
+  border: 2px solid var(--line, var(--brand-edge));
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+}
+.start-player__faces { display: inline-flex; flex: none; }
+.start-player__faces .avatar + .avatar { margin-left: -8px; }
+.start-player__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.start-player__seat.is-lit,
+.start-player__seat.is-picked { border-color: var(--brand); background: var(--brand-tint); box-shadow: 0 0 0 2px var(--brand); }
+.start-player__seat.is-picked { font-weight: 700; }
+.start-player__answer { margin: 0; font-weight: 700; font-size: var(--text-md); color: var(--ink); }
+.start-player__answer:empty { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .start-player__seat { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
+  .start-player__seat.is-lit { transform: translateY(-2px); }
+}

@@ -879,6 +879,12 @@ public/
                      (issue #1681)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
+    start-player.js  „Wer fängt an?": who may be drawn (the session's parties,
+                     a team as one), the RNG-injectable draw and the whirl's
+                     step sequence (issue #1769)
+    start-player-view.js  its button and whirl, on the results screen of a
+                     decided session and in the „Jetzt spielen" sheet
+                     (issue #1769)
     setup-addons.js  the add-on chip row those two fields now sit behind: one
                      chip per rare session option, each carrying its own state,
                      with the open one unfolding into a single body BELOW the

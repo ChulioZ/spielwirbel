@@ -77,6 +77,7 @@ function resultRenderBand(rs) {
   // the one function all of them reach — including the early return below.
   if (tischLook) paintComposedCrowns(peopleEl, rs.winnerIds);
   resultRenderFoot(rs);
+  if (rs.startPlayer) rs.startPlayer.refresh();
   rowRefs.forEach(({ gameId, ownersEl }) => {
     // The table band states the same fact with more context, so the chosen
     // row's own line stands down rather than saying it twice on one screen.

@@ -1358,6 +1358,12 @@ I18N.fi = {
   'log.uncancelled': '{actor} kumosi perumisen',
 
   'directPlay.button': 'Pelaa heti',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Kuka aloittaa?',
+  'startPlayer.again': 'Uudelleen',
+  'startPlayer.answer': '{name} aloittaa',
+  'startPlayer.answerTeam': '{name} aloittavat',
   'directPlay.title': 'Pelaa ”{title}”',
   'directPlay.start': 'Aloita',
   'directPlay.log': 'Lisää sessio',
