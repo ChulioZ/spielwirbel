@@ -191,3 +191,78 @@ test('without a live price an existing watch still shows — and no new one is o
     }
   }
 });
+
+/* Double submit (#1606). Every control that sends a request is disabled until
+   that request settles, so a second click in the in-flight window sends
+   nothing. The stub holds each request open on a deferred promise — without it
+   the request settles before the second click and the window the guard
+   protects never exists (.claude/rules/redundant-guards-make-each-other-untestable.md).
+   The clicks go through the real buttons: a disabled button dispatches no
+   click and a disabled submit button submits no form, which IS the guard. */
+function deferredApi(dom) {
+  const sent = [];
+  let release;
+  dom.set('api', (method, url) => {
+    sent.push(`${method} ${url}`);
+    return new Promise((resolve, reject) => { release = { resolve, reject }; });
+  });
+  return { sent, fail: () => release.reject(new Error('boom')) };
+}
+
+async function priceBoxControl(t, watches) {
+  const { dom } = app(t);
+  dom.set('api', async () => ({ watches, limit: 50 }));
+  const anchor = dom.document.createElement('div');
+  dom.app.appendChild(anchor);
+  await dom.call('renderPriceWatchControl', anchor, { title: 'Arche Nova', source: { externalId: '342942' } }, { amount: 42.99, currency: 'EUR' });
+  return dom;
+}
+
+// Clicks `btn` twice while its first request is in flight, then fails it.
+async function assertOneRequest(dom, btn, net, want) {
+  btn.click(); btn.click();
+  await flush();
+  assert.deepEqual(net.sent, [want], 'the second click sends nothing');
+  assert.equal(btn.disabled, true, 'disabled while in flight');
+  net.fail();
+  await flush();
+  assert.equal(btn.disabled, false, 'a failed request leaves a working button behind');
+}
+
+test('double submit: the form under the price box sets one watch', async (t) => {
+  const dom = await priceBoxControl(t, []);
+  const net = deferredApi(dom);
+  await assertOneRequest(dom, dom.app.querySelector('.gd-watch__form button[type=submit]'), net, 'POST /api/price-watches');
+});
+
+test('double submit: „Beenden" under the price box sends one DELETE', async (t) => {
+  const dom = await priceBoxControl(t, [WATCH]);
+  const net = deferredApi(dom);
+  await assertOneRequest(dom, dom.app.querySelector('#gdWatchStop'), net, 'DELETE /api/price-watches/w1');
+});
+
+test('double submit: the list\'s stop button sends one DELETE', async (t) => {
+  const { dom } = app(t);
+  dom.set('api', async () => ({ watches: [WATCH], limit: 50 }));
+  await dom.call('showPriceWatches');
+  const net = deferredApi(dom);
+  await assertOneRequest(dom, dom.app.querySelector('.price-watch__stop'), net, 'DELETE /api/price-watches/w1');
+});
+
+test('double submit: the list\'s threshold form sends one PATCH', async (t) => {
+  const { dom } = app(t);
+  dom.set('api', async () => ({ watches: [WATCH], limit: 50 }));
+  await dom.call('showPriceWatches');
+  dom.app.querySelector('.price-watch__edit').click();
+  const net = deferredApi(dom);
+  await assertOneRequest(dom, dom.app.querySelector('.price-watch__form button[type=submit]'), net, 'PATCH /api/price-watches/w1');
+});
+
+test('double submit: the inbox „Beenden" looks the live watch up once', async (t) => {
+  const { dom } = app(t);
+  const row = dom.call('renderInboxItem', { id: 'i1', type: 'price_drop', read: true, createdAt: '2026-10-08T06:00:00Z',
+    payload: { watchId: 'w1', externalId: '342942', title: 'X', amountCents: 100, currency: 'EUR', thresholdCents: 200, observedAt: '2026-10-08T06:00:00Z' } });
+  dom.app.appendChild(row);
+  const net = deferredApi(dom);
+  await assertOneRequest(dom, row.querySelector('.inbox-row__stop'), net, 'GET /api/price-watches');
+});

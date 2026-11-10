@@ -15,7 +15,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf, declaredValue, mediaBlocks } = require('./support/css');
+const { rulesOf, declaredValue, mediaBlocks, topLevel } = require('./support/css');
 
 const ME = 'user-me';
 const roundFixture = () => ({
@@ -104,12 +104,17 @@ test('the list carries its count, read from who has voted', async (t) => {
 /* CSS: who SHOWS the count and the panel. The view renders both for every
    design; the designs that compose a count of their own leave this one hidden. */
 const read = (rel) => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
-const shows = (css, sel) => rulesOf(css).some(([s, body]) => s.trim() === sel && declaredValue(body, 'display') === 'block');
+/* Existence is looked up in topLevel(), never the whole sheet: rulesOf() sees
+   through @media, so a rule deleted from the top level would be answered by a
+   media-only one and the test would stay green
+   (.claude/rules/css-rule-lookup-answers-with-the-media-reset.md). The 860px
+   check below reads mediaBlocks() on purpose — there the block IS the subject. */
+const shows = (css, sel) => rulesOf(topLevel(css)).some(([s, body]) => s.trim() === sel && declaredValue(body, 'display') === 'block');
 const K = ':root[data-design="klassisch"]';
 
 test('the count is hidden by default and shown by Klassisch, Der Tisch and Ocean', () => {
   const base = read('public/styles.css');
-  assert.ok(rulesOf(base).some(([s, body]) => s.split(',').map((x) => x.trim()).includes('.live-vote__count')
+  assert.ok(rulesOf(topLevel(base)).some(([s, body]) => s.split(',').map((x) => x.trim()).includes('.live-vote__count')
     && declaredValue(body, 'display') === 'none'), 'hidden unless a design shows it');
   assert.ok(shows(base, `${K} .live-vote__count`), 'Klassisch shows it');
   assert.ok(shows(read('public/css/designs/tisch.css'), ':root[data-design="tisch"][data-scheme="dark"] .live-vote__count'), 'Der Tisch shows it');
@@ -133,13 +138,17 @@ test('Klassisch: a row key shrinks and wraps its label, and only a row WITH a ke
      one, so a key that cannot shrink overflows a 320px row. And a row without a
      key must keep its single line: wrapping every row dropped „✓ abgestimmt" onto
      a second line at 320px (both measured in WebKit). */
-  const rules = rulesOf(read('public/styles.css'));
+  /* Existence in topLevel() (a deleted base rule must not be answered by a
+     media-only one); the "every other row keeps one line" check stays on the
+     whole sheet, since a wrap added inside any @media block is the bug too. */
+  const all = rulesOf(read('public/styles.css'));
+  const rules = rulesOf(topLevel(read('public/styles.css')));
   const key = rules.find(([s]) => s.trim() === `${K} .live-person > .live-vote__hotseat-btn`);
   assert.ok(key, 'Klassisch styles the row key');
   assert.notEqual(declaredValue(key[1], 'flex'), 'none', 'the key may shrink');
   assert.equal(declaredValue(key[1], 'max-width'), '100%', 'and never grows past its row');
   assert.equal(declaredValue(key[1], 'white-space'), 'normal', 'so its label wraps instead');
-  const wraps = rules.filter(([, body]) => declaredValue(body, 'flex-wrap') === 'wrap').map(([s]) => s.trim());
-  assert.ok(wraps.includes(`${K} .live-person:has(> .live-vote__hotseat-btn)`), 'a row with a key wraps');
-  assert.ok(!wraps.includes(`${K} .live-person`), 'every other row keeps one line');
+  const wrapsIn = (list) => list.filter(([, body]) => declaredValue(body, 'flex-wrap') === 'wrap').map(([s]) => s.trim());
+  assert.ok(wrapsIn(rules).includes(`${K} .live-person:has(> .live-vote__hotseat-btn)`), 'a row with a key wraps');
+  assert.ok(!wrapsIn(all).includes(`${K} .live-person`), 'every other row keeps one line');
 });

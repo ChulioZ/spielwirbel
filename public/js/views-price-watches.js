@@ -43,6 +43,22 @@ function parseThreshold(text) {
   return cents >= 1 ? cents : null;
 }
 
+/* One request per control at a time (#1606): `btn` is disabled until `send`
+   settles, so a second click while the first is in flight sends nothing. The
+   guard is `disabled` ALONE — a disabled button dispatches no click, and a
+   disabled submit button submits no form — so there is deliberately no `busy`
+   flag beside it: it would be absorbed by `disabled` and guard nothing
+   (.claude/rules/redundant-guards-make-each-other-untestable.md). Re-enabled
+   on failure too; on success the caller usually re-renders the button away. */
+async function whileSending(btn, send) {
+  btn.disabled = true;
+  try {
+    return await send();
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function priceWatchError(code) {
   const map = {
     quota_price_watches: 'priceWatch.err.quota',
@@ -91,9 +107,10 @@ async function renderPriceWatchControl(anchor, game, price) {
         </div>`);
       navLink(row.querySelector('.gd-watch__all'), '/preisalarme', () => showPriceWatches());
       row.querySelector('#gdWatchEdit').addEventListener('click', () => renderForm(watch.thresholdCents));
-      row.querySelector('#gdWatchStop').addEventListener('click', async () => {
+      const stop = row.querySelector('#gdWatchStop');
+      stop.addEventListener('click', async () => {
         try {
-          await api('DELETE', `/api/price-watches/${encodeURIComponent(watch.id)}`);
+          await whileSending(stop, () => api('DELETE', `/api/price-watches/${encodeURIComponent(watch.id)}`));
           watch = null;
           toast(t('priceWatch.toast.stopped'));
           render();
@@ -137,10 +154,10 @@ async function renderPriceWatchControl(anchor, game, price) {
       const thresholdCents = parseThreshold(form.querySelector('#gdWatchAt').value);
       if (thresholdCents === null) { toast(t('priceWatch.err.threshold'), { tone: 'error' }); return; }
       try {
-        const res = await api('POST', '/api/price-watches', {
+        const res = await whileSending(form.querySelector('button[type=submit]'), () => api('POST', '/api/price-watches', {
           externalId, title: game.title, thresholdCents, lang: getLocale(),
           editionLanguages: (game.edition && game.edition.languages) || [],
-        });
+        }));
         watch = res.watch;
         toast(t('priceWatch.toast.saved'), { tone: 'success' });
         render();
@@ -223,9 +240,10 @@ function watchRow(w, onChange) {
         <button type="button" class="btn btn--sm btn--ghost price-watch__stop">${esc(t('priceWatch.stop'))}</button>
       </div>
     </div>`);
-  row.querySelector('.price-watch__stop').addEventListener('click', async () => {
+  const stop = row.querySelector('.price-watch__stop');
+  stop.addEventListener('click', async () => {
     try {
-      await api('DELETE', `/api/price-watches/${encodeURIComponent(w.id)}`);
+      await whileSending(stop, () => api('DELETE', `/api/price-watches/${encodeURIComponent(w.id)}`));
       toast(t('priceWatch.toast.stopped'));
       onChange(null);
     } catch {
@@ -256,7 +274,7 @@ function thresholdForm(start, label, onSubmit) {
     const cents = parseThreshold(form.querySelector('input').value);
     if (cents === null) { toast(t('priceWatch.err.threshold'), { tone: 'error' }); return; }
     try {
-      await onSubmit(cents);
+      await whileSending(form.querySelector('button[type=submit]'), () => onSubmit(cents));
     } catch (err) {
       toast(priceWatchError(err.message), { tone: 'error' });
     }
@@ -363,12 +381,15 @@ function renderPriceDropItem(item) {
   // „Beenden" means "stop watching this GAME": it ends whichever watch on the
   // game is live now — which may be a newer one than the watch that wrote this
   // item, if the reader ended that one and set another since.
-  row.querySelector('.inbox-row__stop').addEventListener('click', async (ev) => {
+  const stop = row.querySelector('.inbox-row__stop');
+  stop.addEventListener('click', async (ev) => {
     ev.stopPropagation();
     try {
-      const { watches } = await api('GET', '/api/price-watches');
-      const live = (watches || []).find((w) => w.externalId === p.externalId);
-      if (live) await api('DELETE', `/api/price-watches/${encodeURIComponent(live.id)}`);
+      await whileSending(stop, async () => {
+        const { watches } = await api('GET', '/api/price-watches');
+        const live = (watches || []).find((w) => w.externalId === p.externalId);
+        if (live) await api('DELETE', `/api/price-watches/${encodeURIComponent(live.id)}`);
+      });
     } catch {
       toast(t('priceWatch.err.generic'), { tone: 'error' });
       return;
