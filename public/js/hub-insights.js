@@ -372,11 +372,18 @@ function roundPulse(round, activeGames, opts, deps) {
    wrong (a game added five minutes ago is not a loose end) and exactly the
    empty-card first impression #923's own acceptance criteria rule out. Found by
    test/empty-state.test.js, whose young-round fixture is that round. */
-function careList(round, activeGames, deps) {
+function careList(round, activeGames, deps, opts = {}) {
   const shelf = activeGames || [];
   const isRange = (v) => typeof v === 'number' && Number.isFinite(v);
+  /* Boxes out for eight weeks or more (#1775), over EVERY game of the round — a
+     completed box lent out is still somebody else's shelf. Exempt from the
+     has-played floor below: a loan is not a feature the group is still
+     learning, it is a box that is not in the house. `deps.longLoans` is
+     game-loan.js's, injected for the reason this file's header gives. */
+  const loans = deps.longLoans ? deps.longLoans(round.games || [], opts.now) : [];
+  const loanPart = { loans: loans.slice(0, CARE_ROW_MAX), loansTotal: loans.length };
   const plays = hubPlayedSessions(round, deps);
-  if (!plays.length) return { winnerless: [], winnerlessTotal: 0, coverless: [], coverlessTotal: 0, noRange: [], noRangeTotal: 0, empty: true };
+  if (!plays.length) return { winnerless: [], winnerlessTotal: 0, coverless: [], coverlessTotal: 0, noRange: [], noRangeTotal: 0, ...loanPart, empty: !loans.length };
   /* Only a session with NO result at all (#1038). It used to be every played
      session with no winners, which listed a lost coop night, a party game and a
      campaign chapter as gaps to fix forever — the three things `ending` exists
@@ -393,8 +400,9 @@ function careList(round, activeGames, deps) {
     coverlessTotal: coverless.length,
     noRange: noRange.slice(0, CARE_ROW_MAX),
     noRangeTotal: noRange.length,
+    ...loanPart,
   };
-  out.empty = !out.winnerlessTotal && !out.coverlessTotal && !out.noRangeTotal;
+  out.empty = !out.winnerlessTotal && !out.coverlessTotal && !out.noRangeTotal && !out.loansTotal;
   return out;
 }
 

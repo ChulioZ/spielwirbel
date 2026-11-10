@@ -46,7 +46,10 @@ function setupPoolPreview(setup) {
       (g) =>
         matchesTagFilter(selectedTags, g.tagIds, tagFilterState.tagMode) &&
         fitsTable(g) &&
-        ownedByParty(g, shelfSeats())
+        ownedByParty(g, shelfSeats()) &&
+        // A lent box (#1775) — the server's own clause, so the pot cannot show a
+        // box the draw leaves out. Brought guest games are never lent.
+        fitsLoanFilter(g, tableState.includeLent)
     ),
     ...brought().filter(fitsTable),
   ];
@@ -67,6 +70,7 @@ function setupPoolPreview(setup) {
           : fitsPlayerCount(g, playerCount())) &&
         fitsMetadataFilters(g, metaFilters) &&
         (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
+        fitsLoanFilter(g, tableState.includeLent) &&
         !ownedByParty(g, shelfSeats())
     ).length;
 

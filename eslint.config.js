@@ -35,7 +35,7 @@ const frontendGlobals = {
   applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
-  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtMoney: 'readonly',
+  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtLoanDay: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
   // reorder-drag.js (issue #1180) — the one wrapper around vendor/sortable.min.js
@@ -147,6 +147,9 @@ const frontendGlobals = {
   CAPABILITY_ROLE: 'readonly', DEFAULT_CAPABILITY_ROLE: 'readonly',
   normalizeRole: 'readonly', capabilityRole: 'readonly', can: 'readonly',
   roundCan: 'readonly',
+  // game-loan.js (#1775) — also required by lib/draw.js and lib/routes/games.js
+  LOAN_TO_MAX: 'readonly', LOAN_LONG_DAYS: 'readonly', isLoanDay: 'readonly', isLentOut: 'readonly', fitsLoanFilter: 'readonly',
+  loanBorrowerName: 'readonly', loanDayIndex: 'readonly', loanToday: 'readonly', longLoans: 'readonly',
   // draw-pool.js (issues #634, #653) — also required by lib/draw.js
   isActiveGame: 'readonly', isBroughtGame: 'readonly', fitsPlayerCount: 'readonly', fitsPlayerCountFrom: 'readonly', matchesPlayerFilter: 'readonly',
   PLAYER_FILTER_CHOICES: 'readonly', PLAYER_FILTER_TOP: 'readonly', requiredExpansions: 'readonly',
@@ -504,6 +507,7 @@ const frontendGlobals = {
   // views-round-detail.js; each takes an explicit context)
   openPlayersPopover: 'readonly', openOwnersPopover: 'readonly',
   openTagsPopover: 'readonly', openImagePopover: 'readonly',
+  openLoanEditor: 'readonly', returnLoan: 'readonly', loanChipText: 'readonly',
   openExpansionEditor: 'readonly', saveExpansions: 'readonly', showAddGame: 'readonly',
   editorRowButton: 'readonly', editorActions: 'readonly',
   setExpansionsCap: 'readonly',

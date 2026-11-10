@@ -52,7 +52,16 @@ What the app does, in detail. For a short overview see the
   for teams exactly as before. A game with nobody recorded is never
   filtered, so a shelf nobody has marked up behaves exactly as it always did; the
   results screen names who is bringing the box — and names only the people who
-  can actually produce it, skipping anyone who came without their shelf. When adding a
+  can actually produce it, skipping anyone who came without their shelf. A box
+  can be marked **lent out** from its page's „…" menu — to a member of the round
+  or any typed name, with the day it left — and the page then reads „Verliehen an
+  Kim seit 3.11.", the Regal card carries a small marker, the Chronik records
+  „verliehen" and „zurück" among the shelf changes, and the Kümmerliste lists a
+  box that has been out for eight weeks. A lent box is **not drawn** unless the
+  setup screen's „Verliehene Spiele mitwirbeln" chip is on (offered only while a
+  box is out, and never remembered for the next draw); „Jetzt spielen" still
+  offers it, marked. Moving or copying a game into another round drops the loan,
+  and the round export carries it. When adding a
   game, the title field doubles as a **search-as-you-type lookup** against
   **BoardGameGeek**. Hits with the **same title** collapse into a **single
   row** — a game printed in several editions offers one entry to click rather

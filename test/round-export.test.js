@@ -41,7 +41,8 @@ function roundFixture() {
         source: { provider: 'bgg', externalId: '13' }, expansions: [{ title: 'Seefahrer', minPlayers: 3, maxPlayers: 4 }] },
       { id: 'g2', title: 'Azul', retired: true, tagIds: ['t1', 't2'] },
       { id: 'g3', title: 'Ark Nova', wish: true },
-      { id: 'g4', title: 'Cascadia', completed: true },
+      { id: 'g4', title: 'Cascadia', completed: true, loan: { to: 'Kim', memberId: 'm2', since: '2026-11-03' } },
+      { id: 'g6', title: 'Lent', loan: { to: 'Nachbarin', since: '2026-10-01' } },
       { id: 'g5', title: 'Unrated' },
     ],
     sessions: [
@@ -112,7 +113,7 @@ test('games.csv states the Regal\'s own score and play count for every game (#17
         plays: String(playCounts(__round).get(g.id) || 0) };
     });
   })()`);
-  assert.equal(games.length, 5, 'every game, off-shelf ones included');
+  assert.equal(games.length, 6, 'every game, off-shelf ones included');
   for (const e of expected) {
     const row = games.find((g) => g.game_id === e.id);
     // fmtAvg is the pill's printing; the CSV writes the same one decimal with a dot.
@@ -142,6 +143,12 @@ test('games.csv labels every state and reads playtime through the override (#170
   assert.equal(games.g1.tags, 'Kenner, "Strategie"');
   assert.equal(games.g1.expansions, 'Seefahrer');
   assert.equal(games.g2.tags, 'Kenner, "Strategie"; Party');
+  // The loan (#1775): a seat by its current name, a typed borrower as typed.
+  assert.equal(games.g4.lent_to, 'Ben, "der Große"');
+  assert.equal(games.g4.lent_since, '2026-11-03');
+  assert.equal(games.g6.lent_to, 'Nachbarin');
+  assert.equal(games.g1.lent_to, '');
+  assert.equal(games.g1.lent_since, '');
 });
 
 test('sessions.csv: outcomes, endings, guests, teams, splits and date-only days (#1702)', (t) => {

@@ -3187,6 +3187,77 @@ module.exports = function repoContract(repo) {
     }
   });
 
+  // „Verliehen an …" (#1775). The loan is ABSENT when the box is home — on both
+  // backends, after a return as well as before any loan — and each direction
+  // writes exactly one Chronik line carrying the borrower.
+  test('setGameLoan lends, re-dates silently, changes hands, returns — absent key both ends (#1775)', async () => {
+    const round = await freshRound({ name: 'Loans', members: ['Kim'] });
+    const kim = round.members.find((m) => m.name === 'Kim');
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    assert.equal('loan' in g, false);
+
+    const lent = await repo.setGameLoan(T, round.id, g.id, { to: 'Kim', memberId: kim.id, since: '2026-11-03' }, kim.id);
+    assert.deepEqual(lent.loan, { to: 'Kim', memberId: kim.id, since: '2026-11-03' });
+    // Re-dating the same loan is a correction, not a second „verliehen".
+    const redated = await repo.setGameLoan(T, round.id, g.id, { to: 'Kim', memberId: kim.id, since: '2026-11-02' });
+    assert.equal(redated.loan.since, '2026-11-02');
+    // A typed name has no seat key at all, not `memberId: undefined`.
+    const typed = await repo.setGameLoan(T, round.id, g.id, { to: 'Nachbarin', since: '2026-11-04' });
+    assert.deepEqual(typed.loan, { to: 'Nachbarin', since: '2026-11-04' });
+    const back = await repo.setGameLoan(T, round.id, g.id, null);
+    assert.equal('loan' in back, false, 'a returned box carries no loan key');
+    assert.equal('loan' in (await repo.getRound(T, round.id)).games.find((x) => x.id === g.id), false);
+
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => /^game_(lent|returned)$/.test(a.type));
+    assert.deepEqual(acts.map((a) => `${a.type}:${a.to}`).sort(),
+      ['game_lent:Kim', 'game_lent:Nachbarin', 'game_returned:Nachbarin']);
+    const first = acts.find((a) => a.type === 'game_lent' && a.to === 'Kim');
+    assert.equal(first.memberId, kim.id);
+    assert.equal(first.actorMemberId, kim.id);
+    assert.equal(first.gameId, g.id);
+    assert.equal('memberId' in acts.find((a) => a.type === 'game_returned'), false);
+  });
+
+  test('setGameLoan refuses a box the round does not own, a return with nothing out, and other tenants', async () => {
+    const round = await freshRound({ name: 'Loans2', members: ['Kim'] });
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Home' }));
+    const wish = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', wish: true }));
+    assert.equal(await repo.setGameLoan(T, round.id, wish.id, { to: 'Kim', since: '2026-11-03' }), 'not_owned');
+    assert.equal(await repo.setGameLoan(T, round.id, g.id, null), 'not_lent');
+    assert.equal(await repo.setGameLoan(T, round.id, 'nope', { to: 'Kim', since: '2026-11-03' }), null);
+    assert.equal(await repo.setGameLoan('tenant-b', round.id, g.id, { to: 'Kim', since: '2026-11-03' }), null);
+    assert.equal('loan' in (await repo.getRound(T, round.id)).games.find((x) => x.id === g.id), false, 'nothing was written');
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => /^game_(lent|returned)$/.test(a.type));
+    assert.equal(acts.length, 0, 'a refusal writes no Chronik line');
+  });
+
+  // A loan names this round's seat and this round's lending, so a moved, copied
+  // or imported box arrives at home — the owners' reason (#971).
+  test('move, copy and round-import all drop the loan (#1775)', async () => {
+    const src = await freshRound({ name: 'LoanFrom', members: ['Kim'] });
+    const dst = await freshRound({ name: 'LoanTo', members: ['Ben'] });
+    const kim = src.members.find((m) => m.name === 'Kim');
+    const mover = await repo.createGame(T, src.id, gameFields({ title: 'LentMover' }));
+    const copier = await repo.createGame(T, src.id, gameFields({ title: 'LentCopier' }));
+    for (const x of [mover, copier]) {
+      await repo.setGameLoan(T, src.id, x.id, { to: 'Kim', memberId: kim.id, since: '2026-11-03' });
+    }
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [copier.id]));
+    const imported = await repo.createRound(T, { name: 'LoanImported', members: ['Cy'], importFromRoundId: src.id });
+    assert.ok(await repo.moveGames(T, src.id, dst.id, null, [mover.id]));
+    const target = await repo.getRound(T, dst.id);
+    for (const title of ['LentMover', 'LentCopier']) {
+      const g = target.games.find((x) => x.title === title);
+      assert.ok(g, `${title} reached the target`);
+      assert.equal('loan' in g, false, `${title} must arrive at home`);
+    }
+    const importedGames = (await repo.getRound(T, imported.id)).games;
+    assert.equal(importedGames.length, 2, 'the import carried both games');
+    for (const g of importedGames) assert.equal('loan' in g, false, 'an import carries no loan');
+    // The copy leaves the SOURCE's loan alone.
+    assert.ok((await repo.getRound(T, src.id)).games.find((x) => x.id === copier.id).loan);
+  });
+
   /* The single write path clears the same way the bulk one does (#972): an empty
      list stores ABSENCE, not `[]`. Two shapes for one user action — differing by
      which screen the user reached it from — is what this pins shut. */

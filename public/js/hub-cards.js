@@ -45,6 +45,7 @@ const hubDeps = () => ({
   normalizeMetadata: normalizeMetadataFilters,
   fitsMetadata: fitsMetadataFilters,
   newestFirst: newestSessionsFirst,
+  longLoans,
 });
 
 // One card frame. The title is a real <h2> so the grid reads as a set of
@@ -458,6 +459,13 @@ function hubCareCard(round, activeGames) {
     },
     (s) => resultsPath(round.id, s.id),
     (s) => showResults(round, s)
+  );
+  // A box out for eight weeks (#1775) — after the winnerless rows, before the
+  // shelf data gaps: it is a real box in somebody else's house.
+  section(
+    list.loansTotal, 'hub.care.loanOne', 'hub.care.loan', list.loans,
+    (g) => t('hub.care.loanRow', { title: g.title, name: loanBorrowerName(round, g.loan), date: fmtLoanDay(g.loan.since) }),
+    (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
   );
   section(
     list.noRangeTotal, 'hub.care.rangeOne', 'hub.care.range', list.noRange,
