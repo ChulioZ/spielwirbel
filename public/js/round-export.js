@@ -103,7 +103,8 @@ function roundExportTables(round) {
   };
   const gamesCsv = exportCsv(
     ['game_id', 'title', 'state', 'min_players', 'max_players', 'min_playtime', 'max_playtime',
-      'weight', 'bgg_id', 'owners', 'tags', 'expansions', 'score', 'ratings', 'plays'],
+      'weight', 'bgg_id', 'owners', 'tags', 'expansions', 'score', 'ratings', 'plays',
+      'purchase_price', 'currency'],
     games.map((g) => {
       const st = index.byGame[g.id] || {};
       const pt = gamePlaytime(g);
@@ -118,6 +119,9 @@ function roundExportTables(round) {
         list((g.tagIds || []).map((id) => tagName.get(id))),
         list((g.expansions || []).map((e) => e && e.title)),
         score, st.count || 0, index.plays.get(g.id) || 0,
+        // The purchase price (#1773) as a decimal amount, so a spreadsheet can
+        // sum it; the stored cents travel unchanged in round.json.
+        g.purchasePrice ? g.purchasePrice.amount / 100 : null, g.purchasePrice ? g.purchasePrice.currency : null,
       ];
     })
   );

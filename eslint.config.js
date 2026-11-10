@@ -514,6 +514,12 @@ const frontendGlobals = {
   setExpansionsCap: 'readonly',
   // game-editor-playtime.js (#1627) — the playing-time editor
   openPlaytimePopover: 'readonly', playtimeOverrideFrom: 'readonly',
+  // purchase-price.js (#1773, pure, shared with the route) and
+  // game-editor-price.js (its chip, editor and the wish-acquire offer)
+  PURCHASE_PRICE_CURRENCIES: 'readonly', PURCHASE_PRICE_MAX_CENTS: 'readonly', BEST_BUY_MIN_PLAYS: 'readonly',
+  isValidPurchasePrice: 'readonly', parsePurchaseAmount: 'readonly', costPerPlay: 'readonly', bestBuy: 'readonly',
+  fmtPurchaseCents: 'readonly', purchasePriceChipText: 'readonly', defaultPurchaseCurrency: 'readonly',
+  openPurchasePricePopover: 'readonly', askAcquireWithPrice: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',

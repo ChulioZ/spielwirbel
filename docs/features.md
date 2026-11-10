@@ -853,6 +853,19 @@ What the app does, in detail. For a short overview see the
   round export (`sessions.csv`, `duration_min`) and the BG Stats push, and feed
   the Chronik's period recap (hours played) and Pokale's „Längste Session"
   (#1772). Out: pausing, laps, lock-screen timers.
+- **Kaufpreis** (purchase price, #1773) – a game can record what the round paid
+  for it: an amount and one of the price feature's currencies (EUR, GBP, USD,
+  DKK, SEK), set, changed or cleared from a chip on the game page. Before the
+  game's first session the chip states the price; from then on it adds what
+  each session with it has cost („39,99 € · 13,33 € pro Session"), divided by
+  the shelf's own play count — the sessions the Spielwirbel-Score counts as
+  picks. Pokale's **„Bester Kauf"** names the game with the lowest cost per
+  session among priced games played at least three times (ties share the card;
+  only games in the currency most priced games use are compared — there is no
+  conversion). „Ins Regal" on a wish whose current price is on screen offers,
+  unticked, to take that price over. The price travels with a move or copy and
+  in the round export (`games.csv`, `purchase_price` + `currency`). Out: price
+  history, per-owner prices, collection totals.
 - **Punkte eintragen** (enter points, #1630) – a played session can record each
   player's score: one field per person, or per team when the session had teams
   (a team's score never becomes a member's personal best). Whole numbers,

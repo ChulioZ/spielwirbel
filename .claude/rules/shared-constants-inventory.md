@@ -838,6 +838,17 @@ decides what a FAVOURITE is (the top face) for the draw boost exactly as for eve
 screen that shows faces; a server rounding of its own would boost games the
 member's own page does not show as favourites.
 
+**The thirty-ninth is `public/js/purchase-price.js`** (#1773):
+`PURCHASE_PRICE_CURRENCIES` and `PURCHASE_PRICE_MAX_CENTS`, which the game
+page's price editor offers and `PATCH …/games/:gid` validates. The plain
+offer/validate shape — a drifted server list would 400 a currency the select
+offered. The currency list is the price feature's own
+(`lib/prices/boardgameprices.js` `CURRENCIES`), which is what lets „Ins Regal"
+take a wish's current price over; a currency added there must be added here
+too, or that offer silently stops appearing for it. `costPerPlay` and `bestBuy`
+in the same file are client-only and divide by `playCounts` (vote-score.js),
+the shelf's own count, never a second definition of a play.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

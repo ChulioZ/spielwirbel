@@ -564,6 +564,18 @@ function renderPokaleTab(round) {
     );
   }
 
+  // Bester Kauf (#1773): the lowest cost per session among priced games with
+  // BEST_BUY_MIN_PLAYS sessions behind them, ties sharing the card. Counted
+  // over the shelf's own plays (playCounts), so it divides by the number the
+  // Spielepass chip divides by. Absent until a game qualifies.
+  const buy = bestBuy(round.games, playCounts(round));
+  if (buy) {
+    cards.appendChild(
+      pokaleGameCard(round, 'ti-coin', t('pokale.bestBuy'), buy.games,
+        t('purchasePrice.perSession', { price: fmtPurchaseCents(buy.cents, buy.currency) }), loadCover)
+    );
+  }
+
   // Gathering dust: the active game whose last night is longest ago (or never).
   const lastAt = {};
   finished.forEach((s) => {
