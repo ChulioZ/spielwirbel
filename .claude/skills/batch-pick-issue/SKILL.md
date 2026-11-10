@@ -112,6 +112,13 @@ more in parallel mostly makes each slower. Launch the next item as each one
 reports back. Keep a one-line ledger per item (branch, PR, status, open
 questions) in the scratchpad so a context summary doesn't lose it.
 
+**Expect the usage limit to stop every agent at once, more than once.** Four
+agents exhaust a 5-hour window in about 2–3 hours (measured on the first batch:
+three stops for ten items). A stopped agent keeps its worktree, so resume it
+with `SendMessage` after the reset, never by spawning a new one, and tell it to
+**commit, push and open the PR before the long coverage run** so the next stop
+costs no work. Agents near the end hand back first; launch new items only after.
+
 **Agent worktrees live under `.claude/worktrees/`, inside your own checkout,
 and are not gitignored.** A `git add -A` there while agents run commits them as
 gitlinks (measured on the first batch). Before committing in the main checkout,
