@@ -196,7 +196,7 @@ test('Forest sets the Einstellungen in the sheet\'s order: name, marker, set-up 
   const heads = (col) => [...col.querySelectorAll(':scope > .rs-fo__card > .rs-section__h, :scope > .rs-fo__card > .rs-fo__label')].map(text);
   assert.deepEqual(heads(left), [
     dom.run("t('newRound.nameLabel')"), dom.run("t('marker.title')"),
-    dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
+    dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"), dom.run("t('drawBoost.title')"),
   ]);
   assert.deepEqual(heads(right), [dom.run("t('roundSettings.manage')"), dom.run("t('roundSettings.danger')")]);
   assert.ok(right.lastElementChild.classList.contains('rs-fo__card--danger'));

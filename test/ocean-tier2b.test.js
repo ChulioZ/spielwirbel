@@ -111,7 +111,7 @@ test('every section becomes a card, and the danger zone gets a column of its own
   await dom.call('showRoundSettings', RID);
   const heads = (sel) => [...dom.app.querySelectorAll(`${sel} > .rs-card > h2`)].map(text);
   assert.deepEqual(heads('.rs-ocean__main'), [
-    dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
+    dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"), dom.run("t('drawBoost.title')"),
     dom.run("t('roundSettings.manage')"),
   ]);
   assert.deepEqual(heads('.rs-ocean__aside'), [dom.run("t('roundSettings.danger')")]);
