@@ -564,6 +564,18 @@ function renderPokaleTab(round) {
     );
   }
 
+  // Bester Kauf (#1773): the lowest cost per session among priced games with
+  // BEST_BUY_MIN_PLAYS sessions behind them, ties sharing the card. Counted
+  // over the shelf's own plays (playCounts), so it divides by the number the
+  // Spielepass chip divides by. Absent until a game qualifies.
+  const buy = bestBuy(round.games, playCounts(round));
+  if (buy) {
+    cards.appendChild(
+      pokaleGameCard(round, 'ti-coin', t('pokale.bestBuy'), buy.games,
+        t('purchasePrice.perSession', { price: fmtPurchaseCents(buy.cents, buy.currency) }), loadCover)
+    );
+  }
+
   // Gathering dust: the active game whose last night is longest ago (or never).
   const lastAt = {};
   finished.forEach((s) => {
@@ -698,10 +710,48 @@ function renderRecapSection(round, recap) {
     }
   }
 
+  const taste = renderTasteShare(round);
+  if (taste) sec.appendChild(taste);
+
   // Thin data reads as "keep going", never as an empty screen: the totals above
   // already say something real, and this says what would make it say more.
   if (!cards.children.length && !recap.favourites.length) {
     sec.appendChild(h(`<p class="muted recap__thin">${esc(t('recap.thin'))}</p>`));
   }
   return sec;
+}
+
+/*
+ * „Wessen Favoriten auf den Tisch kommen" (#1776): per member, how often one of
+ * their favourites was played with them at the table (taste-share.js). Words and
+ * counts only — no percentages, no places, no vote figures — and the rows run
+ * most evenings first, an order the list never states as a rank.
+ *
+ * Hidden below the round's sixth played session (the same `youngRoundPlayed`
+ * count the podium gates on), and per member below two favourites. The name
+ * stands beside the sentence rather than inside it, so no locale has to form a
+ * genitive of an arbitrary name (.claude/rules/interpolated-names-must-not-be-case-governed.md).
+ */
+function renderTasteShare(round) {
+  if (youngRoundPlayed(round, hubDeps()) < TASTE_SHARE_FROM_SESSIONS) return null;
+  const rows = tasteShareRows(tasteShare(round));
+  if (!rows.length) return null;
+  const group = h(`<div class="recap__group">
+       <h3 class="recap__sub">${esc(t('recap.tasteShare'))}</h3>
+       <ul class="taste-share"></ul>
+     </div>`);
+  const list = group.querySelector('.taste-share');
+  rows.forEach((row) => {
+    const member = round.members.find((m) => m.id === row.memberId);
+    const text = row.evenings === 0 ? t('recap.tasteShareNone')
+      : tn(row.evenings, 'recap.tasteShareOne', 'recap.tasteShareMany');
+    const li = h(`<li class="taste-share__row">
+         <a class="avatar" style="background:${memberColor(round, member.id)}">${avatarFace(initials(member.name), { userId: member.userId })}</a>
+         <span class="taste-share__who">${esc(member.name)}</span>
+         <span class="taste-share__text">${esc(text)}</span>
+       </li>`);
+    makeMemberLink(li.querySelector('.avatar'), round.id, member.id);
+    list.appendChild(li);
+  });
+  return group;
 }

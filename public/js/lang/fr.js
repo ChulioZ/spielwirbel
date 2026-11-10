@@ -320,6 +320,7 @@ I18N.fr = {
   'pokale.streakN': '{n} victoires d’affilée',
   'pokale.dusty': 'Prend la poussière',
   'pokale.longest': 'Session la plus longue',
+  'pokale.bestBuy': 'Meilleur achat',
   'pokale.dustyAt': 'dernière partie en {when}',
   'pokale.dustyNever': 'jamais joué',
 
@@ -332,6 +333,11 @@ I18N.fr = {
   'recap.divisive': 'Le plus clivant',
   'recap.favourites': 'Favoris',
   'recap.thin': 'Pas encore assez de notes pour dresser un portrait — continuez à jouer, ça viendra.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Les favoris de qui arrivent sur la table',
+  'recap.tasteShareNone': 'Ses favoris ne sont pas encore arrivés sur la table',
+  'recap.tasteShareOne': 'Ses favoris sont arrivés une fois sur la table',
+  'recap.tasteShareMany': 'Ses favoris sont arrivés {n} fois sur la table',
 
   // Le bilan par période (#800) : un mois ou une année, partageable en image.
   'periodRecap.title': 'Mois et année',
@@ -987,6 +993,18 @@ I18N.fr = {
   'detail.toast.playtimeRange': 'La durée maximale ne peut pas être inférieure à la durée minimale.',
   'detail.setTags': 'Étiquettes',
   'detail.setOwners': 'Ajouter les propriétaires',
+  'purchasePrice.title': 'Prix d’achat',
+  'purchasePrice.set': 'Ajouter le prix d’achat',
+  'purchasePrice.chip': 'Acheté {price}',
+  'purchasePrice.chipPer': '{price} · {per}',
+  'purchasePrice.perSession': '{price} par session',
+  'purchasePrice.amountLabel': 'Montant',
+  'purchasePrice.currencyLabel': 'Devise',
+  'purchasePrice.hint': 'Combien avez-vous payé ce jeu ?',
+  'purchasePrice.clear': 'Retirer le prix d’achat',
+  'purchasePrice.invalid': 'Saisissez un montant comme 39,99.',
+  'purchasePrice.prefill': 'Reprendre le prix actuel ({price}) comme prix d’achat',
+  'purchasePrice.acquireTitle': 'Mettre « {title} » sur l’étagère ?',
   'detail.owners': 'À {names}',
   'detail.changeImage': 'Changer l’image',
   'detail.edition': 'Édition : {edition}',
@@ -1043,6 +1061,12 @@ I18N.fr = {
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Aucun des favoris n’est encore arrivé sur la table',
+  'member.tasteShareOne': 'Un des favoris est arrivé sur la table',
+  'member.tasteShareMany': '{n} des favoris sont arrivés sur la table',
+  'member.tasteNear': 'Goûts les plus proches :',
+  'member.tasteFar': 'Goûts les plus différents :',
   'member.ownedTitleOne': '{n} jeu de {name}',
   'member.ownedTitle': '{n} jeux de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1324,6 +1348,13 @@ I18N.fr = {
   'lobby.crumb': 'Vote',
   'lobby.title': 'Vote en cours',
   'lobby.sub': '{n} jeux tirés. Dès que tout le monde a voté, la finale commence.',
+  'lobby.drawBoost': 'Aujourd’hui, un coup de pouce pour les favoris de {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Tirage',
+  'drawBoost.label': 'Un coup de pouce pour les oubliés',
+  'drawBoost.note': 'Activé, les favoris de la personne à table dont les favoris ont été le moins joués ont deux fois plus de chances d’être tirés. Le vote ne change pas.',
+  'drawBoost.toast.on': 'Coup de pouce activé',
+  'drawBoost.toast.off': 'Coup de pouce désactivé',
   'lobby.subOne': '{n} jeu tiré. Dès que tout le monde a voté, la finale commence.',
   'lobby.voted': 'a voté',
   'lobby.waiting': 'en attente',
@@ -1414,6 +1445,12 @@ I18N.fr = {
   'log.uncancelled': '{actor} a rétabli la session',
 
   'directPlay.button': 'Jouer maintenant',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Qui commence ?',
+  'startPlayer.again': 'Encore',
+  'startPlayer.answer': '{name} commence',
+  'startPlayer.answerTeam': '{name} commencent',
   'directPlay.title': 'Jouer à « {title} »',
   'directPlay.start': 'Démarrer',
   'directPlay.log': 'Ajouter la session',
@@ -2118,6 +2155,14 @@ I18N.fr = {
   'konto.simple.group.pass': 'Dans le passeport du jeu',
   'konto.simple.group.account': 'Autour de ton compte',
   'konto.simple.saved': 'Mode simple enregistré.',
+  // The Start tab's one-time „Einfacher Modus" prompt (#1768).
+  'simplePrompt.title': 'Plutôt plus simple ?',
+  'simplePrompt.body': 'Le mode simple masque les trophées, les statistiques et les suggestions, pour qui veut seulement tirer au sort, voter et jouer. Tes rondes continuent de tout enregistrer. Masquer ne concerne que toi.',
+  'simplePrompt.keep': 'Tout garder',
+  'simplePrompt.simple': 'Passer au mode simple',
+  'simplePrompt.settingsNote': 'Tu peux afficher ou masquer chaque élément à tout moment dans les réglages de ton compte.',
+  'simplePrompt.settingsLink': 'Réglages du compte',
+  'simplePrompt.close': 'Fermer et tout garder',
   'konto.simple.f.trophies': 'Masquer trophées et badges',
   'konto.simple.f.trophies.hint': 'La section Trophées et tous les badges, y compris sur le résultat, dans l’historique et sur la carte du membre.',
   'konto.simple.f.stats': 'Masquer les cartes de statistiques',

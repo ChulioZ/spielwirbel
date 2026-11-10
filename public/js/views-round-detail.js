@@ -294,6 +294,10 @@ async function showGameDetail(rid, gameId) {
   const editTags = (anchor) => openTagsPopover(editorCtx, anchor);
   const editImage = (anchor) => openImagePopover(editorCtx, anchor);
   const editExpansions = (anchor) => openExpansionEditor(editorCtx, anchor);
+  const editPrice = (anchor) => openPurchasePricePopover(editorCtx, anchor);
+  // A wish's live current price, once the price section has one (#1773) —
+  // „Ins Regal" offers to take it over as the purchase price.
+  let wishLivePrice = null;
 
   // A tag chip that opens an editor (#424). A real <button>, not a span with a
   // click handler: Tab reaches it, Enter *and* Space activate it, and closing
@@ -538,6 +542,19 @@ async function showGameDetail(rid, gameId) {
     }
   }
 
+  // What the round paid (#1773): the price, and from the first session on what
+  // each session with it has cost (game-editor-price.js). Not on a wish or a
+  // guest game — the round bought neither — and, like the owners chip, only an
+  // invitation on a page that is not sparse.
+  if (!game.wish && !game.guestGame) {
+    if (isValidPurchasePrice(game.purchasePrice)) {
+      chips.append(editableTag('tag--custom tag--price',
+        iconText('ti-coin', purchasePriceChipText(game.purchasePrice, st.plays || 0)), editPrice));
+    } else if (!sparse) {
+      chips.append(editableTag('tag--custom tag--empty tag--price', esc(t('purchasePrice.set')), editPrice));
+    }
+  }
+
   // What the round owns for this game (#653), as a chip instead of the 110px
   // section it used to cost on every visit (#1039). The editor it opens now
   // lists the owned expansions with their remove control, so nothing that was
@@ -753,6 +770,7 @@ async function showGameDetail(rid, gameId) {
       .then((p) => {
         liveSettled = true;
         if (p && p.available) {
+          wishLivePrice = p;
           swap(renderPriceSection(p));
           // Not returned: a failing control must never reach the .catch below,
           // which would swap this live price back to the stored one.
@@ -973,7 +991,12 @@ async function showGameDetail(rid, gameId) {
       const restore = h(`<button class="btn btn--lg"><i class="ti ${icon}" aria-hidden="true"></i> ${esc(label)}</button>`);
       restore.addEventListener('click', async () => {
         try {
+          // The wish list's price offer (#1773): asked BEFORE the move, so a
+          // dismissed dialog moves nothing; the price is written after it.
+          const asked = opts.ask ? await opts.ask() : { ok: true, purchasePrice: null };
+          if (!asked.ok) return;
           await api('POST', `/api/rounds/${rid}/games/${gameId}/${endpoint}`, body);
+          if (asked.purchasePrice) await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, { purchasePrice: asked.purchasePrice });
           toast(t(`${kind}.restored`, { title: game.title }));
           showGameDetail(rid, gameId);
         } catch (e) { toast(e.message, { tone: 'error' }); }
@@ -1002,7 +1025,7 @@ async function showGameDetail(rid, gameId) {
       // with a 400 `Game is on the wishlist` (the shared isActiveGame predicate,
       // active-games-filter-sites.md) — so the user got a seat picker, a start
       // button and an English server error.
-      restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore') });
+      restoreFrom('wish', 'wish', { wish: false }, { icon: 'ti-cards', label: t('wish.restore'), ask: () => askAcquireWithPrice(game, wishLivePrice) });
     } else if (game.guestGame) {
       // A guest game (#1681) has two ways out — the Regal (an acquisition) or
       // the wish list — and, unlike a wish, it can be played: the direct pick

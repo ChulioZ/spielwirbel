@@ -54,7 +54,7 @@ const NEWS = [
    * stayed in the draw and nothing said who had it.
    */
   {
-    revision: '2026-11-09',
+    revision: '2026-11-10',
     kind: 'new',
     de: {
       title: 'Wer hat gerade unser Spiel?',
@@ -91,6 +91,50 @@ const NEWS = [
     ko: {
       title: '지금 우리 게임은 누가 가지고 있나요?',
       body: '게임 페이지의 „…“ 메뉴에 이제 „빌려주기“가 있어요. 라운드의 사람을 고르거나 이름을 입력하세요. 빌려준 게임은 더 이상 뽑히지 않아요 – 뽑을 때 „빌려준 게임도 포함“을 켜지 않는 한요. 기록에 언제 나가고 돌아왔는지 남고, 8주가 지나면 „남은 일“이 알려 줘요.',
+    },
+  },
+  /*
+   * #1773, the purchase price. A capability that did not exist: nothing in the
+   * app could say what a game had cost, let alone per session.
+   */
+  {
+    revision: '2026-11-09',
+    kind: 'new',
+    de: {
+      title: 'Was hat jede Session gekostet?',
+      body: 'Tragt auf dem Spielepass ein, was ihr für ein Spiel bezahlt habt. Ab der ersten Session steht dort, was jede Session damit bisher gekostet hat – und in den Pokalen zeigt „Bester Kauf“ das Spiel mit dem günstigsten Preis pro Session, sobald es mindestens dreimal auf dem Tisch lag.',
+    },
+    en: {
+      title: 'What has each session cost?',
+      body: 'Enter what you paid for a game on its game pass. From the first session on it shows what each session with it has cost so far – and in Trophies, “Best buy” names the game with the lowest price per session once it has been played at least three times.',
+    },
+    es: {
+      title: '¿Cuánto ha costado cada sesión?',
+      body: 'Anota en la ficha del juego lo que pagasteis por él. Desde la primera sesión verás lo que ha costado cada sesión hasta ahora, y en Trofeos «Mejor compra» muestra el juego con el precio por sesión más bajo en cuanto se haya jugado al menos tres veces.',
+    },
+    fr: {
+      title: 'Combien a coûté chaque session ?',
+      body: 'Indiquez sur la fiche du jeu ce que vous l’avez payé. Dès la première session, elle affiche ce que chaque session vous a coûté jusqu’ici – et dans les Trophées, « Meilleur achat » montre le jeu au prix par session le plus bas dès qu’il a été joué au moins trois fois.',
+    },
+    it: {
+      title: 'Quanto è costata ogni sessione?',
+      body: 'Inserisci nella scheda del gioco quanto l’avete pagato. Dalla prima sessione vedrai quanto è costata finora ogni sessione, e nei Trofei «Miglior acquisto» indica il gioco con il prezzo per sessione più basso, appena è stato giocato almeno tre volte.',
+    },
+    nl: {
+      title: 'Wat kostte elke sessie?',
+      body: 'Vul op de spelpas in wat jullie voor een spel betaald hebben. Vanaf de eerste sessie zie je wat elke sessie ermee tot nu toe gekost heeft – en bij de Trofeeën toont „Beste aankoop” het spel met de laagste prijs per sessie, zodra het minstens drie keer op tafel lag.',
+    },
+    pt: {
+      title: 'Quanto custou cada sessão?',
+      body: 'Regista na ficha do jogo quanto pagaram por ele. A partir da primeira sessão verás quanto custou cada sessão até agora – e nos Troféus «Melhor compra» mostra o jogo com o preço por sessão mais baixo, assim que tenha sido jogado pelo menos três vezes.',
+    },
+    fi: {
+      title: 'Paljonko kukin sessio maksoi?',
+      body: 'Kirjaa pelin passiin, paljonko maksoitte pelistä. Ensimmäisestä sessiosta lähtien näet, paljonko kukin sessio on tähän mennessä maksanut – ja Palkinnoissa ”Paras ostos” näyttää pelin, jonka hinta per sessio on alhaisin, kun sitä on pelattu vähintään kolme kertaa.',
+    },
+    ko: {
+      title: '세션마다 얼마가 들었을까요?',
+      body: '게임 패스에 게임을 얼마에 샀는지 입력하세요. 첫 세션부터 지금까지 세션마다 얼마가 들었는지 보여 주고, 트로피의 „최고의 구매”는 세 번 이상 플레이한 게임 중 세션당 가격이 가장 낮은 게임을 알려 줍니다.',
     },
   },
   /*
@@ -595,7 +639,7 @@ const NEWS = [
     },
     ko: {
       title: '가격 알림',
-      body: '이제 위시리스트 게임의 가격 아래에서 가격 알림을 설정할 수 있어요. 가격이 설정한 금액 이하로 내려가면 받은 편지함으로 알려 드려요. 알림은 그룹이 아니라 내 것이라, 내가 속한 모든 그룹의 그 게임에 적용돼요. 모든 알림은 계정 메뉴의 “가격 알림”에서 볼 수 있고, 거기서 어떤 목록에도 없는 게임을 검색할 수도 있어요. 가격은 하루에 한 번 확인해요.',
+      body: '이제 위시리스트 게임의 가격 아래에서 가격 알림을 설정할 수 있어요. 가격이 설정한 금액 이하로 내려가면 받은 편지함으로 알려 드려요. 알림은 모임이 아니라 내 것이라, 내가 속한 모든 모임의 그 게임에 적용돼요. 모든 알림은 계정 메뉴의 “가격 알림”에서 볼 수 있고, 거기서 어떤 목록에도 없는 게임을 검색할 수도 있어요. 가격은 하루에 한 번 확인해요.',
     },
   },
   /*
@@ -640,8 +684,8 @@ const NEWS = [
       body: 'Kohdassa Asetukset → ”Kutsu” voit nyt myös luoda linkin ja lähettää sen itse porukan chattiin. Kirjautunut avaaja liittyy porukkaan yhdellä napautuksella — omalle paikalleen tai sille, jonka valitsit. Linkki on voimassa seitsemän päivää, ja voit perua sen milloin tahansa.',
     },
     ko: {
-      title: '링크로 그룹에 초대하기',
-      body: '이제 설정 → “초대”에서 링크를 만들어 단체 대화방에 직접 보낼 수 있어요. 로그인한 상태로 링크를 연 사람은 한 번만 눌러 그룹에 들어와요 — 새 자리로, 또는 여러분이 골라 둔 자리로요. 링크는 7일 동안 유효하고 언제든 취소할 수 있어요.',
+      title: '링크로 모임에 초대하기',
+      body: '이제 설정 → “초대”에서 링크를 만들어 단체 대화방에 직접 보낼 수 있어요. 로그인한 상태로 링크를 연 사람은 한 번만 눌러 모임에 들어와요 — 새 자리로, 또는 여러분이 골라 둔 자리로요. 링크는 7일 동안 유효하고 언제든 취소할 수 있어요.',
     },
   },
   /*
@@ -1398,9 +1442,9 @@ const NEWS = [
         + 'ryhmän chattiin.',
     },
     ko: {
-      title: '나의 돌아보기 — 모든 그룹에서의 나의 한 달, 나의 한 해',
+      title: '나의 돌아보기 — 모든 모임에서의 나의 한 달, 나의 한 해',
       body: '이제 내 프로필에 „나의 돌아보기"가 있어요. 한 달이나 한 해를 고르면 '
-        + '모든 그룹을 합쳐서 세션을 몇 번 했는지, 어떤 게임을 가장 많이 했는지, '
+        + '모든 모임을 합쳐서 세션을 몇 번 했는지, 어떤 게임을 가장 많이 했는지, '
         + '내가 가장 높게 평가한 게임과 처음 해 본 게임을 볼 수 있어요. 나만 볼 수 '
         + '있고, „공유"를 누르면 단체 채팅방에 보낼 이미지가 만들어져요.',
     },
@@ -1618,13 +1662,13 @@ const NEWS = [
         + 'sessioita.',
     },
     ko: {
-      title: '모든 그룹을 합친 전적을 담은 내 프로필',
+      title: '모든 모임을 합친 전적을 담은 내 프로필',
       body: '계정 메뉴에 „내 프로필"이 추가되어 내 프로필 페이지를 열 수 있습니다. '
-        + '내 그룹과 공유받은 그룹을 모두 합친 전적이 표시됩니다: 세션, 승리, 승률, '
-        + '내가 준 평균 평점, 좋아하는 게임, 가장 강한 게임 — 여러 그룹의 '
+        + '내 모임과 공유받은 모임을 모두 합친 전적이 표시됩니다: 세션, 승리, 승률, '
+        + '내가 준 평균 평점, 좋아하는 게임, 가장 강한 게임 — 여러 모임의 '
         + '선반에 있는 같은 게임은 하나로 셉니다. 그 아래에는 내 활동이 나옵니다. '
         + '수락된 친구도 같은 전적을 볼 수 있으며, 계정 설정의 스위치로 끌 수 '
-        + '있습니다. 프로필은 그룹 이름, 함께 플레이한 사람, 개별 세션을 절대 '
+        + '있습니다. 프로필은 모임 이름, 함께 플레이한 사람, 개별 세션을 절대 '
         + '드러내지 않습니다.',
     },
   },

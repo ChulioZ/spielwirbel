@@ -2793,6 +2793,26 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.setMarker(OTHER, round.id, 3), null, 'another tenant cannot mark this round');
   });
 
+  test('setDrawBoost: off by default, present only while on, tenant-scoped (#1777)', async () => {
+    const round = await freshRound();
+    // Off by default, and OFF is the absent key on every read — never `false`.
+    assert.equal('drawBoost' in round, false);
+    assert.equal('drawBoost' in await repo.getRoundMeta(T, round.id), false);
+
+    assert.deepEqual(await repo.setDrawBoost(T, round.id, true), { drawBoost: true });
+    assert.equal((await repo.getRound(T, round.id)).drawBoost, true);
+    assert.equal((await repo.getRoundMeta(T, round.id)).drawBoost, true);
+
+    // Switched back off reads exactly like never set, in both backends.
+    assert.deepEqual(await repo.setDrawBoost(T, round.id, false), { drawBoost: false });
+    assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
+    assert.equal('drawBoost' in await repo.getRoundMeta(T, round.id), false);
+
+    assert.equal(await repo.setDrawBoost(T, 'missing', true), null);
+    assert.equal(await repo.setDrawBoost(OTHER, round.id, true), null, 'another tenant cannot switch it');
+    assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
+  });
+
   test('addTag creates and dedupes; deleteTag unassigns from every game (#238)', async () => {
     const round = await freshRound();
     assert.equal('tags' in round, false); // absent until the first tag is created
@@ -3101,6 +3121,31 @@ module.exports = function repoContract(repo) {
     read = (await repo.getRound(T, round.id)).games.find((g) => g.id === game.id);
     assert.equal('playtimeOverride' in read, false);
     assert.equal(read.title, 'Massive Darkness 2');
+  });
+
+  /* -------------------------- Purchase price (#1773) ----------------------- */
+
+  test('updateGame stores a purchase price, copyGames carries it, and a cleared one leaves NO key', async () => {
+    const src = await freshRound({ name: 'Priced' });
+    const dst = await freshRound({ name: 'Priced copy' });
+    const game = await repo.createGame(T, src.id, gameFields({ title: 'Brass' }));
+    const plain = await repo.createGame(T, src.id, gameFields({ title: 'Unpriced' }));
+    assert.equal('purchasePrice' in plain, false, 'absent until written');
+
+    const set = await repo.updateGame(T, src.id, game.id, { purchasePrice: { amount: 5999, currency: 'EUR' } });
+    assert.deepEqual(set.purchasePrice, { amount: 5999, currency: 'EUR' });
+
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [game.id, plain.id]));
+    const copied = (await repo.getRound(T, dst.id)).games;
+    assert.deepEqual(copied.find((g) => g.title === 'Brass').purchasePrice, { amount: 5999, currency: 'EUR' });
+    assert.equal('purchasePrice' in copied.find((g) => g.title === 'Unpriced'), false,
+      'a copy must not invent a price the source never had');
+
+    // Cleared alongside another field in the same patch: absent, never null.
+    await repo.updateGame(T, src.id, game.id, { title: 'Brass: Birmingham', purchasePrice: null });
+    const read = (await repo.getRound(T, src.id)).games.find((g) => g.id === game.id);
+    assert.equal('purchasePrice' in read, false);
+    assert.equal(read.title, 'Brass: Birmingham');
   });
 
   /* -------------------------- Game owners (#971) --------------------------- */
@@ -4135,6 +4180,24 @@ module.exports = function repoContract(repo) {
     );
     // ...and a fresh username with that same e-mail still reports the e-mail.
     assert.equal(await repo.createUser(userFields({ email: first.email })), 'email_taken');
+  });
+
+  test('the „Einfacher Modus" prompt stamp (#1768) is null at creation and lands with the mode in ONE write', async () => {
+    // The route-shaped creation writes the key as null, so both backends must
+    // hand back a present null rather than dropping it (absent-key parity).
+    const user = await repo.createUser(userFields({ simpleMode: { all: false, except: [] }, simpleModePromptSeen: null }));
+    assert.equal((await repo.getUserById(user.id)).simpleModePromptSeen, null);
+    assert.ok('simpleModePromptSeen' in (await repo.getUserById(user.id)), 'a present null, not an absent key');
+
+    // POST /simple-mode-prompt-seen writes the preference and the stamp in one
+    // updateUser; the merge must keep both — and every other key — intact.
+    const stamp = '2026-11-09T12:00:00.000Z';
+    const updated = await repo.updateUser(user.id, { simpleMode: { all: true, except: [] }, simpleModePromptSeen: stamp });
+    assert.equal(updated.simpleModePromptSeen, stamp);
+    const back = await repo.getUserById(user.id);
+    assert.deepEqual(back.simpleMode, { all: true, except: [] });
+    assert.equal(back.simpleModePromptSeen, stamp);
+    assert.equal(back.email, user.email, 'the merge leaves the rest of the record alone');
   });
 
   test('a forced rename (#320) replaces the username and frees the old one', async () => {

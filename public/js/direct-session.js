@@ -29,6 +29,7 @@ function startDirectSession(round, game, opts = {}) {
           <div id="seatMount"></div>
         </div>
         <div id="addonMount"></div>
+        <div id="startPlayerMount"></div>
         <div id="playedOnMount"></div>
         <div class="toolbar sheet__actions">
           <button id="startDirect" class="btn btn--primary btn--lg"><i class="ti ti-player-play" aria-hidden="true"></i> ${esc(t('directPlay.start'))}</button>
@@ -57,11 +58,23 @@ function startDirectSession(round, game, opts = {}) {
   // consults none — so a team changes no pool: it is here so a team that wins
   // can be recorded in one tap, the same argument that brought guests to this
   // sheet in #532. Hence its own note, which promises no filtering.
-  const teamPicker = renderTeamPicker(round, joining, guestList, t('directPlay.teamsNote'), () => addons.relabelAddons());
+  // „Wer fängt an?" (#1769) over the parties as the pickers stand right now —
+  // through the same resolver the results screen uses, via a draft blob.
+  // Declared before the pickers because their callbacks refresh it.
+  let startPlayer = null;
+  const refreshStartPlayer = () => { if (startPlayer) startPlayer.refresh(); };
+  const teamPicker = renderTeamPicker(round, joining, guestList, t('directPlay.teamsNote'), () => {
+    addons.relabelAddons();
+    refreshStartPlayer();
+  });
   const seatTable = renderSeatPicker(round, joining, () => {
     teamPicker.refreshTeams();
     addons.relabelAddons();
+    refreshStartPlayer();
   }, guestList);
+  startPlayer = renderStartPlayer(round, () =>
+    sessionParties(round, draftSession([...joining], guestList.guests, teamPicker.teamPayload())));
+  sheet.querySelector('#startPlayerMount').replaceWith(startPlayer);
   sheet.querySelector('#seatMount').replaceWith(seatTable);
   addons.addAddon({
     key: 'team',

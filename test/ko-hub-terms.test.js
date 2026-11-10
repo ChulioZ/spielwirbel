@@ -8,6 +8,13 @@
  * the import's „go to the 연대기" pointed at a tab that does not exist by that
  * name. Nothing failed; a reader just met two words for one screen.
  *
+ * The same spec holds the round's noun to ONE word (#1729): a round is 모임
+ * everywhere (the round switcher, the hub, the members tab), but invite, join,
+ * profile, badge, news and FAQ copy said 그룹 — so the invite link asked a
+ * reader to join a 그룹 that every other screen called a 모임. The one allowed
+ * 그룹 is `tags.icons.users`, which labels a tag ICON of several people, not a
+ * round.
+ *
  * Scans parsed VALUES (lang/ko.js, the ko half of every news entry, the ko FAQ
  * answers), never raw file text, for the reason test/session-naming.test.js
  * gives: a text scan trips on comments documenting the rule.
@@ -22,7 +29,11 @@ const vm = require('vm');
 const { NEWS } = require('../public/js/news');
 const { QUESTIONS } = require('../lib/faq');
 
-const BANNED = [/책장/, /연대기/];
+const BANNED = [/책장/, /연대기/, /그룹/];
+
+// Keys where a banned word is the right word: the icon label names a picture
+// of a group of people, not a round.
+const ALLOWED = { 'lang/ko.js tags.icons.users': [/그룹/] };
 
 function loadKo() {
   const file = path.join(__dirname, '..', 'public', 'js', 'lang', 'ko.js');
@@ -34,6 +45,7 @@ function loadKo() {
 function hits(where, value, out) {
   if (typeof value !== 'string') return;
   for (const re of BANNED) {
+    if ((ALLOWED[where] || []).some((a) => a.source === re.source)) continue;
     const m = value.match(re);
     if (m) out.push(`${where}: "${m[0]}" in ${JSON.stringify(value).slice(0, 100)}`);
   }
@@ -48,7 +60,14 @@ test('the Korean tab labels are 선반 and 기록', () => {
   assert.equal(ko['hub.tab.chronik'], '기록');
 });
 
-test('no Korean string calls the Regal 책장 or the Chronik 연대기', () => {
+test('the one allowed 그룹 is still the users tag-icon label', () => {
+  // If this key is renamed, the allowance above silently allows nothing and a
+  // real 그룹 elsewhere would still be caught — but the label itself would then
+  // turn the scan red, so keep the two in step here.
+  assert.equal(loadKo()['tags.icons.users'], '그룹');
+});
+
+test('no Korean string calls the Regal 책장, the Chronik 연대기 or a round 그룹', () => {
   const out = [];
   let scanned = 0;
 
@@ -68,5 +87,5 @@ test('no Korean string calls the Regal 책장 or the Chronik 연대기', () => {
   }
 
   assert.ok(scanned > 1500, `expected to scan ko.js, news and the FAQ, scanned ${scanned}`);
-  assert.deepEqual(out, [], `Korean names a hub tab by a synonym:\n  ${out.join('\n  ')}`);
+  assert.deepEqual(out, [], `Korean names a hub tab or a round by a synonym:\n  ${out.join('\n  ')}`);
 });

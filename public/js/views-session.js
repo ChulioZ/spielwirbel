@@ -1583,6 +1583,12 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const tischSlot = h('<div class="tisch-slot"></div>');
   const tisch = h('<section class="tisch" hidden></section>');
   tischSlot.appendChild(tisch);
+  /* „Wer fängt an?" (#1769): under the band, inside the slot so it travels with
+     it in every design's composition. Offered while a game is on the table and
+     not yet played; resultRenderBand() refreshes it on every phase change. */
+  const startPlayer = renderStartPlayer(round, () => (
+    rs.chosenId && !rs.finished && !rs.cancelled ? parties : []));
+  tischSlot.appendChild(startPlayer);
   screen.appendChild(tischSlot);
 
   /* The foot (#1275): „Noch eine Session", „Teilen" and „Mehr", which holds
@@ -1594,7 +1600,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   // The ranked rows (#1056) and their gold top group, appended to the screen.
   Object.assign(rs, { screen, titleEl, forestFacts, peopleEl, shareNow, when,
-    badgeMoment, tischSlot, tisch, resultFoot });
+    badgeMoment, tischSlot, tisch, resultFoot, startPlayer });
   buildResultTafel(rs);
 
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
