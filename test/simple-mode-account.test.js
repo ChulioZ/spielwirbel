@@ -73,3 +73,67 @@ test('an account predating the key reads as OFF', async () => {
   // would empty the app for every account registered before #1646.
   assert.deepEqual((await getMe(acc.token)).body.simpleMode, { all: false, except: [] });
 });
+
+/* ------------- the Start tab's one-time prompt (#1768) ------------------- */
+
+const promptSeen = (token, body) => request(app).post('/api/account/simple-mode-prompt-seen')
+  .set('Authorization', `Bearer ${token}`).send(body);
+const OFF = { all: false, except: [] };
+
+test('#1768: a new account has NOT answered the prompt, and neither has one predating the key', async () => {
+  const acc = await freshAccount();
+  assert.equal((await getMe(acc.token)).body.simpleModePromptSeen, null, 'stored null at registration');
+  assert.equal(store.data.users.find((u) => u.id === acc.uid).simpleModePromptSeen, null,
+    'written explicitly, for absent-key parity with Postgres');
+  delete store.data.users.find((u) => u.id === acc.uid).simpleModePromptSeen;
+  store.saveData();
+  assert.equal((await getMe(acc.token)).body.simpleModePromptSeen, null, 'an absent key reads as unanswered');
+});
+
+test('#1768: answering without a body stamps the prompt and leaves the mode alone', async () => {
+  const acc = await freshAccount();
+  const res = await promptSeen(acc.token, {});
+  assert.equal(res.status, 200);
+  assert.match(res.body.simpleModePromptSeen, /^\d{4}-\d{2}-\d{2}T/);
+  assert.deepEqual(res.body.simpleMode, OFF, '„Alles behalten" keeps everything');
+  // A client cannot name its own stamp: any value it sends is ignored.
+  const again = await promptSeen(acc.token, { simpleModePromptSeen: '1999-01-01' });
+  assert.notEqual(again.body.simpleModePromptSeen, '1999-01-01');
+});
+
+test('#1768: answering „simple" stores the mode AND the stamp in one request', async () => {
+  const acc = await freshAccount();
+  const res = await promptSeen(acc.token, { simpleMode: { all: true, except: [] } });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body.simpleMode, { all: true, except: [] });
+  assert.ok(res.body.simpleModePromptSeen, 'stamped in the same write');
+  const me = (await getMe(acc.token)).body;
+  assert.deepEqual(me.simpleMode, { all: true, except: [] });
+  assert.equal(me.simpleModePromptSeen, res.body.simpleModePromptSeen);
+});
+
+test('#1768: a malformed mode is refused and writes NOTHING, the stamp included', async () => {
+  const acc = await freshAccount();
+  for (const bad of [true, null, { all: 'true', except: [] }, { all: true, except: 'x' }]) {
+    const res = await promptSeen(acc.token, { simpleMode: bad });
+    assert.equal(res.status, 400, `${JSON.stringify(bad)} must be refused`);
+    assert.equal(res.body.error, 'invalid_simple_mode_pref');
+  }
+  const me = (await getMe(acc.token)).body;
+  assert.equal(me.simpleModePromptSeen, null, 'a refused answer is no answer');
+  assert.deepEqual(me.simpleMode, OFF);
+  assert.equal((await request(app).post('/api/account/simple-mode-prompt-seen').send({})).status, 401);
+});
+
+test('#1768: setting the mode on Konto answers the prompt, once', async () => {
+  const acc = await freshAccount();
+  assert.equal((await patchMe(acc.token, { bgStats: true })).body.simpleModePromptSeen, null,
+    'another preference is no answer');
+  const first = await patchMe(acc.token, { simpleMode: { all: false, except: ['recap'] } });
+  assert.ok(first.body.simpleModePromptSeen, 'a Konto change stamps the prompt');
+  // A later change never moves the recorded answer.
+  store.data.users.find((u) => u.id === acc.uid).simpleModePromptSeen = '2026-01-01T00:00:00.000Z';
+  store.saveData();
+  const later = await patchMe(acc.token, { simpleMode: OFF });
+  assert.equal(later.body.simpleModePromptSeen, '2026-01-01T00:00:00.000Z');
+});

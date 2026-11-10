@@ -1551,6 +1551,14 @@ h1, h2, h3 { font-family: var(--font-display); }
 .hub-card__title .ti { color: var(--brand-ink, var(--brand)); font-size: var(--text-lg); }
 .hub-card__facts { font-size: var(--text-sm); margin: 10px 0 0; }
 .hub-card__body { display: flex; flex-direction: column; }
+/* The one-time „Einfacher Modus" offer (#1768, simple-mode-prompt.js). It
+   sits in the column under the CTA rather than in the card grid, so it carries
+   its own bottom margin; the × rides the title row's right edge. */
+.simple-prompt { margin: 0 0 18px; }
+.simple-prompt__close { margin-left: auto; flex: none; }
+.simple-prompt__text { margin: 0 0 12px; }
+.simple-prompt__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.simple-prompt__note { margin-top: 12px; }
 /* The young round's closing sentence on the Rundenpuls (#1280; every design
    since #1318): muted, because it says when something comes rather than what
    is there. The demo's „Gefällt dir das?" button sits under its text. Der

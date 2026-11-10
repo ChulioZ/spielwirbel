@@ -192,6 +192,9 @@ function renderStartTab(round, activeGames) {
   // „Jetzt spielen" (#1682): after the CTA and its presets, never between them,
   // and `rail-owned` exactly where the CTA is — directPlayButton says why.
   (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(directPlayButton(round, `hub-play${railOwned}`));
+  // „Einfacher Modus" offer (#1768): below the one action, above what it hides.
+  const simplePrompt = simpleModePromptCard(round);
+  if (simplePrompt) feed.appendChild(simplePrompt);
 
   // "Vote in progress" tickets: a draw whose voting was abandoned before the
   // hot-seat wizard POSTed its results (#329). The row is created server-side at

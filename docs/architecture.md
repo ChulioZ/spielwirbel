@@ -993,6 +993,8 @@ public/
     hub-cards.js          the Start tab's card renderers, their shared frame and
                           the quick-start chips, split out of the above at its
                           own #923 seam (issue #1189)
+    simple-mode-prompt.js the Start tab's one-time „Einfacher Modus" offer: who
+                          is owed it, and the card with its two answers (#1768)
     hub-reflow.js         moves a hub's cells between its phone order and its
                           desktop column wrappers at a breakpoint (#1496)
     ocean-hub.js          Ocean's composition of the lobby and the round hub:

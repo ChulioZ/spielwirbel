@@ -328,6 +328,7 @@ const frontendGlobals = {
   // inbox-mail opt-outs (issue #618) + the BG Stats opt-in (issue #485), which
   // share one account-preference toggle row
   buildNotifyForm: 'readonly', buildPrefToggle: 'readonly', buildBgStatsForm: 'readonly', buildSimpleModeForm: 'readonly',
+  simpleModePromptDue: 'readonly', simpleModePromptCard: 'readonly',
   // views-account-tisch.js (issue #1265): Konto as Der Tisch's dashboard
   renderKontoDashboard: 'readonly', buildKontoDuCard: 'readonly',
   kontoToggleValue: 'readonly', kontoRow: 'readonly', buildKontoBggCard: 'readonly',
