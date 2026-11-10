@@ -110,9 +110,10 @@ deviations are stated once. The brief must say:
   results) — the orchestrator only sees that message.
 
 Paste each issue's body into its agent's prompt (one less fetch per agent), and
-name branches predictably: `claude/batch-<issue>-<slug>`. **Run about four
-agents at a time**: every agent runs the full suite (~5 min on 4 cores), and
-more in parallel mostly makes each slower. Launch the next item as each one
+name branches predictably: `claude/batch-<issue>-<slug>`. **Run two to three
+agents at a time** (operator decision after the first batch): every agent runs
+the full suite (~5 min on 4 cores), and four in parallel hit the usage limit
+repeatedly. Launch the next item as each one
 reports back. Keep a one-line ledger per item (branch, PR, status, open
 questions) in the scratchpad so a context summary doesn't lose it.
 
@@ -123,10 +124,9 @@ with `SendMessage` after the reset, never by spawning a new one, and tell it to
 **commit, push and open the PR before the long coverage run** so the next stop
 costs no work. Agents near the end hand back first; launch new items only after.
 
-**Agent worktrees live under `.claude/worktrees/`, inside your own checkout,
-and are not gitignored.** A `git add -A` there while agents run commits them as
-gitlinks (measured on the first batch). Before committing in the main checkout,
-`echo .claude/worktrees/ >> .git/info/exclude`, or stage paths explicitly.
+**Agent worktrees live under `.claude/worktrees/`, inside your own checkout.**
+The first batch's `git add -A` committed them as gitlinks, which is why that
+path is now in `.gitignore` — don't remove the entry.
 
 ## 4. Check every PR before the interview
 
