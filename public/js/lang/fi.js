@@ -307,6 +307,11 @@ I18N.fi = {
   'recap.divisive': 'Eniten mielipiteitä jakava',
   'recap.favourites': 'Suosikit',
   'recap.thin': 'Arvioita ei ole vielä tarpeeksi kokonaiskuvaan — pelatkaa lisää, kyllä se siitä.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Kenen suosikit päätyvät pöytään',
+  'recap.tasteShareNone': 'Suosikit eivät ole vielä päätyneet pöytään',
+  'recap.tasteShareOne': 'Suosikit päätyivät pöytään kerran',
+  'recap.tasteShareMany': 'Suosikit päätyivät pöytään {n} kertaa',
 
   'periodRecap.title': 'Kuukausi ja vuosi',
   'periodRecap.lead': 'Valitse kuukausi tai vuosi — ja jaa se, mitä pelasitte.',
@@ -990,6 +995,12 @@ I18N.fi = {
   'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
   'member.favoriteNone': 'Ei vielä arvioita',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Suosikeista yksikään ei ole vielä päätynyt pöytään',
+  'member.tasteShareOne': 'Suosikeista yksi päätyi pöytään',
+  'member.tasteShareMany': 'Suosikeista {n} päätyi pöytään',
+  'member.tasteNear': 'Lähin maku:',
+  'member.tasteFar': 'Täysin eri maku:',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
   'member.ownedTitle': '{n} peliä, jotka omistaa {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1268,6 +1279,13 @@ I18N.fi = {
   'lobby.crumb': 'Äänestys',
   'lobby.title': 'Äänestys käynnissä',
   'lobby.sub': '{n} peliä arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
+  'lobby.drawBoost': 'Tänään lisämahdollisuus suosikeille: {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Arvonta',
+  'drawBoost.label': 'Vuoro sille, joka on jäänyt paitsi',
+  'drawBoost.note': 'Kun tämä on päällä, sen pöydän ääressä olevan suosikit, jonka suosikkeja on pelattu vähiten, arvotaan kaksi kertaa todennäköisemmin. Äänestys ei muutu.',
+  'drawBoost.toast.on': 'Lisämahdollisuus on päällä',
+  'drawBoost.toast.off': 'Lisämahdollisuus on pois',
   'lobby.subOne': '{n} peli arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
   'lobby.voted': 'äänesti',
   'lobby.waiting': 'odottaa',
@@ -1358,6 +1376,12 @@ I18N.fi = {
   'log.uncancelled': '{actor} kumosi perumisen',
 
   'directPlay.button': 'Pelaa heti',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Kuka aloittaa?',
+  'startPlayer.again': 'Uudelleen',
+  'startPlayer.answer': '{name} aloittaa',
+  'startPlayer.answerTeam': '{name} aloittavat',
   'directPlay.title': 'Pelaa ”{title}”',
   'directPlay.start': 'Aloita',
   'directPlay.log': 'Lisää sessio',

@@ -330,6 +330,11 @@ I18N.nl = {
   'recap.divisive': 'Meest verdeeld',
   'recap.favourites': 'Favorieten',
   'recap.thin': 'Nog te weinig beoordelingen voor een beeld — blijf spelen, het komt vanzelf.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Wiens favorieten op tafel komen',
+  'recap.tasteShareNone': 'Favorieten kwamen nog niet op tafel',
+  'recap.tasteShareOne': 'Favorieten kwamen één keer op tafel',
+  'recap.tasteShareMany': 'Favorieten kwamen {n}× op tafel',
 
   'periodRecap.title': 'Maand & jaar',
   'periodRecap.lead': 'Kies een maand of een jaar — en deel wat jullie gespeeld hebben.',
@@ -1016,6 +1021,12 @@ I18N.nl = {
   'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Van de favorieten kwam er nog geen op tafel',
+  'member.tasteShareOne': 'Van de favorieten kwam er één op tafel',
+  'member.tasteShareMany': 'Van de favorieten kwamen er {n} op tafel',
+  'member.tasteNear': 'Meest verwante smaak:',
+  'member.tasteFar': 'Totaal andere smaak:',
   'member.ownedTitleOne': '{n} spel van {name}',
   'member.ownedTitle': '{n} spellen van {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1297,6 +1308,13 @@ I18N.nl = {
   'lobby.crumb': 'Stemmen',
   'lobby.title': 'Stemmen loopt',
   'lobby.sub': '{n} spellen getrokken. Zodra iedereen gestemd heeft, begint de finale.',
+  'lobby.drawBoost': 'Vandaag extra kans voor de favorieten van {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Trekking',
+  'drawBoost.label': 'Wie tekortkomt, is aan de beurt',
+  'drawBoost.note': 'Als dit aan staat, hebben de favorieten van wie aan tafel zijn favorieten het minst gespeeld zag, twee keer zoveel kans om getrokken te worden. Aan de stemming verandert niets.',
+  'drawBoost.toast.on': 'Extra kans staat aan',
+  'drawBoost.toast.off': 'Extra kans staat uit',
   'lobby.subOne': '{n} spel getrokken. Zodra iedereen gestemd heeft, begint de finale.',
   'lobby.voted': 'gestemd',
   'lobby.waiting': 'wachtend',
@@ -1387,6 +1405,12 @@ I18N.nl = {
   'log.uncancelled': '{actor} maakte het afbreken ongedaan',
 
   'directPlay.button': 'Nu spelen',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Wie begint?',
+  'startPlayer.again': 'Nog een keer',
+  'startPlayer.answer': '{name} begint',
+  'startPlayer.answerTeam': '{name} beginnen',
   'directPlay.title': '“{title}” spelen',
   'directPlay.start': 'Starten',
   'directPlay.log': 'Sessie toevoegen',

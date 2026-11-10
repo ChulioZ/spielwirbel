@@ -2793,6 +2793,26 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.setMarker(OTHER, round.id, 3), null, 'another tenant cannot mark this round');
   });
 
+  test('setDrawBoost: off by default, present only while on, tenant-scoped (#1777)', async () => {
+    const round = await freshRound();
+    // Off by default, and OFF is the absent key on every read — never `false`.
+    assert.equal('drawBoost' in round, false);
+    assert.equal('drawBoost' in await repo.getRoundMeta(T, round.id), false);
+
+    assert.deepEqual(await repo.setDrawBoost(T, round.id, true), { drawBoost: true });
+    assert.equal((await repo.getRound(T, round.id)).drawBoost, true);
+    assert.equal((await repo.getRoundMeta(T, round.id)).drawBoost, true);
+
+    // Switched back off reads exactly like never set, in both backends.
+    assert.deepEqual(await repo.setDrawBoost(T, round.id, false), { drawBoost: false });
+    assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
+    assert.equal('drawBoost' in await repo.getRoundMeta(T, round.id), false);
+
+    assert.equal(await repo.setDrawBoost(T, 'missing', true), null);
+    assert.equal(await repo.setDrawBoost(OTHER, round.id, true), null, 'another tenant cannot switch it');
+    assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
+  });
+
   test('addTag creates and dedupes; deleteTag unassigns from every game (#238)', async () => {
     const round = await freshRound();
     assert.equal('tags' in round, false); // absent until the first tag is created

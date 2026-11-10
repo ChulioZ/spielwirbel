@@ -325,6 +325,11 @@ I18N.en = {
   'recap.divisive': 'Most divisive',
   'recap.favourites': 'Favourites',
   'recap.thin': 'Not enough ratings for a picture yet — keep playing, it will come.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Whose favourites reach the table',
+  'recap.tasteShareNone': 'Favourites have not reached the table yet',
+  'recap.tasteShareOne': 'Favourites reached the table once',
+  'recap.tasteShareMany': 'Favourites reached the table {n} times',
 
   // The per-period recap (#800): one calendar month or year, shareable as an image.
   'periodRecap.title': 'Month & year',
@@ -1035,6 +1040,12 @@ I18N.en = {
   'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'None of the favourites has reached the table yet',
+  'member.tasteShareOne': 'One of the favourites reached the table',
+  'member.tasteShareMany': '{n} of the favourites reached the table',
+  'member.tasteNear': 'Closest taste:',
+  'member.tasteFar': 'Most different taste:',
   'member.ownedTitleOne': '{n} game owned by {name}',
   'member.ownedTitle': '{n} games owned by {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1335,6 +1346,13 @@ I18N.en = {
   'lobby.crumb': 'Voting',
   'lobby.title': 'Voting in progress',
   'lobby.sub': '{n} games drawn. Once everyone has voted, the finale begins.',
+  'lobby.drawBoost': 'Extra chance today for {name}’s favourites',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Draw',
+  'drawBoost.label': 'Give the overlooked a turn',
+  'drawBoost.note': 'When on, the favourites of whoever at the table has seen theirs played least get double the chance to be drawn. The vote itself stays exactly the same.',
+  'drawBoost.toast.on': 'Extra chance is on',
+  'drawBoost.toast.off': 'Extra chance is off',
   'lobby.subOne': '{n} game drawn. Once everyone has voted, the finale begins.',
   'lobby.voted': 'voted',
   'lobby.waiting': 'waiting',
@@ -1432,6 +1450,12 @@ I18N.en = {
   'log.uncancelled': '{actor} undid the cancellation',
 
   'directPlay.button': 'Play now',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Who goes first?',
+  'startPlayer.again': 'Again',
+  'startPlayer.answer': '{name} goes first',
+  'startPlayer.answerTeam': '{name} go first',
   'directPlay.title': 'Play “{title}”',
   'directPlay.start': 'Start',
   'directPlay.log': 'Log session',

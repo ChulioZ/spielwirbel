@@ -332,6 +332,11 @@ I18N.fr = {
   'recap.divisive': 'Le plus clivant',
   'recap.favourites': 'Favoris',
   'recap.thin': 'Pas encore assez de notes pour dresser un portrait — continuez à jouer, ça viendra.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Les favoris de qui arrivent sur la table',
+  'recap.tasteShareNone': 'Ses favoris ne sont pas encore arrivés sur la table',
+  'recap.tasteShareOne': 'Ses favoris sont arrivés une fois sur la table',
+  'recap.tasteShareMany': 'Ses favoris sont arrivés {n} fois sur la table',
 
   // Le bilan par période (#800) : un mois ou une année, partageable en image.
   'periodRecap.title': 'Mois et année',
@@ -1021,6 +1026,12 @@ I18N.fr = {
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Aucun des favoris n’est encore arrivé sur la table',
+  'member.tasteShareOne': 'Un des favoris est arrivé sur la table',
+  'member.tasteShareMany': '{n} des favoris sont arrivés sur la table',
+  'member.tasteNear': 'Goûts les plus proches :',
+  'member.tasteFar': 'Goûts les plus différents :',
   'member.ownedTitleOne': '{n} jeu de {name}',
   'member.ownedTitle': '{n} jeux de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1302,6 +1313,13 @@ I18N.fr = {
   'lobby.crumb': 'Vote',
   'lobby.title': 'Vote en cours',
   'lobby.sub': '{n} jeux tirés. Dès que tout le monde a voté, la finale commence.',
+  'lobby.drawBoost': 'Aujourd’hui, un coup de pouce pour les favoris de {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Tirage',
+  'drawBoost.label': 'Un coup de pouce pour les oubliés',
+  'drawBoost.note': 'Activé, les favoris de la personne à table dont les favoris ont été le moins joués ont deux fois plus de chances d’être tirés. Le vote ne change pas.',
+  'drawBoost.toast.on': 'Coup de pouce activé',
+  'drawBoost.toast.off': 'Coup de pouce désactivé',
   'lobby.subOne': '{n} jeu tiré. Dès que tout le monde a voté, la finale commence.',
   'lobby.voted': 'a voté',
   'lobby.waiting': 'en attente',
@@ -1392,6 +1410,12 @@ I18N.fr = {
   'log.uncancelled': '{actor} a rétabli la session',
 
   'directPlay.button': 'Jouer maintenant',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Qui commence ?',
+  'startPlayer.again': 'Encore',
+  'startPlayer.answer': '{name} commence',
+  'startPlayer.answerTeam': '{name} commencent',
   'directPlay.title': 'Jouer à « {title} »',
   'directPlay.start': 'Démarrer',
   'directPlay.log': 'Ajouter la session',

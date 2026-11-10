@@ -332,6 +332,11 @@ I18N.pt = {
   'recap.divisive': 'Mais divisivo',
   'recap.favourites': 'Favoritos',
   'recap.thin': 'Ainda não há avaliações suficientes para um retrato — continuem jogando, ele vem.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'De quem são os favoritos que chegam à mesa',
+  'recap.tasteShareNone': 'Os favoritos ainda não chegaram à mesa',
+  'recap.tasteShareOne': 'Os favoritos chegaram à mesa uma vez',
+  'recap.tasteShareMany': 'Os favoritos chegaram à mesa {n} vezes',
 
   'periodRecap.title': 'Mês e ano',
   'periodRecap.lead': 'Escolha um mês ou um ano — e compartilhe o que vocês jogaram.',
@@ -1018,6 +1023,12 @@ I18N.pt = {
   'member.bestGameNone': 'Nenhum jogo ganho ainda',
   'member.favorite': 'Jogo favorito',
   'member.favoriteNone': 'Nenhuma avaliação ainda',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Nenhum dos favoritos chegou ainda à mesa',
+  'member.tasteShareOne': 'Um dos favoritos chegou à mesa',
+  'member.tasteShareMany': '{n} dos favoritos chegaram à mesa',
+  'member.tasteNear': 'Gosto mais parecido:',
+  'member.tasteFar': 'Gosto mais diferente:',
   'member.ownedTitleOne': '{n} jogo de {name}',
   'member.ownedTitle': '{n} jogos de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1299,6 +1310,13 @@ I18N.pt = {
   'lobby.crumb': 'Votação',
   'lobby.title': 'Votação em andamento',
   'lobby.sub': '{n} jogos sorteados. Quando todo mundo votar, começa o grande final.',
+  'lobby.drawBoost': 'Hoje com chance extra para os favoritos de {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Sorteio',
+  'drawBoost.label': 'Vez de quem ficou para trás',
+  'drawBoost.note': 'Ativado, os favoritos da pessoa à mesa cujos favoritos foram menos jogados têm o dobro de chance de ser sorteados. A votação não muda.',
+  'drawBoost.toast.on': 'Chance extra ativada',
+  'drawBoost.toast.off': 'Chance extra desativada',
   'lobby.subOne': '{n} jogo sorteado. Quando todo mundo votar, começa o grande final.',
   'lobby.voted': 'votou',
   'lobby.waiting': 'aguardando',
@@ -1389,6 +1407,12 @@ I18N.pt = {
   'log.uncancelled': '{actor} desfez o cancelamento',
 
   'directPlay.button': 'Jogar agora',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Quem começa?',
+  'startPlayer.again': 'De novo',
+  'startPlayer.answer': '{name} começa',
+  'startPlayer.answerTeam': '{name} começam',
   'directPlay.title': 'Jogar “{title}”',
   'directPlay.start': 'Começar',
   'directPlay.log': 'Registrar sessão',

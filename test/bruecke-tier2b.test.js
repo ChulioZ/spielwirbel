@@ -120,7 +120,7 @@ test('every heading takes its section into a plate, and the Gefahrenzone comes l
   await dom.call('showRoundSettings', RID);
   const heads = [...dom.app.querySelectorAll('.rs-br__col:not(.rs-br__col--marker) > .rs-br__plate > h2')].map(text);
   assert.deepEqual(heads, [
-    dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
+    dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"), dom.run("t('drawBoost.title')"),
     dom.run("t('roundSettings.manage')"), dom.run("t('roundSettings.danger')"),
   ]);
   const plates = [...dom.app.querySelectorAll('.rs-br__plate')];

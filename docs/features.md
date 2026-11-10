@@ -370,7 +370,13 @@ What the app does, in detail. For a short overview see the
   and word rather than a number), their strongest game (the one they win most often
   when they play it, ranked so one lucky win cannot outweigh a solid record;
   a never-won game is never named) and their favorite
-  game. The card wears that colour rather than merely being tinted by it: the
+  game. Under the figures the card names, in words only, **whose taste is
+  closest** to theirs and **whose is most different** — each a link to that
+  member's page — measured as the mean difference of each pair's per-game
+  average rating over the games both have rated, and shown only once a pair
+  shares at least five (retired games don't count, retired members aren't
+  named, ties are named together, and with a single qualifying pair only the
+  closest is shown). The card wears that colour rather than merely being tinted by it: the
   **win rate is the ring around the avatar**, sweeping into place once when the
   page opens; the member's **initials stand as a watermark** in the card's
   corner; and the two game tiles stand as **boxes** with a ribbon naming which
@@ -489,7 +495,19 @@ What the app does, in detail. For a short overview see the
     #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite. Pokale is the all-time record; the
+    most, and every member's own favourite. From the round's sixth played
+    session it also says **whose taste the table follows** (#1776): for each
+    member with at least two favourites (games their average rating draws as
+    the top face; a retired game is nobody's), how often one of them was played
+    with that member at the table, in words („Favoriten kamen 9× auf den
+    Tisch") — no percentages, no places. The member page carries the matching
+    line („Von den Favoriten kamen 4 auf den Tisch", distinct favourites), and
+    hides it with the Abzeichen under „Einfacher Modus". An opt-in round setting
+    in Einstellungen, **„Wer zu kurz kommt, ist dran"** (#1777, off by default),
+    acts on the same numbers: when one seated member is strictly behind, their
+    favourites are twice as likely to be drawn into the vote, and the lobby
+    says so once („Heute mit Extra-Chance für die Lieblingsspiele von Ben"). The
+    vote, the scores and the winner are untouched. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that
@@ -768,7 +786,13 @@ What the app does, in detail. For a short overview see the
   width of the row's own fill, beside its rank, its rating distribution (one bar
   per rating, labelled by its face) and who brings the box. Picking a game puts it **on the table**: a
   band above the ranking with the box, who brings it and the one action
-  („Als gespielt markieren") — and nothing at all before a game is chosen. Once
+  („Als gespielt markieren") — and nothing at all before a game is chosen.
+  While it waits to be played, **„Wer fängt an?"** (who goes first, issue
+  #1769) spins a short whirl over the people at the table and lands on one —
+  a team as a whole when the session has teams, never the automa; „Nochmal"
+  draws again, and the answer is shown, never stored. With reduced motion the
+  answer appears at once; it is announced to screen readers either way. The
+  „Jetzt spielen" sheet offers the same button once two seats are taken. Once
   it is played, the table carries a stamp with the date and the winners as
   seats, with the picker behind „Ändern". Recording the winner(s) is an
   optional follow-up step afterwards; the picker stays open while winners are

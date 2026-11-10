@@ -240,6 +240,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
+  draw-boost.js      the opt-in draw boost (issue #1777): which seated member
+                     is strictly behind on favourites reaching the table
+                     (taste-share.js), and the weighted draw that gives their
+                     favourites 2x the chance — the plain shuffle when off
   game-owners.js     which members of a round own a game: the owner-id
                      validation and the per-seat memory of the last selection,
                      shared by the add-game and BGG-import write paths
@@ -539,6 +543,8 @@ lib/
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
+    draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
+                                             on/off — issue #1777)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
                                              set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
@@ -667,6 +673,13 @@ public/
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
+    taste-share.js   whose favourites reach the table: per member, the games
+                     they rate at the top face and how often one was played
+                     with them seated — the Rückblick list, the member page's
+                     line, and the input #1777's draw boost reuses (issue #1776)
+    draw-boost-setting.js  the draw boost's Einstellungen toggle and the
+                     lobby's one line naming whose favourites got the extra
+                     chance (issue #1777)
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)
@@ -879,6 +892,12 @@ public/
                      (issue #1681)
     team-picker.js   the team field: group two or more of those people into one
                      party, shared by the same two screens (issue #575)
+    start-player.js  „Wer fängt an?": who may be drawn (the session's parties,
+                     a team as one), the RNG-injectable draw and the whirl's
+                     step sequence (issue #1769)
+    start-player-view.js  its button and whirl, on the results screen of a
+                     decided session and in the „Jetzt spielen" sheet
+                     (issue #1769)
     setup-addons.js  the add-on chip row those two fields now sit behind: one
                      chip per rare session option, each carrying its own state,
                      with the open one unfolding into a single body BELOW the
@@ -1073,6 +1092,10 @@ public/
                      round's sessions. Split out of views-member.js by #1075;
                      a pure derivation, edited when a statistic changes rather
                      than when the screen does
+    taste-neighbour.js  whose taste in the round is closest to a member's and
+                     whose is most different (mean difference of per-game
+                     average ratings, ≥ 5 shared games) — die Tischkarte's
+                     taste line (issue #1778)
     achievements.js  the Abzeichen catalogue (41 entries: member, round,
                      account) and their states, tiers and earning dates,
                      replayed on demand from the finished sessions — nothing

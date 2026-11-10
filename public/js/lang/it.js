@@ -331,6 +331,11 @@ I18N.it = {
   'recap.divisive': 'Più divisivo',
   'recap.favourites': 'Preferiti',
   'recap.thin': 'Non ci sono ancora valutazioni sufficienti per un quadro d’insieme — continuate a giocare, arriverà.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Di chi sono i preferiti che arrivano in tavola',
+  'recap.tasteShareNone': 'I preferiti non sono ancora arrivati in tavola',
+  'recap.tasteShareOne': 'I preferiti sono arrivati in tavola una volta',
+  'recap.tasteShareMany': 'I preferiti sono arrivati in tavola {n} volte',
 
   // Il riepilogo per periodo (#800): un mese o un anno, condivisibile come immagine.
   'periodRecap.title': 'Mese e anno',
@@ -1020,6 +1025,12 @@ I18N.it = {
   'member.bestGameNone': 'Nessun gioco ancora vinto',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Nessuno dei preferiti è ancora arrivato in tavola',
+  'member.tasteShareOne': 'Uno dei preferiti è arrivato in tavola',
+  'member.tasteShareMany': '{n} dei preferiti sono arrivati in tavola',
+  'member.tasteNear': 'Gusti più simili:',
+  'member.tasteFar': 'Gusti più diversi:',
   'member.ownedTitleOne': '{n} gioco di {name}',
   'member.ownedTitle': '{n} giochi di {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1301,6 +1312,13 @@ I18N.it = {
   'lobby.crumb': 'Votazione',
   'lobby.title': 'Votazione in corso',
   'lobby.sub': '{n} giochi estratti. Quando tutti avranno votato, comincia il finale.',
+  'lobby.drawBoost': 'Oggi più chance per i preferiti di {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Estrazione',
+  'drawBoost.label': 'Tocca a chi è rimasto indietro',
+  'drawBoost.note': 'Se attivo, i preferiti della persona al tavolo i cui preferiti sono stati giocati meno hanno il doppio delle probabilità di essere estratti. Il voto non cambia.',
+  'drawBoost.toast.on': 'Chance extra attiva',
+  'drawBoost.toast.off': 'Chance extra disattivata',
   'lobby.subOne': '{n} gioco estratto. Quando tutti avranno votato, comincia il finale.',
   'lobby.voted': 'ha votato',
   'lobby.waiting': 'in attesa',
@@ -1391,6 +1409,12 @@ I18N.it = {
   'log.uncancelled': '{actor} ha revocato l’annullamento',
 
   'directPlay.button': 'Gioca subito',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Chi inizia?',
+  'startPlayer.again': 'Ancora',
+  'startPlayer.answer': 'Inizia {name}',
+  'startPlayer.answerTeam': 'Iniziano {name}',
   'directPlay.title': 'Gioca a «{title}»',
   'directPlay.start': 'Avvia',
   'directPlay.log': 'Registra la sessione',
