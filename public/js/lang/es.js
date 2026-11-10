@@ -1029,6 +1029,8 @@ I18N.es = {
   'member.tasteShareNone': 'Ninguno de los favoritos ha llegado aún a la mesa',
   'member.tasteShareOne': 'Uno de los favoritos llegó a la mesa',
   'member.tasteShareMany': '{n} de los favoritos llegaron a la mesa',
+  'member.tasteNear': 'Gustos más parecidos:',
+  'member.tasteFar': 'Gustos más distintos:',
   'member.ownedTitleOne': '{n} juego de {name}',
   'member.ownedTitle': '{n} juegos de {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1407,6 +1409,12 @@ I18N.es = {
   'log.uncancelled': '{actor} ha deshecho la cancelación',
 
   'directPlay.button': 'Jugar ya',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': '¿Quién empieza?',
+  'startPlayer.again': 'Otra vez',
+  'startPlayer.answer': 'Empieza {name}',
+  'startPlayer.answerTeam': 'Empiezan {name}',
   'directPlay.title': 'Jugar a «{title}»',
   'directPlay.start': 'Empezar',
   'directPlay.log': 'Registrar sesión',

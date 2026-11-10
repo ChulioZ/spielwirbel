@@ -999,6 +999,8 @@ I18N.fi = {
   'member.tasteShareNone': 'Suosikeista yksikään ei ole vielä päätynyt pöytään',
   'member.tasteShareOne': 'Suosikeista yksi päätyi pöytään',
   'member.tasteShareMany': 'Suosikeista {n} päätyi pöytään',
+  'member.tasteNear': 'Lähin maku:',
+  'member.tasteFar': 'Täysin eri maku:',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
   'member.ownedTitle': '{n} peliä, jotka omistaa {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1367,6 +1369,12 @@ I18N.fi = {
   'log.uncancelled': '{actor} kumosi perumisen',
 
   'directPlay.button': 'Pelaa heti',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Kuka aloittaa?',
+  'startPlayer.again': 'Uudelleen',
+  'startPlayer.answer': '{name} aloittaa',
+  'startPlayer.answerTeam': '{name} aloittavat',
   'directPlay.title': 'Pelaa ”{title}”',
   'directPlay.start': 'Aloita',
   'directPlay.log': 'Lisää sessio',

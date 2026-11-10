@@ -8133,6 +8133,18 @@ a.k-tile:focus-visible,
   text-transform: uppercase;
   color: var(--ink);
 }
+/* The taste line under the figures (#1778): closest and most different member,
+   in words. The label takes the figure labels' treatment and `--ink` for the
+   same contrast reason given above; the names are member links in `--ink`. */
+.member-taste { margin-top: 16px; display: flex; flex-direction: column; gap: 4px; }
+.member-taste__row { margin: 0; color: var(--ink); }
+.member-taste__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.member-taste__row a { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 /* The two game tiles inside the card. `.pokale-cards` gives the grid; two
    columns from 560px so they read as the pair they are, stacked below. */
 .member-card__games { margin-top: 22px; }
@@ -10091,7 +10103,7 @@ kbd {
 .taste-share__row .avatar { width: 26px; height: 26px; font-size: 11px; /* glyph, not type */ }
 .taste-share__who { font-size: var(--text-sm); font-weight: 700; }
 .taste-share__text { font-size: var(--text-sm); color: var(--ink-soft); min-width: 0; }
-.member-taste { margin: 14px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.member-taste-share { margin: 14px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
 .recap-fav__name {
   font-size: var(--text-sm);
   font-weight: 700;
@@ -12575,3 +12587,35 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
   background: linear-gradient(90deg, var(--brand) calc(var(--pct) * 1%), var(--sunken) 0);
 }
 .badge-card__earned { font-size: var(--text-sm); }
+
+/* „Wer fängt an?" (#1769) — the start-player whirl under the table band and in
+   the direct-play sheet. Painted from the design tokens only, so every design
+   wears it in its own colours with the same markup. The seats are `aria-hidden`
+   (the answer is announced instead), and the lit step is never colour alone:
+   it also lifts and gains a ring. */
+.start-player { display: grid; gap: 10px; justify-items: start; margin: 12px 0 0; }
+.start-player[hidden] { display: none; }
+.start-player__ring { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.start-player__seat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 4px 12px 4px 4px;
+  border: 2px solid var(--line, var(--brand-edge));
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+}
+.start-player__faces { display: inline-flex; flex: none; }
+.start-player__faces .avatar + .avatar { margin-left: -8px; }
+.start-player__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.start-player__seat.is-lit,
+.start-player__seat.is-picked { border-color: var(--brand); background: var(--brand-tint); box-shadow: 0 0 0 2px var(--brand); }
+.start-player__seat.is-picked { font-weight: 700; }
+.start-player__answer { margin: 0; font-weight: 700; font-size: var(--text-md); color: var(--ink); }
+.start-player__answer:empty { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .start-player__seat { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
+  .start-player__seat.is-lit { transform: translateY(-2px); }
+}

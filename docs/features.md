@@ -370,7 +370,13 @@ What the app does, in detail. For a short overview see the
   and word rather than a number), their strongest game (the one they win most often
   when they play it, ranked so one lucky win cannot outweigh a solid record;
   a never-won game is never named) and their favorite
-  game. The card wears that colour rather than merely being tinted by it: the
+  game. Under the figures the card names, in words only, **whose taste is
+  closest** to theirs and **whose is most different** — each a link to that
+  member's page — measured as the mean difference of each pair's per-game
+  average rating over the games both have rated, and shown only once a pair
+  shares at least five (retired games don't count, retired members aren't
+  named, ties are named together, and with a single qualifying pair only the
+  closest is shown). The card wears that colour rather than merely being tinted by it: the
   **win rate is the ring around the avatar**, sweeping into place once when the
   page opens; the member's **initials stand as a watermark** in the card's
   corner; and the two game tiles stand as **boxes** with a ribbon naming which
@@ -775,7 +781,13 @@ What the app does, in detail. For a short overview see the
   width of the row's own fill, beside its rank, its rating distribution (one bar
   per rating, labelled by its face) and who brings the box. Picking a game puts it **on the table**: a
   band above the ranking with the box, who brings it and the one action
-  („Als gespielt markieren") — and nothing at all before a game is chosen. Once
+  („Als gespielt markieren") — and nothing at all before a game is chosen.
+  While it waits to be played, **„Wer fängt an?"** (who goes first, issue
+  #1769) spins a short whirl over the people at the table and lands on one —
+  a team as a whole when the session has teams, never the automa; „Nochmal"
+  draws again, and the answer is shown, never stored. With reduced motion the
+  answer appears at once; it is announced to screen readers either way. The
+  „Jetzt spielen" sheet offers the same button once two seats are taken. Once
   it is played, the table carries a stamp with the date and the winners as
   seats, with the picker behind „Ändern". Recording the winner(s) is an
   optional follow-up step afterwards; the picker stays open while winners are
