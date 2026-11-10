@@ -153,6 +153,11 @@ function renderChronikTab(round, activities) {
       // previous name is deliberately not stored: it would outlive a moderation
       // redaction of the round's name.
       round_renamed: { icon: 'ti-pencil', text: t('activity.roundRenamed', { name: a.name }) },
+      // A lent box (#1775): who has it, by the seat's CURRENT name when one was
+      // picked and the name as typed otherwise. Shelf changes like the rest, so
+      // they fold under „Regal-Änderungen" (isShelfChange matches `game_*`).
+      game_lent: { icon: 'ti-share', text: t('activity.gameLent', { title: a.title, name: loanBorrowerName(round, a) }) },
+      game_returned: { icon: 'ti-arrow-back-up', text: t('activity.gameReturned', { title: a.title, name: loanBorrowerName(round, a) }) },
       // Owned expansions (#653) — a count plus the GAME's title, for the same
       // reason the three bulk entries above carry counts: one save can tick ten
       // boxes. A quiet row, deliberately not a CHRONIK_MILESTONES entry: adding

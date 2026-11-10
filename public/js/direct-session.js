@@ -207,7 +207,10 @@ function showDirectPlayPicker(round, { title = t('directPlay.pickTitle'), hint =
   const search = sheet.querySelector('#playPickSearch');
 
   games.forEach((g) => {
-    const marker = g.guestGame === true ? `<span class="play-pick__tag">${esc(t('guestGames.marker'))}</span>` : '';
+    // A lent box stays pickable here (#1775) — the user names the box, and it may
+    // be back on the table tonight — but says so, like a guest game does.
+    const marker = g.guestGame === true ? `<span class="play-pick__tag">${esc(t('guestGames.marker'))}</span>`
+      : isLentOut(g) ? `<span class="play-pick__tag" title="${esc(loanChipText(round, g.loan))}">${esc(t('loan.marker'))}</span>` : '';
     const li = h(`<li><button type="button" class="ds-row play-pick__row" data-title="${esc(String(g.title).toLowerCase())}">
         <span class="ds-row__main">${esc(g.title)}</span>
         <span class="ds-row__meta">${marker}<i class="ti ti-chevron-right" aria-hidden="true"></i></span>

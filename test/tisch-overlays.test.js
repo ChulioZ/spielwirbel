@@ -104,7 +104,7 @@ test('the game menu: the two reversible moves, then the one red question', async
   const tr = (k) => dom.run(`t('${k}')`);
   const items = await menuFacts(dom, '.gd-menu');
   assertMenuContract('game detail', items,
-    [tr('detail.complete'), tr('detail.retire'), tr('detail.unlinkProvider')]);
+    [tr('detail.complete'), tr('detail.retire'), tr('loan.menuLend'), tr('detail.unlinkProvider')]);
   // #1360: retiring is reversible („jederzeit zurückholen"), so it is neither
   // filed nor asked as a deletion.
   assert.equal(items.find((i) => i.label === tr('detail.retire')).kind, 'undoable',

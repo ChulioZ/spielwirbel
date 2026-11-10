@@ -265,7 +265,10 @@ function showStartSession(round, prefill) {
   // `minTableSeats` (#1730) rides along: the smallest table the split may form,
   // read through the shared `minTableSeatsOf` so an absent preset key — every
   // remembered draw before it, and every one at the default — opens on 3.
-  const tableState = { multiTable: !!(preset && preset.multiTable), minTableSeats: minTableSeatsOf(preset) };
+  // `includeLent` (#1775) rides here because the pot preview reads it beside the
+  // table clauses. Always starts OFF — it is not part of any preset, since a
+  // remembered "include lent" would keep drawing boxes that are not in the house.
+  const tableState = { multiTable: !!(preset && preset.multiTable), minTableSeats: minTableSeatsOf(preset), includeLent: false };
   // A preset can arrive with BOTH remembered (#252), and `normalizeMetadataFilters`
   // above cannot drop it: it prunes against the SHELF's options, and whether this
   // evening has one table is a property of the screen. Without this the restored
@@ -412,6 +415,20 @@ function showStartSession(round, prefill) {
       updateHint();
     },
   });
+  // „Verliehene Spiele mitwirbeln" (#1775) — offered only when a box on the
+  // shelf is actually out, so an ordinary evening's row is unchanged.
+  if (activeGames.some(isLentOut)) {
+    addons.addAddon({
+      key: 'lent',
+      icon: 'ti-share',
+      label: () => t('startSession.addon.lent'),
+      on: () => tableState.includeLent,
+      onToggle: () => {
+        tableState.includeLent = !tableState.includeLent;
+        updateHint();
+      },
+    });
+  }
   // A remembered preset can arrive with the mode already on (#252).
   multiTableOpts.hidden = !tableState.multiTable;
   form.querySelector('#addonMount').replaceWith(addons);
@@ -611,6 +628,7 @@ function showStartSession(round, prefill) {
         teams: teamPicker.teamPayload(), // guests by POSITION in `guests` (#575)
         multiTable: tableState.multiTable, // #796; the server drops it when false
         minTableSeats: tableState.minTableSeats, // #1730; ignored without multiTable
+        includeLent: tableState.includeLent, // #1775; lent boxes stay out unless true
       });
       // A per-device session opens the lobby instead: its votes arrive one
       // person at a time, from wherever those people are, so there is no single

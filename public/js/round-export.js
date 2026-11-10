@@ -104,7 +104,7 @@ function roundExportTables(round) {
   const gamesCsv = exportCsv(
     ['game_id', 'title', 'state', 'min_players', 'max_players', 'min_playtime', 'max_playtime',
       'weight', 'bgg_id', 'owners', 'tags', 'expansions', 'score', 'ratings', 'plays',
-      'purchase_price', 'currency'],
+      'purchase_price', 'currency', 'lent_to', 'lent_since'],
     games.map((g) => {
       const st = index.byGame[g.id] || {};
       const pt = gamePlaytime(g);
@@ -122,6 +122,9 @@ function roundExportTables(round) {
         // The purchase price (#1773) as a decimal amount, so a spreadsheet can
         // sum it; the stored cents travel unchanged in round.json.
         g.purchasePrice ? g.purchasePrice.amount / 100 : null, g.purchasePrice ? g.purchasePrice.currency : null,
+        // Who has the box (#1775) — the export is the round's own data, so the
+        // borrower travels; a move or copy into another round drops it.
+        isLentOut(g) ? loanBorrowerName(round, g.loan) : '', isLentOut(g) ? g.loan.since : '',
       ];
     })
   );

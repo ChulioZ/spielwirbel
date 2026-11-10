@@ -168,6 +168,20 @@ function fmtMonthKey(key) {
   return fmtMonth(new Date(Number(m[1]), Number(m[2]) - 1, 1));
 }
 
+// A lent box's day (#1775), 'YYYY-MM-DD' → „3.11." — built in LOCAL time for
+// fmtMonthKey's reason: parsed as an instant, the day is UTC midnight and reads
+// as the day before for anyone west of UTC. The year only when it is not this
+// year, since a loan is almost always recent.
+function fmtLoanDay(day) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(day || ''));
+  if (!m) return '';
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const opts = d.getFullYear() === new Date().getFullYear()
+    ? { day: 'numeric', month: 'numeric' }
+    : { day: 'numeric', month: 'numeric', year: 'numeric' };
+  return d.toLocaleDateString(localeTag(locale), opts);
+}
+
 // Money, in the reader's locale and the upstream's own currency (#679).
 //
 // The currency comes from the price source, never from the locale: a German

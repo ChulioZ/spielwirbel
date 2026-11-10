@@ -112,6 +112,12 @@ before assuming you have them all:
   (`public/js/direct-session.js`) deliberately does **not** filter: the user
   picked that box.
 
+  **A SEVENTH, `fitsLoanFilter` (#1775), lives in `game-loan.js`** — not an
+  "active games" clause either: a lent box is still on the shelf, it is only not
+  in the house. `drawPool` and the setup pot apply it (a lent box is out unless
+  the session sends `includeLent: true`), the direct pick and the Regal do not —
+  „Jetzt spielen" names the box, so it stays playable with a marker.
+
   **A SIXTH predicate joined the same three sites in #1005: `fitsRecommendedCount`.**
   Also not an "active games" clause — it asks whether BGG's community endorses
   this box at this table size — and it lives in `draw-pool.js` beside

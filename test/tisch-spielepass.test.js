@@ -104,7 +104,7 @@ test('Klassisch: the spread is exactly #1039\'s — cover pill, stamps, „…",
   // The menu still lists the three items in fillMenu's order.
   menu.click();
   const opts = dom.document.querySelectorAll('.popover--menu .popover__opt');
-  assert.deepEqual(labelsOf(opts), ['Durchgespielt', 'Aussortieren', 'Verknüpfung lösen']);
+  assert.deepEqual(labelsOf(opts), ['Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
 });
 
 /* --------------------------------- Tisch: the pass -------------------------------- */
@@ -151,9 +151,9 @@ test('Tisch: the menu\'s items are an Aktionen panel in fillMenu\'s order, and �
   assert.ok(!app.querySelector('.back-row').classList.contains('back-row--split'));
 
   const btns = app.querySelectorAll('.gd-actions .gd-actions__grid > button.gd-act');
-  assert.deepEqual(labelsOf(btns), ['Durchgespielt', 'Aussortieren', 'Verknüpfung lösen']);
+  assert.deepEqual(labelsOf(btns), ['Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
   // Retiring is reversible, so it sits with completion above the rule (#1360).
-  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['undoable', 'undoable', 'destructive']);
+  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['undoable', 'undoable', 'undoable', 'destructive']);
 
   // The raters lead, the history follows, then the panel, then the bar.
   assert.deepEqual(classOrder(app.querySelector('.pass__table')), ['gd-raters', 'gd-history', 'gd-actions', 'gd-bar']);

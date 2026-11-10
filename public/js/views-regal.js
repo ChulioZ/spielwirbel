@@ -439,9 +439,16 @@ function renderRegalTab(round, activeGames) {
       // of plain base boxes looks exactly as it always did.
       // „Einfacher Modus" (#1646): the pill rides `gameExtras`.
       const expCount = simpleHidden('gameExtras') ? 0 : (g.expansions || []).length;
-      const expBadge = expCount
+      let expBadge = expCount
         ? `<span class="exp-pill" title="${esc(tn(expCount, 'detail.expansionsBadgeOne', 'detail.expansionsBadge', { n: expCount }))}">+${expCount}</span>`
         : '';
+      // A lent box (#1775): a small marker beside the expansion count, riding
+      // the same pill so every design's own badge styling carries it. The
+      // borrower's name is in the title, escaped like every other attribute.
+      const loanBadge = isLentOut(g)
+        ? `<span class="exp-pill exp-pill--loan" role="img" aria-label="${esc(loanChipText(round, g.loan))}" title="${esc(loanChipText(round, g.loan))}"><i class="ti ti-share" aria-hidden="true"></i></span>`
+        : '';
+      expBadge = loanBadge + expBadge;
       const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge)
         : forest ? forestShelfCard(round, g, score, evidence, expBadge)
         : bruecke ? brueckeCard(g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">

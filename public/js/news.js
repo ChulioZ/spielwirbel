@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1775, lent boxes. A capability that did not exist: a box lent to a friend
+   * stayed in the draw and nothing said who had it.
+   */
+  {
+    revision: '2026-11-10',
+    kind: 'new',
+    de: {
+      title: 'Wer hat gerade unser Spiel?',
+      body: 'Auf der Spielseite steht unter „…“ jetzt „Verliehen“: Wählt jemanden aus der Runde oder tippt einen Namen ein. Ein verliehenes Spiel wird nicht mehr ausgelost – außer ihr schaltet beim Auslosen „Verliehene Spiele mitwirbeln“ ein –, die Chronik merkt sich, wann es ging und zurückkam, und nach acht Wochen erinnert die Kümmerliste daran.',
+    },
+    en: {
+      title: 'Who has our game right now?',
+      body: 'A game’s page now has “Lent out” under “…”: pick someone from the round or type a name. A lent game is no longer drawn – unless you turn on “Include lent games” when drawing –, History records when it left and came back, and after eight weeks “Loose ends” reminds you.',
+    },
+    es: {
+      title: '¿Quién tiene ahora nuestro juego?',
+      body: 'En la página del juego, bajo «…», ahora está «Prestado»: elige a alguien de la ronda o escribe un nombre. Un juego prestado ya no sale en el sorteo – salvo que actives «Incluir juegos prestados» al sortear –, el Historial guarda cuándo se fue y cuándo volvió, y a las ocho semanas «Cabos sueltos» te lo recuerda.',
+    },
+    fr: {
+      title: 'Qui a notre jeu en ce moment ?',
+      body: 'La page d’un jeu propose désormais « Prêté » sous « … » : choisissez quelqu’un de la ronde ou saisissez un nom. Un jeu prêté n’est plus tiré au sort – sauf si vous activez « Inclure les jeux prêtés » au tirage –, l’Historique garde quand il est parti et revenu, et au bout de huit semaines « À régler » vous le rappelle.',
+    },
+    it: {
+      title: 'Chi ha adesso il nostro gioco?',
+      body: 'Nella pagina del gioco, sotto «…», ora c’è «Prestato»: scegli qualcuno del giro o scrivi un nome. Un gioco prestato non viene più estratto – a meno che non attivi «Includi i giochi prestati» al sorteggio –, la Cronologia ricorda quando è partito e tornato, e dopo otto settimane «Cose da sistemare» te lo ricorda.',
+    },
+    nl: {
+      title: 'Wie heeft ons spel nu?',
+      body: 'Op de pagina van een spel staat onder „…” nu „Uitgeleend”: kies iemand uit de ronde of typ een naam. Een uitgeleend spel wordt niet meer geloot – tenzij je bij het loten „Uitgeleende spellen meenemen” aanzet –, de Geschiedenis onthoudt wanneer het vertrok en terugkwam, en na acht weken herinneren „Losse eindjes” je eraan.',
+    },
+    pt: {
+      title: 'Quem tem agora o nosso jogo?',
+      body: 'Na página do jogo, em «…», há agora «Emprestado»: escolhe alguém da roda ou escreve um nome. Um jogo emprestado já não entra no sorteio – a não ser que ligues «Incluir jogos emprestados» ao sortear –, o Histórico regista quando saiu e voltou, e ao fim de oito semanas «Pontas soltas» lembra-te.',
+    },
+    fi: {
+      title: 'Kenellä pelimme on nyt?',
+      body: 'Pelin sivulla on nyt ”…”-valikossa ”Lainaa”: valitse joku porukasta tai kirjoita nimi. Lainassa olevaa peliä ei enää arvota – ellet arvonnassa kytke päälle ”Ota lainatut pelit mukaan” –, Historia muistaa, milloin se lähti ja palasi, ja kahdeksan viikon jälkeen ”Avoimet asiat” muistuttaa siitä.',
+    },
+    ko: {
+      title: '지금 우리 게임은 누가 가지고 있나요?',
+      body: '게임 페이지의 „…“ 메뉴에 이제 „빌려주기“가 있어요. 라운드의 사람을 고르거나 이름을 입력하세요. 빌려준 게임은 더 이상 뽑히지 않아요 – 뽑을 때 „빌려준 게임도 포함“을 켜지 않는 한요. 기록에 언제 나가고 돌아왔는지 남고, 8주가 지나면 „남은 일“이 알려 줘요.',
+    },
+  },
+  /*
    * #1773, the purchase price. A capability that did not exist: nothing in the
    * app could say what a game had cost, let alone per session.
    */

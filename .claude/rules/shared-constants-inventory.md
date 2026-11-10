@@ -849,6 +849,17 @@ too, or that offer silently stops appearing for it. `costPerPlay` and `bestBuy`
 in the same file are client-only and divide by `playCounts` (vote-score.js),
 the shelf's own count, never a second definition of a play.
 
+**The fortieth is `public/js/game-loan.js`** (#1775): a lent box —
+`LOAN_TO_MAX` and `isLoanDay`, which the loan editor offers (the name input's
+`maxlength`, the date input) and `PUT …/games/:gid/loan` validates, plus
+`fitsLoanFilter`, the draw clause `lib/draw.js` applies and the setup screen's
+pot applies to the same games. The value half is the palette shape; the logic
+half is `draw-pool.js`'s argument again, with a default that matters: a lent box
+is OUT unless the session sends a literal `includeLent: true`, so a drifted copy
+on either side would make the pot promise a box the draw leaves out, or hide
+one it would draw. `loanBorrowerName` (a seat's current name, else the typed
+one) and `longLoans` are client-only readers that live beside them.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

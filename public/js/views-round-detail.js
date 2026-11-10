@@ -585,6 +585,12 @@ async function showGameDetail(rid, gameId) {
   // appear on one — the round does not own the game, so it was never played.
   if (game.wish) chips.append(h(`<span class="tag tag--wish">${iconText('ti-heart', t('wish.tag'))}</span>`));
   if (game.guestGame) chips.append(h(`<span class="tag tag--guest">${iconText('ti-door', t('guestGames.marker'))}</span>`));
+  // „Verliehen an Kim seit 3.11." (#1775) — a button, because it opens the loan
+  // editor to correct who has it or since when; „Zurück" is in the page menu.
+  if (isLentOut(game)) {
+    chips.append(editableTag('tag--loan', iconText('ti-share', loanChipText(round, game.loan)),
+      (anchor) => openLoanEditor(editorCtx, anchor)));
+  }
 
   // The glance facts (#717/#724), promoted out of the „Über das Spiel" section
   // and onto the card as pills (#1039): weight, playing time, minimum age are
@@ -1079,6 +1085,15 @@ async function showGameDetail(rid, gameId) {
         showGameDetail(rid, gameId);
       } catch (e) { toast(e.message, { tone: 'error' }); }
     } });
+  }
+  // Lending (#1775): only a box on the shelf — a wish is not in the cupboard, a
+  // guest game is the guest's, and an archived box is offered „Zurück" only if
+  // it is still out. One item either way: „Verliehen" opens the editor,
+  // „Zurück" brings the box home.
+  if (isActiveGame(game) || (isLentOut(game) && !game.wish && !game.guestGame)) {
+    menuItems.push(isLentOut(game)
+      ? { icon: 'ti-arrow-back-up', label: t('loan.menuReturn'), kind: 'undoable', run: () => returnLoan(editorCtx) }
+      : { icon: 'ti-share', label: t('loan.menuLend'), kind: 'undoable', run: () => openLoanEditor(editorCtx, back) });
   }
   if (game.source) {
     const provider = providerLabel(game.source.provider);

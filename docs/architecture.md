@@ -793,6 +793,10 @@ public/
                      imported metadata (issue #725), required by lib/draw.js so
                      the setup screen's live preview and the real draw apply one
                      predicate (issue #634)
+    game-loan.js     a lent box (#1775): the borrower-name cap, the calendar
+                     day check, the draw clause that keeps a lent box out unless
+                     asked, and the eight-week Kümmerliste cut — required by
+                     lib/draw.js and lib/routes/games.js
     filter-panel.js  the ONE „Filter" control: the round's tags and the
                      metadata filters — playing time, complexity, minimum age,
                      categories, mechanics — behind one trigger that opens a
@@ -1047,6 +1051,8 @@ public/
                      views-round-detail.js, whose remaining seam ran INSIDE
                      showGameDetail; each takes one explicit context instead of
                      closing over that function's scope
+    loan-editor.js   the game page's „Verliehen" editor and „Zurück" (#1775):
+                     a seat or a typed name, and the day the box left
     game-editor-playtime.js  the game page's playing-time editor (#1627):
                      a round's own min–max minutes, stored beside BGG's pair
                      as `playtimeOverride` and read everywhere through

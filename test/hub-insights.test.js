@@ -493,3 +493,27 @@ test('anniversary does not celebrate today', () => {
   const sessions = [played('s1', 'g1', at(2026, 9, 5))];
   assert.equal(anniversary(round(games, sessions), { now: NOW }, deps), null);
 });
+
+// ------------------------------------------------- Kümmerliste: lent boxes (#1775)
+
+test('careList lists boxes lent out for eight weeks or more — even before the first played session', () => {
+  const { longLoans } = require('../public/js/game-loan');
+  const withLoans = { ...deps, longLoans };
+  const games = [
+    game('g1', { loan: { to: 'Kim', since: '2026-07-01' } }), // 66 days before NOW
+    game('g2', { loan: { to: 'Ben', since: '2026-08-20' } }), // 16 days — not yet
+    game('g3', { completed: true, loan: { to: 'Ada', since: '2026-06-01' } }), // off the shelf, still out
+    game('g4'),
+  ];
+  const active = games.filter((g) => !g.completed);
+  const young = careList(round(games, []), active, withLoans, { now: NOW });
+  assert.equal(young.empty, false, 'a long loan is worth saying on a round that never played');
+  assert.deepEqual(young.loans.map((g) => g.id), ['g3', 'g1'], 'longest out first, over every game of the round');
+  assert.equal(young.loansTotal, 2);
+  const after = careList(round(games, [played('s1', 'g4', at(2026, 9, 1))]), active, withLoans, { now: NOW });
+  assert.equal(after.loansTotal, 2);
+  assert.equal(after.empty, false);
+  // Nothing long out: the card stays quiet.
+  const none = careList(round([game('g1')], []), [game('g1')], withLoans, { now: NOW });
+  assert.equal(none.empty, true);
+});
