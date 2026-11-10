@@ -102,6 +102,10 @@ deviations are stated once. The brief must say:
 - commit with the branch guard in the same call, `-s`, the harness's attribution
   trailers; open the PR via the GitHub MCP tool when `gh` is unusable;
 - **never merge, never push to `main`**, skip phases 6–8;
+- keep scratch files (commit message, test logs) in a **per-branch subfolder**
+  of the scratchpad — agents share it, and a second agent's `commit-msg.txt` or
+  `cov.log` silently overwrites the first's; no self-scheduled reminders (they
+  fire in the orchestrator's session, not the agent's);
 - end with a short report (PR link, walkthrough, open questions, limits, check
   results) — the orchestrator only sees that message.
 
