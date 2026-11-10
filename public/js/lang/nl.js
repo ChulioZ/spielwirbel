@@ -1308,6 +1308,13 @@ I18N.nl = {
   'lobby.crumb': 'Stemmen',
   'lobby.title': 'Stemmen loopt',
   'lobby.sub': '{n} spellen getrokken. Zodra iedereen gestemd heeft, begint de finale.',
+  'lobby.drawBoost': 'Vandaag extra kans voor de favorieten van {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Trekking',
+  'drawBoost.label': 'Wie tekortkomt, is aan de beurt',
+  'drawBoost.note': 'Als dit aan staat, hebben de favorieten van wie aan tafel zijn favorieten het minst gespeeld zag, twee keer zoveel kans om getrokken te worden. Aan de stemming verandert niets.',
+  'drawBoost.toast.on': 'Extra kans staat aan',
+  'drawBoost.toast.off': 'Extra kans staat uit',
   'lobby.subOne': '{n} spel getrokken. Zodra iedereen gestemd heeft, begint de finale.',
   'lobby.voted': 'gestemd',
   'lobby.waiting': 'wachtend',

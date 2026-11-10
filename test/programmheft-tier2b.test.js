@@ -108,7 +108,7 @@ test('every heading takes its section with it: setup left, managing and danger r
   await dom.call('showRoundSettings', RID);
   const heads = (sel) => [...dom.app.querySelectorAll(`${sel} > .rs-ph__sec > h2`)].map(text);
   assert.deepEqual(heads('.rs-ph__col:not(.rs-ph__col--act)'), [
-    dom.run("t('newRound.nameLabel')"), dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"),
+    dom.run("t('newRound.nameLabel')"), dom.run("t('marker.title')"), dom.run("t('roundSettings.config')"), dom.run("t('savedFilters.title')"), dom.run("t('drawBoost.title')"),
   ]);
   assert.deepEqual(heads('.rs-ph__col--act'), [
     dom.run("t('roundSettings.manage')"), dom.run("t('roundSettings.danger')"),

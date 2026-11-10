@@ -1342,6 +1342,13 @@ I18N.de = {
   'lobby.crumb': 'Abstimmung',
   'lobby.title': 'Abstimmung läuft',
   'lobby.sub': '{n} Spiele ausgelost. Alle stimmen ab, dann kommt das Finale.',
+  'lobby.drawBoost': 'Heute mit Extra-Chance für die Lieblingsspiele von {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Ziehung',
+  'drawBoost.label': 'Wer zu kurz kommt, ist dran',
+  'drawBoost.note': 'Ist das an, haben die Lieblingsspiele der Person am Tisch, deren Favoriten am seltensten gespielt wurden, beim Ziehen doppelte Chance. An der Abstimmung ändert das nichts.',
+  'drawBoost.toast.on': 'Extra-Chance ist an',
+  'drawBoost.toast.off': 'Extra-Chance ist aus',
   'lobby.subOne': '{n} Spiel ausgelost. Alle stimmen ab, dann kommt das Finale.',
   'lobby.voted': 'abgestimmt',
   'lobby.waiting': 'offen',

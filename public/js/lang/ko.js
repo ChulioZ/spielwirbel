@@ -1263,6 +1263,13 @@ I18N.ko = {
   'lobby.crumb': '투표',
   'lobby.title': '투표 진행 중',
   'lobby.sub': '게임 {n}개를 뽑았어요. 모두 투표하면 결선이 시작돼요.',
+  'lobby.drawBoost': '오늘은 {name} 님의 최애 게임에 기회를 더 줘요',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': '추첨',
+  'drawBoost.label': '덜 뽑힌 사람에게 기회를',
+  'drawBoost.note': '켜 두면 자리에 있는 사람 중 최애 게임이 가장 적게 플레이된 사람의 최애 게임이 뽑힐 확률이 두 배가 돼요. 투표는 그대로예요.',
+  'drawBoost.toast.on': '추가 기회 켜짐',
+  'drawBoost.toast.off': '추가 기회 꺼짐',
   'lobby.subOne': '게임 {n}개를 뽑았어요. 모두 투표하면 결선이 시작돼요.',
   'lobby.voted': '투표함',
   'lobby.waiting': '기다리는 중',

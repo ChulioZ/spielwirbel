@@ -502,7 +502,12 @@ What the app does, in detail. For a short overview see the
     with that member at the table, in words („Favoriten kamen 9× auf den
     Tisch") — no percentages, no places. The member page carries the matching
     line („Von den Favoriten kamen 4 auf den Tisch", distinct favourites), and
-    hides it with the Abzeichen under „Einfacher Modus". Pokale is the all-time record; the
+    hides it with the Abzeichen under „Einfacher Modus". An opt-in round setting
+    in Einstellungen, **„Wer zu kurz kommt, ist dran"** (#1777, off by default),
+    acts on the same numbers: when one seated member is strictly behind, their
+    favourites are twice as likely to be drawn into the vote, and the lobby
+    says so once („Heute mit Extra-Chance für die Lieblingsspiele von Ben"). The
+    vote, the scores and the winner are untouched. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that

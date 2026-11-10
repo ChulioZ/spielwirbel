@@ -1346,6 +1346,13 @@ I18N.en = {
   'lobby.crumb': 'Voting',
   'lobby.title': 'Voting in progress',
   'lobby.sub': '{n} games drawn. Once everyone has voted, the finale begins.',
+  'lobby.drawBoost': 'Extra chance today for {name}’s favourites',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Draw',
+  'drawBoost.label': 'Give the overlooked a turn',
+  'drawBoost.note': 'When on, the favourites of whoever at the table has seen theirs played least get double the chance to be drawn. The vote itself stays exactly the same.',
+  'drawBoost.toast.on': 'Extra chance is on',
+  'drawBoost.toast.off': 'Extra chance is off',
   'lobby.subOne': '{n} game drawn. Once everyone has voted, the finale begins.',
   'lobby.voted': 'voted',
   'lobby.waiting': 'waiting',

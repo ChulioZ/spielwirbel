@@ -1312,6 +1312,13 @@ I18N.it = {
   'lobby.crumb': 'Votazione',
   'lobby.title': 'Votazione in corso',
   'lobby.sub': '{n} giochi estratti. Quando tutti avranno votato, comincia il finale.',
+  'lobby.drawBoost': 'Oggi più chance per i preferiti di {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Estrazione',
+  'drawBoost.label': 'Tocca a chi è rimasto indietro',
+  'drawBoost.note': 'Se attivo, i preferiti della persona al tavolo i cui preferiti sono stati giocati meno hanno il doppio delle probabilità di essere estratti. Il voto non cambia.',
+  'drawBoost.toast.on': 'Chance extra attiva',
+  'drawBoost.toast.off': 'Chance extra disattivata',
   'lobby.subOne': '{n} gioco estratto. Quando tutti avranno votato, comincia il finale.',
   'lobby.voted': 'ha votato',
   'lobby.waiting': 'in attesa',
