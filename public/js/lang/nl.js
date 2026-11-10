@@ -1389,6 +1389,12 @@ I18N.nl = {
   'log.uncancelled': '{actor} maakte het afbreken ongedaan',
 
   'directPlay.button': 'Nu spelen',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Wie begint?',
+  'startPlayer.again': 'Nog een keer',
+  'startPlayer.answer': '{name} begint',
+  'startPlayer.answerTeam': '{name} beginnen',
   'directPlay.title': '“{title}” spelen',
   'directPlay.start': 'Starten',
   'directPlay.log': 'Sessie toevoegen',

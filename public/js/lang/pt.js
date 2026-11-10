@@ -1391,6 +1391,12 @@ I18N.pt = {
   'log.uncancelled': '{actor} desfez o cancelamento',
 
   'directPlay.button': 'Jogar agora',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Quem começa?',
+  'startPlayer.again': 'De novo',
+  'startPlayer.answer': '{name} começa',
+  'startPlayer.answerTeam': '{name} começam',
   'directPlay.title': 'Jogar “{title}”',
   'directPlay.start': 'Começar',
   'directPlay.log': 'Registrar sessão',
