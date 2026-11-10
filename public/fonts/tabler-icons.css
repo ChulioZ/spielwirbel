@@ -213,3 +213,5 @@
 .ti-file-upload::before { content: "\ec91"; }
 .ti-world-download::before { content: "\ef8a"; }
 .ti-file-alert::before { content: "\ede6"; }
+/* The purchase price (#1773) — codepoint read from this woff2's cmap. */
+.ti-coin::before { content: "\eb82"; }

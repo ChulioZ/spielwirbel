@@ -827,6 +827,9 @@ public/
     session-duration.js a played session's minutes: the bounds the route also
                      validates with, the timer's stamp both repo backends run
                      on the finish, and the round's median per game (#1770)
+    purchase-price.js a game's purchase price: the currencies and ceiling the
+                     route also validates with, the cost per session and the
+                     tie-aware „Bester Kauf" (issue #1773)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -1027,6 +1030,9 @@ public/
                      a round's own min–max minutes, stored beside BGG's pair
                      as `playtimeOverride` and read everywhere through
                      `gamePlaytime` (draw-pool.js)
+    game-editor-price.js  the game page's purchase-price chip and editor, and
+                     the „Ins Regal" offer to take a wish's current price
+                     over (#1773)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-

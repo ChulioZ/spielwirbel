@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1773, the purchase price. A capability that did not exist: nothing in the
+   * app could say what a game had cost, let alone per session.
+   */
+  {
+    revision: '2026-11-09',
+    kind: 'new',
+    de: {
+      title: 'Was hat jede Session gekostet?',
+      body: 'Tragt auf dem Spielepass ein, was ihr für ein Spiel bezahlt habt. Ab der ersten Session steht dort, was jede Session damit bisher gekostet hat – und in den Pokalen zeigt „Bester Kauf“ das Spiel mit dem günstigsten Preis pro Session, sobald es mindestens dreimal auf dem Tisch lag.',
+    },
+    en: {
+      title: 'What has each session cost?',
+      body: 'Enter what you paid for a game on its game pass. From the first session on it shows what each session with it has cost so far – and in Trophies, “Best buy” names the game with the lowest price per session once it has been played at least three times.',
+    },
+    es: {
+      title: '¿Cuánto ha costado cada sesión?',
+      body: 'Anota en la ficha del juego lo que pagasteis por él. Desde la primera sesión verás lo que ha costado cada sesión hasta ahora, y en Trofeos «Mejor compra» muestra el juego con el precio por sesión más bajo en cuanto se haya jugado al menos tres veces.',
+    },
+    fr: {
+      title: 'Combien a coûté chaque session ?',
+      body: 'Indiquez sur la fiche du jeu ce que vous l’avez payé. Dès la première session, elle affiche ce que chaque session vous a coûté jusqu’ici – et dans les Trophées, « Meilleur achat » montre le jeu au prix par session le plus bas dès qu’il a été joué au moins trois fois.',
+    },
+    it: {
+      title: 'Quanto è costata ogni sessione?',
+      body: 'Inserisci nella scheda del gioco quanto l’avete pagato. Dalla prima sessione vedrai quanto è costata finora ogni sessione, e nei Trofei «Miglior acquisto» indica il gioco con il prezzo per sessione più basso, appena è stato giocato almeno tre volte.',
+    },
+    nl: {
+      title: 'Wat kostte elke sessie?',
+      body: 'Vul op de spelpas in wat jullie voor een spel betaald hebben. Vanaf de eerste sessie zie je wat elke sessie ermee tot nu toe gekost heeft – en bij de Trofeeën toont „Beste aankoop” het spel met de laagste prijs per sessie, zodra het minstens drie keer op tafel lag.',
+    },
+    pt: {
+      title: 'Quanto custou cada sessão?',
+      body: 'Regista na ficha do jogo quanto pagaram por ele. A partir da primeira sessão verás quanto custou cada sessão até agora – e nos Troféus «Melhor compra» mostra o jogo com o preço por sessão mais baixo, assim que tenha sido jogado pelo menos três vezes.',
+    },
+    fi: {
+      title: 'Paljonko kukin sessio maksoi?',
+      body: 'Kirjaa pelin passiin, paljonko maksoitte pelistä. Ensimmäisestä sessiosta lähtien näet, paljonko kukin sessio on tähän mennessä maksanut – ja Palkinnoissa ”Paras ostos” näyttää pelin, jonka hinta per sessio on alhaisin, kun sitä on pelattu vähintään kolme kertaa.',
+    },
+    ko: {
+      title: '세션마다 얼마가 들었을까요?',
+      body: '게임 패스에 게임을 얼마에 샀는지 입력하세요. 첫 세션부터 지금까지 세션마다 얼마가 들었는지 보여 주고, 트로피의 „최고의 구매”는 세 번 이상 플레이한 게임 중 세션당 가격이 가장 낮은 게임을 알려 줍니다.',
+    },
+  },
+  /*
    * #1758, the Myludo shelf import. A capability that did not exist: a
    * collection kept in Myludo could only reach the Regal one game at a time.
    */

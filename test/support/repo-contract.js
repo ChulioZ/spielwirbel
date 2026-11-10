@@ -3103,6 +3103,31 @@ module.exports = function repoContract(repo) {
     assert.equal(read.title, 'Massive Darkness 2');
   });
 
+  /* -------------------------- Purchase price (#1773) ----------------------- */
+
+  test('updateGame stores a purchase price, copyGames carries it, and a cleared one leaves NO key', async () => {
+    const src = await freshRound({ name: 'Priced' });
+    const dst = await freshRound({ name: 'Priced copy' });
+    const game = await repo.createGame(T, src.id, gameFields({ title: 'Brass' }));
+    const plain = await repo.createGame(T, src.id, gameFields({ title: 'Unpriced' }));
+    assert.equal('purchasePrice' in plain, false, 'absent until written');
+
+    const set = await repo.updateGame(T, src.id, game.id, { purchasePrice: { amount: 5999, currency: 'EUR' } });
+    assert.deepEqual(set.purchasePrice, { amount: 5999, currency: 'EUR' });
+
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [game.id, plain.id]));
+    const copied = (await repo.getRound(T, dst.id)).games;
+    assert.deepEqual(copied.find((g) => g.title === 'Brass').purchasePrice, { amount: 5999, currency: 'EUR' });
+    assert.equal('purchasePrice' in copied.find((g) => g.title === 'Unpriced'), false,
+      'a copy must not invent a price the source never had');
+
+    // Cleared alongside another field in the same patch: absent, never null.
+    await repo.updateGame(T, src.id, game.id, { title: 'Brass: Birmingham', purchasePrice: null });
+    const read = (await repo.getRound(T, src.id)).games.find((g) => g.id === game.id);
+    assert.equal('purchasePrice' in read, false);
+    assert.equal(read.title, 'Brass: Birmingham');
+  });
+
   /* -------------------------- Game owners (#971) --------------------------- */
 
   test('createGame stores ownerIds, and leaves the key OFF when there are none', async () => {
