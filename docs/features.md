@@ -874,6 +874,13 @@ What the app does, in detail. For a short overview see the
   points and Chronik entries still written — and other members of a shared round
   see everything. Hidden areas leave the navigation, not the URL. The operator
   panel's Konten card counts uptake per option (`public/js/simple-mode.js`).
+  Because nobody goes looking for it on Konto, every account is **offered the
+  choice once** (#1768): a card on the Start tab of the first round it opens
+  that has a finished session, below the CTA — „Alles behalten" or „Einfachen
+  Modus nutzen" (everything hidden), with a pointer to Konto for single items.
+  Either answer, the ×, or setting the mode on Konto stamps
+  `simpleModePromptSeen`, so it never comes back; demos and accounts-off
+  instances never see it (`public/js/simple-mode-prompt.js`).
 - **Ratings on demand** – a game's rating is always computed live from all
   session votes, so deleting a session automatically corrects every number.
 - **The Spielwirbel-Score** – the figure every screen ranks a game by is not a

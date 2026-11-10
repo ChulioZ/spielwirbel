@@ -4066,6 +4066,24 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.createUser(userFields({ email: first.email })), 'email_taken');
   });
 
+  test('the „Einfacher Modus" prompt stamp (#1768) is null at creation and lands with the mode in ONE write', async () => {
+    // The route-shaped creation writes the key as null, so both backends must
+    // hand back a present null rather than dropping it (absent-key parity).
+    const user = await repo.createUser(userFields({ simpleMode: { all: false, except: [] }, simpleModePromptSeen: null }));
+    assert.equal((await repo.getUserById(user.id)).simpleModePromptSeen, null);
+    assert.ok('simpleModePromptSeen' in (await repo.getUserById(user.id)), 'a present null, not an absent key');
+
+    // POST /simple-mode-prompt-seen writes the preference and the stamp in one
+    // updateUser; the merge must keep both — and every other key — intact.
+    const stamp = '2026-11-09T12:00:00.000Z';
+    const updated = await repo.updateUser(user.id, { simpleMode: { all: true, except: [] }, simpleModePromptSeen: stamp });
+    assert.equal(updated.simpleModePromptSeen, stamp);
+    const back = await repo.getUserById(user.id);
+    assert.deepEqual(back.simpleMode, { all: true, except: [] });
+    assert.equal(back.simpleModePromptSeen, stamp);
+    assert.equal(back.email, user.email, 'the merge leaves the rest of the record alone');
+  });
+
   test('a forced rename (#320) replaces the username and frees the old one', async () => {
     const user = await repo.createUser(userFields({ username: 'Slur42' }));
     const neutral = `user-${user.id}`;
