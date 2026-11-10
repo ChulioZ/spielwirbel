@@ -1427,6 +1427,12 @@ I18N.de = {
   'log.uncancelled': '{actor} hat den Abbruch zurückgenommen',
 
   'directPlay.button': 'Jetzt spielen',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Wer fängt an?',
+  'startPlayer.again': 'Nochmal',
+  'startPlayer.answer': '{name} fängt an',
+  'startPlayer.answerTeam': '{name} fangen an',
   'directPlay.title': '„{title}“ spielen',
   'directPlay.start': 'Los geht’s',
   'directPlay.log': 'Session nachtragen',

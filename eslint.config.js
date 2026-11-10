@@ -115,7 +115,7 @@ const frontendGlobals = {
   memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly', personNameInk: 'readonly', designPersonTone: 'readonly',
-  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly',
+  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly', renderStartPlayer: 'readonly', startPlayerReducedMotion: 'readonly', START_PLAYER_MIN_UNITS: 'readonly', canDrawStartPlayer: 'readonly', pickStartPlayer: 'readonly', startPlayerWhirl: 'readonly', whirlDelays: 'readonly', draftSession: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',

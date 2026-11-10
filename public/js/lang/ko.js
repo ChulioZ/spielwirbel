@@ -1341,6 +1341,12 @@ I18N.ko = {
   'log.cancelled': '{actor}이(가) 세션을 취소했어요',
   'log.uncancelled': '{actor}이(가) 취소를 되돌렸어요',
   'directPlay.button': '바로 플레이',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': '누가 먼저 할까요?',
+  'startPlayer.again': '다시',
+  'startPlayer.answer': '{name}부터 시작해요',
+  'startPlayer.answerTeam': '{name}부터 시작해요',
   'directPlay.title': '“{title}” 플레이',
   'directPlay.start': '시작',
   'directPlay.log': '세션 추가',
