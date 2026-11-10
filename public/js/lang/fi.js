@@ -307,6 +307,11 @@ I18N.fi = {
   'recap.divisive': 'Eniten mielipiteitä jakava',
   'recap.favourites': 'Suosikit',
   'recap.thin': 'Arvioita ei ole vielä tarpeeksi kokonaiskuvaan — pelatkaa lisää, kyllä se siitä.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Kenen suosikit päätyvät pöytään',
+  'recap.tasteShareNone': 'Suosikit eivät ole vielä päätyneet pöytään',
+  'recap.tasteShareOne': 'Suosikit päätyivät pöytään kerran',
+  'recap.tasteShareMany': 'Suosikit päätyivät pöytään {n} kertaa',
 
   'periodRecap.title': 'Kuukausi ja vuosi',
   'periodRecap.lead': 'Valitse kuukausi tai vuosi — ja jaa se, mitä pelasitte.',
@@ -990,6 +995,10 @@ I18N.fi = {
   'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
   'member.favoriteNone': 'Ei vielä arvioita',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Suosikeista yksikään ei ole vielä päätynyt pöytään',
+  'member.tasteShareOne': 'Suosikeista yksi päätyi pöytään',
+  'member.tasteShareMany': 'Suosikeista {n} päätyi pöytään',
   'member.tasteNear': 'Lähin maku:',
   'member.tasteFar': 'Täysin eri maku:',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',

@@ -325,6 +325,11 @@ I18N.en = {
   'recap.divisive': 'Most divisive',
   'recap.favourites': 'Favourites',
   'recap.thin': 'Not enough ratings for a picture yet — keep playing, it will come.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Whose favourites reach the table',
+  'recap.tasteShareNone': 'Favourites have not reached the table yet',
+  'recap.tasteShareOne': 'Favourites reached the table once',
+  'recap.tasteShareMany': 'Favourites reached the table {n} times',
 
   // The per-period recap (#800): one calendar month or year, shareable as an image.
   'periodRecap.title': 'Month & year',
@@ -1035,6 +1040,10 @@ I18N.en = {
   'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'None of the favourites has reached the table yet',
+  'member.tasteShareOne': 'One of the favourites reached the table',
+  'member.tasteShareMany': '{n} of the favourites reached the table',
   'member.tasteNear': 'Closest taste:',
   'member.tasteFar': 'Most different taste:',
   'member.ownedTitleOne': '{n} game owned by {name}',

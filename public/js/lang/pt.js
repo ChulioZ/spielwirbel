@@ -332,6 +332,11 @@ I18N.pt = {
   'recap.divisive': 'Mais divisivo',
   'recap.favourites': 'Favoritos',
   'recap.thin': 'Ainda não há avaliações suficientes para um retrato — continuem jogando, ele vem.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'De quem são os favoritos que chegam à mesa',
+  'recap.tasteShareNone': 'Os favoritos ainda não chegaram à mesa',
+  'recap.tasteShareOne': 'Os favoritos chegaram à mesa uma vez',
+  'recap.tasteShareMany': 'Os favoritos chegaram à mesa {n} vezes',
 
   'periodRecap.title': 'Mês e ano',
   'periodRecap.lead': 'Escolha um mês ou um ano — e compartilhe o que vocês jogaram.',
@@ -1018,6 +1023,10 @@ I18N.pt = {
   'member.bestGameNone': 'Nenhum jogo ganho ainda',
   'member.favorite': 'Jogo favorito',
   'member.favoriteNone': 'Nenhuma avaliação ainda',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Nenhum dos favoritos chegou ainda à mesa',
+  'member.tasteShareOne': 'Um dos favoritos chegou à mesa',
+  'member.tasteShareMany': '{n} dos favoritos chegaram à mesa',
   'member.tasteNear': 'Gosto mais parecido:',
   'member.tasteFar': 'Gosto mais diferente:',
   'member.ownedTitleOne': '{n} jogo de {name}',

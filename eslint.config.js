@@ -370,6 +370,10 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
+  // taste-share.js (#1776): whose favourites reach the table
+  TASTE_SHARE_FROM_SESSIONS: 'readonly', TASTE_SHARE_MIN_FAVOURITES: 'readonly',
+  tasteShare: 'readonly', tasteShareRows: 'readonly',
+  renderTasteShare: 'readonly', memberTasteShareLine: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
   periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',

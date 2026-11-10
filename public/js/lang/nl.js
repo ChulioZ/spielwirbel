@@ -330,6 +330,11 @@ I18N.nl = {
   'recap.divisive': 'Meest verdeeld',
   'recap.favourites': 'Favorieten',
   'recap.thin': 'Nog te weinig beoordelingen voor een beeld — blijf spelen, het komt vanzelf.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Wiens favorieten op tafel komen',
+  'recap.tasteShareNone': 'Favorieten kwamen nog niet op tafel',
+  'recap.tasteShareOne': 'Favorieten kwamen één keer op tafel',
+  'recap.tasteShareMany': 'Favorieten kwamen {n}× op tafel',
 
   'periodRecap.title': 'Maand & jaar',
   'periodRecap.lead': 'Kies een maand of een jaar — en deel wat jullie gespeeld hebben.',
@@ -1016,6 +1021,10 @@ I18N.nl = {
   'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Van de favorieten kwam er nog geen op tafel',
+  'member.tasteShareOne': 'Van de favorieten kwam er één op tafel',
+  'member.tasteShareMany': 'Van de favorieten kwamen er {n} op tafel',
   'member.tasteNear': 'Meest verwante smaak:',
   'member.tasteFar': 'Totaal andere smaak:',
   'member.ownedTitleOne': '{n} spel van {name}',

@@ -667,6 +667,10 @@ public/
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
+    taste-share.js   whose favourites reach the table: per member, the games
+                     they rate at the top face and how often one was played
+                     with them seated — the Rückblick list, the member page's
+                     line, and the input #1777's draw boost reuses (issue #1776)
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)
