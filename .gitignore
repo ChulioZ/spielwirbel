@@ -30,3 +30,7 @@ data/
 # Local per-finding log of the CodeRabbit trial (ended 2026-10, config removed).
 # An evaluation of a vendor, kept private on purpose.
 .ai-review-trial/
+
+# Agent worktrees (Agent tool isolation: "worktree") live inside the checkout;
+# a git add -A would otherwise commit them as gitlinks (batch-pick-issue).
+.claude/worktrees/

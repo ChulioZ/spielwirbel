@@ -65,6 +65,8 @@ async function showRoundSettings(rid) {
   // names needs no page of its own. Every grantee may manage them — they cost
   // 'round.write', the floor anyone who can draw in the round clears.
   app.appendChild(renderSavedFiltersSection(round));
+  // The opt-in draw boost (#1777) — draw-boost-setting.js.
+  app.appendChild(renderDrawBoostSection(round));
 
   // --- The two sheet actions. The gate asks the shared capability table (#137)
   // rather than testing `shared`, so a grantee is never offered an action the

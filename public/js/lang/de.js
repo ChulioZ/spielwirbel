@@ -329,6 +329,11 @@ I18N.de = {
   'recap.divisive': 'Größte Uneinigkeit',
   'recap.favourites': 'Lieblingsspiele',
   'recap.thin': 'Noch zu wenig gewertet für ein Bild — spielt weiter, das kommt von allein.',
+  // #1776: per member, how often one of their favourites was played with them at the table.
+  'recap.tasteShare': 'Wessen Favoriten auf den Tisch kommen',
+  'recap.tasteShareNone': 'Favoriten kamen noch nicht auf den Tisch',
+  'recap.tasteShareOne': 'Favoriten kamen einmal auf den Tisch',
+  'recap.tasteShareMany': 'Favoriten kamen {n}× auf den Tisch',
 
   // Der Zeitraum-Rückblick (#800): ein Monat oder ein Jahr, teilbar als Bild.
   'periodRecap.title': 'Monat & Jahr',
@@ -1051,6 +1056,12 @@ I18N.de = {
   'member.bestGameNone': 'Noch kein Spiel gewonnen',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
+  // #1776: how many distinct favourites of this member reached the table.
+  'member.tasteShareNone': 'Von den Favoriten kam noch keiner auf den Tisch',
+  'member.tasteShareOne': 'Von den Favoriten kam einer auf den Tisch',
+  'member.tasteShareMany': 'Von den Favoriten kamen {n} auf den Tisch',
+  'member.tasteNear': 'Ähnlichster Geschmack:',
+  'member.tasteFar': 'Ganz anders:',
   'member.ownedTitleOne': '{n} Spiel von {name}',
   'member.ownedTitle': '{n} Spiele von {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1344,6 +1355,13 @@ I18N.de = {
   'lobby.crumb': 'Abstimmung',
   'lobby.title': 'Abstimmung läuft',
   'lobby.sub': '{n} Spiele ausgelost. Alle stimmen ab, dann kommt das Finale.',
+  'lobby.drawBoost': 'Heute mit Extra-Chance für die Lieblingsspiele von {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Ziehung',
+  'drawBoost.label': 'Wer zu kurz kommt, ist dran',
+  'drawBoost.note': 'Ist das an, haben die Lieblingsspiele der Person am Tisch, deren Favoriten am seltensten gespielt wurden, beim Ziehen doppelte Chance. An der Abstimmung ändert das nichts.',
+  'drawBoost.toast.on': 'Extra-Chance ist an',
+  'drawBoost.toast.off': 'Extra-Chance ist aus',
   'lobby.subOne': '{n} Spiel ausgelost. Alle stimmen ab, dann kommt das Finale.',
   'lobby.voted': 'abgestimmt',
   'lobby.waiting': 'offen',
@@ -1440,6 +1458,12 @@ I18N.de = {
   'log.uncancelled': '{actor} hat den Abbruch zurückgenommen',
 
   'directPlay.button': 'Jetzt spielen',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Wer fängt an?',
+  'startPlayer.again': 'Nochmal',
+  'startPlayer.answer': '{name} fängt an',
+  'startPlayer.answerTeam': '{name} fangen an',
   'directPlay.title': '„{title}“ spielen',
   'directPlay.start': 'Los geht’s',
   'directPlay.log': 'Session nachtragen',
@@ -2178,6 +2202,14 @@ I18N.de = {
   'konto.simple.group.pass': 'Im Spielepass',
   'konto.simple.group.account': 'Rund ums Konto',
   'konto.simple.saved': 'Einfacher Modus gespeichert.',
+  // The Start tab's one-time „Einfacher Modus" prompt (#1768).
+  'simplePrompt.title': 'Lieber einfacher?',
+  'simplePrompt.body': 'Der einfache Modus blendet Pokale, Statistiken und Vorschläge aus, für alle, die nur auslosen, abstimmen und spielen wollen. Deine Runden zeichnen weiter alles auf. Ausblenden betrifft nur dich.',
+  'simplePrompt.keep': 'Alles behalten',
+  'simplePrompt.simple': 'Einfachen Modus nutzen',
+  'simplePrompt.settingsNote': 'Einzelne Punkte kannst du jederzeit in deinen Kontoeinstellungen ein- und ausblenden.',
+  'simplePrompt.settingsLink': 'Kontoeinstellungen',
+  'simplePrompt.close': 'Schließen und alles behalten',
   'konto.simple.f.trophies': 'Pokale & Abzeichen ausblenden',
   'konto.simple.f.trophies.hint': 'Der Bereich Pokale und alle Abzeichen, auch auf dem Ergebnis, in der Chronik und auf der Tischkarte.',
   'konto.simple.f.stats': 'Statistik-Karten ausblenden',

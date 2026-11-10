@@ -821,7 +821,24 @@ repo contract the only witness. `roundGameDuration` (the Spielepass median),
 `sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
 (Pokale's „Längste Session") are client-only.
 
-**The thirty-seventh is `public/js/purchase-price.js`** (#1773):
+**The thirty-seventh is `public/js/taste-share.js`** (#1776, required by #1777):
+`tasteShare`, whose favourites reached the table how often, plus its two bars
+`TASTE_SHARE_FROM_SESSIONS`/`TASTE_SHARE_MIN_FAVOURITES`. The Pokale Rückblick and
+the member page state it; `lib/draw-boost.js` acts on it, weighting the draw
+towards the member strictly behind. One file because the lobby announces whose
+favourites got the extra chance, and a server copy that counted evenings or
+favourites differently would name a member the Rückblick shows as level — a
+claim the group can check against a screen and find false. Called with its
+siblings injected as `deps` (Node has no shared scope), so a forgotten argument
+throws instead of computing something else.
+
+**The thirty-eighth is `public/js/rating-faces.js`** (#1537, required by #1777):
+`ratingRung`/`RATING_MAX`, the one rounding of a person's average to a face. It
+decides what a FAVOURITE is (the top face) for the draw boost exactly as for every
+screen that shows faces; a server rounding of its own would boost games the
+member's own page does not show as favourites.
+
+**The thirty-ninth is `public/js/purchase-price.js`** (#1773):
 `PURCHASE_PRICE_CURRENCIES` and `PURCHASE_PRICE_MAX_CENTS`, which the game
 page's price editor offers and `PATCH …/games/:gid` validates. The plain
 offer/validate shape — a drifted server list would 400 a currency the select

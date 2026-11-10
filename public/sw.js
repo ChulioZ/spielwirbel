@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v548';
+const CACHE = 'spielwirbel-shell-v555';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -172,6 +172,8 @@ const SHELL = [
   '/js/guest-picker.js',
   '/js/guest-games-sheet.js',
   '/js/team-picker.js',
+  '/js/start-player.js',
+  '/js/start-player-view.js',
   '/js/setup-addons.js',
   '/js/game-info.js',
   '/js/score-info.js',
@@ -185,6 +187,7 @@ const SHELL = [
   '/js/session-share.js',
   '/js/bgstats.js',
   '/js/recap.js',
+  '/js/taste-share.js',
   '/js/period-recap.js',
   '/js/account-recap.js',
   '/js/recap-card.js',
@@ -217,7 +220,9 @@ const SHELL = [
   '/js/views-round.js',
   '/js/hub-previews.js',
   '/js/saved-filters.js',
+  '/js/draw-boost-setting.js',
   '/js/hub-cards.js',
+  '/js/simple-mode-prompt.js',
   '/js/hub-reflow.js',
   '/js/ocean-hub.js',
   '/js/programmheft-hub.js',
@@ -254,6 +259,7 @@ const SHELL = [
   '/js/session-points.js',
   '/js/direct-session.js',
   '/js/member-stats.js',
+  '/js/taste-neighbour.js',
   '/js/achievements.js',
   '/js/views-badges.js',
   '/js/views-member-points.js',

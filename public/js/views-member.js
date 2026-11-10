@@ -257,7 +257,10 @@ async function showMember(rid, mid) {
   figures.appendChild(figure(t('member.avgGiven'), st.avgGiven === null ? '–' : ratingMark(st.avgGiven)));
   // Under the figures: the earned Abzeichen (#1388, never the open ones), then the
   // personal bests (#1631, views-member-points.js). Each is null when empty.
-  [memberPointsPanel(round, member), memberCardBadges(round, member)].forEach((el) => el && figures.after(el));
+  [memberPointsPanel(round, member), memberCardBadges(round, member), memberTasteShareLine(round, mid)].forEach((el) => el && figures.after(el));
+  // Directly under the figures: whose taste is closest and furthest (#1778).
+  const taste = memberTasteLine(round, mid);
+  if (taste) figures.after(taste);
 
   const cards = card.querySelector('.member-card__games');
 
@@ -633,6 +636,30 @@ function memberPage(card, round, member, owned) {
   return page;
 }
 
+/* Die Tischkarte's taste line (#1778): the closest and the most different
+   member by `tasteNeighbours` (taste-neighbour.js), each a link to their page.
+   Words only — the distance that ranks them is never printed. Null when no pair
+   qualifies, so the card simply has no line rather than an empty one. Inside
+   the card in every design, so its content is identical everywhere. */
+function memberTasteLine(round, mid) {
+  const { near, far } = tasteNeighbours(round, mid);
+  if (!near.length) return null;
+  const line = h('<div class="member-taste"></div>');
+  const row = (cls, label, people) => {
+    const el = h(`<p class="member-taste__row member-taste__row--${cls}"><span class="member-taste__label">${esc(label)}</span> </p>`);
+    people.forEach((m, i) => {
+      if (i) el.appendChild(document.createTextNode(i === people.length - 1 ? ` ${t('list.and')} ` : ', '));
+      const a = h(`<a>${esc(m.name)}</a>`);
+      makeMemberLink(a, round.id, m.id);
+      el.appendChild(a);
+    });
+    line.appendChild(el);
+  };
+  row('near', t('member.tasteNear'), near);
+  if (far.length) row('far', t('member.tasteFar'), far);
+  return line;
+}
+
 /* „Stärkstes Spiel"'s sub-line, shared with the profile (views-profile.js),
    which shows the same tile over an account-wide merge of the same figures.
 
@@ -645,4 +672,20 @@ function bestGameSub(st) {
     pct: Math.round(st.bestScore * 100) + '%',
     n: st.bestPlays,
   });
+}
+
+/* „Von den Favoriten kamen 4 auf den Tisch" (#1776): how many DISTINCT
+   favourites of this member reached the table with them at it — the Pokale
+   Rückblick counts the evenings instead (taste-share.js has both). Same gates
+   as that list: the round's sixth played session, at least two favourites,
+   and an active member. Under „Einfacher Modus" it follows the Abzeichen on
+   this card, which hide with the trophies (#1646). */
+function memberTasteShareLine(round, mid) {
+  if (simpleHidden('trophies')) return null;
+  if (youngRoundPlayed(round, hubDeps()) < TASTE_SHARE_FROM_SESSIONS) return null;
+  const mine = tasteShare(round).find((e) => e.memberId === mid);
+  if (!mine || mine.favouriteIds.length < TASTE_SHARE_MIN_FAVOURITES) return null;
+  const n = mine.favouritesPlayed;
+  const text = n === 0 ? t('member.tasteShareNone') : tn(n, 'member.tasteShareOne', 'member.tasteShareMany');
+  return h(`<p class="member-taste-share">${esc(text)}</p>`);
 }

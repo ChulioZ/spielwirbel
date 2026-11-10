@@ -124,6 +124,7 @@ const MOUNTS = [
   // The per-round design route it once shared a file with was retired at the
   // flip (#1202).
   ['/marker', '../lib/routes/marker'],
+  ['/draw-boost', '../lib/routes/draw-boost'], // #1777
   ['/tags', '../lib/routes/tags'],
   ['/filters', '../lib/routes/saved-filters'],
   ['/lookup', '../lib/routes/lookup'],
