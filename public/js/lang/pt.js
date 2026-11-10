@@ -1308,6 +1308,13 @@ I18N.pt = {
   'lobby.crumb': 'Votação',
   'lobby.title': 'Votação em andamento',
   'lobby.sub': '{n} jogos sorteados. Quando todo mundo votar, começa o grande final.',
+  'lobby.drawBoost': 'Hoje com chance extra para os favoritos de {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Sorteio',
+  'drawBoost.label': 'Vez de quem ficou para trás',
+  'drawBoost.note': 'Ativado, os favoritos da pessoa à mesa cujos favoritos foram menos jogados têm o dobro de chance de ser sorteados. A votação não muda.',
+  'drawBoost.toast.on': 'Chance extra ativada',
+  'drawBoost.toast.off': 'Chance extra desativada',
   'lobby.subOne': '{n} jogo sorteado. Quando todo mundo votar, começa o grande final.',
   'lobby.voted': 'votou',
   'lobby.waiting': 'aguardando',

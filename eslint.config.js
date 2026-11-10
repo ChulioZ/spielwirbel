@@ -517,6 +517,8 @@ const frontendGlobals = {
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
   renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
+  // draw-boost-setting.js (#1777) — the Einstellungen toggle and the lobby line
+  renderDrawBoostSection: 'readonly', drawBoostNote: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   // round-export.js (#1702) — the round settings' data export.

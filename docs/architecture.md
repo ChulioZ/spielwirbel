@@ -240,6 +240,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
+  draw-boost.js      the opt-in draw boost (issue #1777): which seated member
+                     is strictly behind on favourites reaching the table
+                     (taste-share.js), and the weighted draw that gives their
+                     favourites 2x the chance — the plain shuffle when off
   game-owners.js     which members of a round own a game: the owner-id
                      validation and the per-seat memory of the last selection,
                      shared by the add-game and BGG-import write paths
@@ -539,6 +543,8 @@ lib/
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
+    draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
+                                             on/off — issue #1777)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
                                              set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
@@ -671,6 +677,9 @@ public/
                      they rate at the top face and how often one was played
                      with them seated — the Rückblick list, the member page's
                      line, and the input #1777's draw boost reuses (issue #1776)
+    draw-boost-setting.js  the draw boost's Einstellungen toggle and the
+                     lobby's one line naming whose favourites got the extra
+                     chance (issue #1777)
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)

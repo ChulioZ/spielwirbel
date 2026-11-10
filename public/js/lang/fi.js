@@ -1277,6 +1277,13 @@ I18N.fi = {
   'lobby.crumb': 'Äänestys',
   'lobby.title': 'Äänestys käynnissä',
   'lobby.sub': '{n} peliä arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
+  'lobby.drawBoost': 'Tänään lisämahdollisuus suosikeille: {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Arvonta',
+  'drawBoost.label': 'Vuoro sille, joka on jäänyt paitsi',
+  'drawBoost.note': 'Kun tämä on päällä, sen pöydän ääressä olevan suosikit, jonka suosikkeja on pelattu vähiten, arvotaan kaksi kertaa todennäköisemmin. Äänestys ei muutu.',
+  'drawBoost.toast.on': 'Lisämahdollisuus on päällä',
+  'drawBoost.toast.off': 'Lisämahdollisuus on pois',
   'lobby.subOne': '{n} peli arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
   'lobby.voted': 'äänesti',
   'lobby.waiting': 'odottaa',

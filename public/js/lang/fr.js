@@ -1311,6 +1311,13 @@ I18N.fr = {
   'lobby.crumb': 'Vote',
   'lobby.title': 'Vote en cours',
   'lobby.sub': '{n} jeux tirés. Dès que tout le monde a voté, la finale commence.',
+  'lobby.drawBoost': 'Aujourd’hui, un coup de pouce pour les favoris de {name}',
+  // The opt-in draw boost (#1777), a round setting in Einstellungen.
+  'drawBoost.title': 'Tirage',
+  'drawBoost.label': 'Un coup de pouce pour les oubliés',
+  'drawBoost.note': 'Activé, les favoris de la personne à table dont les favoris ont été le moins joués ont deux fois plus de chances d’être tirés. Le vote ne change pas.',
+  'drawBoost.toast.on': 'Coup de pouce activé',
+  'drawBoost.toast.off': 'Coup de pouce désactivé',
   'lobby.subOne': '{n} jeu tiré. Dès que tout le monde a voté, la finale commence.',
   'lobby.voted': 'a voté',
   'lobby.waiting': 'en attente',
