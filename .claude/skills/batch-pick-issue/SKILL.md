@@ -154,7 +154,10 @@ Then act on the answer before moving to the next PR:
 
 - **Merge** → rebase/update onto `main` if behind (an own branch may be updated
   with a merge or a rebase + force-with-lease; it is ours), re-run the checks on
-  conflicts, wait for green, squash-merge (`mcp__github__merge_pull_request`,
+  conflicts, wait for green, squash-merge. **Check `CACHE` in `public/sw.js`
+  after every such update:** parallel PRs all bump it to the same `vN+1`, so the
+  merge is conflict-free and leaves the second PR's shell change under a name
+  production already caches — bump it past `main`'s by hand. Then squash-merge (`mcp__github__merge_pull_request`,
   `merge_method: squash`), and retarget a stacked child to `main`.
 - **Change first** → implement the change, push, re-state what moved and ask
   again; an earlier yes does not carry over (implement 6b).
