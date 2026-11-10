@@ -1038,6 +1038,8 @@ I18N.de = {
   'member.bestGameNone': 'Noch kein Spiel gewonnen',
   'member.favorite': 'Lieblingsspiel',
   'member.favoriteNone': 'Noch keine Wertungen',
+  'member.tasteNear': 'Ähnlichster Geschmack:',
+  'member.tasteFar': 'Ganz anders:',
   'member.ownedTitleOne': '{n} Spiel von {name}',
   'member.ownedTitle': '{n} Spiele von {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

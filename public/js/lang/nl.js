@@ -1016,6 +1016,8 @@ I18N.nl = {
   'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
+  'member.tasteNear': 'Meest verwante smaak:',
+  'member.tasteFar': 'Totaal andere smaak:',
   'member.ownedTitleOne': '{n} spel van {name}',
   'member.ownedTitle': '{n} spellen van {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

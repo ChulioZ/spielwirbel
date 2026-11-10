@@ -990,6 +990,8 @@ I18N.fi = {
   'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
   'member.favoriteNone': 'Ei vielä arvioita',
+  'member.tasteNear': 'Lähin maku:',
+  'member.tasteFar': 'Täysin eri maku:',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
   'member.ownedTitle': '{n} peliä, jotka omistaa {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this

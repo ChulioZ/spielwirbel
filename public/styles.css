@@ -8133,6 +8133,18 @@ a.k-tile:focus-visible,
   text-transform: uppercase;
   color: var(--ink);
 }
+/* The taste line under the figures (#1778): closest and most different member,
+   in words. The label takes the figure labels' treatment and `--ink` for the
+   same contrast reason given above; the names are member links in `--ink`. */
+.member-taste { margin-top: 16px; display: flex; flex-direction: column; gap: 4px; }
+.member-taste__row { margin: 0; color: var(--ink); }
+.member-taste__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.member-taste__row a { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 /* The two game tiles inside the card. `.pokale-cards` gives the grid; two
    columns from 560px so they read as the pair they are, stacked below. */
 .member-card__games { margin-top: 22px; }

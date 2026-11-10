@@ -370,7 +370,13 @@ What the app does, in detail. For a short overview see the
   and word rather than a number), their strongest game (the one they win most often
   when they play it, ranked so one lucky win cannot outweigh a solid record;
   a never-won game is never named) and their favorite
-  game. The card wears that colour rather than merely being tinted by it: the
+  game. Under the figures the card names, in words only, **whose taste is
+  closest** to theirs and **whose is most different** — each a link to that
+  member's page — measured as the mean difference of each pair's per-game
+  average rating over the games both have rated, and shown only once a pair
+  shares at least five (retired games don't count, retired members aren't
+  named, ties are named together, and with a single qualifying pair only the
+  closest is shown). The card wears that colour rather than merely being tinted by it: the
   **win rate is the ring around the avatar**, sweeping into place once when the
   page opens; the member's **initials stand as a watermark** in the card's
   corner; and the two game tiles stand as **boxes** with a ribbon naming which

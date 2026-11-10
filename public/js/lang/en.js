@@ -1035,6 +1035,8 @@ I18N.en = {
   'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
+  'member.tasteNear': 'Closest taste:',
+  'member.tasteFar': 'Most different taste:',
   'member.ownedTitleOne': '{n} game owned by {name}',
   'member.ownedTitle': '{n} games owned by {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
