@@ -82,6 +82,7 @@ trigger. Each is self-contained and enforces this repo's constraints.
 | --- | --- |
 | **`create-issue`** | Interviews you and files a GitHub issue specific enough to implement without follow-up questions, grounded in this repo's architecture. |
 | **`pick-issue`** | Surveys open issues, Dependabot PRs and human PRs, and hands the best next one to the right builder skill. An open non-draft human PR is picked first — only a security exposure or broken core functionality outranks it — so contributors get feedback fast; everything else is ranked by value-for-effort. |
+| **`batch-pick-issue`** | Runs `pick-issue` for a whole batch: picks about ten items, builds them in parallel up to open PRs (merging only clean Dependabot bumps on the way), then walks you through each PR — walkthrough, open questions, merge go-ahead — one at a time. |
 | **`implement`** | Takes a change end-to-end: branch from up-to-date `main`, write the code **plus tests**, review locally, open a PR, review it, and merge only if it's safe — then watch `main`'s CI and clean up. |
 | **`review-pr`** | Reviews a pull request (human or bot) against this repo's constraints and returns a `SAFE TO MERGE` / `NOT SAFE` verdict with concrete blockers. |
 | **`dependabot`** | Triages open Dependabot PRs, merging what passes review and commenting on what doesn't. |
