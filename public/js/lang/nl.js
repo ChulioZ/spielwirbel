@@ -1025,6 +1025,8 @@ I18N.nl = {
   'member.tasteShareNone': 'Van de favorieten kwam er nog geen op tafel',
   'member.tasteShareOne': 'Van de favorieten kwam er één op tafel',
   'member.tasteShareMany': 'Van de favorieten kwamen er {n} op tafel',
+  'member.tasteNear': 'Meest verwante smaak:',
+  'member.tasteFar': 'Totaal andere smaak:',
   'member.ownedTitleOne': '{n} spel van {name}',
   'member.ownedTitle': '{n} spellen van {name}',
   // Der Tisch's attendance line under a member's name (#1276): sessions this
@@ -1403,6 +1405,12 @@ I18N.nl = {
   'log.uncancelled': '{actor} maakte het afbreken ongedaan',
 
   'directPlay.button': 'Nu spelen',
+  // Who starts (#1769): the start-player whirl on the results screen and in
+  // the direct-play sheet. answerTeam names a team (plural verb).
+  'startPlayer.button': 'Wie begint?',
+  'startPlayer.again': 'Nog een keer',
+  'startPlayer.answer': '{name} begint',
+  'startPlayer.answerTeam': '{name} beginnen',
   'directPlay.title': '“{title}” spelen',
   'directPlay.start': 'Starten',
   'directPlay.log': 'Sessie toevoegen',

@@ -110,34 +110,34 @@ test('Rückblick: a cancelled sixth session does not open it', async (t) => {
 test('member page: the distinct favourites that reached the table', async (t) => {
   const dom = boot(t, round(SIX));
   await dom.call('showMember', RID, 'm2');
-  assert.equal(dom.app.querySelector('.member-taste').textContent, 'Von den Favoriten kamen 2 auf den Tisch');
+  assert.equal(dom.app.querySelector('.member-taste-share').textContent, 'Von den Favoriten kamen 2 auf den Tisch');
 });
 
 test('member page: singular, and absent below two favourites', async (t) => {
   const dom = boot(t, round(SIX));
   await dom.call('showMember', RID, 'm1');
-  assert.equal(dom.app.querySelector('.member-taste').textContent, 'Von den Favoriten kam einer auf den Tisch');
+  assert.equal(dom.app.querySelector('.member-taste-share').textContent, 'Von den Favoriten kam einer auf den Tisch');
   await dom.call('showMember', RID, 'm3');
   assert.ok(dom.app.querySelector('.member-card'), 'the member page must have rendered');
-  assert.equal(dom.app.querySelector('.member-taste'), null);
+  assert.equal(dom.app.querySelector('.member-taste-share'), null);
 });
 
 test('member page: absent below the sixth session', async (t) => {
   const dom = boot(t, round(SIX.slice(0, 5)));
   await dom.call('showMember', RID, 'm2');
   assert.ok(dom.app.querySelector('.member-card'));
-  assert.equal(dom.app.querySelector('.member-taste'), null);
+  assert.equal(dom.app.querySelector('.member-taste-share'), null);
 });
 
 test('member page: „Einfacher Modus" hiding the trophies hides the line too', async (t) => {
   const dom = boot(t, round(SIX), { id: 'u1', simpleMode: { all: false, except: ['trophies'] } });
   await dom.call('showMember', RID, 'm2');
   assert.ok(dom.app.querySelector('.member-card'));
-  assert.equal(dom.app.querySelector('.member-taste'), null);
+  assert.equal(dom.app.querySelector('.member-taste-share'), null);
 });
 
 test('member page: the line is shown when „Einfacher Modus" hides something else', async (t) => {
   const dom = boot(t, round(SIX), { id: 'u1', simpleMode: { all: false, except: ['stats'] } });
   await dom.call('showMember', RID, 'm2');
-  assert.ok(dom.app.querySelector('.member-taste'));
+  assert.ok(dom.app.querySelector('.member-taste-share'));
 });

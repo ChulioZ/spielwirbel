@@ -115,7 +115,7 @@ const frontendGlobals = {
   memberIsActive: 'readonly', activeMembers: 'readonly',
   memberTone: 'readonly', initials: 'readonly',
   personColor: 'readonly', personNameInk: 'readonly', designPersonTone: 'readonly',
-  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly',
+  renderSeatPicker: 'readonly', createGuestList: 'readonly', openGuestSheet: 'readonly', guestGameNote: 'readonly', guestGameOffers: 'readonly', releaseGuestGame: 'readonly', renderTeamPicker: 'readonly', renderStartPlayer: 'readonly', startPlayerReducedMotion: 'readonly', START_PLAYER_MIN_UNITS: 'readonly', canDrawStartPlayer: 'readonly', pickStartPlayer: 'readonly', startPlayerWhirl: 'readonly', whirlDelays: 'readonly', draftSession: 'readonly',
   renderSetupAddons: 'readonly',
   hasGameInfo: 'readonly', gameInfoButton: 'readonly', openGameInfoSheet: 'readonly',
   gameGlanceFacts: 'readonly', gameInfoRest: 'readonly', playtimeText: 'readonly',
@@ -373,7 +373,7 @@ const frontendGlobals = {
   // taste-share.js (#1776): whose favourites reach the table
   TASTE_SHARE_FROM_SESSIONS: 'readonly', TASTE_SHARE_MIN_FAVOURITES: 'readonly',
   tasteShare: 'readonly', tasteShareRows: 'readonly',
-  renderTasteShare: 'readonly', memberTasteLine: 'readonly',
+  renderTasteShare: 'readonly', memberTasteShareLine: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
   periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',
@@ -663,6 +663,8 @@ const frontendGlobals = {
   composeForestSettings: 'readonly', forestNameCard: 'readonly', renderMarkerGrid: 'readonly', wireRoundNameField: 'readonly',
   // member-stats.js (#1075 — split out of views-member.js)
   memberStats: 'readonly', bestGameValue: 'readonly', BEST_GAME_PRIOR_PLAYS: 'readonly', bestGameSub: 'readonly',
+  // taste-neighbour.js (#1778): die Tischkarte's closest / most different taste
+  TASTE_MIN_SHARED: 'readonly', tasteAverages: 'readonly', tasteDistance: 'readonly', tasteNeighbours: 'readonly', memberTasteLine: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   // views-badges.js (#1388) — the Klassisch rendering every design skins.

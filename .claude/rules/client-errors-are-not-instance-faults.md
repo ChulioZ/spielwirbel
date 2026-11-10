@@ -2,6 +2,9 @@
 paths:
   - "lib/observability.js"
   - "lib/app.js"
+  - "lib/upload.js"
+  - "lib/routes/account.js"
+  - "lib/routes/games.js"
 ---
 
 # A 4xx logged as an application error hands any bot a key to the alert channel
@@ -70,6 +73,20 @@ Three properties of the 4xx branch are load-bearing:
 
 Nothing is lost by the downgrade: `requestLogger` already emits its own line for
 the same request, carrying method, path, status and duration.
+
+## A client fault with NO status lands in the 5xx branch (#1657)
+
+Classifying by `err.status` only works when the thrower sets one. multer does
+not: a phone that loses signal mid-upload produces a plain `Error: Request
+aborted` (or `Request closed`), which `errorHandler` defaults to 500 — a stack,
+the webhook, a ring-buffer entry. So the two upload wrappers (`receiveAvatar`,
+`receiveCover`) ask `clientAborted(req)` in `lib/upload.js` before `next(err)`:
+it keys on **`req.destroyed`**, never on the message, logs one `client_aborted`
+line at `info` and sends nothing. Any other multer error still goes to
+`next(err)`; `test/upload-client-abort.test.js` aborts a real socket mid-body
+(supertest cannot) and carries the control. Widen the check to "any multer
+error" and that control **hangs** rather than failing — the swallowed error
+leaves a live client unanswered — which is the tell.
 
 ## Check the other half before downgrading — a real 413 is a real signal
 
