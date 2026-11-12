@@ -84,6 +84,9 @@ test('the admin gate refuses everything without a valid operator session', async
       ['post', '/api/admin/notices/x/decision'],
       ['get', '/api/admin/statement?entry=x'],
       ['post', '/api/admin/statement'],
+      // A reported chat message (#1781).
+      ['get', '/api/admin/messages/x'],
+      ['post', '/api/admin/messages/remove'],
     ]) {
       const res = await request(app)[method](path).send({});
       assert.equal(res.status, 401, `${method} ${path}`);

@@ -132,6 +132,25 @@ I18N.es = {
   'hub.tab.regal': 'Estantería',
   'hub.tab.chronik': 'Historial',
   'hub.tab.pokale': 'Trofeos',
+  'hub.tab.chat': 'Chat',
+  'chat.note': 'Todas las personas con acceso a este grupo pueden leerlo. Los mensajes se conservan mientras exista el grupo.',
+  'chat.older': 'Cargar mensajes anteriores',
+  'chat.empty': 'Aún no hay mensajes. ¿Quién trae qué?',
+  'chat.inputLabel': 'Mensaje',
+  'chat.placeholder': 'Escribe al grupo …',
+  'chat.send': 'Enviar',
+  'chat.deletedAccount': 'Cuenta eliminada',
+  'chat.edited': 'editado',
+  'chat.edit': 'Editar',
+  'chat.save': 'Guardar',
+  'chat.delete': 'Eliminar',
+  'chat.deleteConfirm': '¿Eliminar este mensaje? No se puede deshacer.',
+  'chat.report': 'Denunciar',
+  'chat.reportSubject': 'Mensaje de chat {id}',
+  'chat.unread': 'Mensajes nuevos',
+  'chat.toast.rateLimited': 'Estás escribiendo muy rápido. Espera un momento y vuelve a intentarlo.',
+  'chat.toast.quota': 'Este grupo ha alcanzado el número máximo de mensajes. Elimina mensajes antiguos para hacer sitio.',
+  'chat.toast.failed': 'No se pudo guardar el mensaje.',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that
@@ -2251,7 +2270,7 @@ I18N.es = {
   // Borrado de la cuenta por el propio usuario (#419) — el art. 17 del RGPD
   // sin pasar por el operador.
   'konto.delete.title': 'Eliminar la cuenta',
-  'konto.delete.intro': 'Elimina tu cuenta junto con todos los grupos, juegos, sesiones e imágenes subidas. No se puede deshacer.',
+  'konto.delete.intro': 'Elimina tu cuenta junto con todos los grupos, juegos, sesiones e imágenes subidas, y todos los mensajes de chat que hayas escrito, también en grupos de otras personas. No se puede deshacer.',
   'konto.delete.cta': 'Eliminar la cuenta …',
   'konto.delete.sheetTitle': 'Eliminar la cuenta definitivamente',
   'konto.delete.lead': 'Se eliminará definitivamente:',

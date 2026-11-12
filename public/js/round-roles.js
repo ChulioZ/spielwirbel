@@ -85,6 +85,7 @@ const CAPABILITY_ROLE = {
   'game.delete': 'coowner',         // delete an archived game, and its whole rating history
   'session.delete': 'coowner',      // delete a played evening's votes, result and winners
   'activity.delete': 'coowner',     // delete an entry from the shared Chronik
+  'chat.moderate': 'coowner',       // delete someone ELSE's message in the round chat (#1781)
   // Any grantee.
   // Throwing away a session whose voting is STILL OPEN (#857). It shares a route
   // and a method with 'session.delete' and differs only in the session's state,

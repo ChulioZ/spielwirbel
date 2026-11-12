@@ -23,7 +23,7 @@
 // The round screen is a hub with tabs, presented per device (#331): a floating
 // dock at the bottom on phones, an in-flow strip at the top of the content
 // column on desktop.
-const HUB_TABS = ['start', 'regal', 'chronik', 'pokale'];
+const HUB_TABS = ['start', 'regal', 'chronik', 'pokale', 'chat'];
 
 // Which hub tab owns each round SUB-screen, so those screens can show the
 // section they belong to instead of being orphans of it. Keyed the way the
@@ -71,8 +71,26 @@ async function showRound(rid, tab) {
   if (activeTab === 'regal') renderRegalTab(round, activeGames);
   else if (activeTab === 'chronik') renderChronikTab(round, activities);
   else if (activeTab === 'pokale') renderPokaleTab(round);
+  // The chat (#1781) needs an account; without one the URL falls back to Start.
+  else if (activeTab === 'chat' && chatAvailable()) renderChatTab(round);
   else renderStartTab(round, activeGames);
   renderHubTabs(round, activeTab);
+}
+
+// The round's sections, in nav order — ONE list for the dock and the rail
+// (round-rail.js), so the two cannot offer different sections.
+// „Einfacher Modus" (#1646): Pokale leaves the navigation, never the URL —
+// /round/:rid/pokale still renders, it is just no longer offered. The chat
+// (#1781) is offered only to a signed-in account, and carries its unread dot.
+function hubSections(round) {
+  return [
+    { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
+    { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
+    { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
+    { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
+    { id: 'chat', icon: 'ti-messages', label: t('hub.tab.chat'), dot: !!round.chatUnread },
+  ].filter(({ id }) => !(id === 'pokale' && simpleHidden('trophies')))
+    .filter(({ id }) => id !== 'chat' || chatAvailable());
 }
 
 // The hub's tab bar. ONE element with two presentations, branched in CSS by
@@ -98,16 +116,9 @@ async function showRound(rid, tab) {
 // just its id.
 function renderHubTabs(round, activeTab, sub) {
   const rid = round.id;
-  const tabs = [
-    { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
-    { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
-    { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
-    { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
-    // „Einfacher Modus" (#1646): the tab leaves the navigation, never the URL —
-    // /round/:rid/pokale still renders, it is just no longer offered.
-  ].filter(({ id }) => !(id === 'pokale' && simpleHidden('trophies')));
+  const tabs = hubSections(round);
   const dock = h(`<nav class="dock${sub ? ' dock--sub' : ''}" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
-  tabs.forEach(({ id: tabId, icon, label }) => {
+  tabs.forEach(({ id: tabId, icon, label, dot }) => {
     // aria-current marks the tab you are on (#145). It was signalled by the
     // is-active class alone, i.e. by color — and since the active tab also does
     // nothing when clicked, a screen-reader user met a dead control with no
@@ -119,7 +130,7 @@ function renderHubTabs(round, activeTab, sub) {
     const active = tabId === activeTab;
     const current = sub ? 'true' : 'page';
     const item = h(`<a class="dock__item${active ? ' is-active' : ''}"${active ? ` aria-current="${current}"` : ''}>
-         <i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}
+         <i class="ti ${icon}" aria-hidden="true"></i>${esc(label)}${dot ? hubChatDot() : ''}
        </a>`);
     // Every tab carries its href, so any of them can be copied or opened in a
     // new tab — but on a hub tab the active one stays click-inert (no onNav),

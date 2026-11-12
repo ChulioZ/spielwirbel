@@ -616,6 +616,64 @@ if (!process.env.DATABASE_URL) {
     assert.equal((await repo.roundContent(round.id)).games[0].title, '[entfernt]');
   });
 
+  // The round chat (#1781) adds two operator-side WRITES that cross tenants —
+  // removing a reported message, and erasing an account's messages in rounds
+  // it does not own. Both must resolve the tenant under atx() and delete under
+  // tx(tenant): a DELETE inside the FOR SELECT escape matches zero rows while
+  // the call still reports success. This file's own connection is a superuser,
+  // so only the methods run AS A PLAIN ROLE can see that (admin-cross-tenant-
+  // escape.md §4); the stored rows are checked afterwards, never the return.
+  test('chat removal and erasure delete as a non-superuser under FORCE RLS', async () => {
+    const assert = require('node:assert/strict');
+    const owner = `pg-chat-${Math.random().toString(16).slice(2)}`;
+    const now = new Date().toISOString();
+    const round = await repo.createRound(owner, { name: 'Chat', members: ['Ann'] });
+    const author = await repo.createUser({ tenantId: `${owner}-author`, createdAt: now, username: `chat${owner.slice(-6)}` });
+    const reported = await repo.createRoundMessage(owner, round.id, { authorUserId: 'someone', text: 'gemeldet', at: now });
+    const authored = await repo.createRoundMessage(owner, round.id, { authorUserId: author.id, text: 'von mir', at: now });
+    const kept = await repo.createRoundMessage(owner, round.id, { authorUserId: 'someone', text: 'bleibt', at: now });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    try {
+      await admin.query('DROP ROLE IF EXISTS gs_chat_probe');
+      await admin.query("CREATE ROLE gs_chat_probe LOGIN PASSWORD 'probe'");
+      await admin.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gs_chat_probe');
+      await admin.query('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO gs_chat_probe');
+      const url = new URL(process.env.DATABASE_URL);
+      url.username = 'gs_chat_probe';
+      url.password = 'probe';
+      const child = execFileSync(process.execPath, ['-e', `
+        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
+        (async () => {
+          const page = await repo.listRoundMessages(${JSON.stringify(owner)}, ${JSON.stringify(round.id)});
+          const removed = await repo.removeRoundMessage(${JSON.stringify(reported.id)});
+          await repo.eraseAccount(${JSON.stringify(author.id)});
+          console.log('RESULT:' + JSON.stringify({ seen: page.messages.length, removed: !!removed }));
+          await repo.end();
+        })().catch((err) => { console.error(err.stack); process.exit(1); });
+      `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
+      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
+      assert.ok(line, `the probe child produced no result: ${child}`);
+      assert.deepEqual(JSON.parse(line.slice('RESULT:'.length)), { seen: 3, removed: true },
+        'the plain role reads the thread under its tenant');
+    } finally {
+      await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_chat_probe').catch(() => {});
+      await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_chat_probe').catch(() => {});
+      await admin.query('DROP ROLE IF EXISTS gs_chat_probe').catch(() => {});
+      await admin.end();
+    }
+
+    assert.equal(await repo.getRoundMessage(owner, round.id, reported.id), null, 'the operator removal did not land');
+    assert.equal(await repo.getRoundMessage(owner, round.id, authored.id), null,
+      "erasure left the account's message in another tenant's round");
+    assert.ok(await repo.getRoundMessage(owner, round.id, kept.id), 'an unrelated message survives both');
+    await repo.deleteRound(owner, round.id);
+  });
+
   // instanceMetrics (#404) is the fourth cross-tenant operator READ, and it
   // fails in the quietest way of all of them: rounds/games/sessions are
   // RLS-scoped, so without atx() a non-superuser connection sees ZERO rows —
@@ -640,6 +698,8 @@ if (!process.env.DATABASE_URL) {
       guests: [{ id: 'g1', name: 'Gast' }],
     });
     await repo.addTag(tenant, round.id, 'Kurz', null);
+    // #1781: the chat peak reads round_messages, RLS-scoped like the rest.
+    await repo.createRoundMessage(tenant, round.id, { authorUserId: 'u', text: 'hi', at: new Date().toISOString() });
     /* An account whose OWN tenant holds that round (#1174). „Konten ohne Runde"
        joins `users` (no RLS) to `rounds` (RLS-scoped), so outside atx() the
        rounds side matches nothing and EVERY account reads as roundless — a
@@ -700,6 +760,7 @@ if (!process.env.DATABASE_URL) {
     assert.ok(out.content.games >= 1, 'games were invisible without the admin escape');
     assert.ok(out.content.sessions >= 1, 'sessions were invisible without the admin escape');
     assert.ok(out.peaks.gamesPerRound >= 1, 'the games peak was invisible without the admin escape');
+    assert.ok(out.peaks.messagesPerTenant >= 1, 'the chat peak was invisible without the admin escape');
 
     /* The #1124 adoption figures, and the reason this probe exists at all: they
        are computed from `games`, `sessions` and `rounds`, all RLS-scoped, so a

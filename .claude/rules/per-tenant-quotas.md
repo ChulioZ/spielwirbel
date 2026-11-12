@@ -20,6 +20,7 @@ comment is the authoritative list. The table mirrors it, in two groups:
 | expansions per game | `lib/routes/games.js` | `quota_expansions` | #653 |
 | dismissed recommendations per round | `lib/routes/recommendations.js` | `quota_dismissed` | #782 |
 | saved session filters per round | `lib/routes/saved-filters.js` | `quota_filters` | #1328 |
+| chat messages per tenant | `lib/routes/round-messages.js` (a grantee's message counts against the OWNER's tenant, where it is stored) | `quota_messages` | #1781 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
 | passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |

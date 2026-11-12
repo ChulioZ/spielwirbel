@@ -83,7 +83,7 @@ const CLIENT_ERROR_SCREENS = [
   'inbox', 'freunde', 'konto', 'neu', 'entdecken', 'login', 'register', 'forgot-password', 'preisalarme', 'quiz',
 ];
 const CLIENT_ERROR_ROUND_TABS = [
-  'start', 'regal', 'chronik', 'pokale', 'retired', 'completed', 'wishlist', 'guestgames',
+  'start', 'regal', 'chronik', 'pokale', 'chat', 'retired', 'completed', 'wishlist', 'guestgames',
   'recommendations', 'shelf-profile', 'design', 'tags', 'settings',
 ];
 const CLIENT_ERROR_ROUND_ITEMS = ['game', 'member', 'session'];

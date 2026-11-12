@@ -7290,7 +7290,7 @@ module.exports = function repoContract(repo) {
     // Exactly the five named keys — this is the export/erasure symmetry guard: it
     // must stay in step with the stores eraseAccount deletes (the erase tests below
     // pin the delete side), so a sixth store added to one shows up as a shape drift.
-    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions']);
+    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions', 'roundMessageReads', 'roundMessages']);
     assert.equal(mine.grants.length, 1);
     assert.equal(mine.grants[0].roundId, round.id);
     assert.equal(mine.grants[0].userId, me.id);
@@ -7316,6 +7316,7 @@ module.exports = function repoContract(repo) {
     const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
     assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
       grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [], quizSubmissions: [],
+      roundMessages: [], roundMessageReads: [],
     });
   });
 
@@ -7844,5 +7845,123 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getAdminSession('h-old'), null, 'expired rows are purged on create');
     assert.ok(await repo.getAdminSession('h-c'));
     await repo.deleteAdminSessionsForPasskey('cred-b');
+  });
+
+  /* ------------------------------- Round chat (#1781) ------------------------------- */
+
+  test('round chat: a thread pages oldest-first, carries its seq, and edits/deletes in place', async () => {
+    const round = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    const posted = [];
+    for (let i = 1; i <= 5; i += 1) {
+      posted.push(await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: `m${i}`, at }));
+    }
+    for (const m of posted) assert.equal(typeof m.seq, 'number', 'seq is a number on both backends');
+    assert.ok(posted.every((m, i) => i === 0 || m.seq > posted[i - 1].seq), 'seq is strictly increasing');
+    assert.equal('editedAt' in posted[0], false, 'editedAt is absent until an edit');
+
+    const last = await repo.listRoundMessages(T, round.id, { limit: 2 });
+    assert.deepEqual(last.messages.map((m) => m.text), ['m4', 'm5'], 'newest page, oldest first');
+    assert.equal(last.hasMore, true);
+    const older = await repo.listRoundMessages(T, round.id, { before: last.messages[0].seq, limit: 10 });
+    assert.deepEqual(older.messages.map((m) => m.text), ['m1', 'm2', 'm3']);
+    assert.equal(older.hasMore, false);
+
+    const edited = await repo.updateRoundMessage(T, round.id, posted[1].id, { text: 'neu', editedAt: at });
+    assert.equal(edited.text, 'neu');
+    assert.equal(edited.editedAt, at);
+    assert.equal(edited.seq, posted[1].seq, 'an edit keeps the message in place');
+    const gone = await repo.deleteRoundMessage(T, round.id, posted[2].id);
+    assert.equal(gone.id, posted[2].id);
+    assert.equal(await repo.getRoundMessage(T, round.id, posted[2].id), null);
+    assert.equal(await repo.deleteRoundMessage(T, round.id, posted[2].id), null, 'a second delete is not-found');
+    assert.equal(await repo.countRoundMessages(T) >= 4, true);
+    assert.equal(typeof (await repo.countRoundMessages(T)), 'number');
+
+    // A seq is never reused after the newest is deleted, or a reader whose
+    // marker sat on it would see the next message as already read.
+    const newest = posted[4];
+    await repo.deleteRoundMessage(T, round.id, newest.id);
+    const next = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'm6', at });
+    assert.ok(next.seq > newest.seq, 'the seq counter survives deleting the newest message');
+    await repo.deleteRound(T, round.id);
+  });
+
+  test('round chat is tenant-scoped: another tenant reads, writes and deletes nothing', async () => {
+    const round = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    const m = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'geheim', at });
+    assert.equal(await repo.listRoundMessages(OTHER, round.id), null);
+    assert.equal(await repo.createRoundMessage(OTHER, round.id, { authorUserId: 'u-b', text: 'x', at }), null);
+    assert.equal(await repo.getRoundMessage(OTHER, round.id, m.id), null);
+    assert.equal(await repo.updateRoundMessage(OTHER, round.id, m.id, { text: 'x', editedAt: at }), null);
+    assert.equal(await repo.deleteRoundMessage(OTHER, round.id, m.id), null);
+    assert.deepEqual(await repo.roundMessageHeads(OTHER, [round.id], 'u-b'), {});
+    assert.equal((await repo.getRoundMessage(T, round.id, m.id)).text, 'geheim', 'untouched');
+    await repo.deleteRound(T, round.id);
+  });
+
+  test('round chat heads skip the reader\'s own messages, and markers only move forward', async () => {
+    const round = await freshRound();
+    const quiet = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    const a = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'a', at });
+    const b = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-b', text: 'b', at });
+    await repo.createRoundMessage(T, quiet.id, { authorUserId: 'u-a', text: 'nur ich', at });
+    assert.deepEqual(await repo.roundMessageHeads(T, [round.id, quiet.id], 'u-a'), { [round.id]: b.seq },
+      "a round where only the reader wrote has no head for them");
+    assert.deepEqual(await repo.roundMessageHeads(T, [round.id], 'u-b'), { [round.id]: a.seq });
+    assert.deepEqual(await repo.roundMessageHeads(T, [], 'u-a'), {});
+
+    assert.equal(await repo.markRoundMessagesRead('u-a', round.id, b.seq), b.seq);
+    assert.equal(await repo.markRoundMessagesRead('u-a', round.id, a.seq), b.seq, 'a stale marker does not move it back');
+    const reads = await repo.getRoundMessageReads('u-a');
+    assert.equal(reads[round.id], b.seq);
+    assert.equal(typeof reads[round.id], 'number');
+
+    await repo.deleteRound(T, round.id);
+    assert.equal((await repo.getRoundMessageReads('u-a'))[round.id], undefined, 'the round takes its markers with it');
+    assert.equal(await repo.listRoundMessages(T, round.id), null);
+    await repo.deleteRound(T, quiet.id);
+  });
+
+  test('round chat: the operator finds and removes a message across tenants', async () => {
+    const round = await freshRound({ name: 'Moderiert' });
+    const at = '2026-11-12T10:00:00.000Z';
+    const m = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'böse', at });
+    const found = await repo.findRoundMessage(m.id);
+    assert.equal(found.tenantId, T);
+    assert.equal(found.roundId, round.id);
+    assert.equal(found.roundName, 'Moderiert');
+    assert.equal(found.text, 'böse');
+    const removed = await repo.removeRoundMessage(m.id);
+    assert.equal(removed.id, m.id);
+    assert.equal(await repo.getRoundMessage(T, round.id, m.id), null, 'the stored row is really gone');
+    assert.equal(await repo.removeRoundMessage(m.id), null);
+    assert.equal(await repo.findRoundMessage('nope'), null);
+    await repo.deleteRound(T, round.id);
+  });
+
+  test('erasing an account deletes its chat messages in every tenant and exports them first', async () => {
+    const now = '2026-11-12T10:00:00.000Z';
+    const { id: uid } = await repo.createUser({ tenantId: 't-chat-erase', createdAt: now, username: 'chaterase' });
+    const own = await repo.createRound('t-chat-erase', { name: 'Eigen', members: ['A'], owner: null });
+    const foreign = await freshRound();
+    await repo.createRoundMessage('t-chat-erase', own.id, { authorUserId: 'u-x', text: 'in meiner Runde', at: now });
+    const mine = await repo.createRoundMessage(T, foreign.id, { authorUserId: uid, text: 'von mir', at: now });
+    const theirs = await repo.createRoundMessage(T, foreign.id, { authorUserId: 'u-x', text: 'von dir', at: now });
+    await repo.markRoundMessagesRead(uid, foreign.id, theirs.seq);
+
+    const out = await repo.exportAccountData(uid, 't-chat-erase');
+    assert.deepEqual(out.roundMessages.map((m) => [m.roundId, m.text]), [[foreign.id, 'von mir']],
+      'the export carries exactly what the account wrote, wherever it wrote it');
+    assert.deepEqual(out.roundMessageReads, [{ roundId: foreign.id, lastSeq: theirs.seq }]);
+
+    await repo.eraseAccount(uid);
+    assert.equal(await repo.getRoundMessage(T, foreign.id, mine.id), null, 'its message in a foreign round is gone');
+    assert.ok(await repo.getRoundMessage(T, foreign.id, theirs.id), 'the other author\'s survives');
+    assert.deepEqual(await repo.getRoundMessageReads(uid), {});
+    assert.equal(await repo.listRoundMessages('t-chat-erase', own.id), null, 'its own round and thread are gone');
+    await repo.deleteRound(T, foreign.id);
   });
 };

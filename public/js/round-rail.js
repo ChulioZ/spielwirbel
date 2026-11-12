@@ -186,14 +186,9 @@ function buildRoundRail(round, activeTab, sub) {
      the hub's previews say the same figures in words. */
   const counts = designIs('forest') ? { regal: activeGames.length, chronik: playedCount } : {};
 
-  // --- The four sections.
+  // --- The sections (hubSections, views-round.js — shared with the dock).
   const nav = h(`<nav class="rail__group" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
-  [
-    { id: 'start', icon: 'ti-home', label: t('hub.tab.start') },
-    { id: 'regal', icon: 'ti-cards', label: t('hub.tab.regal') },
-    { id: 'chronik', icon: 'ti-history', label: t('hub.tab.chronik') },
-    { id: 'pokale', icon: 'ti-trophy', label: t('hub.tab.pokale') },
-  ].filter(({ id }) => !(id === 'pokale' && simpleHidden('trophies'))).forEach(({ id: tabId, icon, label }) => {
+  hubSections(round).forEach(({ id: tabId, icon, label, dot }) => {
     // On a sub-screen owned by this section (game detail, member, results) the
     // section is where you ARE inside, but not the page you are on — so it is
     // marked, and stays a live link, but never "page". Same distinction the
@@ -201,7 +196,7 @@ function buildRoundRail(round, activeTab, sub) {
     // its own.
     const inside = !ownEntry && sub && tabId === activeTab;
     const el = h(`<a class="rail__item${tabId === activeTab && !ownEntry ? ' is-active' : ''}"${inside ? ' aria-current="true"' : ''}>
-         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>${counts[tabId] ? `<span class="rail__count" aria-hidden="true">${counts[tabId]}</span>` : ''}
+         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(label)}</span>${dot ? hubChatDot() : ''}${counts[tabId] ? `<span class="rail__count" aria-hidden="true">${counts[tabId]}</span>` : ''}
        </a>`);
     const current = tabId === activeTab && !sub;
     if (current) el.setAttribute('aria-current', 'page');

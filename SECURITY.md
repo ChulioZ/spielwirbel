@@ -44,6 +44,12 @@ Security issues especially relevant given the current architecture:
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
   thresholds, or to attribute one of them to a particular tenant, is in scope;
   the published totals themselves are not.
+- **The round chat** (#1781) — user-authored text shown to OTHER accounts.
+  Reading or posting in a round's thread without access to that round (an
+  outsider, a revoked grantee, another tenant), editing someone else's message,
+  deleting one without being its author or the round's owner/co-owner, any way
+  to make message text execute or render as markup, a link with a scheme other
+  than http(s), or message text reaching the logs is in scope.
 - **The weekly quiz's answer key** (#743). `GET /api/quiz/sample` is public by
   design: one teaser question, without its answer, from games the week's scored
   questions do not use. Reading the answer to a **scored** question before

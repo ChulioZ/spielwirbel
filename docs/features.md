@@ -399,7 +399,8 @@ What the app does, in detail. For a short overview see the
   round has recorded who owns which box, the page also lists the shelf games that
   member owns; it is left out entirely for a member who owns none, so a round
   that does not use ownership never sees it.
-- **Round hub** – each round is a small app of its own, with four sections
+- **Round hub** – each round is a small app of its own, with four sections (five
+  with the round chat, for a signed-in account)
   presented per screen size: a floating bottom dock on phones, a tab strip at
   the top of the content column on tablets, and from 1280px a persistent left
   rail carrying the four sections and one Einstellungen entry — in Klassisch
@@ -1109,6 +1110,20 @@ What the app does, in detail. For a short overview see the
   seat choice — a new one replaces the old — and every link expires after
   **7 days**; the sheet lists the live ones to share again or revoke. The
   round's member quota bounds how many people a fresh-seat link can bring in.
+- **Round chat** – *accounts mode only* (issue #1781). Every round has a fifth
+  hub section, **Chat**: one plain-text thread for every account with access to
+  the round (owner and every invited role). Messages are at most 2000
+  characters, links are clickable, the newest sit at the bottom and older ones
+  load on request; an open thread checks for new messages every 20 seconds. The
+  author can edit (marked „bearbeitet") and delete their own; the owner and
+  co-owners can delete anyone's. An **unread dot** on the Chat tab and on the
+  round's home card is per account and clears when the thread is opened; your
+  own messages never light it. Every message from someone else carries a
+  **report** link into the contact form, prefilled with the message id, which
+  the operator looks up and removes in the admin panel („Chat-Nachricht
+  entfernen", logged). Messages live as long as the round; deleting an account
+  deletes every message it wrote, in every round. Posting is limited per account
+  (`CHAT_RATE_LIMIT_MAX`) and messages per tenant (`MAX_MESSAGES_PER_TENANT`).
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

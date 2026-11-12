@@ -133,6 +133,25 @@ I18N.en = {
   'hub.tab.regal': 'Shelf',
   'hub.tab.chronik': 'History',
   'hub.tab.pokale': 'Trophies',
+  'hub.tab.chat': 'Chat',
+  'chat.note': 'Everyone with access to this round can read along. Messages are kept as long as the round exists.',
+  'chat.older': 'Load older messages',
+  'chat.empty': 'No messages yet. Who is bringing what?',
+  'chat.inputLabel': 'Message',
+  'chat.placeholder': 'Message the round …',
+  'chat.send': 'Send',
+  'chat.deletedAccount': 'Deleted account',
+  'chat.edited': 'edited',
+  'chat.edit': 'Edit',
+  'chat.save': 'Save',
+  'chat.delete': 'Delete',
+  'chat.deleteConfirm': 'Delete this message? This cannot be undone.',
+  'chat.report': 'Report',
+  'chat.reportSubject': 'Chat message {id}',
+  'chat.unread': 'New messages',
+  'chat.toast.rateLimited': 'You are writing very fast. Wait a moment and try again.',
+  'chat.toast.quota': 'This round has reached the maximum number of messages. Delete older messages to make room.',
+  'chat.toast.failed': 'The message could not be saved.',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that
@@ -2300,7 +2319,7 @@ I18N.en = {
 
   // Self-service account deletion (#419) — Art. 17 GDPR without the operator.
   'konto.delete.title': 'Delete account',
-  'konto.delete.intro': 'Deletes your account along with every round, game, session and uploaded image. This cannot be undone.',
+  'konto.delete.intro': 'Deletes your account along with every round, game, session and uploaded image, and every chat message you wrote – in other people’s rounds too. This cannot be undone.',
   'konto.delete.cta': 'Delete account …',
   'konto.delete.sheetTitle': 'Permanently delete account',
   'konto.delete.lead': 'This will permanently delete:',

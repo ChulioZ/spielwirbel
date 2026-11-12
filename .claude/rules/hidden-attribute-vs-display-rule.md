@@ -88,6 +88,16 @@ Nothing but a real engine sees this: jsdom applies no stylesheet, so every spec
 reported the items hidden. **When code hides things by attribute, probe
 `getClientRects().length` on them in a browser**, not `el.hidden`.
 
+## The fifth instance (#1781): a DESIGN stylesheet outranks the guard
+
+The chat's „Ältere Nachrichten laden" is a `.link-btn` with a correct
+`.chat__older[hidden] { display: none }` (0,2,0) — and it still showed under a
+two-message thread, in Der Tisch only: `:root[data-design="tisch"] .link-btn`
+is (0,3,1). A guard written against `styles.css` alone is outranked by any
+design sheet that restyles the component, so a `[hidden]` guard on a shared
+component takes `!important`, like `.hub-fill > [hidden]` above. Probe it with
+the design applied, not only in Klassisch.
+
 ## The verification trap that hid it
 
 The DOM probe lied. `el.hidden` is the **IDL attribute** — it returned `true`

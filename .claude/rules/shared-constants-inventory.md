@@ -860,6 +860,14 @@ on either side would make the pot promise a box the draw leaves out, or hide
 one it would draw. `loanBorrowerName` (a seat's current name, else the typed
 one) and `longLoans` are client-only readers that live beside them.
 
+**The forty-first is `public/js/round-chat.js`** (#1781): `CHAT_MESSAGE_MAX`,
+`CHAT_PAGE_SIZE` and `normalizeChatText`, required by
+`lib/routes/round-messages.js`. The plain offer/validate shape — the composer's
+`maxlength` and the route's cap are one number, and both measure the text AFTER
+the same normalisation, so a composer that counted the raw `\r\n` input could
+accept a message the route then refuses. `chatSegments` (the link splitter) and
+`chatUnread` live beside them and are client-only.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

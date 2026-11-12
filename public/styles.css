@@ -12627,3 +12627,53 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
   .start-player__seat { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-base) var(--ease-out); }
   .start-player__seat.is-lit { transform: translateY(-2px); }
 }
+
+/* ---- Round chat (#1781) -------------------------------------------------
+   Every colour is a token, so each design repaints the thread through its own
+   :root block with nothing to add here
+   (.claude/rules/design-stylesheets-are-shell-assets.md). The unread dot on a
+   nav label reuses .inbox-row__dot's size and fill (one dot, one rule) and only
+   adds the gap beside the label. */
+.hub-chat-dot { margin-left: 6px; }
+.chat { display: flex; flex-direction: column; gap: 12px; }
+.chat__note { margin: 0; font-size: var(--text-sm); }
+.chat__older { align-self: center; }
+/* .link-btn sets its own display, which beats the bare `hidden` attribute
+   (.claude/rules/hidden-attribute-vs-display-rule.md) — and Der Tisch's
+   `:root[data-design="tisch"] .link-btn` (0,3,1) beats a plain guard too,
+   measured on #1781: the button showed under a two-message thread. A state
+   guard must win in every design, so it is !important, as `.hub-fill > [hidden]`. */
+.chat__older[hidden], .chat__empty[hidden] { display: none !important; }
+.chat__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.chat__empty { margin: 0; text-align: center; }
+.chat-msg {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.chat-msg--own { background: var(--brand-tint-soft); border-color: var(--brand-edge); }
+.chat-msg__meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: var(--text-sm); }
+.chat-msg__author { font-weight: 700; color: var(--ink); }
+.chat-msg__edited { font-style: italic; }
+/* pre-wrap keeps the author's line breaks; anywhere lets a long URL wrap
+   instead of widening the row past the phone (responsive-content-width.md). */
+.chat-msg__text { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+/* The accent, like every in-app link: it is contrast-checked against each
+   design's surface, where the browser's default blue/purple is not. */
+.chat-msg__text a { color: var(--brand-ink, var(--brand)); text-decoration: underline; }
+.chat-msg__actions { display: flex; gap: 2px; }
+.chat-msg__act {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--ink-soft); cursor: pointer;
+}
+.chat-msg__act:hover { background: var(--sunken); color: var(--ink); }
+.chat__compose { display: flex; gap: 8px; align-items: flex-end; }
+.chat__input { flex: 1; min-width: 0; resize: vertical; }
+.chat-edit { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
+.chat-edit__actions { display: flex; gap: 6px; justify-content: flex-end; }

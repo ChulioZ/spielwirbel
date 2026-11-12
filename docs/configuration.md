@@ -37,6 +37,9 @@ Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
 `DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below), and
 `VOTE_LINK_RATE_LIMIT_MAX` (the public vote link `/api/vote/…`, per 15 min,
 default 60 — higher because it is an ordinary user action, not a signup), and
+`CHAT_RATE_LIMIT_MAX` (round-chat posts per **account** per minute, default 20,
+issue #1781 — keyed by account rather than by IP, since a whole table shares one
+address), and
 `AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
 one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
 lower ceiling than the account surface around it), and
@@ -174,7 +177,9 @@ round (`MAX_GAMES_PER_ROUND`, default 1000), custom tags per round
 (`MAX_DISMISSED_RECOMMENDATIONS_PER_ROUND`, default 500, issue #782). One
 per-round cap applies in **every** mode, accounts on or off: saved session
 filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
-bounds the hub's quick-start chip row rather than abuse. Per
+bounds the hub's quick-start chip row rather than abuse. The round chat's messages
+are capped per tenant (`MAX_MESSAGES_PER_TENANT`, default 20000, issue #1781); a
+grantee's message counts against the round owner's tenant, where it is stored. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys

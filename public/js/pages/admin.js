@@ -381,7 +381,7 @@
     // ceilings are inert (.claude/rules/per-tenant-quotas.md), so the peaks are
     // shown without a verdict that implies a refusal that cannot happen.
     const peakVerdict = s.quotas.enforced
-      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound']
+      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound', 'messagesPerTenant']
         .map((k) => capVerdict(m.peaks[k], s.quotas[k]))
         .reduce((worst, v) => (VERDICT_RANK[v] > VERDICT_RANK[worst] ? v : worst), 'ok')
       : 'warn';
@@ -391,6 +391,7 @@
         ['Runden/Konto', `${m.peaks.roundsPerTenant} / ${s.quotas.roundsPerTenant}`],
         ['Spiele/Runde', `${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`],
         ['Tags/Runde', `${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`],
+        ['Chat-Nachrichten/Konto', `${m.peaks.messagesPerTenant} / ${s.quotas.messagesPerTenant}`],
       ]]);
 
     // The runtime the answering process is on (#977). Neutral pill, deliberately:
@@ -1384,7 +1385,7 @@
       refreshLog();
       // Art. 17 (#272): the statement of reasons for what just happened,
       // generated server-side from the log entry that was just written.
-      offerStatement(out.entry);
+      offerStatement(out.entry, $('takedownCard'));
     } catch (err) {
       show($('takedownMsg'), message(err), 'err');
     } finally {
@@ -1392,10 +1393,51 @@
     }
   });
 
+  // ---- chat message (#1781) -----------------------------------------------
+
+  let chatMessageId = null;
+  $('chatLookupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hide($('chatMsg'));
+    $('chatResult').hidden = true;
+    chatMessageId = null;
+    try {
+      const { message: m } = await api(`/messages/${encodeURIComponent($('chatMessageId').value.trim())}`);
+      chatMessageId = m.id;
+      $('chatMeta').textContent = `${m.authorUsername || 'unbekanntes Konto'} · Runde „${m.roundName || '—'}“ · ${m.createdAt} · Mandant ${m.tenantId}`;
+      $('chatText').textContent = m.text;
+      $('chatResult').hidden = false;
+    } catch (err) {
+      show($('chatMsg'), message(err), 'err');
+    }
+  });
+
+  $('chatRemoveForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!chatMessageId || !window.confirm('Diese Nachricht endgültig löschen?')) return;
+    try {
+      const out = await api('/messages/remove', {
+        method: 'POST',
+        body: JSON.stringify({ id: chatMessageId, reason: $('chatReason').value }),
+      });
+      show($('chatMsg'), 'Gelöscht und protokolliert.', 'ok');
+      $('chatResult').hidden = true;
+      $('chatReason').value = '';
+      chatMessageId = null;
+      refreshLog();
+      offerStatement(out.entry, $('chatCard'));
+    } catch (err) {
+      show($('chatMsg'), message(err), 'err');
+    }
+  });
+
   // ---- statement of reasons (#272) -----------------------------------------
 
-  async function offerStatement(entry) {
+  // One statement box, moved into whichever card just acted (#1781) — the
+  // takedown card is hidden unless an image was looked up.
+  async function offerStatement(entry, host) {
     if (!entry) return;
+    host.appendChild($('statementBox'));
     statementEntry = entry;
     hide($('statementMsg'));
     try {
