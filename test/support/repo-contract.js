@@ -7887,6 +7887,23 @@ module.exports = function repoContract(repo) {
     await repo.deleteRound(T, round.id);
   });
 
+  test('round chat: one author\'s count, and removing one author\'s messages from ONE round', async () => {
+    const round = await freshRound();
+    const other = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    for (const t of ['a', 'b']) await repo.createRoundMessage(T, round.id, { authorUserId: 'u-spam', text: t, at });
+    await repo.createRoundMessage(T, other.id, { authorUserId: 'u-spam', text: 'elsewhere', at });
+    const kept = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-ok', text: 'ok', at });
+    assert.equal(await repo.countRoundMessages(T, 'u-spam'), 3);
+    assert.equal(typeof (await repo.countRoundMessages(T, 'u-spam')), 'number');
+    assert.equal(await repo.deleteRoundMessagesByAuthor(OTHER, round.id, 'u-spam'), 0, 'another tenant removes nothing');
+    assert.equal(await repo.deleteRoundMessagesByAuthor(T, round.id, 'u-spam'), 2);
+    assert.deepEqual((await repo.listRoundMessages(T, round.id)).messages.map((m) => m.id), [kept.id]);
+    assert.equal((await repo.listRoundMessages(T, other.id)).messages.length, 1, 'the author\'s other round is untouched');
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, other.id);
+  });
+
   test('round chat is tenant-scoped: another tenant reads, writes and deletes nothing', async () => {
     const round = await freshRound();
     const at = '2026-11-12T10:00:00.000Z';

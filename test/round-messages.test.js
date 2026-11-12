@@ -264,3 +264,52 @@ test('the operator\'s Art. 15 export forwards EVERY store exportAccountData retu
   const missing = keys.filter((k) => !(k in res.body.export));
   assert.deepEqual(missing, [], 'stores the repo exports but the route does not forward');
 });
+
+test('the read marker and the paging cursor refuse numbers no seq can be (no 500 on Postgres)', async () => {
+  // Measured: 1e300 reaches Postgres as a bigint and throws 22P02 → a 500 any
+  // account can repeat, each one an entry in the operator's error log.
+  const { owner, base } = await sharedRound('chat-bounds');
+  for (const seq of [1e300, Number.MAX_SAFE_INTEGER + 2, -1, 1.5]) {
+    const res = await request(app).post(`${base}/read`).set(auth(owner.token)).send({ seq });
+    assert.equal(res.status, 400, `seq ${seq}`);
+  }
+  for (const before of ['1e300', String(Number.MAX_SAFE_INTEGER + 2), '0', 'x']) {
+    assert.equal((await request(app).get(`${base}?before=${before}`).set(auth(owner.token))).status, 400, `before ${before}`);
+  }
+  assert.equal((await request(app).post(`${base}/read`).set(auth(owner.token)).send({ seq: Number.MAX_SAFE_INTEGER })).status, 200);
+});
+
+test('one author cannot fill the round owner\'s message quota on their own', async () => {
+  const { owner, guest, base } = await sharedRound('chat-share');
+  process.env.MAX_MESSAGES_PER_TENANT = '10';
+  process.env.MAX_MESSAGES_PER_AUTHOR = '2';
+  try {
+    for (let i = 0; i < 2; i += 1) {
+      assert.equal((await request(app).post(base).set(auth(guest.token)).send({ text: `g${i}` })).status, 201);
+    }
+    const refused = await request(app).post(base).set(auth(guest.token)).send({ text: 'g3' });
+    assert.equal(refused.status, 403);
+    assert.equal(refused.body.error, 'quota_messages_author');
+    assert.equal((await request(app).post(base).set(auth(owner.token)).send({ text: 'ich darf noch' })).status, 201,
+      'the owner — and everyone else — can still post');
+  } finally {
+    delete process.env.MAX_MESSAGES_PER_TENANT;
+    delete process.env.MAX_MESSAGES_PER_AUTHOR;
+  }
+});
+
+test('owner and co-owner remove all of one person\'s messages in a round at once; an editor cannot', async () => {
+  const { owner, guest, round, base } = await sharedRound('chat-purge');
+  const editor = await makeAccount('chat-purge-editor@example.com');
+  await repo.createGrant({ roundId: round.id, ownerTenantId: owner.user.tenantId, userId: editor.user.id, role: 'editor' });
+  const spam = [];
+  for (let i = 0; i < 3; i += 1) spam.push((await request(app).post(base).set(auth(guest.token)).send({ text: `spam${i}` })).body);
+  const keep = (await request(app).post(base).set(auth(editor.token)).send({ text: 'normal' })).body;
+
+  assert.equal((await request(app).delete(`${base}/by-author/${spam[0].id}`).set(auth(editor.token))).status, 403);
+  const res = await request(app).delete(`${base}/by-author/${spam[1].id}`).set(auth(owner.token));
+  assert.equal(res.status, 200);
+  assert.equal(res.body.removed, 3);
+  assert.deepEqual((await request(app).get(base).set(auth(owner.token))).body.messages.map((m) => m.id), [keep.id]);
+  assert.equal((await request(app).delete(`${base}/by-author/${spam[1].id}`).set(auth(owner.token))).status, 404);
+});

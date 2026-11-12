@@ -142,6 +142,10 @@ I18N.fi = {
   'chat.toast.rateLimited': 'Kirjoitat todella nopeasti. Odota hetki ja yritä uudelleen.',
   'chat.toast.quota': 'Tämä porukka on saavuttanut viestien enimmäismäärän. Poista vanhempia viestejä tehdäksesi tilaa.',
   'chat.toast.failed': 'Viestiä ei voitu tallentaa.',
+  'chat.purge': 'Poista kaikki käyttäjän {name} viestit',
+  'chat.purgeConfirm': 'Poistetaanko kaikki käyttäjän {name} viestit tästä porukasta? Toimintoa ei voi perua.',
+  'chat.purged': 'Käyttäjän {name} viestit poistettu.',
+  'chat.toast.quotaAuthor': 'Olet saavuttanut omien viestiesi enimmäismäärän täällä. Poista vanhempia jatkaaksesi.',
 
   'hub.suggest.title': 'Mitä jos',
   'hub.suggest.never': 'Hyllyssä, ei koskaan pelattu',

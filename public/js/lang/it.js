@@ -160,6 +160,10 @@ I18N.it = {
   'chat.toast.rateLimited': 'Stai scrivendo molto velocemente. Aspetta un momento e riprova.',
   'chat.toast.quota': 'Questo gruppo ha raggiunto il numero massimo di messaggi. Elimina i messaggi più vecchi per fare spazio.',
   'chat.toast.failed': 'Impossibile salvare il messaggio.',
+  'chat.purge': 'Elimina tutti i messaggi di {name}',
+  'chat.purgeConfirm': 'Eliminare tutti i messaggi di {name} in questo gruppo? L’operazione non si può annullare.',
+  'chat.purged': 'Messaggi di {name} eliminati.',
+  'chat.toast.quotaAuthor': 'Hai raggiunto il numero massimo di messaggi tuoi qui. Eliminane alcuni vecchi per continuare a scrivere.',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that

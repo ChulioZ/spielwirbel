@@ -179,7 +179,9 @@ per-round cap applies in **every** mode, accounts on or off: saved session
 filters (`MAX_SAVED_FILTERS_PER_ROUND`, default 6, issue #1328), because it
 bounds the hub's quick-start chip row rather than abuse. The round chat's messages
 are capped per tenant (`MAX_MESSAGES_PER_TENANT`, default 20000, issue #1781); a
-grantee's message counts against the round owner's tenant, where it is stored. Per
+grantee's message counts against the round owner's tenant, where it is stored, and
+one account may hold at most `MAX_MESSAGES_PER_AUTHOR` of them (default 5000), so a
+single invitee cannot exhaust the owner's cap alone. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys

@@ -165,6 +165,10 @@ I18N.nl = {
   'chat.toast.rateLimited': 'Je schrijft heel snel. Wacht even en probeer het opnieuw.',
   'chat.toast.quota': 'Deze groep heeft het maximale aantal berichten bereikt. Verwijder oudere berichten om ruimte te maken.',
   'chat.toast.failed': 'Het bericht kon niet worden opgeslagen.',
+  'chat.purge': 'Alle berichten van {name} verwijderen',
+  'chat.purgeConfirm': 'Alle berichten van {name} in deze groep verwijderen? Dit kan niet ongedaan worden gemaakt.',
+  'chat.purged': 'Berichten van {name} verwijderd.',
+  'chat.toast.quotaAuthor': 'Je hebt hier het maximale aantal eigen berichten bereikt. Verwijder oudere om verder te schrijven.',
 
   'hub.suggest.title': 'Wat dacht je van',
   'hub.suggest.never': 'In de kast, nooit gespeeld',

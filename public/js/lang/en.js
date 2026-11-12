@@ -152,6 +152,10 @@ I18N.en = {
   'chat.toast.rateLimited': 'You are writing very fast. Wait a moment and try again.',
   'chat.toast.quota': 'This round has reached the maximum number of messages. Delete older messages to make room.',
   'chat.toast.failed': 'The message could not be saved.',
+  'chat.purge': 'Delete all messages by {name}',
+  'chat.purgeConfirm': 'Delete all of {name}’s messages in this round? This cannot be undone.',
+  'chat.purged': 'Messages by {name} deleted.',
+  'chat.toast.quotaAuthor': 'You have reached the maximum number of your own messages here. Delete older ones to keep writing.',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that

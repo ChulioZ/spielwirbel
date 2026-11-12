@@ -1123,7 +1123,9 @@ What the app does, in detail. For a short overview see the
   the operator looks up and removes in the admin panel („Chat-Nachricht
   entfernen", logged). Messages live as long as the round; deleting an account
   deletes every message it wrote, in every round. Posting is limited per account
-  (`CHAT_RATE_LIMIT_MAX`) and messages per tenant (`MAX_MESSAGES_PER_TENANT`).
+  (`CHAT_RATE_LIMIT_MAX`) and messages per tenant (`MAX_MESSAGES_PER_TENANT`), of
+  which one account may hold `MAX_MESSAGES_PER_AUTHOR`. The owner and co-owners
+  can remove all of one person's messages in the round at once.
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

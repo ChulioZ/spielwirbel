@@ -143,6 +143,10 @@ I18N.ko = {
   'chat.toast.rateLimited': '너무 빠르게 보내고 있어요. 잠시 후 다시 시도해 주세요.',
   'chat.toast.quota': '이 모임의 메시지가 최대 개수에 도달했어요. 이전 메시지를 삭제해 공간을 만들어 주세요.',
   'chat.toast.failed': '메시지를 저장하지 못했어요.',
+  'chat.purge': '{name}님의 메시지 모두 삭제',
+  'chat.purgeConfirm': '이 모임에서 {name}님의 메시지를 모두 삭제할까요? 되돌릴 수 없어요.',
+  'chat.purged': '{name}님의 메시지를 삭제했어요.',
+  'chat.toast.quotaAuthor': '여기서 보낼 수 있는 내 메시지 수가 최대에 도달했어요. 이전 메시지를 삭제하면 계속 쓸 수 있어요.',
 
   'hub.suggest.title': '이건 어때요',
   'hub.suggest.never': '선반에 있지만 아직 플레이한 적 없음',

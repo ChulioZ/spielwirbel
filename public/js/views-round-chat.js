@@ -29,6 +29,7 @@ function chatErrorText(err) {
   const code = err && err.message;
   if (code === 'rate_limited') return t('chat.toast.rateLimited');
   if (code === 'quota_messages') return t('chat.toast.quota');
+  if (code === 'quota_messages_author') return t('chat.toast.quotaAuthor');
   return t('chat.toast.failed');
 }
 
@@ -106,6 +107,8 @@ async function renderChatTab(round) {
     };
     if (m.own) action('ti-pencil', t('chat.edit'), () => editMessage(li, m));
     if (m.own || moderator) action('ti-trash', t('chat.delete'), () => deleteMessage(m));
+    // The flood clean-up: every message by this person in this round.
+    if (!m.own && moderator) action('ti-user-x', t('chat.purge', { name: name || t('chat.deletedAccount') }), () => purgeAuthor(m, name));
     if (!m.own) {
       // The in-context notice channel (#559), with the message id in the
       // subject so the operator can look it up in the panel.
@@ -199,6 +202,18 @@ async function renderChatTab(round) {
       await api('DELETE', `${base}/${m.id}`);
       state.messages = state.messages.filter((x) => x.id !== m.id);
       paint();
+    } catch (err) { toast(chatErrorText(err), { tone: 'error' }); }
+  }
+
+  async function purgeAuthor(m, name) {
+    const who = name || t('chat.deletedAccount');
+    if (!await confirmDialog({ body: t('chat.purgeConfirm', { name: who }), confirmLabel: t('chat.delete'), icon: 'ti-user-x' })) return;
+    try {
+      await api('DELETE', `${base}/by-author/${m.id}`);
+      const author = m.author && m.author.username;
+      state.messages = state.messages.filter((x) => (x.author && x.author.username) !== author);
+      paint();
+      toast(t('chat.purged', { name: who }));
     } catch (err) { toast(chatErrorText(err), { tone: 'error' }); }
   }
 

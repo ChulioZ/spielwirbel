@@ -167,6 +167,10 @@ I18N.pt = {
   'chat.toast.rateLimited': 'Você está escrevendo muito rápido. Espere um momento e tente de novo.',
   'chat.toast.quota': 'Este grupo atingiu o número máximo de mensagens. Exclua mensagens antigas para liberar espaço.',
   'chat.toast.failed': 'Não foi possível salvar a mensagem.',
+  'chat.purge': 'Excluir todas as mensagens de {name}',
+  'chat.purgeConfirm': 'Excluir todas as mensagens de {name} neste grupo? Não é possível desfazer.',
+  'chat.purged': 'Mensagens de {name} excluídas.',
+  'chat.toast.quotaAuthor': 'Você atingiu o número máximo de mensagens próprias aqui. Exclua algumas antigas para continuar escrevendo.',
 
   'hub.suggest.title': 'Que tal',
   'hub.suggest.never': 'Na estante, nunca jogado',

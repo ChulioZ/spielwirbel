@@ -117,7 +117,7 @@ test('a co-owner may remove someone else\'s message; with no contact channel the
   await dom.call('renderChatTab', { ...ROUND, shared: true, role: 'coowner' });
   await flush();
   const acts = [...dom.app.querySelectorAll('.chat-msg__act')].map((b) => b.getAttribute('aria-label'));
-  assert.deepEqual(acts, ['Löschen']);
+  assert.deepEqual(acts, ['Löschen', 'Alle Nachrichten von bea löschen'], 'delete + the per-person clean-up, no report');
 });
 
 test('the thread\'s hidden controls stay hidden in every design', () => {
@@ -127,4 +127,21 @@ test('the thread\'s hidden controls stay hidden in every design', () => {
   const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public/styles.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '');
   assert.match(css, /\.chat__older\[hidden\],\s*\.chat__empty\[hidden\]\s*\{\s*display:\s*none\s*!important;\s*\}/);
+});
+
+test('a moderator gets the per-person clean-up on someone else\'s message, never on their own', async (t) => {
+  const dom = chatApp(t, { contact: false });
+  dom.set('api', async (method) => (method === 'GET'
+    ? { messages: [
+      { id: 'm1', seq: 1, text: 'spam', createdAt: '2026-11-12T10:00:00.000Z', author: { username: 'bea' }, own: false },
+      { id: 'm2', seq: 2, text: 'meins', createdAt: '2026-11-12T10:00:00.000Z', author: { username: 'ich' }, own: true },
+    ], hasMore: false, lastRead: 2 }
+    : {}));
+  dom.app.innerHTML = '';
+  await dom.call('renderChatTab', ROUND); // the owner: no grant
+  await flush();
+  const [other, mine] = [...dom.app.querySelectorAll('.chat-msg')].map((r) =>
+    [...r.querySelectorAll('.chat-msg__act')].map((b) => b.getAttribute('aria-label')));
+  assert.deepEqual(other, ['Löschen', 'Alle Nachrichten von bea löschen']);
+  assert.deepEqual(mine, ['Bearbeiten', 'Löschen']);
 });
