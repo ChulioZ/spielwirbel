@@ -1894,6 +1894,9 @@ I18N.de = {
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} möchte dich als Freund*in hinzufügen',
   'inbox.friend.failed': 'Anfrage konnte nicht angenommen werden.',
+  'inbox.chat.titleOne': '{n} neue Nachricht in »{round}«',
+  'inbox.chat.titleMany': '{n} neue Nachrichten in »{round}«',
+  'inbox.chat.open': 'Zum Chat',
   'friends.title': 'Freundeskreis',
   'friends.menu': 'Freundeskreis',
   'friends.addPlaceholder': 'Nutzername',
@@ -2288,6 +2291,10 @@ I18N.de = {
   'konto.notify.friends': 'Freundschaftsanfrage',
   'konto.notify.on': 'E-Mails eingeschaltet.',
   'konto.notify.off': 'E-Mails ausgeschaltet.',
+  'konto.notify.chatIntro': 'Neue Chat-Nachrichten zeigen wir dir außerdem im Postfach — ein Eintrag pro Runde, nie per E-Mail.',
+  'konto.notify.chat': 'Neue Chat-Nachrichten im Postfach',
+  'konto.notify.chatOn': 'Chat-Nachrichten erscheinen im Postfach.',
+  'konto.notify.chatOff': 'Chat-Nachrichten erscheinen nicht mehr im Postfach.',
 
   // Passkeys (#418). Zusätzlich zum Passwort, nie an seiner Stelle — deshalb
   // sagt der Einleitungstext ausdrücklich, dass das Passwort bestehen bleibt.

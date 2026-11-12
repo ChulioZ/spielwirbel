@@ -7959,6 +7959,64 @@ module.exports = function repoContract(repo) {
     await repo.deleteRound(T, round.id);
   });
 
+  /* --------------------------- Chat inbox items (#1784) --------------------------- */
+
+  test('chat inbox: unread counts skip the reader and the marker, per round and tenant', async () => {
+    const round = await freshRound();
+    const other = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    const a = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-x', text: 'a', at });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-me', text: 'mine', at });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-x', text: 'b', at });
+    await repo.createRoundMessage(T, other.id, { authorUserId: 'u-x', text: 'elsewhere', at });
+    const n = await repo.countUnreadRoundMessages(T, round.id, 'u-me', 0);
+    assert.equal(n, 2, 'own messages and other rounds do not count');
+    assert.equal(typeof n, 'number', 'a number on both backends (Postgres count() is a string)');
+    assert.equal(await repo.countUnreadRoundMessages(T, round.id, 'u-me', a.seq), 1, 'only past the marker');
+    assert.equal(await repo.countUnreadRoundMessages(OTHER, round.id, 'u-me', 0), 0, 'another tenant counts nothing');
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, other.id);
+  });
+
+  test('chat inbox: one item per (account, thread), created on top or rewritten in place', async () => {
+    const user = await repo.createUser(userFields({ tenantId: `t-chat-${uniq()}` }));
+    assert.equal((await repo.getUserByTenant(user.tenantId)).id, user.id, 'a tenant resolves to its account');
+    assert.equal(await repo.getUserByTenant('t-nobody'), null);
+
+    const first = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 1 });
+    assert.deepEqual(first.payload, { roundId: 'r1', roundName: 'A', count: 1, thread: 'round:r1' });
+    assert.equal(first.type, 'chat_unread');
+    await repo.addInboxItem(user.id, { type: 'friend_request', payload: {} });
+    await repo.putChatInboxItem(user.id, 'round:r2', { roundId: 'r2', roundName: 'B', count: 1 });
+
+    // A post replaces the thread's item with a fresh one at the top.
+    const again = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 4 });
+    let items = await repo.listInbox(user.id);
+    assert.equal(items.filter((i) => i.type === 'chat_unread' && i.payload.thread === 'round:r1').length, 1, 'never two for one thread');
+    assert.equal(items[0].id, again.id, 'a new message moves the thread to the top');
+    assert.equal(items[0].payload.count, 4);
+
+    // Without `create`: rewrite in place, keeping read state and position.
+    await repo.markInboxRead(user.id, again.id);
+    const lowered = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 2 }, { create: false });
+    assert.equal(lowered.id, again.id, 'in place');
+    assert.equal(lowered.read, true, 'read state kept');
+    items = await repo.listInbox(user.id);
+    assert.equal(items[0].payload.count, 2);
+    assert.equal(await repo.putChatInboxItem(user.id, 'round:r9', { roundId: 'r9', count: 1 }, { create: false }), null,
+      'no item and no create: nothing is written');
+    assert.equal((await repo.listInbox(user.id)).some((i) => i.payload && i.payload.thread === 'round:r9'), false);
+
+    assert.equal(await repo.removeChatInboxItem(user.id, 'round:r1'), true);
+    assert.equal(await repo.removeChatInboxItem(user.id, 'round:r1'), false, 'a second remove is a no-op');
+    items = await repo.listInbox(user.id);
+    assert.deepEqual(items.map((i) => i.type).sort(), ['chat_unread', 'friend_request'], 'only that thread\'s item went');
+    assert.equal(await repo.removeChatInboxItem('someone-else', 'round:r2'), false, 'scoped to the account');
+
+    assert.equal(await repo.putChatInboxItem('no-such-account', 'round:r1', { count: 1 }), null, 'an erased account gets nothing');
+    await repo.eraseAccount(user.id);
+  });
+
   test('erasing an account deletes its chat messages in every tenant and exports them first', async () => {
     const now = '2026-11-12T10:00:00.000Z';
     const { id: uid } = await repo.createUser({ tenantId: 't-chat-erase', createdAt: now, username: 'chaterase' });
