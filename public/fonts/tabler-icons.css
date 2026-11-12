@@ -215,3 +215,6 @@
 .ti-file-alert::before { content: "\ede6"; }
 /* The purchase price (#1773) — codepoint read from this woff2's cmap. */
 .ti-coin::before { content: "\eb82"; }
+/* Round chat (#1781) — codepoints read from this woff2's own cmap. */
+.ti-messages::before { content: "\eb6c"; }
+.ti-send::before { content: "\eb1e"; }

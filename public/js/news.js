@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1781, the round chat. A capability that did not exist: a round's people
+   * coordinated around it somewhere else entirely.
+   */
+  {
+    revision: '2026-11-12',
+    kind: 'new',
+    de: {
+      title: 'Ein Chat für jede Runde',
+      body: 'Jede Runde hat jetzt den Bereich „Chat“: Alle mit Zugriff auf die Runde schreiben dort, wer was mitbringt oder was ihr als Nächstes ausprobiert. Ein Punkt am Chat und an der Runde zeigt neue Nachrichten, eigene Nachrichten lassen sich bearbeiten und löschen.',
+    },
+    en: {
+      title: 'A chat for every round',
+      body: 'Every round now has a “Chat” section: everyone with access to the round can write there – who brings what, what to try next. A dot on the chat and on the round shows new messages, and you can edit and delete your own.',
+    },
+    es: {
+      title: 'Un chat para cada grupo',
+      body: 'Cada grupo tiene ahora la sección «Chat»: todas las personas con acceso escriben ahí quién trae qué o qué probaréis después. Un punto en el chat y en el grupo marca los mensajes nuevos, y los tuyos se pueden editar y eliminar.',
+    },
+    fr: {
+      title: 'Un chat pour chaque groupe',
+      body: 'Chaque groupe a désormais une section « Chat » : toutes les personnes qui y ont accès peuvent y écrire qui apporte quoi ou ce que vous essaierez ensuite. Un point sur le chat et sur le groupe signale les nouveaux messages, et vous pouvez modifier et supprimer les vôtres.',
+    },
+    it: {
+      title: 'Una chat per ogni gruppo',
+      body: 'Ogni gruppo ha ora la sezione «Chat»: tutte le persone con accesso possono scrivere lì chi porta cosa o cosa provare la prossima volta. Un punto sulla chat e sul gruppo segnala i nuovi messaggi, e i tuoi si possono modificare ed eliminare.',
+    },
+    nl: {
+      title: 'Een chat voor elke groep',
+      body: 'Elke groep heeft nu het onderdeel „Chat”: iedereen met toegang schrijft daar wie wat meeneemt of wat jullie hierna proberen. Een stip op de chat en op de groep toont nieuwe berichten, en je eigen berichten kun je bewerken en verwijderen.',
+    },
+    pt: {
+      title: 'Um chat para cada grupo',
+      body: 'Cada grupo tem agora a seção “Chat”: todas as pessoas com acesso escrevem ali quem traz o quê ou o que vocês vão experimentar depois. Um ponto no chat e no grupo mostra as mensagens novas, e as suas você pode editar e excluir.',
+    },
+    fi: {
+      title: 'Oma chat jokaiselle porukalle',
+      body: 'Jokaisella porukalla on nyt ”Chat”-osio: kaikki, joilla on pääsy porukkaan, voivat kirjoittaa sinne, kuka tuo mitä tai mitä kokeilette seuraavaksi. Piste chatissa ja porukassa kertoo uusista viesteistä, ja omia viestejä voi muokata ja poistaa.',
+    },
+    ko: {
+      title: '모임마다 채팅이 생겼어요',
+      body: '이제 모든 모임에 ‘채팅’이 있어요. 모임에 접근할 수 있는 모든 사람이 누가 무엇을 가져올지, 다음에 무엇을 해 볼지 이야기할 수 있어요. 채팅과 모임에 표시되는 점으로 새 메시지를 알 수 있고, 내 메시지는 수정하고 삭제할 수 있어요.',
+    },
+  },
+  /*
    * #1775, lent boxes. A capability that did not exist: a box lent to a friend
    * stayed in the draw and nothing said who had it.
    */

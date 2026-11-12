@@ -60,6 +60,10 @@ const frontendGlobals = {
   topbarKeep: 'readonly', topbarRowWidth: 'readonly', TOPBAR_FIT_SLACK: 'readonly',
   // report-link.js
   feedReportUrl: 'readonly', setContactAvailable: 'readonly',
+  // The round chat (#1781): js/round-chat.js and js/views-round-chat.js.
+  CHAT_MESSAGE_MAX: 'readonly', CHAT_PAGE_SIZE: 'readonly', normalizeChatText: 'readonly',
+  chatSegments: 'readonly', chatUnread: 'readonly',
+  chatAvailable: 'readonly', renderChatTab: 'readonly', hubChatDot: 'readonly', hubSections: 'readonly',
   // views-friends.js (#1092)
   renderPersonCard: 'readonly', renderPersonTile: 'readonly', personTileLine: 'readonly',
   renderAddTile: 'readonly', renderBand: 'readonly',

@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-10-20
+**Stand:** 2026-11-12
 
 ## Eingang & Identitätsprüfung
 
@@ -39,7 +39,9 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 - Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
   Postfach (Inbox), Einladungen, Runden-Freigaben (Grants), — seit #680 —
-  Preisalarme und — seit #743 — die Antworten im Wochenquiz** — genau die
+  Preisalarme, — seit #743 — die Antworten im Wochenquiz und — seit #1781 —
+  alle Chat-Nachrichten, die das Konto in irgendeiner Runde geschrieben hat,
+  samt seinen Lesemarkierungen** — genau die
   Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
   Löschung decken damit dieselben Datensätze ab — mit **einer bewussten
   Ausnahme**: die **Abstimmungslinks** (#652, VVT Zeile 19) werden bei der

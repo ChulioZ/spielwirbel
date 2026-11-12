@@ -88,10 +88,10 @@ const STATUS = (over = {}) => ({
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
     demo: { live: 1, max: 5 },
     mail: { sent: 2, limit: 200 },
-    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4 },
+    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7 },
     ...over,
   },
-  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20 },
+  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20, messagesPerTenant: 20000 },
   runtime: { node: 'v22.0.0' },
 });
 
@@ -281,6 +281,7 @@ test('Kontingente keeps its graded pill and moves its three ceilings onto lines'
     ['Runden/Konto', '3 / 10'],
     ['Spiele/Runde', '12 / 200'],
     ['Tags/Runde', '4 / 20'],
+    ['Chat-Nachrichten/Konto', '7 / 20000'],
   ]);
 });
 

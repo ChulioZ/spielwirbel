@@ -25,6 +25,10 @@ const PROSE = [
   'public/kontakt.html#message',
   'public/admin.html#takedownReason',
   'public/admin.html#statementText',
+  // The round chat (#1781): a message is free prose, and so is the reason.
+  'public/js/views-round-chat.js#chatInput',
+  'public/js/views-round-chat.js#chatEditInput',
+  'public/admin.html#chatReason',
 ];
 // The contact form's honeypot: no human types into it.
 const HONEYPOT = ['public/kontakt.html#website'];

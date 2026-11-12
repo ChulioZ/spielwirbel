@@ -429,7 +429,7 @@ function renderLobbyList(rounds) {
           : h(`<a class="round-card" style="${marker}">
          <span class="round-card__emblem" style="background:var(--marker)"><i class="ti ti-tornado" aria-hidden="true"></i></span>
          <span class="round-card__body">
-           <span class="round-card__name">${esc(r.name)}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
+           <span class="round-card__name">${esc(r.name)}${r.chatUnread ? hubChatDot() : ''}${r.shared ? ` <span class="round-card__shared"><i class="ti ti-users" aria-hidden="true"></i> ${esc(t('home.shared'))}</span>` : ''}</span>
            <span class="round-card__meta">
              <span class="avatar-stack" style="--seat-n:${seatCount}" ${stackAttrs}>${stack}</span>
              <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(r.gameCount, 'home.chip.gamesOne', 'home.chip.games'))}</span>

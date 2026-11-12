@@ -442,6 +442,28 @@
           </div>
         </section>
 
+        <!-- A reported round-chat message (#1781). The in-app report link puts
+             the message id into the notice subject, so the lookup is by id. The
+             text renders through textContent only — it is user-authored. -->
+        <section class="card" id="chatCard">
+          <h2>Chat-Nachricht entfernen</h2>
+          <label for="chatMessageId">Nachrichten-ID (aus dem Betreff der Meldung)</label>
+          <form id="chatLookupForm" class="row">
+            <input id="chatMessageId" required autocomplete="off" autocorrect="off" spellcheck="false">
+            <button type="submit" class="small">Nachschlagen</button>
+          </form>
+          <div id="chatResult" hidden>
+            <p class="sub" id="chatMeta"></p>
+            <blockquote id="chatText"></blockquote>
+            <form id="chatRemoveForm">
+              <label for="chatReason">Begründung (wird protokolliert)</label>
+              <textarea id="chatReason" required></textarea>
+              <button type="submit" class="danger">Nachricht löschen</button>
+            </form>
+          </div>
+          <p class="msg" id="chatMsg" role="alert" hidden></p>
+        </section>
+
         <!-- The licensed BGG game corpus (#681). It is an operator card and not
              a user-facing screen because the dump has to be fetched by hand: the
              download needs a logged-in BGG session cookie, which the server does

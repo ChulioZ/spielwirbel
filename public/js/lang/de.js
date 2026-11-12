@@ -135,6 +135,29 @@ I18N.de = {
   'hub.tab.regal': 'Regal',
   'hub.tab.chronik': 'Chronik',
   'hub.tab.pokale': 'Pokale',
+  'hub.tab.chat': 'Chat',
+  'chat.note': 'Alle mit Zugriff auf diese Runde lesen mit. Nachrichten bleiben, solange die Runde besteht.',
+  'chat.older': 'Ältere Nachrichten laden',
+  'chat.empty': 'Noch keine Nachrichten. Wer bringt was mit?',
+  'chat.inputLabel': 'Nachricht',
+  'chat.placeholder': 'Nachricht an die Runde …',
+  'chat.send': 'Senden',
+  'chat.deletedAccount': 'Gelöschtes Konto',
+  'chat.edited': 'bearbeitet',
+  'chat.edit': 'Bearbeiten',
+  'chat.save': 'Speichern',
+  'chat.delete': 'Löschen',
+  'chat.deleteConfirm': 'Diese Nachricht löschen? Das lässt sich nicht rückgängig machen.',
+  'chat.report': 'Melden',
+  'chat.reportSubject': 'Chat-Nachricht {id}',
+  'chat.unread': 'Neue Nachrichten',
+  'chat.toast.rateLimited': 'Du schreibst gerade sehr schnell. Warte kurz und versuch es dann noch einmal.',
+  'chat.toast.quota': 'Diese Runde hat die Höchstzahl an Nachrichten erreicht. Lösche ältere Nachrichten, um Platz zu schaffen.',
+  'chat.toast.failed': 'Die Nachricht konnte nicht gespeichert werden.',
+  'chat.purge': 'Alle Nachrichten von {name} löschen',
+  'chat.purgeConfirm': 'Alle Nachrichten von {name} in dieser Runde löschen? Das lässt sich nicht rückgängig machen.',
+  'chat.purged': 'Nachrichten von {name} gelöscht.',
+  'chat.toast.quotaAuthor': 'Du hast in dieser Runde die Höchstzahl eigener Nachrichten erreicht. Lösche ältere, um weiterzuschreiben.',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that
@@ -2296,7 +2319,7 @@ I18N.de = {
 
   // Self-service Kontolöschung (#419) — Art. 17 DSGVO ohne den Betreiber.
   'konto.delete.title': 'Konto löschen',
-  'konto.delete.intro': 'Löscht dein Konto mit allen Runden, Spielen, Sessions und hochgeladenen Bildern. Das lässt sich nicht rückgängig machen.',
+  'konto.delete.intro': 'Löscht dein Konto mit allen Runden, Spielen, Sessions und hochgeladenen Bildern sowie allen Chat-Nachrichten, die du geschrieben hast – auch in Runden anderer. Das lässt sich nicht rückgängig machen.',
   'konto.delete.cta': 'Konto löschen …',
   'konto.delete.sheetTitle': 'Konto endgültig löschen',
   'konto.delete.lead': 'Endgültig gelöscht werden:',

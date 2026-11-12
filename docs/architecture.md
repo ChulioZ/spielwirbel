@@ -545,6 +545,8 @@ lib/
                                              0-7 — issue #1187)
     draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
                                              on/off — issue #1777)
+    round-messages.js …/messages            (the round chat: page, post, edit, delete,
+                                             mark read — accounts mode only, issue #1781)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
                                              set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
@@ -970,6 +972,9 @@ public/
                      (issue #956)
     report-link.js   builds the contact-form deep link behind the Freundeskreis
                      feed's per-item report button (issue #559)
+    round-chat.js    the round chat's message cap, page size, text
+                     normalisation, link splitting and unread rule — shared
+                     with lib/routes/round-messages.js (issue #1781)
     install-prompt.js stashes the browser's install event and decides which
                      install affordance a screen may offer — a real button, the
                      iOS Share-sheet steps, or nothing (issue #616)
@@ -1075,6 +1080,8 @@ public/
                           the round's name and colour marker on the page
                           (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
+    views-round-chat.js   the hub's Chat tab: the round's message thread, paged,
+                          lightly polled, with edit/delete/report (#1781)
     views-round-lookup.js the add-game lookup sheet, incl. its guest-game mode
                           (#1681)
     views-game-link.js    the other lookup sheet: link an existing game to a

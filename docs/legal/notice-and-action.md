@@ -29,7 +29,7 @@ Abschnitt 7 (Maßnahmen + Begründung), Abschnitt 10 (Kontaktstellen
 Art. 11/12). **Jede Entfernung stützt sich auf eine dort benannte Regel** —
 die Begründung (unten) zeigt auf die konkrete Ziffer.
 
-**Stand:** 2026-10-04
+**Stand:** 2026-11-12
 
 ## Kanäle (Art. 16 Abs. 1)
 
@@ -37,8 +37,10 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
 - Melde-Buttons an den Oberflächen, auf denen Nutzer Angaben **fremder** Konten
   sehen — an jedem Eintrag des Freundeskreis-Feeds (#559) und, seit #841, am
   Kontoprofil (Nutzername, Profilbild) sowie an den Personen-Karten im
-  Freundeskreis. Jeder öffnet dasselbe Formular mit Kategorie „Sonstiges" und
-  vorbelegtem gemeldetem Konto (beim Feed auch dem Betreff). Kein eigener Kanal,
+  Freundeskreis, sowie seit #1781 an jeder fremden Nachricht im Runden-Chat
+  (Betreff vorbelegt mit „Chat-Nachricht <Kennung>"). Jeder öffnet dasselbe
+  Formular mit Kategorie „Sonstiges" und vorbelegtem gemeldetem Konto (beim Feed
+  und im Chat auch dem Betreff). Kein eigener Kanal,
   sondern weitere Zugänge zum obigen, dort, wo fremde Inhalte zu sehen sind
   (Art. 16 Abs. 1: „leicht zugänglich").
 - E-Mail an `IMPRESSUM_EMAIL` (Alias `abuse@` läuft auf dasselbe Postfach, #307).
@@ -82,7 +84,9 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
    Vorgang dokumentieren. Diese Pflicht gilt ohne
    Kleinstunternehmen-Ausnahme.
 3. **Entscheiden & handeln** — Entfernen/Redigieren/Sperren über das Panel
-   (`takedownImage`, `redactText`, Konto-Sperre; ist der **Nutzername selbst**
+   (`takedownImage`, `redactText`, Konto-Sperre, seit #1781 „Chat-Nachricht
+   entfernen" — Nachschlagen über die Kennung aus dem Betreff, Löschen mit
+   Grund, der Text bleibt als `previous` auf dem Log-Eintrag; ist der **Nutzername selbst**
    der Verstoß, `Name neutralisieren` — ersetzt ihn durch eine aus der Konto-Id
    abgeleitete neutrale Bezeichnung und hält den vorherigen Namen als Nachweis
    auf dem Log-Eintrag fest, #320); jede Maßnahme schreibt einen

@@ -216,7 +216,7 @@ function resolveRoute(pathname) {
     if (!rid) return () => showHome();
     const sub = parts[2];
     if (!sub || sub === 'start') return () => showRound(rid, 'start');
-    if (['regal', 'chronik', 'pokale'].includes(sub)) return () => showRound(rid, sub);
+    if (['regal', 'chronik', 'pokale', 'chat'].includes(sub)) return () => showRound(rid, sub);
     if (sub === 'retired') return () => showRetired(rid);
     if (sub === 'completed') return () => showCompleted(rid);
     if (sub === 'wishlist') return () => showWishlist(rid);

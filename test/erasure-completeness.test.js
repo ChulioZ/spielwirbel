@@ -83,6 +83,8 @@ const GLOBAL_DISPOSITION = {
   },
   price_watches: { erase: true, export: true },
   quiz_submissions: { erase: true, export: true },
+  // #1781: the account's read markers on round chats (its own and others').
+  round_message_reads: { erase: true, export: true },
   quiz_rounds: {
     erase: false,
     export: false,
@@ -240,6 +242,7 @@ if (!process.env.DATABASE_URL) {
       feed_events: 'feedEvents',
       price_watches: 'priceWatches',
       quiz_submissions: 'quizSubmissions',
+      round_message_reads: 'roundMessageReads',
     };
     for (const [table, d] of Object.entries(GLOBAL_DISPOSITION)) {
       if (!d.export) continue;
@@ -277,6 +280,14 @@ if (!process.env.DATABASE_URL) {
     await repo.recordQuizAnswer(uid, '2026-W41', 0, 5, { choice: 0, correct: true });
     await repo.createSessionVoteLink({ tenantId: tenant, roundId: round.id, sessionId: session.id });
     await repo.createRoundInviteLink({ roundId: round.id, ownerTenantId: tenant, memberId: null });
+    // #1781: a chat marker, and — the cross-tenant half — a message the account
+    // wrote in ANOTHER tenant's round beside one that tenant's own account wrote.
+    // Only the first must go: round_messages is tenant-scoped, so the cascade
+    // spec below cannot see an author's rows in a round the erasure never deletes.
+    const otherRound = await repo.createRound('t-erase-other', { name: 'Fremd', members: ['Bo'], owner: null });
+    const mine = await repo.createRoundMessage('t-erase-other', otherRound.id, { authorUserId: uid, text: 'von mir', at: now });
+    const theirs = await repo.createRoundMessage('t-erase-other', otherRound.id, { authorUserId: other, text: 'von dir', at: now });
+    await repo.markRoundMessagesRead(uid, otherRound.id, theirs.seq);
 
     // Every fixture landed — otherwise the counts below are all zero before the
     // erase and the whole test passes against an eraseAccount that does nothing.
@@ -298,6 +309,10 @@ if (!process.env.DATABASE_URL) {
     for (const table of erasable) {
       assert.equal(await countFor(table), 0, `${table} still holds rows after erasure`);
     }
+    assert.equal(await repo.getRoundMessage('t-erase-other', otherRound.id, mine.id), null,
+      "the account's message in another tenant's round is gone");
+    assert.ok(await repo.getRoundMessage('t-erase-other', otherRound.id, theirs.id),
+      "and the other account's message beside it survives");
     assert.equal(await repo.getUserById(uid), null, 'the account row itself is gone');
     assert.ok(await repo.getUserById(other), 'and the other account is untouched');
 
@@ -310,6 +325,7 @@ if (!process.env.DATABASE_URL) {
     const { id: uid } = await repo.createUser({ tenantId: tenant, createdAt: now, username: 'cascadeprobe' });
     const round = await repo.createRound(tenant, { name: 'Kaskade', members: ['Ann'], owner: null });
     await repo.createGame(tenant, round.id, { title: 'Catan', minPlayers: 1, maxPlayers: 4 });
+    await repo.createRoundMessage(tenant, round.id, { authorUserId: uid, text: 'Hallo', at: now });
     await repo.createSession(tenant, round.id, {
       createdAt: now, gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
       finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
