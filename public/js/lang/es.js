@@ -1852,6 +1852,9 @@ I18N.es = {
   // Amistades (#325)
   'inbox.friend.title': '{user} quiere ser tu amigo',
   'inbox.friend.failed': 'No se ha podido aceptar la solicitud.',
+  'inbox.chat.titleOne': '{n} mensaje nuevo en «{round}»',
+  'inbox.chat.titleMany': '{n} mensajes nuevos en «{round}»',
+  'inbox.chat.open': 'Abrir el chat',
   'friends.title': 'Amigos',
   'friends.menu': 'Amigos',
   'friends.addPlaceholder': 'Nombre de usuario',
@@ -2242,6 +2245,10 @@ I18N.es = {
   'konto.notify.friends': 'Solicitud de amistad',
   'konto.notify.on': 'Correos activados.',
   'konto.notify.off': 'Correos desactivados.',
+  'konto.notify.chatIntro': 'Los mensajes nuevos del chat también te los mostramos en el buzón: una entrada por grupo, nunca por correo.',
+  'konto.notify.chat': 'Mensajes nuevos del chat en el buzón',
+  'konto.notify.chatOn': 'Los mensajes del chat aparecen en el buzón.',
+  'konto.notify.chatOff': 'Los mensajes del chat ya no aparecen en el buzón.',
 
   // Claves de acceso (#418). Además de la contraseña, nunca en su lugar — por
   // eso la introducción lo dice sin rodeos.

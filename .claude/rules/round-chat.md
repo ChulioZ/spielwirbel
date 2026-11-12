@@ -6,6 +6,7 @@ paths:
   - "lib/repo/migrations/20261112120000_round_messages.js"
   - "public/js/views-round-chat.js"
   - "public/js/round-chat.js"
+  - "lib/chat-inbox.js"
 ---
 # The round chat (#1781): tenant-scoped messages whose AUTHOR crosses tenants
 
@@ -35,3 +36,22 @@ round OWNER's tenant, reached by a grantee through the ordinary re-scope
 The text is user-authored and shown to other accounts: `textContent` only, links
 built from `chatSegments` (http(s) only), and never in a log line or a
 `trackEvent` — `test/round-messages.test.js` captures stdout and asserts it.
+
+## The inbox item (#1784) — `lib/chat-inbox.js`
+
+One `chat_unread` item per (account, thread key `round:<rid>`). Three traps:
+
+- **The count is recomputed, never incremented** — from
+  `countUnreadRoundMessages` (the heads' filter) and the read marker, on every
+  post, read and delete. A tally drifts the first time a delete or a read lands
+  between two posts; a recount cannot.
+- **Only a post may CREATE.** A read or a delete passes `create: false`, which
+  rewrites an existing item or removes it — otherwise lowering a count
+  resurrects an item the user dismissed. The author exclusion on the post is NOT
+  redundant with the count skipping own messages: it is what keeps the author's
+  item for *others'* unread messages from being bumped back (measured: the
+  exclusion's own spec is the only red when it goes).
+- **Recipients are read BEFORE grants are deleted** on round delete — after, the
+  grantees are no longer recipients and keep an item leading to a 404. The owner
+  holds no grant; it is found by `getUserByTenant` on the storing tenant.
+

@@ -1900,6 +1900,9 @@ I18N.en = {
   // Friendships & Freundeskreis (issue #325)
   'inbox.friend.title': '{user} wants to be your friend',
   'inbox.friend.failed': 'Couldn’t accept the request.',
+  'inbox.chat.titleOne': '{n} new message in “{round}”',
+  'inbox.chat.titleMany': '{n} new messages in “{round}”',
+  'inbox.chat.open': 'Open chat',
   'friends.title': 'Friends',
   'friends.menu': 'Friends',
   'friends.addPlaceholder': 'Username',
@@ -2292,6 +2295,10 @@ I18N.en = {
   'konto.notify.friends': 'Friend request',
   'konto.notify.on': 'E-mails turned on.',
   'konto.notify.off': 'E-mails turned off.',
+  'konto.notify.chatIntro': 'We also show new chat messages in your inbox — one entry per round, never by e-mail.',
+  'konto.notify.chat': 'New chat messages in the inbox',
+  'konto.notify.chatOn': 'Chat messages now appear in your inbox.',
+  'konto.notify.chatOff': 'Chat messages no longer appear in your inbox.',
 
   // Passkeys (#418). In addition to the password, never instead of it — which
   // is why the intro says so outright.

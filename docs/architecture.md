@@ -343,6 +343,10 @@ lib/
                      invitations, friend requests — issue #618): a per-type
                      allowlist, the two per-account opt-outs, a one-per-hour
                      per-recipient throttle and coalescing
+  chat-inbox.js      unread chat threads as in-app inbox items (issue #1784):
+                     one collapsed item per account and thread, its count
+                     recomputed from the read marker on every post, read and
+                     delete; never mailed, never the message text
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
   account-design.js  which design an account wears (resolved against the

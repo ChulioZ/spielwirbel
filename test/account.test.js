@@ -1193,6 +1193,8 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   // `statsVisible` (#1089) rides on every account as a real boolean, defaulting
   // ON like the two notify keys — it governs whether accepted friends see this
   // account's play statistics on its profile.
+  // `notifyChatInbox` (#1784) is the third of that shape — a real boolean,
+  // default ON — though it switches inbox items, not mail.
   // `design` + `designChooserSeen` (#1186) ride on every account as well: the
   // first RESOLVED against this instance's selectable set rather than echoed
   // (a design enabled only outside production must not be handed out), the
@@ -1200,7 +1202,7 @@ test('PATCH /me leaves the handle alone when the key is absent, and never expose
   assert.deepEqual(Object.keys(res.body).sort(),
     ['acceptedTermsRevision', 'avatar', 'bgStats', 'bggUsername', 'createdAt', 'demo',
       'demoExpiresAt', 'design', 'designChooserSeen', 'email', 'emailVerified', 'id',
-      'lastSeenNewsRevision', 'notifyFriendRequests', 'notifyRoundInvitations',
+      'lastSeenNewsRevision', 'notifyChatInbox', 'notifyFriendRequests', 'notifyRoundInvitations',
       'pendingEmail', 'simpleMode', 'simpleModePromptSeen', 'statsVisible', 'termsRevision', 'username']);
   assert.equal(res.body.demo, false);
   assert.equal(res.body.demoExpiresAt, null);

@@ -1118,7 +1118,12 @@ What the app does, in detail. For a short overview see the
   author can edit (marked „bearbeitet") and delete their own; the owner and
   co-owners can delete anyone's. An **unread dot** on the Chat tab and on the
   round's home card is per account and clears when the thread is opened; your
-  own messages never light it. Every message from someone else carries a
+  own messages never light it. New messages from someone else also put **one
+  inbox item per round** into the in-app inbox („3 neue Nachrichten in
+  »Spieleabend«", issue #1784) — updated as more arrive, moved to the top, and
+  cleared when the thread is opened; never the message text and never an e-mail.
+  It can be switched off under Konto → Benachrichtigungen (default on); a
+  dismissed item comes back only with the next new message. Every message from someone else carries a
   **report** link into the contact form, prefilled with the message id, which
   the operator looks up and removes in the admin panel („Chat-Nachricht
   entfernen", logged). Messages live as long as the round; deleting an account

@@ -260,3 +260,35 @@ async function renderChatTab(round) {
 function hubChatDot() {
   return `<span class="hub-chat-dot inbox-row__dot" role="img" aria-label="${esc(t('chat.unread'))}"></span>`;
 }
+
+/* The inbox row for an unread thread (#1784, rendered by views-inbox.js). One
+   per thread, carrying a name and a count — never a message's text, which the
+   item does not hold. Opening the chat is what clears it: the thread's own read
+   marker removes the item server-side, so this row needs no read/dismiss call
+   of its own beyond the shared dismiss button. Only round threads exist today;
+   a session (#1782) or direct thread (#1783) adds its own key shape here. */
+function renderChatUnreadItem(item) {
+  const p = item.payload || {};
+  const count = Number(p.count) || 1;
+  const row = h(`<div class="ds-row inbox-row inbox-row--chat${item.read ? ' ds-row--static' : ' inbox-row--unread'}">
+      <div class="ds-row__main">
+        <div class="ds-row__date">${unreadDot(item)}${esc(tn(count, 'inbox.chat.titleOne', 'inbox.chat.titleMany', { round: p.roundName || '' }))}</div>
+        <a class="inbox-row__chat">${esc(t('inbox.chat.open'))}</a>
+      </div>
+      <div class="ds-row__meta">
+        <button class="link-btn inbox-row__del" type="button" aria-label="${esc(t('inbox.dismiss'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>
+      </div>
+    </div>`);
+  if (p.roundId) {
+    navLink(row.querySelector('.inbox-row__chat'), roundPath(p.roundId, 'chat'), () => showRound(p.roundId, 'chat'));
+  }
+  row.querySelector('.inbox-row__del').addEventListener('click', async (ev) => {
+    ev.stopPropagation();
+    try {
+      await accountApi('DELETE', `/inbox/${item.id}`);
+      row.remove();
+      afterRemove();
+    } catch {}
+  });
+  return row;
+}
