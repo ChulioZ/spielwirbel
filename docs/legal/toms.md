@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-10-27
+**Stand:** 2026-11-12
 
 ## Verschlüsselung & Transport
 
@@ -92,11 +92,31 @@ list nothing that is not actually in place.
   - **Tägliche Volume-Sicherungen** mit 6 Tagen Aufbewahrung, dazu manuelle
     Sicherungen auf Anforderung.
 - Deployment reproduzierbar aus dem Repo (Dockerfile).
-- **Objektspeicher (Cloudflare R2):** derzeit **keine** eigene Replikation und
-  keine eigenen Sicherungen konfiguriert. Betroffen wären hochgeladene Cover und
-  Profilbilder; die zugehörigen Datensätze in der Datenbank sind von den oben
-  genannten Sicherungen abgedeckt. Offener Punkt, verfolgt in #1743 (seit dem
-  Bekanntwerden des R2-Schlüssels am 2026-10-22 dringlicher).
+- **Objektspeicher (Cloudflare R2):** **keine** Sicherung und keine Replikation.
+  Das ist eine **bewusst getroffene Entscheidung (Betreiber, 2026-11-12, #1743)**
+  und kein offener Punkt mehr.
+  - *Geprüft:* R2 bietet weder Objekt-Versionierung noch eine Replikation
+    zwischen Buckets (beides laut S3-Kompatibilitätstabelle von Cloudflare nicht
+    implementiert, Stand 2026-11-12). Eine Bucket-Sperre (Bucket Lock) auf dem
+    Haupt-Bucket wurde verworfen: Eine unbefristete Sperre verhindert die
+    Löschung nach Art. 17. Eine altersbasierte Sperre lässt die Löschungen der
+    App selbst scheitern und hinterlässt Dateien, die die App für gelöscht hält.
+    Die einzige tragfähige Variante, wöchentliche gesperrte Kopien in einem
+    zweiten Bucket, wurde vorgeschlagen und nicht umgesetzt.
+  - *Hingenommenes Risiko:* Ein Fehler im Löschpfad oder ein missbrauchter
+    Schlüssel kann hochgeladene Cover und Profilbilder **unwiederbringlich**
+    löschen. Die zugehörigen Datensätze in der Datenbank sind von den oben
+    genannten Sicherungen abgedeckt. Verloren wären nur die Bilddateien, die
+    Nutzer erneut hochladen können. Über einen Anbieter verlinkte Cover liegen
+    gar nicht in R2.
+  - *Folge für Art. 17:* Eine gelöschte Bilddatei ist sofort endgültig weg. Für
+    Uploads gibt es keinen Backup-Vorbehalt (`retention.md`).
+  - *Neu zu bewerten*, sobald eines davon eintritt: ein erneutes Bekanntwerden
+    eines Schlüssels mit Zugriff auf den Bucket (wie am 2026-10-22), ein
+    tatsächlicher Verlust von Uploads, oder eine Änderung, durch die Nutzer auf
+    die Verfügbarkeit ihrer Uploads einen Anspruch erhalten (etwa ein
+    kostenpflichtiges Angebot). Ohne Anlass spätestens beim nächsten
+    Legal-Audit (L-015).
 - Health-Check (`/healthz`, ohne Datenbankzugriff) + Bereitschafts-Check
   (`/readyz`, prüft die Datenbank und antwortet 503, wenn sie nicht erreichbar
   ist — #462) + externes Uptime-Monitoring, das den Verantwortlichen alarmiert;

@@ -46,7 +46,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | **automatisch** (Scheduler-Job `purgeModerationLog`, #311); Jahresprüfung nur noch zur Kontrolle (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
-| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf) | automatisch |
+| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf). **Hochgeladene Bilder (Cover, Profilbilder) in Cloudflare R2 werden nicht gesichert** (Betreiber-Entscheidung 2026-11-12, `toms.md`). Eine gelöschte Bilddatei überdauert daher in keiner Sicherung | automatisch |
 
 **Backups und Art. 17 (Löschung).** Eine Löschung wirkt im Live-Bestand sofort
 und vollständig. In den Sicherungen bleiben die Daten dagegen bis zum Ablauf des
