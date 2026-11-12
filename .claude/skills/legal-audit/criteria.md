@@ -201,8 +201,9 @@ than an acknowledged gap.
   the first truncation, `.claude/rules/railway-postgres-floating-major.md`), encryption at
   rest (Railway Postgres, R2), TLS, access control and whether the app's DB role is a
   superuser, `ipHash` pseudonymisation (code), and the deployment regions of every service
-  (dashboard, cf. L-011), and R2 object versioning or replication (dashboard; none on
-  2026-10-27, tracked as #1743). A **platform-side** claim is the one no commit can touch,
+  (dashboard, cf. L-011), and R2 backups (none, by dated operator decision 2026-11-12 in
+  `toms.md` — check its re-evaluation triggers rather than re-raising the gap; R2
+  offers no versioning or replication at all). A **platform-side** claim is the one no commit can touch,
   so it is the one that rots. An „Offener Punkt" in `toms.md` needs an OPEN owning issue
   or a dated decision (`.claude/rules/deferred-weakness-attributions-rot.md`).
 - **Enforced by:** — (manual; platform-side by construction)

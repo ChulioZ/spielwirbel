@@ -134,13 +134,24 @@ Everything is configured with the same env vars documented in
    - `S3_FORCE_PATH_STYLE` = `true`
    - `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` = the R2 token pair
 
-3. **Decide the bucket's recovery story — R2 has none by default.** Cover images
-   are user data with no second copy anywhere: object versioning is off unless you
-   turn it on, and unlike the database there is nothing to restore from. A bad
-   delete path or a leaked token loses them permanently. Enable **object
-   versioning**, or add a lifecycle/replication rule to a second bucket. Scope the
-   API token to the one bucket while you are there — an account-wide token is a
-   much wider blast radius than the app needs.
+3. **Know the bucket's recovery story — R2 has none, and production runs without
+   one by decision.** Uploaded covers and profile pictures have no second copy
+   anywhere, and unlike the database there is nothing to restore from: a bad
+   delete path or a leaked token loses them for good. R2 cannot fix that on its
+   own. It implements **neither object versioning nor bucket replication**
+   (`PutBucketVersioning` and `PutBucketReplication` are unimplemented in its S3
+   API, checked 2026-11-12). A **bucket lock** on this bucket is the wrong tool:
+   an indefinite lock blocks Art. 17 erasure, and an age-based one makes the
+   app's own `DeleteObject` fail with `409 ObjectLockedByBucketPolicy`, which
+   leaves files the app believes it removed. The workable option is a second
+   bucket with weekly copies under an age-based lock plus a lifecycle expiry.
+   It was evaluated in #1743 and **not built** — the operator accepted the risk
+   on 2026-11-12. The decision and its re-evaluation triggers are in
+   `docs/legal/toms.md` („Verfügbarkeit & Wiederherstellung"). Either way, give
+   the app an **Object Read & Write** token scoped to this one bucket. That
+   token cannot delete the bucket or change its configuration, whereas an
+   account-wide or Admin token widens the blast radius far beyond what the app
+   needs.
 
 *(Simplest-start alternative: attach a Railway **volume** mounted at `/data` and
 skip R2 — uploads then live on the volume. It works, but a volume pins the service
