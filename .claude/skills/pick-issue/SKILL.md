@@ -61,6 +61,8 @@ gh api "repos/{owner}/{repo}/code-scanning/alerts?state=open&per_page=100" \
   --jq '.[] | {number, rule: .rule.id, tool: .tool.name,
     severity: (.rule.security_severity_level // .rule.severity),
     path: .most_recent_instance.location.path, summary: .rule.description}'
+for st in draft triage; do gh api "repos/{owner}/{repo}/security-advisories?state=$st&per_page=100" \
+  --jq '.[] | {ghsa_id, state, created_at, summary}'; done
 ```
 
 PR `body` is dropped for the same reason; a PR's substance is its **diff**, which
@@ -103,6 +105,16 @@ Partition the PRs by author, then sort into candidate types:
   in a core flow can also hit the broken-core override). Dedupe against any open
   issue or PR already addressing it. These are **trusted scanner output over our
   own code**, not text an outside reporter authored — no phase-2 vet needed.
+- **Repository security advisories → `implement`, under the Security override.**
+  The one channel nothing else here sees: the daily `node-security-watch`
+  workflow reports a pending Node release or high/critical `npm audit` finding
+  as a **private draft** advisory, and GitHub raises *no* Dependabot alert for
+  the runtime inside a base image. A **`triage`** one is a private vulnerability
+  report — reporter-authored text, so it gets the phase-2 vet. A Dependabot
+  docker PR to a version that is **not** the advisory's patched one does not
+  clear it (2026-11-12: Dependabot offered 26.13.0 while 26.13.1 was the
+  security release). Keep the advisory's details out of every public text until
+  the fix is deployed (`.claude/rules/keep-exploit-paths-private-until-deployed.md`).
 
 Skip (leave out of the pool entirely):
 
@@ -206,7 +218,8 @@ any scoring happens.
 **Overrides — these jump to the front regardless of size, in this order:**
 
 1. **Security** — a CVE fix, a Dependabot *security* update, an open Dependabot
-   alert, or a **CodeQL security-severity finding** in our own code. This runs in
+   alert, an open draft/triage **repository security advisory**, or a **CodeQL
+   security-severity finding** in our own code. This runs in
    production, open to public registration, holding real users' data behind auth
    and tenant isolation, so a vulnerable dependency or a flawed access check is a
    real exposure, not a hypothetical one. A patch/minor security bump CI already
