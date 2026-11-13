@@ -158,6 +158,13 @@ I18N.de = {
   'chat.purgeConfirm': 'Alle Nachrichten von {name} in dieser Runde löschen? Das lässt sich nicht rückgängig machen.',
   'chat.purged': 'Nachrichten von {name} gelöscht.',
   'chat.toast.quotaAuthor': 'Du hast in dieser Runde die Höchstzahl eigener Nachrichten erreicht. Lösche ältere, um weiterzuschreiben.',
+  'comments.title': 'Kommentare',
+  'comments.placeholder': 'Kommentar zu dieser Session …',
+  'comments.empty': 'Noch keine Kommentare. Wer bringt Snacks mit?',
+  'comments.on': 'zu: {session}',
+  'comments.onSession': 'zu einer Session',
+  'comments.countOne': '{n} Kommentar',
+  'comments.count': '{n} Kommentare',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that

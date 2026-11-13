@@ -171,6 +171,13 @@ I18N.pt = {
   'chat.purgeConfirm': 'Excluir todas as mensagens de {name} neste grupo? Não é possível desfazer.',
   'chat.purged': 'Mensagens de {name} excluídas.',
   'chat.toast.quotaAuthor': 'Você atingiu o número máximo de mensagens próprias aqui. Exclua algumas antigas para continuar escrevendo.',
+  'comments.title': 'Comentários',
+  'comments.placeholder': 'Comenta esta sessão …',
+  'comments.empty': 'Ainda não há comentários. Quem traz petiscos?',
+  'comments.on': 'sobre: {session}',
+  'comments.onSession': 'sobre uma sessão',
+  'comments.countOne': '{n} comentário',
+  'comments.count': '{n} comentários',
 
   'hub.suggest.title': 'Que tal',
   'hub.suggest.never': 'Na estante, nunca jogado',

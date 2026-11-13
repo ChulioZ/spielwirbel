@@ -169,6 +169,13 @@ I18N.nl = {
   'chat.purgeConfirm': 'Alle berichten van {name} in deze groep verwijderen? Dit kan niet ongedaan worden gemaakt.',
   'chat.purged': 'Berichten van {name} verwijderd.',
   'chat.toast.quotaAuthor': 'Je hebt hier het maximale aantal eigen berichten bereikt. Verwijder oudere om verder te schrijven.',
+  'comments.title': 'Reacties',
+  'comments.placeholder': 'Reageer op deze sessie …',
+  'comments.empty': 'Nog geen reacties. Wie neemt er snacks mee?',
+  'comments.on': 'bij: {session}',
+  'comments.onSession': 'bij een sessie',
+  'comments.countOne': '{n} reactie',
+  'comments.count': '{n} reacties',
 
   'hub.suggest.title': 'Wat dacht je van',
   'hub.suggest.never': 'In de kast, nooit gespeeld',

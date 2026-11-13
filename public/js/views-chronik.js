@@ -646,24 +646,34 @@ function renderChronikTab(round, activities) {
     }
   }
 
+  // Every design's card, plus its comment count (#1782, views-round-chat.js).
+  const commentCards = [];
+  function badgedSessionCard(s) {
+    const card = buildSessionCard(s);
+    commentCards.push([card, s.id]);
+    sessionCommentBadge(card, rid, s.id);
+    return card;
+  }
+
   function buildItem(e) {
     const dot = e.kind === 'session' ? ' tl-dot--session'
       : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
     const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
-    item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
+    item.appendChild(e.kind === 'session' ? badgedSessionCard(e.session) : buildActivityRow(e));
     // The tables of a split evening, indented under the parent they came from
     // (#796). Newest-first everywhere else in this timeline, but a split's
     // tables are siblings of one moment, so they keep the split's own order.
     const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
     if (kids && kids.length) {
       const nest = h('<div class="tl-nest"></div>');
-      kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
+      kids.forEach((child) => nest.appendChild(badgedSessionCard(child)));
       item.appendChild(nest);
     }
     if (e.kind === 'session') chronikBadgeRows(round, badgeRows.get(e.session.id)).forEach((row) => item.appendChild(row));
     return item;
   }
   renderTimeline();
+  loadSessionCommentBadges(round, commentCards);
   // Deleting (or leaving) the round used to end this timeline, and it was the one
   // round action with no good home at any width: unlike the Regal's footer this
   // one was not `rail-owned`, so it stayed below the whole history on desktop too,

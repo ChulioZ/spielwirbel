@@ -1637,6 +1637,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   if (guestOffer) screen.appendChild(guestOffer);
   const sessionLog = renderSessionLog(round, session, { collapsed: true });
   if (sessionLog) screen.appendChild(sessionLog);
+  // The session's comment thread (#1782), beside its log so every design's
+  // composition below places it with the record of the evening.
+  const comments = renderSessionComments(round, session);
+  if (comments) screen.appendChild(comments);
 
   // One install nudge (#616), at the one moment the app has just delivered
   // something. Above the footer, because the footer's two controls are how you

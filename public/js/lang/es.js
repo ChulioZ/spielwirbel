@@ -155,6 +155,13 @@ I18N.es = {
   'chat.purgeConfirm': '¿Eliminar todos los mensajes de {name} en este grupo? No se puede deshacer.',
   'chat.purged': 'Mensajes de {name} eliminados.',
   'chat.toast.quotaAuthor': 'Has alcanzado el máximo de mensajes propios aquí. Elimina algunos antiguos para seguir escribiendo.',
+  'comments.title': 'Comentarios',
+  'comments.placeholder': 'Comenta esta sesión …',
+  'comments.empty': 'Aún no hay comentarios. ¿Quién trae algo de picar?',
+  'comments.on': 'sobre: {session}',
+  'comments.onSession': 'sobre una sesión',
+  'comments.countOne': '{n} comentario',
+  'comments.count': '{n} comentarios',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that

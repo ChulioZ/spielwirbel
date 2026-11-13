@@ -12635,7 +12635,7 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
    nav label reuses .inbox-row__dot's size and fill (one dot, one rule) and only
    adds the gap beside the label. */
 .hub-chat-dot { margin-left: 6px; }
-.chat { display: flex; flex-direction: column; gap: 12px; }
+.chat, .chat__thread { display: flex; flex-direction: column; gap: 12px; }
 .chat__note { margin: 0; font-size: var(--text-sm); }
 .chat__older { align-self: center; }
 /* .link-btn sets its own display, which beats the bare `hidden` attribute
@@ -12677,3 +12677,17 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
 .chat__input { flex: 1; min-width: 0; resize: vertical; }
 .chat-edit { margin-top: 4px; display: flex; flex-direction: column; gap: 6px; }
 .chat-edit__actions { display: flex; gap: 6px; justify-content: flex-end; }
+/* Session comments (#1782): the same thread on the result screen, under its
+   own heading, plus the context line a comment carries in the Chat tab and the
+   count on a Chronik row. Tokens only, for the reason above. */
+.chat--session { margin-top: 24px; }
+.chat__title { margin: 0; font-size: var(--text-lg); }
+.chat-msg__context {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 2px;
+  font-size: var(--text-sm); color: var(--ink-soft); text-decoration: none;
+}
+.chat-msg__context[href]:hover { text-decoration: underline; }
+.session-card__comments {
+  display: inline-flex; align-items: center; gap: 2px; margin-left: 6px;
+  font-size: var(--text-sm); font-weight: 400; color: var(--ink-soft);
+}
