@@ -164,6 +164,13 @@ I18N.it = {
   'chat.purgeConfirm': 'Eliminare tutti i messaggi di {name} in questo gruppo? L’operazione non si può annullare.',
   'chat.purged': 'Messaggi di {name} eliminati.',
   'chat.toast.quotaAuthor': 'Hai raggiunto il numero massimo di messaggi tuoi qui. Eliminane alcuni vecchi per continuare a scrivere.',
+  'comments.title': 'Commenti',
+  'comments.placeholder': 'Commenta questa sessione …',
+  'comments.empty': 'Ancora nessun commento. Chi porta gli snack?',
+  'comments.on': 'su: {session}',
+  'comments.onSession': 'su una sessione',
+  'comments.countOne': '{n} commento',
+  'comments.count': '{n} commenti',
 
   // ---- Start tab: the hub's card grid (#923) ----
   // The Start tab used to be a ticket and a button; these are the modules that

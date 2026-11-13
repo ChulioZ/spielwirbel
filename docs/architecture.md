@@ -550,7 +550,9 @@ lib/
     draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
                                              on/off — issue #1777)
     round-messages.js …/messages            (the round chat: page, post, edit, delete,
-                                             mark read — accounts mode only, issue #1781)
+                                             mark read — accounts mode only, issue #1781;
+                                             mounted again at …/sessions/:sid/messages
+                                             for session comments, issue #1782)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
                                              set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
@@ -1085,7 +1087,9 @@ public/
                           (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-chat.js   the hub's Chat tab: the round's message thread, paged,
-                          lightly polled, with edit/delete/report (#1781)
+                          lightly polled, with edit/delete/report (#1781); the
+                          same thread on a session's result + the Chronik
+                          comment count (#1782)
     views-round-lookup.js the add-game lookup sheet, incl. its guest-game mode
                           (#1681)
     views-game-link.js    the other lookup sheet: link an existing game to a

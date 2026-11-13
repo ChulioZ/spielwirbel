@@ -1131,6 +1131,16 @@ What the app does, in detail. For a short overview see the
   (`CHAT_RATE_LIMIT_MAX`) and messages per tenant (`MAX_MESSAGES_PER_TENANT`), of
   which one account may hold `MAX_MESSAGES_PER_AUTHOR`. The owner and co-owners
   can remove all of one person's messages in the round at once.
+- **Session comments** – *accounts mode only* (issue #1782). Every session's
+  result screen — planned, running or played — carries a **Kommentare** thread
+  („wer bringt Snacks", the banter afterwards) with the round chat's rules: the
+  same people, cap, edit/delete, report link, quota and limits. Comments are part
+  of the round's conversation, so they also appear in the **Chat** tab, each with
+  a „zu: Catan, 12. Nov." line linking to its session, and they count toward the
+  round's unread dot and inbox item. Reading them on the result screen clears the
+  dot only up to the first unread message elsewhere in the round. A Chronik row
+  shows its session's comment count. Comments are deleted with their session
+  (also when a game delete or transfer leaves the session with no games).
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a

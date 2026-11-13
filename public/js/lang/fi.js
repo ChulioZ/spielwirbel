@@ -146,6 +146,13 @@ I18N.fi = {
   'chat.purgeConfirm': 'Poistetaanko kaikki käyttäjän {name} viestit tästä porukasta? Toimintoa ei voi perua.',
   'chat.purged': 'Käyttäjän {name} viestit poistettu.',
   'chat.toast.quotaAuthor': 'Olet saavuttanut omien viestiesi enimmäismäärän täällä. Poista vanhempia jatkaaksesi.',
+  'comments.title': 'Kommentit',
+  'comments.placeholder': 'Kommentoi tätä sessiota …',
+  'comments.empty': 'Ei vielä kommentteja. Kuka tuo naposteltavaa?',
+  'comments.on': 'sessiosta: {session}',
+  'comments.onSession': 'sessiosta',
+  'comments.countOne': '{n} kommentti',
+  'comments.count': '{n} kommenttia',
 
   'hub.suggest.title': 'Mitä jos',
   'hub.suggest.never': 'Hyllyssä, ei koskaan pelattu',

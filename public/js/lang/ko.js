@@ -147,6 +147,13 @@ I18N.ko = {
   'chat.purgeConfirm': '이 모임에서 {name}님의 메시지를 모두 삭제할까요? 되돌릴 수 없어요.',
   'chat.purged': '{name}님의 메시지를 삭제했어요.',
   'chat.toast.quotaAuthor': '여기서 보낼 수 있는 내 메시지 수가 최대에 도달했어요. 이전 메시지를 삭제하면 계속 쓸 수 있어요.',
+  'comments.title': '댓글',
+  'comments.placeholder': '이 세션에 댓글 달기 …',
+  'comments.empty': '아직 댓글이 없어요. 간식은 누가 가져오나요?',
+  'comments.on': '세션: {session}',
+  'comments.onSession': '세션에 단 댓글',
+  'comments.countOne': '댓글 {n}개',
+  'comments.count': '댓글 {n}개',
 
   'hub.suggest.title': '이건 어때요',
   'hub.suggest.never': '선반에 있지만 아직 플레이한 적 없음',

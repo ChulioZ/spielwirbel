@@ -4,6 +4,7 @@ paths:
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"
   - "lib/repo/migrations/20261112120000_round_messages.js"
+  - "lib/repo/migrations/20261113120000_session_messages.js"
   - "public/js/views-round-chat.js"
   - "public/js/round-chat.js"
   - "lib/chat-inbox.js"
@@ -55,3 +56,20 @@ One `chat_unread` item per (account, thread key `round:<rid>`). Three traps:
   grantees are no longer recipients and keep an item leading to a 404. The owner
   holds no grant; it is found by `getUserByTenant` on the storing tenant.
 
+
+## Session comments (#1782) — the same table, router and marker
+
+A comment is a `round_messages` row with a `session_id` (FK, `ON DELETE
+CASCADE` from `sessions`). The router is mounted twice; `threadSid(req)` is the
+only fork. Three things fail silently:
+
+- **The round thread lists comments too.** The round has ONE read marker and
+  the dot leads to the Chat tab, so the Chat tab must show every message the
+  dot counts (operator decision, 2026-11-13). A session's own GET filters.
+- **A session view marks read only below the first unread message it did not
+  show** (`firstUnreadOutsideSession`). Postgres needs `IS DISTINCT FROM`:
+  `NULL <> 'sid'` is never true, so `<>` skips every round-level message —
+  measured, only the contract spec on Postgres goes red.
+- **The JSON backend has no cascade.** `dropOrphanSessionMessages` runs after
+  every session removal (deleteSession, scrubGames, moveGames). They mask each
+  other in a combined fixture, so the contract asserts after EACH step.

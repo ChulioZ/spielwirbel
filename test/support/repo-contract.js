@@ -7904,6 +7904,104 @@ module.exports = function repoContract(repo) {
     await repo.deleteRound(T, other.id);
   });
 
+  /* -------------------------- Session comments (#1782) -------------------------- */
+
+  const bareSession = (gameIds) => ({
+    createdAt: 't', gameIds, votes: {}, chosenGameId: null, chosenAt: null,
+    finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+  });
+
+  test('session comments: a session thread lists its own, the round thread lists everything', async () => {
+    const round = await freshRound();
+    const decoy = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const s1 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const s2 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    const r = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'round', at });
+    const c1 = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'snacks?', at, sessionId: s1.id });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-b', text: 'ich', at, sessionId: s1.id });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-b', text: 'anderer Abend', at, sessionId: s2.id });
+
+    assert.equal('sessionId' in r, false, 'a round-level message carries no sessionId key');
+    assert.equal(c1.sessionId, s1.id);
+    assert.deepEqual((await repo.listRoundMessages(T, round.id, { sessionId: s1.id })).messages.map((m) => m.text),
+      ['snacks?', 'ich'], 'one session\'s comments, oldest first');
+    assert.deepEqual((await repo.listRoundMessages(T, round.id)).messages.map((m) => m.text),
+      ['round', 'snacks?', 'ich', 'anderer Abend'], 'the round thread holds the whole conversation');
+    assert.equal((await repo.getRoundMessage(T, round.id, c1.id)).sessionId, s1.id);
+    assert.deepEqual(await repo.countSessionMessages(T, round.id), { [s1.id]: 2, [s2.id]: 1 });
+    assert.equal(typeof (await repo.countSessionMessages(T, round.id))[s1.id], 'number');
+
+    // A session is only reachable through its own round, and not from another tenant.
+    assert.equal(await repo.listRoundMessages(T, decoy.id, { sessionId: s1.id }), null);
+    assert.equal(await repo.createRoundMessage(T, decoy.id, { authorUserId: 'u-a', text: 'x', at, sessionId: s1.id }), null);
+    assert.equal(await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'x', at, sessionId: 'nope' }), null);
+    assert.equal(await repo.listRoundMessages(OTHER, round.id, { sessionId: s1.id }), null);
+    assert.deepEqual(await repo.countSessionMessages(OTHER, round.id), {});
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, decoy.id);
+  });
+
+  test('session comments: the first unread message OUTSIDE a session, by others only', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields());
+    const s1 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const s2 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    const post = (who, sessionId) => repo.createRoundMessage(T, round.id, { authorUserId: who, text: 'x', at, sessionId });
+    const own = await post('u-me', null);
+    const inS1 = await post('u-b', s1.id);
+    const roundLevel = await post('u-b', null);
+    const inS2 = await post('u-b', s2.id);
+
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', 0, s1.id), roundLevel.seq,
+      'a round-level message counts as outside (a NULL session id), the reader\'s own does not');
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', roundLevel.seq, s1.id), inS2.seq,
+      'another session\'s comment is outside too');
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', inS2.seq, s1.id), null);
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', 0, s2.id), inS1.seq,
+      'from s2\'s side, s1\'s comment is the oldest outside');
+    assert.equal(await repo.firstUnreadOutsideSession(OTHER, round.id, 'u-me', 0, s1.id), null);
+    assert.ok(own.seq < inS1.seq);
+    await repo.deleteRound(T, round.id);
+  });
+
+  test('session comments go with their session — deleted, emptied by a game delete or a move', async () => {
+    const round = await freshRound();
+    const dst = await freshRound();
+    const keep = await repo.createGame(T, round.id, gameFields({ title: 'Keep' }));
+    const drop = await repo.createGame(T, round.id, gameFields({ title: 'Drop' }));
+    const mover = await repo.createGame(T, round.id, gameFields({ title: 'Mover' }));
+    const deleted = await repo.createSession(T, round.id, bareSession([keep.id]));
+    const byGame = await repo.createSession(T, round.id, bareSession([drop.id]));
+    const byMove = await repo.createSession(T, round.id, bareSession([mover.id]));
+    const survives = await repo.createSession(T, round.id, bareSession([keep.id, mover.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    for (const s of [deleted, byGame, byMove, survives]) {
+      await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'c', at, sessionId: s.id });
+    }
+    const roundLevel = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'r', at });
+
+    // Checked after EACH step: the JSON backend's sweep after a game delete
+    // would otherwise also clear a comment deleteSession had left behind, and
+    // the final count could not tell the two apart (measured on #1782).
+    const counted = async () => repo.countSessionMessages(T, round.id);
+    assert.ok(await repo.deleteSession(T, round.id, deleted.id));
+    assert.deepEqual(await counted(), { [byGame.id]: 1, [byMove.id]: 1, [survives.id]: 1 }, 'deleteSession');
+    await repo.retireGame(T, round.id, drop.id, true);
+    assert.deepEqual(await repo.deleteGame(T, round.id, drop.id), { image: null });
+    assert.deepEqual(await counted(), { [byMove.id]: 1, [survives.id]: 1 }, 'a game delete that empties a session');
+    assert.ok(await repo.moveGames(T, round.id, dst.id, null, [mover.id]));
+    assert.deepEqual(await counted(), { [survives.id]: 1 },
+      'a move that empties a session; the session that still exists keeps its comment');
+    const all = (await repo.listRoundMessages(T, round.id)).messages.map((m) => m.id);
+    assert.ok(all.includes(roundLevel.id), 'a round-level message is untouched');
+    assert.equal(all.length, 2);
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, dst.id);
+  });
+
   test('round chat is tenant-scoped: another tenant reads, writes and deletes nothing', async () => {
     const round = await freshRound();
     const at = '2026-11-12T10:00:00.000Z';
