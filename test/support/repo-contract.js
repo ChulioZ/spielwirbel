@@ -5586,6 +5586,82 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.redactText({ kind: 'filter', roundId: round.id, id: 'nope' }, 'x'), null);
   });
 
+  // A lent box's borrower is free text about a third party (#1822). The Chronik
+  // keeps its own copy on every lend/return line, and those outlive the loan, so
+  // the takedown has to reach them too — or the name stays on screen.
+  test('roundContent lists every borrower name per box and redactText blanks loan and Chronik copies (#1822)', async () => {
+    const round = await freshRound({ members: ['Kim'] });
+    const kim = round.members.find((m) => m.name === 'Kim');
+    const lent = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    const back = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'Never lent' }));
+    await repo.setGameLoan(T, round.id, lent.id, { to: 'Kim', memberId: kim.id, since: '2026-11-03' });
+    await repo.setGameLoan(T, round.id, lent.id, { to: 'Nachbarin Eva', since: '2026-11-04' });
+    await repo.setGameLoan(T, round.id, back.id, { to: 'Onkel Udo', since: '2026-11-01' });
+    await repo.setGameLoan(T, round.id, back.id, null);
+
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.loans, [
+      { id: lent.id, to: 'Kim, Nachbarin Eva' },
+      { id: back.id, to: 'Onkel Udo' },
+    ], 'a returned box is listed too, from its Chronik lines');
+
+    const done = await repo.redactText({ kind: 'loan', roundId: round.id, id: lent.id }, '[entfernt]');
+    assert.equal(done.kind, 'loan');
+    assert.equal(done.id, lent.id);
+    assert.equal(done.previous, 'Kim, Nachbarin Eva');
+    const game = (await repo.getRound(T, round.id)).games.find((g) => g.id === lent.id);
+    assert.deepEqual(game.loan, { to: '[entfernt]', since: '2026-11-04' }, 'still lent, so still out of the draw');
+
+    const gone = await repo.redactText({ kind: 'loan', roundId: round.id, id: back.id }, '[entfernt]');
+    assert.equal(gone.previous, 'Onkel Udo');
+    assert.equal('loan' in (await repo.getRound(T, round.id)).games.find((g) => g.id === back.id), false,
+      'redacting a returned box does not lend it again');
+
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => /^game_(lent|returned)$/.test(a.type));
+    assert.equal(acts.length, 4);
+    assert.deepEqual([...new Set(acts.map((a) => a.to))], ['[entfernt]'], 'no Chronik line keeps a name');
+    assert.equal(acts.find((a) => a.memberId).memberId, kim.id, 'the seat link survives');
+    assert.deepEqual((await repo.roundContent(round.id)).loans.map((l) => l.to), ['[entfernt]', '[entfernt]']);
+
+    assert.equal(await repo.redactText({ kind: 'loan', roundId: round.id, id: 'nope' }, 'x'), null);
+  });
+
+  // A scoring category's name (#1780, #1822): blanked by name, its id kept, so
+  // a session's stored breakdown still resolves. Tombstones are listed too.
+  test('roundContent lists scoring category names and redactText blanks one, id kept (#1822)', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields());
+    await repo.updateGame(T, round.id, g.id, {
+      scoreCategories: [{ id: 'c1', name: 'Vögel' }, { id: 'c2', name: 'Anstößig', removed: true }],
+    });
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [{ id: 'c3', name: 'Eier' }] });
+    const at = '2026-11-01T20:00:00.000Z';
+    const parts = { m1: { c1: 40, c2: 2 } };
+    const session = await repo.createSession(T, round.id, {
+      createdAt: at, gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: at, finished: true,
+      finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      scores: { m1: 42 }, scoreParts: parts,
+    });
+
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.scoreCategories, [
+      { id: 'c1', name: 'Vögel' }, { id: 'c2', name: 'Anstößig' }, { id: 'c3', name: 'Eier' },
+    ]);
+
+    const done = await repo.redactText({ kind: 'scoreCategory', roundId: round.id, id: 'c2' }, '[entfernt]');
+    assert.equal(done.previous, 'Anstößig');
+    assert.equal(done.kind, 'scoreCategory');
+    const after = await repo.getRound(T, round.id);
+    assert.deepEqual(after.games.find((x) => x.id === g.id).scoreCategories,
+      [{ id: 'c1', name: 'Vögel' }, { id: 'c2', name: '[entfernt]', removed: true }]);
+    assert.deepEqual(after.games.find((x) => x.id === other.id).scoreCategories, [{ id: 'c3', name: 'Eier' }]);
+    assert.deepEqual(after.sessions.find((x) => x.id === session.id).scoreParts, parts, 'the breakdown still resolves');
+
+    assert.equal(await repo.redactText({ kind: 'scoreCategory', roundId: round.id, id: 'nope' }, 'x'), null);
+  });
+
   test('redactText blanks one text field and returns what was there', async () => {
     const round = await freshRound({ name: 'Bad round name' });
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));

@@ -1302,6 +1302,11 @@
       ...(content.expansions || []).map((e) => ['Erweiterung', 'expansion', e.id, e.title]),
       // A saved session filter's name (#1328) — user-authored like the rest.
       ...(content.filters || []).map((f) => ['Gespeicherter Filter', 'filter', f.id, f.name]),
+      // A lent box's borrower (#1822), keyed by the GAME id: one row per box,
+      // every name it was lent to — redacting it blanks the loan and its
+      // Chronik lines together.
+      ...(content.loans || []).map((l) => ['Verliehen an', 'loan', l.id, l.to]),
+      ...(content.scoreCategories || []).map((c) => ['Wertungskategorie', 'scoreCategory', c.id, c.name]),
     ]) {
       const row = detailRow({
         title: label,

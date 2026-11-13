@@ -116,9 +116,18 @@ returns the previous value.
   keeps its seats and tags, so a moderation action never quietly changes what a
   group's quick-start chip draws. `roundContent` lists them as `filters`.
 
+- A **loan** (#1822) is keyed by its GAME id and redacts every copy of the
+  borrower's name at once — the game's current loan **and** every
+  `game_lent`/`game_returned` Chronik line for that box, which carry their own
+  `to` and outlive the loan. `roundContent.loans` lists a returned box too, from
+  those lines. The loan itself stays, so a lent box stays out of the draw.
+- A **scoring category** (#1822) is redacted by name; its id survives so a
+  session's stored `scoreParts` still resolve. Tombstones are listed and redactable.
+
 There are **no rating comments** (votes are numeric), so user-authored text is
 exactly: round name, game title, member name, tag name, expansion title,
-saved-filter name, feedback message. **Adding another means adding a `REDACT_KINDS` entry, both
+saved-filter name, loan borrower, scoring-category name, feedback message (chat
+messages have their own removal route, #1781). **Adding another means adding a `REDACT_KINDS` entry, both
 backends' `redactText`, the `roundContent` list and one line in the panel's flat
 row builder** — a new free-text field with no takedown path is a DSA answer the
 operator cannot give. Feedback is global/un-scoped → it redacts by id alone, no
