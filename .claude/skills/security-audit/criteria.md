@@ -74,7 +74,10 @@ that a generic scanner does not know about.
   methods come from `require('../lib/repo')`. A new round-scoped method absent from
   `TENANT_METHODS` is unreachable *or*, if reached via the module repo, cross-tenant.
   Bare `pool.query` on round tables bypasses the tenant `set_config` and RLS.
-- **Enforced by:** `test/tenant.test.js`, `test/repo.postgres.test.js`
+  A grantee's writes pass one chokepoint, `lib/round-access.js`: `ROUTE_ROLES` maps
+  each guarded route to a capability and an unlisted route is refused.
+- **Enforced by:** `test/tenant.test.js`, `test/repo.postgres.test.js`,
+  `test/round-roles.test.js` (`ROUTE_ROLES`)
 
 ### S-006 — RLS is FORCE-enabled and app-layer WHERE clauses are the primary filter
 - **Status:** adopted · 2026-07-24
@@ -158,7 +161,9 @@ that a generic scanner does not know about.
 - **Check:** A global limiter plus tighter `AUTH_RATE_LIMIT_MAX` on the auth routes and a
   contact limiter. Ceilings are read from env **inside** `createApp()`, never bound at
   module load. `/healthz` sits before the limiter so uptime probes aren't throttled. Note
-  the store is in-memory per instance. The control that keeps that correct is the
+  the store is in-memory per instance — and so is the per-account chat limiter
+  (`CHAT_RATE_LIMIT_MAX`), which lives in `lib/routes/round-messages.js`, not in
+  `lib/app.js`. The control that keeps all of them correct is the
   **`numReplicas: 1` pin in `railway.json`**, asserted by `test/docker.test.js`
   (#646) — not a shared store: #215 (Redis) was **closed 2026-08-02 without
   shipping one**. A change that raises the replica count reopens this criterion

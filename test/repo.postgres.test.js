@@ -522,6 +522,10 @@ if (!process.env.DATABASE_URL) {
     const game = await repo.createGame(tenant, round.id, {
       title: 'Illegal title', minPlayers: 1, maxPlayers: 4, image: null, source: null,
     });
+    // #1822's two kinds ride the same child: a loan (whose name also sits on an
+    // ACTIVITIES row — a second RLS-scoped table) and a scoring category.
+    await repo.setGameLoan(tenant, round.id, game.id, { to: 'Illegal borrower', since: '2026-11-03' });
+    await repo.updateGame(tenant, round.id, game.id, { scoreCategories: [{ id: 'c1', name: 'Illegal category' }] });
 
     const admin = new Client({
       connectionString: process.env.DATABASE_URL,
@@ -591,7 +595,12 @@ if (!process.env.DATABASE_URL) {
       const child = execFileSync(process.execPath, ['-e', `
         const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
         repo.redactText(${JSON.stringify({ kind: 'game', roundId: round.id, id: game.id })}, '[entfernt]')
-          .then((out) => { console.log('RESULT:' + JSON.stringify(out)); return repo.end(); })
+          .then(async (out) => {
+            console.log('RESULT:' + JSON.stringify(out));
+            await repo.redactText(${JSON.stringify({ kind: 'loan', roundId: round.id, id: game.id })}, '[entfernt]');
+            await repo.redactText(${JSON.stringify({ kind: 'scoreCategory', roundId: round.id, id: 'c1' })}, '[entfernt]');
+            return repo.end();
+          })
           .catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url2.toString() }, encoding: 'utf8' });
 
@@ -608,6 +617,10 @@ if (!process.env.DATABASE_URL) {
     // The value must actually have CHANGED, not merely been reported as changed.
     const after = await repo.getRound(tenant, round.id);
     assert.equal(after.games[0].title, '[entfernt]', 'the redaction did not land as a non-superuser');
+    assert.equal(after.games[0].loan.to, '[entfernt]', 'the loan redaction did not land as a non-superuser');
+    assert.equal(after.games[0].scoreCategories[0].name, '[entfernt]', 'the category redaction did not land');
+    const lentLine = (await repo.listActivities(tenant, round.id)).find((a) => a.type === 'game_lent');
+    assert.equal(lentLine.to, '[entfernt]', 'the Chronik copy of the borrower did not change as a non-superuser');
 
     // The cross-tenant reads resolve without any tenant scope in hand — that is
     // the half the admin escape legitimately provides.

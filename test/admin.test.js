@@ -999,7 +999,40 @@ test('redaction blanks user text, logs the original and deletes nothing (#275)',
     assert.deepEqual(after.body.games.find((x) => x.id === gid).tagIds, [tag.body.id]);
   });
 
+  // #1822: a borrower's name and a scoring category's name are user-authored
+  // text shown to the whole round, so each needs the same takedown path.
+  await t.test('a loan keeps the box lent; the name goes from the loan and the Chronik', async () => {
+    const lent = await auth(request(app).put(`/api/rounds/${rid}/games/${gid}/loan`)).send({ to: 'Nachbar Ede' });
+    assert.equal(lent.status, 200);
+    const content = await request(app).get(`/api/admin/content?round=${rid}`).set('Cookie', cookie);
+    assert.deepEqual(content.body.content.loans, [{ id: gid, to: 'Nachbar Ede' }]);
+
+    const res = await redact({ kind: 'loan', roundId: rid, id: gid, reason: 'Notice' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.redacted.previous, 'Nachbar Ede');
+    const after = await auth(request(app).get(`/api/rounds/${rid}`));
+    assert.equal(after.body.games.find((x) => x.id === gid).loan.to, '[entfernt]');
+    const log = await request(app).get('/api/admin/log').set('Cookie', cookie);
+    assert.equal(log.body.entries[0].action, 'redact_loan');
+    assert.equal(log.body.entries[0].previous, 'Nachbar Ede');
+  });
+
+  await t.test('a scoring category keeps its id', async () => {
+    const patched = await auth(request(app).patch(`/api/rounds/${rid}/games/${gid}`))
+      .send({ scoreCategories: [{ name: 'Offensive category' }] });
+    assert.equal(patched.status, 200);
+    const [cat] = patched.body.scoreCategories;
+
+    const res = await redact({ kind: 'scoreCategory', roundId: rid, id: cat.id, reason: 'Notice' });
+    assert.equal(res.status, 200);
+    assert.equal(res.body.redacted.previous, 'Offensive category');
+    const after = await auth(request(app).get(`/api/rounds/${rid}`));
+    assert.deepEqual(after.body.games.find((x) => x.id === gid).scoreCategories, [{ id: cat.id, name: '[entfernt]' }]);
+  });
+
   await t.test('an unknown target is a 404, never a silent success', async () => {
+    assert.equal((await redact({ kind: 'loan', roundId: rid, id: 'deadbeef', reason: 'x' })).status, 404);
+    assert.equal((await redact({ kind: 'scoreCategory', roundId: rid, id: 'deadbeef', reason: 'x' })).status, 404);
     assert.equal((await redact({ kind: 'game', roundId: rid, id: 'deadbeef', reason: 'x' })).status, 404);
     assert.equal((await redact({ kind: 'round', roundId: 'deadbeef', reason: 'x' })).status, 404);
     assert.equal((await redact({ kind: 'feedback', id: 'deadbeef', reason: 'x' })).status, 404);
