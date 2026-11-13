@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1780, scoring categories. A capability that did not exist: a game scored in
+   * categories had to be added up on paper before the total could be typed.
+   */
+  {
+    revision: '2026-11-13',
+    kind: 'new',
+    de: {
+      title: 'Punkte nach Kategorien',
+      body: 'Auf der Seite eines Spiels legt ihr unter „Wertungskategorien" seine Wertung fest, etwa Vögel, Eier und Boni. Beim Punkte-Eintragen gibt es dann ein Feld pro Kategorie und Person, die Summe rechnet die App. Jede Kategorie hat ihren eigenen Rekord, und eure Bestleistungen zeigen sie einzeln.',
+    },
+    en: {
+      title: 'Points by category',
+      body: 'On a game’s page, „Scoring categories" sets up how it is scored, say birds, eggs and bonuses. Entering points then gives one field per category and person, and the app adds them up. Every category has its own record, and your personal bests show each one.',
+    },
+    es: {
+      title: 'Puntos por categoría',
+      body: 'En la página de un juego, «Categorías de puntuación» define cómo se puntúa, por ejemplo aves, huevos y bonificaciones. Al anotar los puntos hay un campo por categoría y persona, y la app hace la suma. Cada categoría tiene su propio récord, y vuestras mejores marcas las muestran una a una.',
+    },
+    fr: {
+      title: 'Des points par catégorie',
+      body: 'Sur la page d’un jeu, « Catégories de score » définit son décompte, par exemple oiseaux, œufs et bonus. La saisie des points propose alors un champ par catégorie et par personne, et l’app fait la somme. Chaque catégorie a son propre record, et vos meilleures performances les détaillent.',
+    },
+    it: {
+      title: 'Punti per categoria',
+      body: 'Nella pagina di un gioco, «Categorie di punteggio» stabilisce come si conta, ad esempio uccelli, uova e bonus. Inserendo i punti c’è poi un campo per categoria e persona, e la somma la fa l’app. Ogni categoria ha il suo record, e i vostri migliori risultati le mostrano una per una.',
+    },
+    nl: {
+      title: 'Punten per categorie',
+      body: 'Op de pagina van een spel leggen jullie onder „Scorecategorieën" de telling vast, bijvoorbeeld vogels, eieren en bonussen. Bij het invoeren van punten krijg je dan één veld per categorie en persoon, en de app telt op. Elke categorie heeft een eigen record, en jullie persoonlijke records tonen ze apart.',
+    },
+    pt: {
+      title: 'Pontos por categoria',
+      body: 'Na página de um jogo, «Categorias de pontuação» define como se pontua, por exemplo aves, ovos e bónus. Ao registar os pontos há um campo por categoria e pessoa, e a app faz a soma. Cada categoria tem o seu próprio recorde, e os vossos melhores resultados mostram-nas uma a uma.',
+    },
+    fi: {
+      title: 'Pisteet luokittain',
+      body: 'Pelin sivulla ”Pisteluokat” määrittää, miten peli pisteytetään, esimerkiksi linnut, munat ja bonukset. Pisteitä syötettäessä saat sitten kentän jokaista luokkaa ja pelaajaa kohti, ja sovellus laskee summan. Jokaisella luokalla on oma ennätyksensä, ja omat parhaat tuloksenne näyttävät ne erikseen.',
+    },
+    ko: {
+      title: '항목별 점수',
+      body: '게임 페이지의 ‘점수 항목’에서 새, 알, 보너스처럼 점수 계산 방식을 정해 두세요. 점수를 입력할 때 항목과 사람마다 칸이 생기고, 합계는 앱이 계산해요. 항목마다 따로 기록이 있고, 개인 최고 기록에서도 항목별로 볼 수 있어요.',
+    },
+  },
+  /*
    * #1779, group challenges. A capability that did not exist: a round could only
    * look back at what it played, never set itself a goal to play towards.
    */

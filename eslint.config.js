@@ -636,6 +636,10 @@ const frontendGlobals = {
   // route) and session-points.js (the sheet and the result's block).
   POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
+  // Scoring categories (#1780): point-records.js too.
+  SCORE_CATEGORY_MAX: 'readonly', SCORE_CATEGORY_NAME_MAX: 'readonly', scoreCategoryList: 'readonly', activeScoreCategories: 'readonly',
+  mergeScoreCategories: 'readonly', parseScoreParts: 'readonly', consistentScoreParts: 'readonly', seatScoreParts: 'readonly',
+  gameCategoryRecords: 'readonly', memberCategoryBests: 'readonly',
   // A session's playing time (#1770): session-duration.js (pure, shared with the
   // route and both repo backends).
   DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
@@ -645,9 +649,10 @@ const frontendGlobals = {
   fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',
   parseDurationInput: 'readonly', durationField: 'readonly', durationInvalidToast: 'readonly', showSessionDurationSheet: 'readonly',
   // views-member-points.js (#1631)
-  memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',
+  memberPointsPanel: 'readonly', profilePointsPanel: 'readonly', memberCategoryBestsBlock: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
   renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
+  sheetScoreCategories: 'readonly', buildPointsGrid: 'readonly', gridColumnSum: 'readonly', paintGridTotals: 'readonly', showScoreCategoriesEditor: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
   importScore: 'readonly', importDayInRange: 'readonly', importDayKeyInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',

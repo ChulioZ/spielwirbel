@@ -132,6 +132,11 @@ function roundExportTables(round) {
   const sessionRows = [];
   const voteRows = [];
   const pointRows = [];
+  const partRows = [];
+  // A category is named from the game's list in any state (#1780): a removed
+  // one hides from the sheet but keeps its values here.
+  const categoryName = new Map();
+  games.forEach((g) => scoreCategoryList(g).forEach((c) => categoryName.set(`${g.id}/${c.id}`, c.name)));
   sessions.forEach((s) => {
     const when = exportLocalDay(s.createdAt);
     const dateOnly = isDateOnlySession(s);
@@ -166,6 +171,15 @@ function roundExportTables(round) {
       const p = byId.get(pid);
       pointRows.push([s.id, when.day, pid, p ? p.name : '', !!(p && p.guest),
         s.chosenGameId || '', gameTitle.get(s.chosenGameId) || '', s.scores[pid]]);
+      // Its per-category breakdown (#1780), one row per category — a sibling
+      // file rather than columns on points.csv, so that file's shape (and every
+      // spreadsheet built on it) stays as it was. Only a breakdown that adds up
+      // to the total is exported, the same reading every screen uses.
+      Object.entries(seatScoreParts(s, pid) || {}).forEach(([cid, v]) => {
+        partRows.push([s.id, when.day, pid, p ? p.name : '', !!(p && p.guest),
+          s.chosenGameId || '', gameTitle.get(s.chosenGameId) || '', cid,
+          categoryName.get(`${s.chosenGameId}/${cid}`) || '', v]);
+      });
     });
   });
 
@@ -179,6 +193,9 @@ function roundExportTables(round) {
       ['session_id', 'date', 'person_id', 'person', 'guest', 'game_id', 'game', 'rating'], voteRows),
     'points.csv': exportCsv(
       ['session_id', 'date', 'person_id', 'person', 'guest', 'game_id', 'game', 'points'], pointRows),
+    'point-categories.csv': exportCsv(
+      ['session_id', 'date', 'person_id', 'person', 'guest', 'game_id', 'game', 'category_id', 'category', 'points'],
+      partRows),
     'members.csv': exportCsv(
       ['member_id', 'name', 'color', 'retired'],
       members.map((m) => [m.id, m.name, m.color, !!m.retired])),

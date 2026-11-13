@@ -337,7 +337,8 @@ What the app does, in detail. For a short overview see the
   is owner-only for the same reason moving is.
 - **Exporting a round's data** (issue #1702) – „Daten exportieren (CSV + JSON)"
   in the round's Einstellungen downloads one zip: `games.csv`, `sessions.csv`,
-  `votes.csv`, `points.csv`, `members.csv` and `tags.csv` for spreadsheets (UTF-8
+  `votes.csv`, `points.csv`, `point-categories.csv` (one row per player ×
+  scoring category, #1780), `members.csv` and `tags.csv` for spreadsheets (UTF-8
   with a BOM so Excel reads accents and Hangul, ids in every table so they
   join), plus `round.json`, the complete round as the app stores it. Everyone
   with access to the round may download it — owner, co-owner and editor alike —
@@ -912,6 +913,20 @@ What the app does, in detail. For a short overview see the
   team set counts for every member of it. The account profile shows the same
   across every round the account sits in (titles and scores only, no dates).
   Both are hidden while a member has no points.
+  **„Wertungskategorien"** (scoring categories, issue #1780) – the game page's
+  „…" (Der Tisch: its Aktionen panel) edits an ordered list of up to 12
+  category names (≤ 30 characters) for a game on the shelf. „Punkte eintragen"
+  then shows a grid — a row per category, a column per player or team — and
+  sums each column live; the total is still what is stored and what decides
+  bests and records, the breakdown is kept beside it. One „±" flips the field
+  last focused. Renaming a category keeps its history; removing one hides it
+  from the sheet but keeps its values (and its name in the export) while a
+  session holds any, and re-adding the same name brings them back. A seat scored
+  before the game had categories keeps its total until someone types into its
+  column. The game page lists each category's record („Vögel: 48 · Anna"), and
+  the member page's Bestleistungen gain a „Nach Kategorie" disclosure. The
+  „Niedrigere Punktzahl gewinnt" switch applies per category too. BG Stats still
+  receives totals only.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is
