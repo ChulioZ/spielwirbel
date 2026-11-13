@@ -34,32 +34,40 @@ function assertRosterReflow(sheet, { container, sel }) {
   assert.ok(css.columnsIn(css.rootPx('--w-detail') - panel - colGap, { floor, gap }) >= 2,
     'the roster holds one column at 1440');
 
-  // The count goes exactly where two columns start: a wide single row has the
-  // room for it, a two-up row does not.
+  // #1817: the composition that is safe at ANY row width is the DEFAULT — no
+  // count, „Für …" whole on a line of its own — so that a browser which ignores
+  // `@container` (Safari before 16), or a roster the query does not answer,
+  // falls back to it. The inline key used to be the default, and a two-up row
+  // without the query starved its track to a few px.
+  const defKey = css.bodyOf(sel.key, wide);
+  assert.equal(css.declaredValue(defKey, 'grid-row'), '3',
+    'the inline key is the default again — any row the container query misses starves it (#1817)');
+  assert.equal(css.declaredValue(defKey, 'grid-column'), '2 / -1');
+  assert.equal(css.declaredValue(defKey, 'white-space'), 'nowrap', 'the default key may break its label');
+  assert.equal(tracks(css.bodyOf(sel.row, wide)), 4, 'the default row carries the count track');
+  assert.equal(css.declaredValue(css.bodyOf(sel.progress, wide), 'display'), 'none');
+  assert.equal(css.declaredValue(css.bodyOf(sel.name, wide), 'grid-column'), '2 / 4',
+    'the name no longer spans both text tracks, so an inline key takes its width');
+
+  // The rich composition only inside a container query bounded on BOTH sides:
+  // below 930 (= two floors and the gap) the rows are still one-up, and from
+  // the lower bound the key's track keeps room for „Für Maximilian".
   const cq = css.atBlocks(sheet, 'container').find(([p]) => p.startsWith(container));
   assert.ok(cq, 'no container block answers the roster');
-  assert.equal(px(cq[0], /min-width:\s*(\d+)px/, 'the container threshold'), 2 * floor + gap,
-    'the threshold that drops the count is not where the roster turns two-up');
-  const narrow = css.rulesOf(cq[1]);
-  assert.equal(css.declaredValue(css.bodyOf(sel.progress, narrow), 'display'), 'none');
-  assert.equal(tracks(css.bodyOf(sel.row, wide)), 5, 'a single wide row lost its count track');
-  assert.equal(tracks(css.bodyOf(sel.row, narrow)), 4);
-
-  // „Für …" on the state line, the name spanning both text tracks above it.
-  const key = css.bodyOf(sel.key, wide);
-  assert.equal(css.declaredValue(key, 'grid-row'), '2', 'the key is back on a line of its own');
+  const lower = px(cq[0], /min-width:\s*(\d+)px/, 'the inline lower bound');
+  const upper = px(cq[0], /max-width:\s*([\d.]+)px/, 'the inline upper bound');
+  assert.ok(upper < 2 * floor + gap && upper > 2 * floor + gap - 1,
+    'the inline composition reaches into two-up rows, or stops short of them');
+  const inline = css.rulesOf(cq[1]);
+  const inlineRow = css.bodyOf(sel.row, inline);
+  assert.equal(tracks(inlineRow), 5, 'a single wide row lost its count track');
+  const count = px(inlineRow, /(\d+)px\s*;?\s*$/m, 'the count track');
+  const prog = css.bodyOf(sel.progress, inline);
+  assert.equal(css.declaredValue(prog, 'display'), 'block');
+  assert.equal(css.declaredValue(prog, 'grid-column'), '5');
+  const key = css.bodyOf(sel.key, inline);
+  assert.equal(css.declaredValue(key, 'grid-row'), '2', 'a wide row puts the key back on a line of its own');
   assert.equal(css.declaredValue(key, 'grid-column'), '3');
-  assert.equal(css.declaredValue(css.bodyOf(sel.name, wide), 'grid-column'), '2 / 4',
-    'the name no longer spans the key\'s track, so a key takes its width');
-
-  // …but not in a two-up row: with the marks at their cap the key's track there
-  // is ~150px, and „Für Maximilian" broke over two lines. It takes a line of its
-  // own under the state, whole, as on a phone.
-  const twoUpKey = css.bodyOf(sel.key, narrow);
-  assert.ok(twoUpKey, 'a two-up row keeps the key on the state line');
-  assert.equal(css.declaredValue(twoUpKey, 'grid-row'), '3');
-  assert.equal(css.declaredValue(twoUpKey, 'grid-column'), '2 / -1');
-  assert.equal(css.declaredValue(twoUpKey, 'white-space'), 'nowrap', 'a two-up key may still break its label');
 
   // What a two-up row at its floor leaves the name, with the marks at their cap.
   const row = css.bodyOf(sel.rowBase, top);
@@ -67,6 +75,11 @@ function assertRosterReflow(sheet, { container, sel }) {
   const rowGap = px(row, /column-gap:\s*(\d+)px/, 'the row gap');
   const avatar = px(css.bodyOf(sel.avatar, top), /width:\s*(\d+)px/, 'the avatar');
   const marks = px(css.bodyOf(sel.dots, top), /max-width:\s*(\d+)px/, 'the marks cap');
+  // At the inline lower bound, with the marks at their cap, the count, four
+  // gaps and ~100px for the state line, the key's track still holds a whole
+  // „Für Maximilian" (~160px). Lower the bound and this is the #1817 sliver.
+  const keyTrack = lower - 2 * pad - avatar - marks - count - 4 * rowGap - 100;
+  assert.ok(keyTrack >= 150, `at its ${lower}px lower bound the inline key gets ${keyTrack}px`);
   const name = floor - 2 * pad - avatar - marks - 2 * rowGap;
   assert.ok(name >= 140, `a two-up row leaves the name ${name}px — an 11-character name clips`);
 
