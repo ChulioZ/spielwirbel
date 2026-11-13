@@ -68,6 +68,8 @@ function renderChronikTab(round, activities) {
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
   const badgeRows = badgeChronikIndex(round);
+  // The challenges each session completed (#1779), same placement.
+  const challengeRows = challengeChronikIndex(round);
 
   // The chip choice persists for the session but is scoped to one round — the
   // same guard renderRegalTab opens with. An unknown value (a filter dropped in
@@ -670,6 +672,8 @@ function renderChronikTab(round, activities) {
       item.appendChild(nest);
     }
     if (e.kind === 'session') chronikBadgeRows(round, badgeRows.get(e.session.id)).forEach((row) => item.appendChild(row));
+    // A split evening's table can complete one, so its children are asked too.
+    if (e.kind === 'session') [e.session].concat(kids || []).forEach((s) => chronikChallengeRows(round, challengeRows.get(s.id)).forEach((row) => item.appendChild(row)));
     return item;
   }
   renderTimeline();

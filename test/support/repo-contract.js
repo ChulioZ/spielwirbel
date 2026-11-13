@@ -2813,6 +2813,29 @@ module.exports = function repoContract(repo) {
     assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
   });
 
+  test('setChallenge: absent until set, round-trips, empties delete, tenant-scoped (#1779)', async () => {
+    const round = await freshRound();
+    assert.equal('challenge' in round, false);
+    assert.equal('challengeHistory' in round, false);
+
+    const ch = { kind: 'sessions', n: 5, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' };
+    const old = { kind: 'wholeShelf', shelfSnapshot: ['g1', 'g2'], startedAt: '2026-10-01T10:00:00.000Z', deadline: '2026-10-20T21:59:59.999Z', endedAt: '2026-10-05T10:00:00.000Z' };
+    assert.deepEqual(await repo.setChallenge(T, round.id, { challenge: ch, history: [old] }), { challenge: ch, challengeHistory: [old] });
+    const read = await repo.getRound(T, round.id);
+    assert.deepEqual(read.challenge, ch);
+    assert.deepEqual(read.challengeHistory, [old]);
+
+    // Cleared reads exactly like never set, in both backends.
+    assert.deepEqual(await repo.setChallenge(T, round.id, { challenge: null, history: [] }), { challenge: null, challengeHistory: [] });
+    const cleared = await repo.getRound(T, round.id);
+    assert.equal('challenge' in cleared, false);
+    assert.equal('challengeHistory' in cleared, false);
+
+    assert.equal(await repo.setChallenge(T, 'missing', { challenge: ch, history: [] }), null);
+    assert.equal(await repo.setChallenge(OTHER, round.id, { challenge: ch, history: [] }), null, 'another tenant cannot set it');
+    assert.equal('challenge' in await repo.getRound(T, round.id), false);
+  });
+
   test('addTag creates and dedupes; deleteTag unassigns from every game (#238)', async () => {
     const round = await freshRound();
     assert.equal('tags' in round, false); // absent until the first tag is created

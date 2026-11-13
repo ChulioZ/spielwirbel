@@ -125,6 +125,7 @@ const MOUNTS = [
   // flip (#1202).
   ['/marker', '../lib/routes/marker'],
   ['/draw-boost', '../lib/routes/draw-boost'], // #1777
+  ['/challenge', '../lib/routes/challenge'], // #1779
   ['/messages', '../lib/routes/round-messages'], // #1781
   // The same router again, for one session's comments (#1782). The app-mount
   // scan above cannot see this one (its regex stops at the `:sid`).

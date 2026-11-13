@@ -868,6 +868,17 @@ the same normalisation, so a composer that counted the raw `\r\n` input could
 accept a message the route then refuses. `chatSegments` (the link splitter) and
 `chatUnread` live beside them and are client-only.
 
+**The forty-second is `public/js/challenges.js`** (#1779): the group challenge's
+presets and bounds (`CHALLENGE_KINDS`, `CHALLENGE_N_MIN`/`MAX`, the deadline
+horizon) with `challengeStartError`, which the start sheet offers and
+`lib/routes/challenge.js` validates — the palette shape — plus the derivation
+itself, which the route needs because the one thing it refuses (a second
+challenge while one is RUNNING) is a derived state. A server copy that counted
+plays differently would refuse a start the Pokale section offers, or allow one
+while the screen still shows a challenge running. The route injects
+`isActiveGame` (`opts.isActive`), since a public/js file cannot require its
+sibling.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The
