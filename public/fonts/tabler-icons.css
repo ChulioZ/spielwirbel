@@ -155,6 +155,8 @@
 /* The feed's report control (#559). Same: cmap, not tabler.io. */
 .ti-filter::before { content: "\eaa5"; }
 .ti-flag::before { content: "\eaa6"; }
+.ti-flag-check::before { content: "\fb8c"; }
+.ti-flag-off::before { content: "\f12d"; }
 
 /* Tag icons (#255) — codepoints read from this bundle's own cmap via fontTools,
    NOT from tabler.io (they differ; see .claude/rules/tabler-icon-codepoints.md). */

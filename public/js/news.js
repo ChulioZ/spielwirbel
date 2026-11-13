@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1779, group challenges. A capability that did not exist: a round could only
+   * look back at what it played, never set itself a goal to play towards.
+   */
+  {
+    revision: '2026-11-13',
+    kind: 'new',
+    de: {
+      title: 'Challenges für die ganze Runde',
+      body: 'Unter Pokale startet ihr jetzt eine Challenge mit Frist: Spiele, die noch nie auf dem Tisch waren, einmal durchs ganze Regal, eine Zahl an Sessions oder verschiedenen Spielen. Der Fortschritt steht unter Start und zählt jede Session, die ihr ab dem Start spielt.',
+    },
+    en: {
+      title: 'Challenges for the whole round',
+      body: 'Under Trophies you can now start a challenge with a deadline: games that have never been on the table, once through the whole shelf, a number of sessions or of different games. The progress shows on the Start tab and counts every session you play from the start.',
+    },
+    es: {
+      title: 'Retos para todo el grupo',
+      body: 'En Trofeos podéis empezar ahora un reto con plazo: juegos que nunca han salido a la mesa, toda la estantería una vez, un número de sesiones o de juegos distintos. El progreso aparece en Inicio y cuenta cada sesión que juguéis desde el comienzo.',
+    },
+    fr: {
+      title: 'Des défis pour tout le groupe',
+      body: 'Dans Trophées, vous pouvez désormais lancer un défi avec une échéance : des jeux jamais sortis, toute l’étagère une fois, un nombre de sessions ou de jeux différents. La progression s’affiche dans Démarrer et compte chaque session jouée depuis le lancement.',
+    },
+    it: {
+      title: 'Sfide per tutto il gruppo',
+      body: 'In Trofei ora potete avviare una sfida con scadenza: giochi mai portati in tavola, tutto lo scaffale una volta, un numero di sessioni o di giochi diversi. Il progresso compare in Avvia e conta ogni sessione giocata dall’avvio.',
+    },
+    nl: {
+      title: 'Uitdagingen voor de hele groep',
+      body: 'Onder Trofeeën starten jullie nu een uitdaging met een deadline: spellen die nog nooit op tafel lagen, de hele kast één keer, een aantal sessies of verschillende spellen. De voortgang staat bij Start en telt elke sessie die jullie vanaf de start spelen.',
+    },
+    pt: {
+      title: 'Desafios para todo o grupo',
+      body: 'Em Troféus vocês podem agora começar um desafio com prazo: jogos que nunca foram à mesa, a estante inteira uma vez, um número de sessões ou de jogos diferentes. O progresso aparece em Início e conta cada sessão jogada a partir do início.',
+    },
+    fi: {
+      title: 'Haasteita koko porukalle',
+      body: 'Palkinnot-osiossa voitte nyt aloittaa haasteen määräajalla: pelejä, jotka eivät ole koskaan olleet pöydällä, koko hylly kerran tai tietty määrä sessioita tai eri pelejä. Edistyminen näkyy Aloitus-osiossa ja laskee jokaisen session aloituksesta lähtien.',
+    },
+    ko: {
+      title: '모임 전체를 위한 챌린지',
+      body: '이제 트로피 탭에서 기한이 있는 챌린지를 시작할 수 있어요. 한 번도 안 해 본 게임, 선반 전체 한 번씩, 정해 둔 세션 수나 서로 다른 게임 수 중에서 고르세요. 진행 상황은 시작 탭에 보이고, 시작한 뒤에 하는 모든 세션이 반영돼요.',
+    },
+  },
+  /*
    * #1781, the round chat. A capability that did not exist: a round's people
    * coordinated around it somewhere else entirely.
    */

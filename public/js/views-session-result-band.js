@@ -69,6 +69,8 @@ function resultRenderBand(rs) {
   const { round, session, games, rows, parties, people, tischLook, peopleEl, rowRefs, badgeMoment, tisch, tischSlot, tischBar } = rs;
   resultUpdateTitle(rs);
   fillBadgeMoment(badgeMoment, round, session);
+  // The group challenge (#1779) rides in the same moment, after the marks.
+  fillChallengeMoment(badgeMoment, round, session);
   // Consumed at the top so every exit, including the early return below,
   // clears it — a stale intent must not fire on a later, unrelated render.
   const wantedChip = rs.pickerRefocus;

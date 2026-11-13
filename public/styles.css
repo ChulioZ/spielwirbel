@@ -12495,6 +12495,46 @@ kbd {
 .chronik-row--badge .chronik-row__text { color: var(--ink); min-width: 0; overflow-wrap: anywhere; }
 
 .hub-row--badges { font-size: var(--text-sm); color: var(--ink-soft); }
+
+/* The group challenge (#1779, views-challenges.js). The bar is a track and a
+   fill sized by `--pct` (inline DATA, never overridden — a design that wants
+   another fill colour sets `--challenge-fill`, which nothing writes inline). */
+.challenge-bar {
+  display: block;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  overflow: hidden;
+}
+.challenge-bar__fill {
+  display: block;
+  height: 100%;
+  width: var(--pct, 0%);
+  border-radius: inherit;
+  background: var(--challenge-fill, var(--brand));
+}
+[data-state="completed"] .challenge-bar__fill { background: var(--challenge-done, var(--good, var(--brand))); }
+.challenge-section { margin: 24px 0; }
+.challenge-current {
+  padding: 14px;
+  border: 1px solid var(--brand-edge);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.challenge-current__goal { margin: 0; font-weight: 600; }
+.challenge-current__status { margin: 4px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
+.challenge-current__end { margin-top: 10px; }
+.challenge-section__start { margin-top: 12px; }
+.challenge-history { margin-top: 14px; font-size: var(--text-sm); }
+.challenge-history > summary { cursor: pointer; color: var(--ink-soft); }
+.challenge-history__list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.challenge-history__item { display: flex; flex-direction: column; }
+.challenge-history__goal { font-weight: 600; }
+.challenge-history__status { color: var(--ink-soft); }
+.challenge-moment__text { margin: 0; font-weight: 600; }
+.badge-moment__list + .challenge-moment,
+.badge-moment__more + .challenge-moment { margin-top: 12px; }
 .hub-row--badges .ti { color: var(--brand-ink, var(--brand)); }
 
 /* The row wraps: the label and the chevron (#1386) share the first line, the

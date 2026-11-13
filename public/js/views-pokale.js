@@ -357,6 +357,9 @@ function renderPokaleTab(round) {
       emptyStateAction(empty, { icon: bruecke ? 'ti-rocket' : 'ti-tornado', label: t(bruecke ? 'round.startSessionBruecke' : 'round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
     }
     app.appendChild(sec);
+    // The group challenge (#1779): startable before the first session too.
+    const challenge = renderChallengeSection(round);
+    if (challenge) app.appendChild(challenge);
     // Abzeichen (#1388): the section's one empty line, no tiles.
     app.appendChild(renderBadgeSection(round));
     return;
@@ -614,6 +617,10 @@ function renderPokaleTab(round) {
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two
      lists on one page cannot disagree about who comes first. */
+  // The group challenge (#1779): the goal the table plays towards, above the
+  // marks it collects by playing.
+  const challenge = renderChallengeSection(round);
+  if (challenge) app.appendChild(challenge);
   app.appendChild(renderBadgeSection(round, ranked, rankOf));
   app.appendChild(renderRecapSection(round, recap));
   badgeRevealTarget(round.id);

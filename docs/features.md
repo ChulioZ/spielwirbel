@@ -536,6 +536,18 @@ What the app does, in detail. For a short overview see the
     first played session in every design (#1586) — holds its monthly bars back
     and closes on a sentence saying when series come.
 
+    A **Challenge** (issue #1779) sits above the Abzeichen: the round picks one
+    of four goals with a deadline — N games never played before, every game on
+    the shelf once (a snapshot taken at the start), N sessions (a split evening
+    counts once) or N different games — and plays towards it. One runs at a time;
+    it can be ended early, and finished ones go into a short history. Only the
+    goal is stored: progress counts the played sessions dated after the start and
+    is derived on every read, so deleting a session corrects it and a deadline
+    passing needs no scheduler. While it runs (and for a week after it ends) the
+    Start tab carries its card; the result screen says when a session moved or
+    completed it, and the Chronik keeps a row under the session that completed
+    it. Hidden with the Abzeichen under „Einfacher Modus".
+
     **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
     round, then one row per member in standings order — the first win, ten
     sessions, a game that keeps coming back, a full year of monthly play, and

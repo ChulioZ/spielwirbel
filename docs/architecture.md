@@ -549,6 +549,8 @@ lib/
                                              0-7 — issue #1187)
     draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
                                              on/off — issue #1777)
+    challenge.js     …/challenge            (POST to start the group challenge,
+                                             DELETE to end or archive it — #1779)
     round-messages.js …/messages            (the round chat: page, post, edit, delete,
                                              mark read — accounts mode only, issue #1781;
                                              mounted again at …/sessions/:sid/messages
@@ -1132,6 +1134,14 @@ public/
                      `.badge` markup every design skins, Pokale › Abzeichen,
                      the result moment, the Chronik rows, the hub line, the
                      Tischkarte row and the tap-open card
+    challenges.js    the group challenge (issue #1779): its four presets and
+                     the progress, completion and expiry derived from the
+                     sessions — only the goal is stored. Also required by
+                     lib/routes/challenge.js, so the route agrees whether one
+                     is still running
+    views-challenges.js  the challenge's Start card, Pokale › Challenge (start,
+                     end, the short history), its line in the result moment
+                     and its Chronik row
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and
                      the two game boxes; name/colour editing; the

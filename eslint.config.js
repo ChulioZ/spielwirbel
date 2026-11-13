@@ -682,6 +682,15 @@ const frontendGlobals = {
   // taste-neighbour.js (#1778): die Tischkarte's closest / most different taste
   TASTE_MIN_SHARED: 'readonly', tasteAverages: 'readonly', tasteDistance: 'readonly', tasteNeighbours: 'readonly', memberTasteLine: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
+  // The group challenge (#1779): challenges.js + views-challenges.js.
+  CHALLENGE_KINDS: 'readonly', CHALLENGE_COUNTED: 'readonly', CHALLENGE_N_MIN: 'readonly', CHALLENGE_N_MAX: 'readonly',
+  CHALLENGE_DEADLINE_MAX_DAYS: 'readonly', CHALLENGE_HISTORY_MAX: 'readonly', challengePlays: 'readonly',
+  challengeProgress: 'readonly', currentChallenge: 'readonly', challengeRunning: 'readonly', challengeHistory: 'readonly',
+  challengeStartError: 'readonly', challengeDeadlineInstant: 'readonly', challengeDaysLeft: 'readonly',
+  CHALLENGE_HUB_LINGER_DAYS: 'readonly', challengeGoalText: 'readonly', challengeStatusText: 'readonly', challengeBar: 'readonly',
+  challengeEndedAt: 'readonly', hubChallengeCard: 'readonly', renderChallengeSection: 'readonly', challengeRefresh: 'readonly',
+  endChallenge: 'readonly', challengeDay: 'readonly', openChallengeSheet: 'readonly', fillChallengeMoment: 'readonly',
+  challengeChronikIndex: 'readonly', chronikChallengeRows: 'readonly',
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   // views-badges.js (#1388) — the Klassisch rendering every design skins.
   renderBadgeSection: 'readonly', badgeRevealTarget: 'readonly', hubBadgeLine: 'readonly', badgeChronikIndex: 'readonly',
