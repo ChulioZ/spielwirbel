@@ -7543,6 +7543,28 @@ a.k-tile:focus-visible,
 /* #1672: the automa's row puts an editable name where a party's label sits. */
 .points-row__automa-name { min-width: 0; font-weight: 700; }
 .points-row__automa-name[aria-invalid="true"] { border-color: var(--danger); }
+.gd-record__cats { flex-basis: 100%; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 16px; font-size: var(--text-sm); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+/* The category grid (#1780, session-points.js): categories down, parties
+   across. The table scrolls sideways inside its own box so a five-player sheet
+   on a phone never widens the dialog; the row heads stick to the left edge. */
+.points-grid { display: grid; gap: 8px; }
+.points-grid__scroll { overflow-x: auto; }
+.points-grid__table { border-collapse: separate; border-spacing: 6px 6px; margin: 0 -6px; }
+.points-grid__table th { font-weight: 700; text-align: left; overflow-wrap: break-word; }
+.points-grid__table thead th { font-size: var(--text-sm); text-align: right; }
+/* min-width keeps a one-word name („Rundenziele") whole: the table squeezes its
+   first column first, and `anywhere` split it mid-word at 375px. */
+.points-grid__table tbody th, .points-grid__table tfoot th { position: sticky; left: 0; background: var(--surface, var(--page-bg)); padding-right: 6px; min-width: 6.5em; max-width: 10em; }
+.points-grid__table .points-row__input { width: 4.75em; }
+.points-grid__total { display: block; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-right: 10px; }
+.points-grid__total--legacy { color: var(--ink-soft); }
+.points-grid__total[data-invalid] { color: var(--danger); }
+.points-grid__sign { justify-self: start; }
+/* The game's „Wertungskategorien" editor (#1780). */
+.score-cats__list { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; gap: 8px; }
+.score-cats__row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; }
+.score-cats__name[aria-invalid="true"] { border-color: var(--danger); }
+.score-cats__add { margin-bottom: 16px; }
 .points-automa__toggle { justify-self: start; margin-top: 4px; }
 
 /* „Wer wie gewertet hat" (#1190): one tile per person behind the game's score —
@@ -12585,6 +12607,10 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
    or not a row holds the record. */
 .member-points__mark { flex: none; display: inline-flex; justify-content: center; width: 1.1em; }
 .member-points__record { color: var(--brand-ink, var(--brand)); }
+.member-points__cats { margin-top: 8px; }
+.member-points__cats > summary { cursor: pointer; font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); min-height: 24px; }
+.member-points__cat-game { margin-top: 8px; }
+.member-points__cat-head { margin: 0; font-size: var(--text-sm); }
 
 /* The Spielerkarte's account tier (#1389): the same label and tiles, all four
    always, under the figures — two a row on a phone, four across from there. */

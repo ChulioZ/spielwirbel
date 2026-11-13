@@ -2399,6 +2399,44 @@ module.exports = function repoContract(repo) {
     assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, other.id)), false, 'false is absence');
   });
 
+  // #1780: the per-category breakdown rides setSessionScores' seventh argument
+  // — undefined keeps it, an empty map clears it to absence — and leaves with
+  // the played game, on the un-play AND the shelf-delete path. A game's
+  // `scoreCategories: []` is absence too.
+  test('setSessionScores stores and clears scoreParts; the played game takes them; scoreCategories [] is absence', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields());
+    const fields = (at, extra = {}) => ({
+      createdAt: at, gameIds: [g.id, other.id], votes: {}, chosenGameId: g.id, chosenAt: at,
+      finished: true, finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true, ...extra,
+    });
+    const session = await repo.createSession(T, round.id, fields('t'));
+    const read = async (sid = session.id) => (await repo.getRound(T, round.id)).sessions.find((x) => x.id === sid);
+
+    const parts = { m1: { a: 40, b: 2 } };
+    const saved = await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, parts);
+    assert.deepEqual(saved.scoreParts, parts);
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 });
+    assert.deepEqual((await read()).scoreParts, parts, 'undefined keeps them');
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, {});
+    assert.equal('scoreParts' in (await read()), false, 'an empty map clears to absence');
+
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, parts);
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('scoreParts' in (await read()), false, 'un-playing the game drops its breakdown');
+
+    const scored = await repo.createSession(T, round.id, fields('u', { scores: { m1: 42 }, scoreParts: parts }));
+    await repo.retireGame(T, round.id, g.id, true);
+    await repo.deleteGame(T, round.id, g.id);
+    assert.equal('scoreParts' in (await read(scored.id)), false, 'deleting the played game drops its breakdown');
+
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [{ id: 'a', name: 'Vögel' }] });
+    assert.deepEqual((await repo.getGame(T, round.id, other.id)).scoreCategories, [{ id: 'a', name: 'Vögel' }]);
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [] });
+    assert.equal('scoreCategories' in (await repo.getGame(T, round.id, other.id)), false, '[] is absence');
+  });
+
   // #1672: the automa rides setSessionScores' sixth argument — undefined keeps
   // it, null deletes the key, an object replaces it — and leaves with the
   // played game exactly like the points do.

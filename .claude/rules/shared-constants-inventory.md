@@ -730,7 +730,13 @@ folds into the profile's account-wide Bestleistungen, what the member page lists
 and what the two record Abzeichen count (injected into `achievements.js` like its
 other siblings) — so a page, a profile and a badge cannot disagree about which
 records a member holds. A hand-written server copy would let the profile name a
-best the member page does not.
+best the member page does not. **#1780 added scoring categories to the same
+file**: `SCORE_CATEGORY_MAX`/`SCORE_CATEGORY_NAME_MAX` and `mergeScoreCategories`
+are what the editor offers and what `PATCH …/games/:gid` stores (via
+`lib/routes/games.js`), and `parseScoreParts`/`consistentScoreParts` are what the
+grid sends and what `PUT …/scores` accepts — a breakdown must add up to its
+total on both sides, so a server copy of the sum rule would 400 a sheet the
+client let through.
 
 **The twenty-ninth is `public/js/simple-mode.js`** (#1646): the „Einfacher
 Modus" feature ids (`SIMPLE_MODE_FEATURES`, grouped as Konto renders them), the

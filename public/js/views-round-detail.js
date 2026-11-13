@@ -1095,6 +1095,13 @@ async function showGameDetail(rid, gameId) {
       ? { icon: 'ti-arrow-back-up', label: t('loan.menuReturn'), kind: 'undoable', run: () => returnLoan(editorCtx) }
       : { icon: 'ti-share', label: t('loan.menuLend'), kind: 'undoable', run: () => openLoanEditor(editorCtx, back) });
   }
+  // Scoring categories (#1780): a game on the shelf, the one a session draws
+  // and scores — not a wish, nor an archived box (which would grow a „…" its
+  // page has never had for a setting nobody can use there).
+  if (isActiveGame(game)) {
+    menuItems.push({ icon: 'ti-list-numbers', label: t('points.categories.menu'), kind: 'edit',
+      run: () => showScoreCategoriesEditor(game, (list) => updateGame({ scoreCategories: list })) });
+  }
   if (game.source) {
     const provider = providerLabel(game.source.provider);
     menuItems.push({ icon: 'ti-unlink', label: t('detail.unlinkProvider'), cls: 'popover__opt--muted', kind: 'destructive', run: async () => {

@@ -38,7 +38,9 @@ function roundFixture() {
     games: [
       { id: 'g1', title: 'Catan', minPlayers: 3, maxPlayers: 4, tagIds: ['t1'], ownerIds: ['m1', 'm2'],
         minPlaytime: 60, maxPlaytime: 120, playtimeOverride: { min: 45, max: 90 }, weight: 2.3,
-        source: { provider: 'bgg', externalId: '13' }, expansions: [{ title: 'Seefahrer', minPlayers: 3, maxPlayers: 4 }] },
+        source: { provider: 'bgg', externalId: '13' }, expansions: [{ title: 'Seefahrer', minPlayers: 3, maxPlayers: 4 }],
+        // #1780: one live category and one removed that an old session still holds.
+        scoreCategories: [{ id: 'ca', name: 'Straßen' }, { id: 'cb', name: '=Alt', removed: true }] },
       { id: 'g2', title: 'Azul', retired: true, tagIds: ['t1', 't2'] },
       { id: 'g3', title: 'Ark Nova', wish: true },
       { id: 'g4', title: 'Cascadia', completed: true, loan: { to: 'Kim', memberId: 'm2', since: '2026-11-03' } },
@@ -51,7 +53,10 @@ function roundFixture() {
         teams: [{ id: 'tm1', personIds: ['m1', 'gu1'] }],
         gameIds: ['g1', 'g2'], chosenGameId: 'g1', finished: true, winnerIds: ['m1', 'gu1'],
         votes: { m1: { g1: { rating: 5 }, g2: { rating: 2 } }, m2: { g1: { rating: 4 } }, gu1: { g1: { rating: 3 } } },
-        scores: { m1: 42, m2: -3, gu1: 40 }, durationMinutes: 110 },
+        scores: { m1: 42, m2: -3, gu1: 40 }, durationMinutes: 110,
+        // Ben's breakdown adds up to his -3; Eva's (41) no longer matches her 40,
+        // so it is not exported — the reading every screen uses.
+        scoreParts: { m2: { ca: -5, cb: 2 }, gu1: { ca: 41 } } },
       { id: 's2', createdAt: '2026-08-09T18:00:00.000Z', memberIds: ['m1', 'm4'], dateOnly: true,
         events: [{ type: 'logged' }], gameIds: ['g1'], chosenGameId: 'g1', finished: true,
         winnerIds: [], ending: 'noWinner', votes: {} },
@@ -194,6 +199,15 @@ test('votes.csv and points.csv carry one row per rating and per score (#1702)', 
     'a negative score stays a number — no formula guard on numbers');
 });
 
+test('point-categories.csv carries one row per category of a breakdown that adds up (#1780)', (t) => {
+  const { dom } = boot(t);
+  const rows = parseCsv(tables(dom)['point-categories.csv']);
+  assert.deepEqual(rows.map((r) => [r.session_id, r.person, r.game, r.category_id, r.category, r.points]), [
+    ['s1', 'Ben, "der Große"', 'Catan', 'ca', 'Straßen', '-5'],
+    ['s1', 'Ben, "der Große"', 'Catan', 'cb', "'=Alt", '2'],
+  ], 'a removed category is still named; a formula-like name is guarded');
+});
+
 test('members.csv and tags.csv survive commas, quotes, newlines and Hangul (#1702)', (t) => {
   const { dom } = boot(t);
   const all = tables(dom);
@@ -250,12 +264,12 @@ test('the filename is a safe slug of the round name plus the local day (#1702)',
   assert.equal(name('금요일'), 'spielwirbel-round-2026-10-20.zip', 'nothing left → a fallback, not "--"');
 });
 
-test('the zip holds the six tables and the complete round as JSON (#1702)', (t) => {
+test('the zip holds the seven tables and the complete round as JSON (#1702, #1780)', (t) => {
   const { dom, round } = boot(t);
   const bytes = Buffer.from(dom.run('roundExportZip(__round)'));
   const files = unzipSync(new Uint8Array(bytes));
   assert.deepEqual(Object.keys(files).sort(),
-    ['games.csv', 'members.csv', 'points.csv', 'round.json', 'sessions.csv', 'tags.csv', 'votes.csv']);
+    ['games.csv', 'members.csv', 'point-categories.csv', 'points.csv', 'round.json', 'sessions.csv', 'tags.csv', 'votes.csv']);
   assert.deepEqual(JSON.parse(strFromU8(files['round.json'])), round);
   assert.ok(strFromU8(files['members.csv']).includes('지민'), 'UTF-8 survives the zip');
 });

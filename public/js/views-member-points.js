@@ -64,7 +64,35 @@ function memberPointsPanel(round, member) {
       list.appendChild(li);
     });
   if (!list.children.length) list.remove();
+  const cats = memberCategoryBestsBlock(round, member.id);
+  if (cats) panel.appendChild(cats);
   return panel;
+}
+
+/* Per-category bests (#1780), folded into a disclosure under the totals: most
+   rounds keep no categories, and a game that does can carry twelve, which would
+   bury the panel's one-line-per-game shape. One group per game, the categories
+   in the round's order. null when the member has none. */
+function memberCategoryBestsBlock(round, mid) {
+  const games = memberCategoryBests(round, mid);
+  if (!games.length) return null;
+  const el = h(`<details class="member-points__cats">
+      <summary>${esc(t('member.pointsCategories'))}</summary>
+    </details>`);
+  games
+    .slice()
+    .sort((a, b) => pointsByTitle(a.game.title, b.game.title))
+    .forEach(({ game, categories }) => {
+      const group = h(`<div class="member-points__cat-game">
+          <p class="member-points__game member-points__cat-head">${esc(game.title)}</p>
+          <ul class="member-points__list">${categories.map((c) => `<li><span class="member-points__row">
+            <span class="member-points__name"><span class="member-points__game">${esc(c.category.name)}</span><span class="member-points__when">${esc(fmtDate(c.session.createdAt))}</span></span>
+            <span class="member-points__value">${esc(fmtCount(c.points))}</span><span class="member-points__mark"></span>
+          </span></li>`).join('')}</ul>
+        </div>`);
+      el.appendChild(group);
+    });
+  return el;
 }
 
 /* The profile's panel, or null. `points` is the payload's `stats.points`:
