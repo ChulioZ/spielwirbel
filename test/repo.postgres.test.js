@@ -621,6 +621,12 @@ if (!process.env.DATABASE_URL) {
     assert.equal(after.games[0].scoreCategories[0].name, '[entfernt]', 'the category redaction did not land');
     const lentLine = (await repo.listActivities(tenant, round.id)).find((a) => a.type === 'game_lent');
     assert.equal(lentLine.to, '[entfernt]', 'the Chronik copy of the borrower did not change as a non-superuser');
+    // #1825: the game's title is copied onto its Chronik lines too (game_added
+    // here, and the game_lent line above), a second RLS-scoped table.
+    const titleLines = (await repo.listActivities(tenant, round.id)).filter((a) => a.gameId === game.id);
+    assert.ok(titleLines.length >= 2);
+    assert.deepEqual([...new Set(titleLines.map((a) => a.title))], ['[entfernt]'],
+      'the Chronik copy of the title did not change as a non-superuser');
 
     // The cross-tenant reads resolve without any tenant scope in hand — that is
     // the half the admin escape legitimately provides.

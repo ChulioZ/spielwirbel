@@ -5711,6 +5711,73 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.getRound(T, other.id)).games[0].title, 'Not yours');
   });
 
+  // #1825: a game title and a member name are COPIED onto Chronik lines and
+  // friend-feed rows, and a takedown that leaves those copies on screen took
+  // nothing down. Lines with an id match by id; the id-less ones (game_deleted,
+  // member_*) and every feed row match by the old text — a same-named twin in
+  // the same round is blanked too, accepted for a takedown (operator, 2026-11-14).
+  test('redactText of a game or member also blanks its Chronik and friend-feed copies (#1825)', async () => {
+    const round = await freshRound({ members: ['Kim'] });
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));
+    const keep = await repo.createGame(T, round.id, gameFields({ title: 'Good title' }));
+    await repo.retireGame(T, round.id, game.id, true);
+    await repo.retireGame(T, round.id, game.id, false);
+    await repo.setGameLoan(T, round.id, game.id, { to: 'Eva', since: '2026-11-03' });
+    await repo.retireGame(T, round.id, keep.id, true);
+    // A deleted twin: its Chronik line has no gameId, only the text.
+    const twin = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));
+    await repo.retireGame(T, round.id, twin.id, true);
+    await repo.deleteGame(T, round.id, twin.id);
+
+    // A member who was deleted and re-added under the same name, then retired.
+    const first = await repo.createMember(T, round.id, { name: 'Bad name' });
+    await repo.deleteMember(T, round.id, first.id);
+    const member = await repo.createMember(T, round.id, { name: 'Bad name' });
+    await repo.retireMember(T, round.id, member.id, true);
+
+    // Feed rows: the owner's own account, a grantee in ANOTHER tenant, and a
+    // stranger with no access to this round whose row happens to match.
+    const mk = async (tenantId) => repo.createUser({
+      email: `${uniq()}@example.com`, username: uniq(), tenantId, createdAt: '2026-11-01T00:00:00.000Z',
+    });
+    const owner = await mk(T);
+    const grantee = await mk(`other-${uniq()}`);
+    const stranger = await mk(`other-${uniq()}`);
+    await repo.createGrant({ roundId: round.id, ownerTenantId: T, userId: grantee.id });
+    await repo.addFeedEvent(owner.id, { type: 'game_added', title: 'Bad title', coverUrl: null });
+    await repo.addFeedEvent(owner.id, { type: 'game_added', title: 'Good title', coverUrl: null });
+    await repo.addFeedEvent(grantee.id, { type: 'session_played', title: 'Bad title', coverUrl: null });
+    await repo.addFeedEvent(grantee.id, { type: 'games_imported', title: 'Bad title', coverUrl: null, count: 3 });
+    await repo.addFeedEvent(stranger.id, { type: 'game_added', title: 'Bad title', coverUrl: null });
+
+    const g = await repo.redactText({ kind: 'game', roundId: round.id, id: game.id }, '[entfernt]');
+    assert.equal(g.previous, 'Bad title', 'the log keeps the row\'s own text');
+    const m = await repo.redactText({ kind: 'member', roundId: round.id, id: member.id }, '[entfernt]');
+    assert.equal(m.previous, 'Bad name');
+
+    const acts = await repo.listActivities(T, round.id);
+    const leaks = acts.filter((a) => a.title === 'Bad title' || a.name === 'Bad name');
+    assert.deepEqual(leaks, [], 'no Chronik line keeps the old text');
+    const gameLines = acts.filter((a) => a.gameId === game.id);
+    assert.ok(gameLines.length >= 4, `the game's own lines are present (${gameLines.length})`);
+    assert.ok(gameLines.every((a) => a.title === '[entfernt]'));
+    assert.equal(gameLines.find((a) => a.type === 'game_lent').to, 'Eva', 'the borrower is a separate redaction');
+    assert.equal(acts.find((a) => a.type === 'game_deleted').title, '[entfernt]', 'the id-less twin by text');
+    assert.deepEqual(
+      acts.filter((a) => /^member_/.test(a.type) && a.name === '[entfernt]').map((a) => a.type).sort(),
+      ['member_added', 'member_added', 'member_deleted', 'member_retired'],
+    );
+    assert.ok(acts.some((a) => a.gameId === keep.id && a.title === 'Good title'), 'another game is untouched');
+
+    const feed = await repo.listFeedEvents([owner.id, grantee.id]);
+    assert.deepEqual(feed.filter((e) => e.title === 'Bad title'), [], 'no friend sees the old title');
+    assert.equal(feed.filter((e) => e.title === '[entfernt]').length, 3);
+    assert.ok(feed.some((e) => e.title === 'Good title'), 'another title is untouched');
+    assert.equal(feed.find((e) => e.type === 'games_imported').count, 3, 'only the text moves');
+    assert.equal((await repo.listFeedEvents([stranger.id]))[0].title, 'Bad title',
+      'an account with no access to the round is out of scope');
+  });
+
   test('logModeration appends and listModeration returns newest first', async () => {
     const a = await repo.logModeration({ action: 'takedown', target: '/uploads/a.jpg', reason: 'notice 1', at: '2026-07-20T10:00:00.000Z' });
     assert.match(a.id, /^[0-9a-f]{16}$/);
