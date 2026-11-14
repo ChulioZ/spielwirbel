@@ -4962,6 +4962,17 @@ a.stats-games__name { color: inherit; text-decoration: none; }
 a.stats-games__name:hover,
 a.stats-games__name:focus-visible { text-decoration: underline; }
 .stats-games__score { font-size: var(--text-sm); }
+/* Discover's longer lists (#1732): the card's control sits on its own line
+   under the card's content, and a top-ten row carries its place like the
+   card's own rows do (same column width as .stats-card__rank's numerals). */
+.stats-card .stats-card__expand { flex: 1 0 100%; align-self: flex-start; text-align: start; margin-top: 8px; }
+.stats-games__rank {
+  flex: 0 0 22px;
+  text-align: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
 /* On a phone the list docks to the bottom edge as a sheet (#1560), in every
    design: Klassisch's editors are otherwise centred dialogs below 860px, so
    this is scoped to this one editor and no other Klassisch editor moves. 639px

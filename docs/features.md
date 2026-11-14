@@ -1355,6 +1355,16 @@ What the app does, in detail. For a short overview see the
   bars, each sized as a share of the leader's sessions. From 1280px the
   screen widens past the reading measure, so the cards run five across (three
   in Die Brücke and Das Programmheft) instead of leaving the margins empty.
+  On the `/entdecken` screen only, two controls go deeper (issue #1732). The
+  shelf, all-time, best-rated and three name cards get „Mehr anzeigen", which
+  opens their top ten places — the same floors, the same shared places, never
+  padded, and no button when nothing lies beyond what the card shows. The week
+  and month cards get „Frühere Sieger": every completed week's or month's most
+  played game, newest first, named by its date range or month — no session
+  count, all tied games on a tie, and a period nobody cleared the card's
+  minimum in left out. The history is recomputed from the sessions on every
+  rebuild rather than stored, so raising a floor can remove an old winner. The
+  landing page and the home tile stay at three places with neither control.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

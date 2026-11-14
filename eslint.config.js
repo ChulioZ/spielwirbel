@@ -35,7 +35,7 @@ const frontendGlobals = {
   applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
-  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtLoanDay: 'readonly', fmtMoney: 'readonly',
+  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtWeekKey: 'readonly', fmtLoanDay: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
   // reorder-drag.js (issue #1180) — the one wrapper around vendor/sortable.min.js

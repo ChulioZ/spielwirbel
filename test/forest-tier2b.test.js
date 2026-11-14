@@ -115,7 +115,11 @@ function boot(t, design) {
   dom.set('isDemoAccount', () => false);
   dom.set('currentUserId', () => 'u-ada');
   dom.run('setContactAvailable(true)');
-  dom.set('fetch', async () => ({ ok: true, json: async () => JSON.parse(JSON.stringify(PUBLIC)) }));
+  // The golden predates Discover's longer lists (#1732): that route answers as
+  // an instance without them would, so the snapshot stays the pre-#1732 screen.
+  dom.set('fetch', async (url) => (String(url) === '/api/stats/public/more'
+    ? { ok: false, status: 404, json: async () => ({}) }
+    : { ok: true, json: async () => JSON.parse(JSON.stringify(PUBLIC)) }));
   dom.set('accountApi', async (method, p) => {
     if (p === '/friends') {
       return {

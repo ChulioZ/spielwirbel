@@ -209,6 +209,11 @@ lib/
                      games that could reach a podium from the provider — never
                      from the user-typed title — and caches the payload for
                      the route
+  public-stats-more.js
+                     Discover's past-winners lists (issue #1732): buckets every
+                     completed week's and month's finished plays on the Berlin
+                     calendar and names each period's most played game(s),
+                     under the live cards' own floors — recomputed, never stored
   public-stats-ranking.js
                      how those lists are numbered (issue #1648): equal shown
                      values share a place (1, 1, 3), everything tied with the

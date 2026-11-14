@@ -1883,6 +1883,11 @@ I18N.it = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': 'Punteggio {score}',
+  'stats.showMore': 'Mostra altro',
+  'stats.pastWinners': 'Vincitori precedenti',
+  'stats.pastWeeksTitle': 'I più giocati – settimane precedenti',
+  'stats.pastMonthsTitle': 'I più giocati – mesi precedenti',
+  'stats.topTitle': '{label} · Top 10',
   'stats.ratedPlaysOne': '{rated} · {n} sessione',
   'stats.ratedPlays': '{rated} · {n} sessioni',
   'stats.counter.players': 'giocatori',

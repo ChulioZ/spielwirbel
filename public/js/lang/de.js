@@ -1935,6 +1935,11 @@ I18N.de = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': 'Score {score}',
+  'stats.showMore': 'Mehr anzeigen',
+  'stats.pastWinners': 'Frühere Sieger',
+  'stats.pastWeeksTitle': 'Meistgespielt – frühere Wochen',
+  'stats.pastMonthsTitle': 'Meistgespielt – frühere Monate',
+  'stats.topTitle': '{label} · Top 10',
   // The best-rated line with the plays that lifted its score (#1329).
   // {rated} is the stats.ratedOne/stats.rated line above, already
   // inflected for the rating count; {n} is the play count.

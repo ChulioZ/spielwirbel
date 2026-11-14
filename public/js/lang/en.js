@@ -1944,6 +1944,11 @@ I18N.en = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': 'Score {score}',
+  'stats.showMore': 'Show more',
+  'stats.pastWinners': 'Past winners',
+  'stats.pastWeeksTitle': 'Most played – past weeks',
+  'stats.pastMonthsTitle': 'Most played – past months',
+  'stats.topTitle': '{label} · Top 10',
   'stats.ratedPlaysOne': '{rated} · {n} session',
   'stats.ratedPlays': '{rated} · {n} sessions',
   'stats.counter.players': 'players',

@@ -142,12 +142,12 @@ function statsEntries(stats) {
 /* A list of cards with ONE ⓘ per topic: the favourites carry the score topic
    too, and four identical buttons on one grid would be noise — the first card
    that has it explains the number for every card after it. */
-function statsCardsHtml(entries) {
+function statsCardsHtml(entries, more = null) {
   const explained = new Set();
   return entries.map(([p, list]) => {
     const withInfo = !!p.info && !explained.has(p.info);
     if (withInfo) explained.add(p.info);
-    return statsCard(p, list, withInfo);
+    return statsCard(p, list, withInfo, statsMoreButton(p, more));
   }).join('');
 }
 
@@ -272,12 +272,12 @@ function wireStatsGames(root, stats) {
 // payload from before ranks existed — its position in the list.
 const placeOf = (e, index) => (Number.isInteger(e.rank) ? e.rank : index + 1);
 
-function statsCard(podium, list, withInfo = !!podium.info) {
+function statsCard(podium, list, withInfo = !!podium.info, action = '') {
   const [entry, ...rest] = list;
   const label = `<span class="stats-card__label"><i class="ti ${podium.icon}" aria-hidden="true"></i>${esc(podium.label ? podium.label(entry) : t('stats.' + podium.key))}${withInfo ? ` ${infoButton(podium.info)}` : ''}</span>`;
   // A design owns its layout: Das Programmheft draws its „Meistgespielt" cards
   // as a bar list (P14.5), every other design keeps the card.
-  if (podium.bar && designIs('programmheft')) return statsBarCard(podium, list, label);
+  if (podium.bar && designIs('programmheft')) return statsBarCard(podium, list, label, action);
   const cover = entry.image
     ? `<img class="stats-card__cover" src="${esc(coverUrl(entry.image, COVER_THUMB))}" alt="" loading="lazy" />`
     : '<span class="stats-card__cover stats-card__cover--none" aria-hidden="true"></span>';
@@ -298,7 +298,7 @@ function statsCard(podium, list, withInfo = !!podium.info) {
         ${label}
         ${statsTitle(entry, 'stats-card__title')}
         ${statsValue(podium, entry, 'stats-card__value', 0)}
-      </span>${more}
+      </span>${more}${action}
     </li>`;
 }
 
@@ -308,7 +308,7 @@ function statsCard(podium, list, withInfo = !!podium.info) {
    bar is always full and a list reads as a comparison, not as absolute
    magnitudes. `--stats-share` is written inline and is data only: a design
    reads it and never sets it (.claude/rules/inline-custom-properties-cannot-be-overridden.md). */
-function statsBarCard(podium, list, label) {
+function statsBarCard(podium, list, label, action = '') {
   const top = list[0][podium.bar] || 1;
   const rows = list.map((e, i) => {
     const share = Math.round((e[podium.bar] / top) * 1000) / 1000;
@@ -323,7 +323,7 @@ function statsBarCard(podium, list, label) {
   return `
     <li class="stats-card stats-card--bars">
       ${label}
-      <ol class="stats-card__bars">${rows}</ol>
+      <ol class="stats-card__bars">${rows}</ol>${action}
     </li>`;
 }
 
@@ -335,7 +335,7 @@ function statsBarCard(podium, list, label) {
  * its title is the h1 already rendered by the screen and this returns h2
  * sub-headings; on the landing page it is one section among several.
  */
-function renderPublicStats(stats) {
+function renderPublicStats(stats, more = null) {
   if (!publicStatsHasContent(stats)) return null;
 
   const counters = stats.counters
@@ -350,7 +350,7 @@ function renderPublicStats(stats) {
 
   const entries = statsEntries(stats);
   const cards = entries.length
-    ? `<ul class="stats-cards">${statsCardsHtml(entries)}</ul>`
+    ? `<ul class="stats-cards">${statsCardsHtml(entries, more)}</ul>`
     : '';
 
   // The provenance note is not decoration: the podiums cover only
@@ -364,7 +364,117 @@ function renderPublicStats(stats) {
   // and forget the ⓘ (the landing page being the one that would hurt).
   wireInfoButtons(el);
   wireStatsGames(el, stats);
+  if (more) wireStatsMore(el, more);
   return el;
+}
+
+/* ------------------ /entdecken's longer lists (#1732) --------------------- */
+
+/* GET /api/stats/public/more: the top ten places of six cards and every past
+   week's and month's winner. Fetched by /entdecken only, once per page load,
+   and a 404 (feature off, or not built yet) simply means no buttons. */
+let publicStatsMorePromise = null;
+function loadPublicStatsMore() {
+  if (!publicStatsMorePromise) {
+    publicStatsMorePromise = fetch('/api/stats/public/more')
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+  }
+  return publicStatsMorePromise;
+}
+
+/* The week and month cards get past winners instead of a top ten; each names
+   its period with the formatter for that key (a Monday's date, a month). */
+const STATS_PAST = {
+  playedWeek: { kind: 'week', label: (k) => fmtWeekKey(k), title: 'stats.pastWeeksTitle' },
+  playedMonth: { kind: 'month', label: (k) => fmtMonthKey(k), title: 'stats.pastMonthsTitle' },
+};
+
+// A card's longer list, or [] — game podiums under `games`, favourites under
+// `names`, exactly as the main payload splits them. The server publishes a key
+// only when it holds more than the card, so presence is the whole test.
+function statsMoreList(podium, more) {
+  const block = podium.type ? more.names : more.games;
+  return statsList(block && block[podium.key]);
+}
+function statsPastList(podium, more) {
+  const past = STATS_PAST[podium.key];
+  const list = past && more.pastWinners && more.pastWinners[past.kind];
+  return Array.isArray(list) ? list.filter((p) => p && Array.isArray(p.games) && p.games.length) : [];
+}
+
+// The card's extra control, or '' — never on a card with nothing behind it.
+function statsMoreButton(podium, more) {
+  if (!more) return '';
+  const past = !!STATS_PAST[podium.key];
+  const has = past ? statsPastList(podium, more).length : statsMoreList(podium, more).length;
+  if (!has) return '';
+  const label = t(past ? 'stats.pastWinners' : 'stats.showMore');
+  return `<button type="button" class="link-btn stats-card__expand" data-stats-more="${esc(podium.key)}" aria-haspopup="dialog" aria-expanded="false">${esc(label)}</button>`;
+}
+
+function wireStatsMore(root, more) {
+  root.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-stats-more]');
+    if (!btn || !root.contains(btn)) return;
+    const key = btn.dataset.statsMore;
+    const podium = [...STATS_PODIUMS, ...STATS_FAVOURITES].find((p) => p.key === key);
+    if (podium) openStatsMore(btn, podium, more);
+  });
+}
+
+// One cover cell, decorative (the title beside it is the name).
+const statsMoreCover = (g) => (g && g.image
+  ? `<img class="stats-games__cover" src="${esc(coverUrl(g.image, COVER_THUMB))}" alt="" loading="lazy" />`
+  : '<span class="stats-games__cover stats-games__cover--none" aria-hidden="true"></span>');
+
+/* The rows: a top ten carries the card's own rank and value line; a past
+   winner its period and the game(s) — every tied game, no count. A favourite
+   links its name to BGG as on the card. */
+function statsMoreRows(podium, more) {
+  if (STATS_PAST[podium.key]) {
+    const past = STATS_PAST[podium.key];
+    return statsPastList(podium, more).map((p) => `
+      <li class="stats-games__row">
+        ${statsMoreCover(p.games[0])}
+        <span class="stats-games__body">
+          <span class="stats-games__score muted">${esc(past.label(p.period))}</span>
+          ${p.games.map((g) => statsTitle(g, 'stats-games__name')).join('')}
+        </span>
+      </li>`).join('');
+  }
+  const asTitle = (n) => (podium.type ? { title: n.name, image: null, ...n, url: bggLinkUrl(podium.type, n.bggId) } : n);
+  return statsMoreList(podium, more).map(asTitle).map((e, i) => `
+      <li class="stats-games__row" value="${placeOf(e, i)}">
+        <span class="stats-games__rank">${placeOf(e, i)}</span>
+        ${podium.type ? '' : statsMoreCover(e)}
+        <span class="stats-games__body">
+          ${statsTitle(e, 'stats-games__name')}
+          <span class="stats-games__score muted">${esc(podium.line(e))}</span>
+        </span>
+      </li>`).join('');
+}
+
+/* Through openEditor like the favourites' games (#1560) — the same variant, so
+   every design's popover and the phone sheet already style it — read-only. */
+function openStatsMore(btn, podium, more) {
+  const past = STATS_PAST[podium.key];
+  const title = past ? t(past.title) : t('stats.topTitle', { label: t('stats.' + podium.key) });
+  btn.setAttribute('aria-expanded', 'true');
+  openEditor(btn, 'stats-games', title, (el) => {
+    const bare = el.classList.contains('popover') && !el.querySelector('.popover__head');
+    if (bare) {
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', title);
+    }
+    const body = h(`<div class="stats-games stats-games--more">
+        ${bare ? `<h2 class="stats-games__title">${esc(title)}</h2>` : ''}
+        <ol class="stats-games__list">${statsMoreRows(podium, more)}</ol>
+      </div>`);
+    el.appendChild(body);
+    const first = body.querySelector('a, button');
+    return () => { if (first) first.focus(); };
+  }, () => btn.setAttribute('aria-expanded', 'false'));
 }
 
 /* ------------------------------- /entdecken -------------------------------- */
@@ -446,8 +556,10 @@ async function showEntdecken() {
       <img class="lobby-head__bgg" src="/icons/powered-by-bgg.png" width="900" height="264" alt="Powered by BGG" />` : ''}
     </div>`));
 
-  const stats = await loadPublicStats();
-  const block = renderPublicStats(stats);
+  // The longer lists (#1732) only here, never on the landing page or the home
+  // tile — fetched beside the main payload so the buttons render with the cards.
+  const [stats, more] = await Promise.all([loadPublicStats(), loadPublicStatsMore()]);
+  const block = renderPublicStats(stats, more);
   if (block) {
     app.appendChild(block);
   } else {
