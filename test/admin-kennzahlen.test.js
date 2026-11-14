@@ -74,7 +74,7 @@ const STATUS = (over = {}) => ({
       accountsSimpleModeAll: 1, accountsSimpleModeAny: 5,
       accountsSimpleModeHidden: Object.fromEntries(SIMPLE_MODE_FEATURES.map((f) => [f, f === 'trophies' ? 4 : 2])),
       funnel: {
-        started: 28, rated: 18, closed: 22, chosen: 20, played: 12, result: 9, cancelled: 3,
+        started: 28, rated: 18, closed: 22, chosen: 20, played: 12, result: 9, cancelled: 3, photo: 3,
       },
       // Sums to roundsTotal, which the tile's own test asserts.
       roundsByFinished: { none: 5, one: 3, many: 2 },
@@ -89,10 +89,10 @@ const STATUS = (over = {}) => ({
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
     demo: { live: 1, max: 5 },
     mail: { sent: 2, limit: 200 },
-    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7 },
+    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7, photosPerTenant: 5 },
     ...over,
   },
-  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20, messagesPerTenant: 20000 },
+  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20, messagesPerTenant: 20000, photosPerTenant: 500 },
   runtime: { node: 'v22.0.0' },
 });
 
@@ -283,6 +283,7 @@ test('Kontingente keeps its graded pill and moves its three ceilings onto lines'
     ['Spiele/Runde', '12 / 200'],
     ['Tags/Runde', '4 / 20'],
     ['Chat-Nachrichten/Konto', '7 / 20000'],
+    ['Session-Fotos/Konto', '5 / 500'],
   ]);
 });
 
@@ -381,6 +382,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['aus Myludo', '2', '25 %', 1],
         ['gestartet (ohne Split-Eltern)', '28', '93 %', 0],
         ['als gespielt markiert', '12', '43 %', 1],
+        ['mit Foto', '3', '25 %', 2],
         ['von ≥2 bewertet', '18', '64 %', 1],
         ['Abstimmung beendet', '22', '79 %', 1],
         ['Spiel gewählt', '20', '71 %', 1],
@@ -419,15 +421,23 @@ test('a nested line is a share of the line directly above it, not of the card', 
      line visually but divided by the card total fails here by name. The
      „gespielte Sessions" bands sit under a label with no figure and divide by
      the card's population — a partition of Runden. */
+  // `above[d]` is the figure of the latest line at depth d, so a line at depth
+  // d + 1 is checked against it — two levels since #1774's „mit Foto" under
+  // „als gespielt markiert".
+  let nested = 0;
   for (const card of groups(doc)) {
-    let parent = Number(card.total);
+    const above = [];
     for (const [label, n, share, depth] of card.lines) {
-      if (depth === 0) { if (n !== '') parent = Number(n); else parent = Number(card.total); continue; }
+      above[depth] = n !== '' ? Number(n) : Number(card.total);
+      if (depth === 0) continue;
       if (share === '' || share === '—') continue;
+      const parent = above[depth - 1];
       assert.equal(share, `${Math.round((100 * Number(n)) / parent)} %`,
         `${card.title} › ${label}: not a share of the line above it (${parent})`);
+      if (depth === 2) nested += 1;
     }
   }
+  assert.ok(nested >= 1, 'no depth-2 line was checked — the fixture lost „mit Foto"');
 });
 
 test('no adoption figure carries a verdict pill', async (t) => {

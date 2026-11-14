@@ -381,7 +381,7 @@
     // ceilings are inert (.claude/rules/per-tenant-quotas.md), so the peaks are
     // shown without a verdict that implies a refusal that cannot happen.
     const peakVerdict = s.quotas.enforced
-      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound', 'messagesPerTenant']
+      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound', 'messagesPerTenant', 'photosPerTenant']
         .map((k) => capVerdict(m.peaks[k], s.quotas[k]))
         .reduce((worst, v) => (VERDICT_RANK[v] > VERDICT_RANK[worst] ? v : worst), 'ok')
       : 'warn';
@@ -392,6 +392,7 @@
         ['Spiele/Runde', `${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`],
         ['Tags/Runde', `${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`],
         ['Chat-Nachrichten/Konto', `${m.peaks.messagesPerTenant} / ${s.quotas.messagesPerTenant}`],
+        ['Session-Fotos/Konto', `${m.peaks.photosPerTenant} / ${s.quotas.photosPerTenant}`],
       ]]);
 
     // The runtime the answering process is on (#977). Neutral pill, deliberately:
@@ -617,6 +618,9 @@
         line('aus Myludo', a.sessionsImportedMyludo, a.sessionsImported, 1),
         line('gestartet (ohne Split-Eltern)', f.started, sessions),
         line('als gespielt markiert', f.played, f.started, 1),
+        // A share of „gespielt", one level deeper: only a played session can
+        // carry a photo (#1774).
+        line('mit Foto', f.photo, f.played, 2),
         line('von ≥2 bewertet', f.rated, f.started, 1),
         line('Abstimmung beendet', f.closed, f.started, 1),
         line('Spiel gewählt', f.chosen, f.started, 1),
@@ -1189,7 +1193,9 @@
     box.replaceChildren();
 
     const pairs = [];
-    if (out.owner) pairs.push(['Spiel', out.owner.gameTitle], ['Runde', out.owner.roundName]);
+    // A session photo (#1774) names its round and session, not a game.
+    if (out.owner && out.owner.kind === 'session') pairs.push(['Session-Foto', out.owner.sessionId], ['Runde', out.owner.roundName]);
+    else if (out.owner) pairs.push(['Spiel', out.owner.gameTitle], ['Runde', out.owner.roundName]);
     if (out.round) pairs.push(['Runde', out.round.roundName]);
     pairs.push(['Tenant', out.tenantId || '—']);
     pairs.push(['Konten', out.users.length

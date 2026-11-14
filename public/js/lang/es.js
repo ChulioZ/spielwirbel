@@ -428,6 +428,7 @@ I18N.es = {
   'chronik.count': '{n} sesiones desde {month}',
   'chronik.seatedOne': '{n} en la mesa',
   'chronik.seated': '{n} en la mesa',
+  'chronik.hasPhoto': 'con foto',
   'chronik.sessionNo': 'Sesión n.º {n}',
   'chronik.wonOne': 'ganó {names}',
   'chronik.won': 'ganaron {names}',
@@ -1633,6 +1634,20 @@ I18N.es = {
 
   'result.crumb': 'Resultado',
   'result.title': 'Resultado',
+  // The evening's photo (#1774).
+  'result.photo.add': 'Añadir foto',
+  'result.photo.replace': 'Reemplazar foto',
+  'result.photo.remove': 'Quitar foto',
+  'result.photo.alt': 'Foto de esta sesión',
+  'result.photo.hint': 'Solo con el consentimiento de todas las personas que aparecen.',
+  'result.photo.removeConfirm': '¿Quitar la foto? Se borrará y no se podrá recuperar.',
+  'result.photo.toast.saved': 'Foto guardada',
+  'result.photo.toast.removed': 'Foto quitada',
+  'result.photo.err.tooLarge': 'La foto es demasiado grande (máximo {mb} MB).',
+  'result.photo.err.tooLargeServer': 'La foto es demasiado grande.',
+  'result.photo.err.invalid': 'Este archivo no se puede usar como foto.',
+  'result.photo.err.quota': 'Tus grupos han alcanzado el número máximo de fotos. Quita una foto antigua para hacer sitio.',
+  'result.photo.err.generic': 'No se pudo guardar la foto.',
   'result.subtitleOne': '{when} · {n} juego',
   'result.subtitle': '{when} · {n} juegos',
   // The winner spotlight's kicker (#897). Deliberately names no entity: „Spiel

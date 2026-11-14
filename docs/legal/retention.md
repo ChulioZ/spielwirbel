@@ -6,7 +6,7 @@ den Prüf-Rhythmus fest; die veröffentlichte Datenschutzerklärung
 Frist, die hier steht, aber nicht gelebt oder nicht veröffentlicht wird, ist
 schlimmer als keine.
 
-**Stand:** 2026-11-13
+**Stand:** 2026-11-14
 
 ## Grundsatz
 
@@ -20,6 +20,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Datenbestand | Frist | Mechanismus |
 |---|---|---|
 | Runden-/Spiel-/Mitgliedsdaten, Cover | bis Löschung durch Nutzer bzw. Kontolöschung | Nutzeraktion / `eraseAccount` (#273) |
+| **Session-Foto (#1774)** — die gespeicherte Bilddatei, `vvt.md` Zeile 4 | bis es entfernt **oder ersetzt** wird (das ersetzte Objekt wird im selben Vorgang gelöscht), bis seine Session gelöscht wird, bis das gespielte Spiel der Session gelöscht oder in eine andere Runde verschoben wird (das Ergebnis der Session fällt dann weg, das Foto mit ihm), bis zur Löschung der Runde, bis zur betreiberseitigen Entfernung nach einer Meldung — und in jedem Fall bis Kontolöschung. Kein eigener Aufbewahrungslauf: das Foto hängt an der Session | Nutzeraktion / `deleteSession` / `deleteGame` / `deleteRound` / `takedownImage` / `eraseAccount` |
 | **Profilbild eines Kontos (#841)** — die gespeicherte Bilddatei, `vvt.md` Zeile 4 | bis der Nutzer es entfernt **oder durch ein neues ersetzt** (das ersetzte Objekt wird im selben Vorgang gelöscht), bis zur betreiberseitigen Entfernung nach einer Meldung (Zeile Moderation) — und in jedem Fall bis Kontolöschung. Kein eigener Aufbewahrungslauf: das Bild hängt am Konto und geht mit ihm | Nutzeraktion / `takedownImage` / `eraseAccount` |
 | Konten — **mit allen am Konto hängenden Feldern**: Anmeldedaten samt zuletzt bestätigter Fassung der Nutzungsbedingungen (`vvt.md` Zeile 2), verknüpfter BoardGameGeek-Nutzername (Zeile 15), eingerichtete Passkeys (#418 — einzeln in den Kontoeinstellungen entfernbar, sonst mit dem Konto), Benachrichtigungs-Schalter und Zeitpunkt der letzten Benachrichtigung (Zeile 18) | bis Kontolöschung — seit #419 vom Nutzer selbst in den Kontoeinstellungen auslösbar, alternativ betreiberseitig auf formlose Anfrage | `eraseAccount` (#273/#419) |
 | **Nie bestätigte Konten** (#1544, `vvt.md` Zeile 2) — Konten, deren E-Mail-Adresse nie bestätigt wurde: Adresse, Nutzername, Passwort-Hash und der bei der Registrierung angelegte Mandant. Ein solches Konto kann sich nicht anmelden und daher keine Inhalte anlegen; es hielt aber Adresse und Nutzername dauerhaft belegt | **7 Tage** ab Registrierung (`createdAt`, `UNVERIFIED_ACCOUNT_TTL_MS`) — bewusst nicht ab dem Ablauf des aktuellen Bestätigungslinks, damit ein erneuter Versand die Frist nicht beliebig verlängert. Keine Vorab-Benachrichtigung: die Adresse ist unbestätigt, und sie anzuschreiben wäre genau der Versand, den die Begrenzung der Registrierungs-Mails vermeidet | **automatisch** (seit #1544): 15-Minuten-Sweep `purgeUnverifiedAccounts` in `lib/scheduler.js`, ruft `eraseAccount`; Demo-Konten sind ausgenommen (eigene Frist, Zeile unten) |
@@ -46,7 +47,7 @@ Bild-Objekte ab — `.claude/rules/deletion-paths-must-free-cover-objects.md`).
 | Gespeicherte Kontakt-Meldungen (Datenbank `contact_notices`, #272) | wie Postfach: Allgemeine Anfragen nach Bearbeitung, DSA-Meldungen **3 Jahre** ab Jahresende der Entscheidung | manuell (DB), Jahresprüfung |
 | **Moderations-Log-Einträge mit personenbezogenen Daten** (E-Mail-Adressen, redigierte Texte als `previous`-Nachweis) | **3 Jahre ab Ende des Jahres der Maßnahme** | **automatisch** (Scheduler-Job `purgeModerationLog`, #311); Jahresprüfung nur noch zur Kontrolle (unten) |
 | Löschnachweise (`eraseAccount`-Einträge — ohne E-Mail-Adresse by design): Aktionen **`user_erased`** (betreiberseitig, #273) **und `account_deleted`** (Selbstbedienung, #419) | dauerhaft (Art. 17 Abs. 3 lit. b/e DSGVO) | — |
-| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf). **Hochgeladene Bilder (Cover, Profilbilder) in Cloudflare R2 werden nicht gesichert** (Betreiber-Entscheidung 2026-11-12, `toms.md`). Eine gelöschte Bilddatei überdauert daher in keiner Sicherung | automatisch |
+| **Backups** (Railway Managed Postgres, eingerichtet 2026-08-04) | **Point-in-Time-Recovery: bis zu ca. 4 Wochen** (rollierend die letzten 4 wöchentlichen Vollsicherungen; plattformseitig nicht konfigurierbar); **Volume-Sicherungen: 6 Tage** (täglicher Lauf). **Hochgeladene Bilder (Cover, Session-Fotos, Profilbilder) in Cloudflare R2 werden nicht gesichert** (Betreiber-Entscheidung 2026-11-12, `toms.md`). Eine gelöschte Bilddatei überdauert daher in keiner Sicherung | automatisch |
 
 **Backups und Art. 17 (Löschung).** Eine Löschung wirkt im Live-Bestand sofort
 und vollständig. In den Sicherungen bleiben die Daten dagegen bis zum Ablauf des

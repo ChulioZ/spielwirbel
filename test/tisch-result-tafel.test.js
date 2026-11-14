@@ -107,7 +107,8 @@ test('Klassisch keeps its blocks and its row cells, and ends on the shared foot'
   const [side, list] = screen(dom).children;
   // `.badge-moment` (#1388) sits before the table, hidden while it is empty.
   assert.deepEqual(kids(side), ['page-head page-head--result', 'result-people', 'badge-moment', 'tisch-slot', 'result-foot']);
-  assert.deepEqual(kids(list), ['tafel', 'tisch-bar']);
+  // The evening's photo (#1774) under the ranking, hidden while it has none.
+  assert.deepEqual(kids(list), ['tafel', 'tisch-bar', 'session-photo']);
   // „Teilen" left the head for the foot.
   const head = screen(dom).querySelector('.page-head--result');
   assert.equal(head.children.length, 1);

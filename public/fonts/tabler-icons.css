@@ -32,6 +32,7 @@
 .ti-ban::before { content: "\ea2e"; }
 .ti-bell::before { content: "\ea35"; }
 .ti-tornado::before { content: "\ece2"; }
+.ti-camera-plus::before { content: "\ec3b"; }
 .ti-cards::before { content: "\f510"; }
 .ti-trophy::before { content: "\eb45"; }
 .ti-confetti::before { content: "\ee46"; }

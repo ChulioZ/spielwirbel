@@ -21,6 +21,7 @@ comment is the authoritative list. The table mirrors it, in two groups:
 | dismissed recommendations per round | `lib/routes/recommendations.js` | `quota_dismissed` | #782 |
 | saved session filters per round | `lib/routes/saved-filters.js` | `quota_filters` | #1328 |
 | chat messages per tenant | `lib/routes/round-messages.js` (a grantee's message counts against the OWNER's tenant, where it is stored) | `quota_messages` | #1781 |
+| session photos per tenant — only a FIRST photo counts against it; replacing one never does, so a tenant at the cap can still swap a picture | `lib/routes/session-photo.js` (a grantee's photo counts against the OWNER's tenant) | `quota_photos` | #1774 |
 | one author's chat messages per tenant — the share of the cap above any single account may hold, so one invitee cannot exhaust the owner's | `lib/routes/round-messages.js` | `quota_messages_author` | #1781 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |

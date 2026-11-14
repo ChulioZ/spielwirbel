@@ -45,6 +45,17 @@ Note the two shapes of `game.image` do **not** need a check at the call site:
 keeps hotlinked provider covers (#172) safe by construction — see
 `.claude/rules/provider-cover-hotlinking.md`.
 
+**Session photos (#1774) widened "rows that may carry an image" past games.**
+A session's `photo` is a stored path too, and sessions are deleted by more than
+`deleteSession`: `scrubGames` drops every session left with no games and resets
+the result of one whose played game left, so **`deleteGame`, `deleteGames`,
+`acquireWishExpansion` and `moveGames` all free photos** (`photos` on their
+return; `deleteGames` folds them into `images`). The un-played case is the easy
+one to miss — the session survives, so it does not look like a deletion. Every
+enumerator of referenced paths has to include them as well: `referencedImages`
+without photos would offer live photos to the operator as deletable orphans.
+`test/support/repo-contract.js` („session photos") pins each one on both backends.
+
 **Out of scope of #280:** objects already orphaned by past round deletions. A
 sweeper would need to list the bucket and diff it against every referenced path;
 worth its own issue only if the bucket turns out to hold a meaningful number.

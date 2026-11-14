@@ -4,7 +4,7 @@ Internal record (German — it addresses a German supervisory authority). Every
 item is implemented in this repository or the hosting setup; keep it truthful —
 list nothing that is not actually in place.
 
-**Stand:** 2026-11-12
+**Stand:** 2026-11-14
 
 ## Verschlüsselung & Transport
 
@@ -51,7 +51,11 @@ list nothing that is not actually in place.
   Trennung: Ein Objekt wird nur an den besitzenden Mandanten ausgeliefert bzw.
   an ein Konto mit einer Freigabe für die referenzierende Runde
   (`lib/upload-access.js`). Zuvor genügte ein beliebig gültiges Konto, sodass
-  ein *bekannter* Schlüssel mandantenübergreifend lesbar war.
+  ein *bekannter* Schlüssel mandantenübergreifend lesbar war. Session-Fotos
+  (#1774) folgen genau dieser Regel (besitzender Mandant oder Freigabe der
+  Runde); `test/session-photo.test.js` prüft beide Richtungen, einschließlich
+  eines fremden Mandanten, einer widerrufenen Freigabe und des geteilten
+  Abstimmungslinks.
   Konto-Profilbilder sind bewusst für jedes angemeldete Konto lesbar
   (Datenschutzerklärung §16).
 
@@ -104,10 +108,12 @@ list nothing that is not actually in place.
     Die einzige tragfähige Variante, wöchentliche gesperrte Kopien in einem
     zweiten Bucket, wurde vorgeschlagen und nicht umgesetzt.
   - *Hingenommenes Risiko:* Ein Fehler im Löschpfad oder ein missbrauchter
-    Schlüssel kann hochgeladene Cover und Profilbilder **unwiederbringlich**
+    Schlüssel kann hochgeladene Cover, Session-Fotos und Profilbilder **unwiederbringlich**
     löschen. Die zugehörigen Datensätze in der Datenbank sind von den oben
     genannten Sicherungen abgedeckt. Verloren wären nur die Bilddateien, die
-    Nutzer erneut hochladen können. Über einen Anbieter verlinkte Cover liegen
+    Nutzer erneut hochladen können — ein Session-Foto allerdings nur, solange
+    das Original noch auf ihrem Gerät liegt; das ist das Risiko, das #1774 dieser
+    Abwägung hinzufügt. Über einen Anbieter verlinkte Cover liegen
     gar nicht in R2.
   - *Folge für Art. 17:* Eine gelöschte Bilddatei ist sofort endgültig weg. Für
     Uploads gibt es keinen Backup-Vorbehalt (`retention.md`).

@@ -142,6 +142,9 @@ lib/
                      INSIDE the ceiling (never cropped), EXIF/GPS stripped, plus
                      the "already converted?" predicate the operator backfill
                      presses against (issue #867)
+  session-photo.js   re-encodes an uploaded session photo to a bounded webp —
+                     EXIF orientation applied first, then every tag (GPS
+                     included) dropped (issue #1774)
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
@@ -520,6 +523,8 @@ lib/
                                              user picked, in one write — #1758)
     session-import.js …/sessions/import     (a play history from BG Stats, Myludo or BGG,
                                              written as finished sessions — #1665)
+    session-photo.js …/sessions/:sid/photo  (one photo per played session: PUT to set
+                                             or replace, DELETE to remove — #1774)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
                                              a share via …/:rid/shares/:userId)
@@ -878,6 +883,9 @@ public/
                      the stored long edge, output format — offered by the two
                      paste sites and validated by lib/upload.js + lib/cover.js
                      (issue #867)
+    photo-policy.js  what a session photo may be — byte cap, stored long edge,
+                     output format — offered by the result screen and validated
+                     by lib/upload.js + lib/session-photo.js (issue #1774)
     member-avatar.js the ONE decision of photo-vs-initials, used by every avatar
                      render site, plus the per-page id→picture cache and the
                      broken-image fallback (issue #841)
@@ -1181,6 +1189,8 @@ public/
     views-session-result-band.js the results' table band, headline and finish
     views-session-result-actions.js the results' row actions, cancel/delete
                      and footers (all four split out in #1543)
+    session-photo-view.js the evening's photo on the results (#1774): add,
+                     replace, remove, and the consent hint
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
     views-session-tables.js the multi-table builder and, once confirmed, the split

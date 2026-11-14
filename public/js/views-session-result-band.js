@@ -68,6 +68,8 @@ function resultUpdateTitle(rs) {
 function resultRenderBand(rs) {
   const { round, session, games, rows, parties, people, tischLook, peopleEl, rowRefs, badgeMoment, tisch, tischSlot, tischBar } = rs;
   resultUpdateTitle(rs);
+  // The photo block's add button follows the played phase (#1774).
+  if (rs.photoRefresh) rs.photoRefresh();
   fillBadgeMoment(badgeMoment, round, session);
   // The group challenge (#1779) rides in the same moment, after the marks.
   fillChallengeMoment(badgeMoment, round, session);

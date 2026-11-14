@@ -181,7 +181,9 @@ bounds the hub's quick-start chip row rather than abuse. The round chat's messag
 are capped per tenant (`MAX_MESSAGES_PER_TENANT`, default 20000, issue #1781); a
 grantee's message counts against the round owner's tenant, where it is stored, and
 one account may hold at most `MAX_MESSAGES_PER_AUTHOR` of them (default 5000), so a
-single invitee cannot exhaust the owner's cap alone. Per
+single invitee cannot exhaust the owner's cap alone. Session photos are capped per
+tenant too (`MAX_PHOTOS_PER_TENANT`, default 500, issue #1774) — only a first photo
+counts against it, so replacing one at the ceiling still works. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys
