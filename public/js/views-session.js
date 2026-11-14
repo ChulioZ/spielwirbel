@@ -1559,6 +1559,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const pointsEl = session.finished ? renderSessionPoints(round, session) : null;
   if (pointsEl) screen.appendChild(pointsEl);
 
+
   /* Der Tisch (#1057) — the chosen game, as a band above the Tafel, and the
      only place the evening's own controls live.
 
@@ -1633,6 +1634,13 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // open. The lobby renders the same builder open — there it is the live record.
   // Guest games this evening played (#1681): a light offer to keep them —
   // Ins Regal or onto the wish list — never a step the screen waits on.
+  // The evening's photo (#1774), first in the record of the evening — after
+  // the ranking, so it never pushes the result itself down a phone screen,
+  // and ahead of the log and the comments it belongs with. Self-hiding until
+  // the session is played; resultRenderBand() repaints it on every phase
+  // change through rs.photoRefresh (session-photo-view.js); the first
+  // resultUpdateChosen() above runs before it exists, so it paints itself once.
+  screen.appendChild(renderSessionPhoto(rs));
   const guestOffer = guestGameOffers(round, session, games);
   if (guestOffer) screen.appendChild(guestOffer);
   const sessionLog = renderSessionLog(round, session, { collapsed: true });

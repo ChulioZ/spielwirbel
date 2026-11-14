@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-11-12
+**Stand:** 2026-11-14
 
 ## Eingang & Identitätsprüfung
 
@@ -36,6 +36,12 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   Sitzungen (Refresh-Token). `test/account-export-fields.test.js` verlangt für
   jedes gespeicherte Kontofeld entweder den Export oder einen benannten Grund
   für das Weglassen — ein neues Feld kann also nicht still herausfallen.
+- **Session-Fotos (#1774)** sind Rundendaten, keine Kontodaten: der Export führt
+  sie als Pfad (`/uploads/<key>`) an der jeweiligen Session, die Bilddatei
+  selbst nicht — ebenso wie bei Cover-Bildern. Wer die Dateien mit ausgeliefert
+  haben möchte, bekommt sie über die Runde (die Bilder sind dort sichtbar) oder
+  auf Nachfrage vom Betreiber aus dem Objektspeicher. Ein Uploader wird nicht
+  gespeichert, daher lässt sich ein Foto keinem einzelnen Konto zuordnen.
 - Der Export enthält neben Konto und Runden auch die kontobezogenen Daten in den
   globalen Speichern (#397): **Freundschaften, Freundeskreis-Feed-Ereignisse,
   Postfach (Inbox), Einladungen, Runden-Freigaben (Grants), — seit #680 —
@@ -101,7 +107,15 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
 
 ## Löschung (Art. 17)
 
-- Selbstbedienung: Spiele/Runden löschen wirkt durchgängig (inkl. Cover).
+- Selbstbedienung: Spiele/Runden löschen wirkt durchgängig (inkl. Cover und
+  Session-Fotos); ein Session-Foto lässt sich zudem einzeln entfernen.
+- **Eine auf einem Session-Foto abgebildete Person ohne Konto (#1774)** kann der
+  Verarbeitung widersprechen (Art. 21) bzw. die Löschung verlangen (Art. 17).
+  Sie kennt die Runde in der Regel nicht und kann das Foto nicht selbst
+  entfernen: über das Kontaktformular eingehen lassen, das Foto anhand ihrer
+  Beschreibung bzw. eines mitgeschickten Bildpfads im Betreiber-Panel suchen
+  (Suche nach Bild — „Session-Foto") und per **Takedown** entfernen, wie in
+  `notice-and-action.md` beschrieben.
 - **Ganzes Konto, durch die betroffene Person selbst (#419):** Kontoeinstellungen
   (`/konto`) → **„Konto löschen"**. Erfordert Nutzername + Passwort und zeigt
   vorher die tatsächlichen Zahlen (Runden, Spiele, Sessions, Bilder sowie die

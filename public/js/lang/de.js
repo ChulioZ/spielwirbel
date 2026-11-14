@@ -434,6 +434,7 @@ I18N.de = {
   'chronik.count': '{n} Sessions seit {month}',
   'chronik.seatedOne': '{n} dabei',
   'chronik.seated': '{n} dabei',
+  'chronik.hasPhoto': 'mit Foto',
   'chronik.sessionNo': 'Session Nr. {n}',
   'chronik.wonOne': '{names} hat gewonnen',
   'chronik.won': '{names} haben gewonnen',
@@ -1664,6 +1665,20 @@ I18N.de = {
 
   'result.crumb': 'Ergebnis',
   'result.title': 'Ergebnis',
+  // The evening's photo (#1774).
+  'result.photo.add': 'Foto hinzufügen',
+  'result.photo.replace': 'Foto ersetzen',
+  'result.photo.remove': 'Foto entfernen',
+  'result.photo.alt': 'Foto von dieser Session',
+  'result.photo.hint': 'Nur mit dem Einverständnis aller, die darauf zu sehen sind.',
+  'result.photo.removeConfirm': 'Foto entfernen? Es wird gelöscht und lässt sich nicht wiederherstellen.',
+  'result.photo.toast.saved': 'Foto gespeichert',
+  'result.photo.toast.removed': 'Foto entfernt',
+  'result.photo.err.tooLarge': 'Das Foto ist zu groß (höchstens {mb} MB).',
+  'result.photo.err.tooLargeServer': 'Das Foto ist zu groß.',
+  'result.photo.err.invalid': 'Diese Datei lässt sich nicht als Foto verwenden.',
+  'result.photo.err.quota': 'Deine Runden haben die Höchstzahl an Fotos erreicht. Entferne ein älteres Foto, um Platz zu schaffen.',
+  'result.photo.err.generic': 'Das Foto konnte nicht gespeichert werden.',
   'result.subtitleOne': '{when} · {n} Spiel',
   'result.subtitle': '{when} · {n} Spiele',
   // The gold group's kicker (#1056, was the winner spotlight's). „Sieger der

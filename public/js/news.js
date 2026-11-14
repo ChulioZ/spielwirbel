@@ -50,6 +50,50 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1774, session photos. A capability that did not exist: the Chronik held
+   * only numbers, never the evening itself.
+   */
+  {
+    revision: '2026-11-14',
+    kind: 'new',
+    de: {
+      title: 'Ein Foto pro Session',
+      body: 'Unter dem Ergebnis einer gespielten Session könnt ihr jetzt ein Foto speichern, etwa vom Tisch oder vom Spielbrett am Ende. In der Chronik erscheint es als Vorschaubild der Session. Sehen können es nur die, mit denen die Runde geteilt ist, und Standortdaten im Bild werden vor dem Speichern entfernt. Fragt vorher alle, die darauf zu sehen sind.',
+    },
+    en: {
+      title: 'One photo per session',
+      body: 'Under the result of a played session you can now keep a photo, say of the table or the board at the end. The Chronik shows it as the session’s thumbnail. Only the people the round is shared with can see it, and location data in the picture is removed before it is stored. Ask everyone in the picture first.',
+    },
+    es: {
+      title: 'Una foto por sesión',
+      body: 'Bajo el resultado de una sesión jugada ya podéis guardar una foto, por ejemplo de la mesa o del tablero al final. En el historial aparece como miniatura de la sesión. Solo la ven las personas con quienes se comparte el grupo, y los datos de ubicación de la imagen se eliminan antes de guardarla. Preguntad antes a todas las personas que salen en ella.',
+    },
+    fr: {
+      title: 'Une photo par session',
+      body: 'Sous le résultat d’une session jouée, vous pouvez désormais garder une photo, par exemple de la table ou du plateau à la fin. L’historique l’affiche comme vignette de la session. Seules les personnes avec qui le groupe est partagé la voient, et les données de localisation de l’image sont retirées avant l’enregistrement. Demandez d’abord à toutes les personnes visibles dessus.',
+    },
+    it: {
+      title: 'Una foto per sessione',
+      body: 'Sotto il risultato di una sessione giocata ora potete salvare una foto, ad esempio del tavolo o del tabellone alla fine. Nella cronologia compare come anteprima della sessione. La vedono solo le persone con cui è condiviso il gruppo, e i dati di posizione dell’immagine vengono rimossi prima del salvataggio. Chiedete prima a tutte le persone ritratte.',
+    },
+    nl: {
+      title: 'Eén foto per sessie',
+      body: 'Onder de uitslag van een gespeelde sessie kunnen jullie nu een foto bewaren, bijvoorbeeld van de tafel of van het bord aan het eind. De geschiedenis toont hem als miniatuur van de sessie. Alleen wie de groep met jullie deelt kan hem zien, en locatiegegevens in de foto worden vóór het opslaan verwijderd. Vraag het eerst aan iedereen die erop staat.',
+    },
+    pt: {
+      title: 'Uma foto por sessão',
+      body: 'Debaixo do resultado de uma sessão jogada já podem guardar uma foto, por exemplo da mesa ou do tabuleiro no fim. No histórico aparece como miniatura da sessão. Só a veem as pessoas com quem o grupo é partilhado, e os dados de localização da imagem são removidos antes de ser guardada. Perguntem antes a todas as pessoas que aparecem nela.',
+    },
+    fi: {
+      title: 'Yksi kuva sessiota kohti',
+      body: 'Pelatun session tuloksen alle voi nyt tallentaa kuvan, esimerkiksi pöydästä tai pelilaudasta lopussa. Historiassa se näkyy session pikkukuvana. Kuvan näkevät vain ne, joiden kanssa porukka on jaettu, ja kuvan sijaintitiedot poistetaan ennen tallennusta. Kysykää ensin kaikilta, jotka näkyvät kuvassa.',
+    },
+    ko: {
+      title: '세션마다 사진 한 장',
+      body: '플레이한 세션의 결과 아래에 이제 사진을 한 장 저장할 수 있어요. 테이블이나 마지막 게임판을 찍어 보세요. 기록에서는 세션의 미리보기 이미지로 보여요. 모임을 공유받은 사람만 볼 수 있고, 사진에 담긴 위치 정보는 저장하기 전에 지워져요. 사진에 나온 모든 사람에게 먼저 물어봐 주세요.',
+    },
+  },
+  /*
    * #1780, scoring categories. A capability that did not exist: a game scored in
    * categories had to be added up on paper before the total could be typed.
    */

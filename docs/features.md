@@ -927,6 +927,19 @@ What the app does, in detail. For a short overview see the
   the member page's Bestleistungen gain a „Nach Kategorie" disclosure. The
   „Niedrigere Punktzahl gewinnt" switch applies per category too. BG Stats still
   receives totals only.
+- **Session-Foto** (#1774) – a played session can carry **one photo** — the
+  table, or the board at the end — added, replaced or removed on its results
+  screen by anyone the round is shared with. It shows under the evening's points
+  and takes the session's thumbnail in the Chronik (Die Brücke, which draws no
+  thumbnails there, marks the row instead). The photo is re-encoded on upload:
+  turned upright from the camera's orientation tag, capped at 1280px on the long
+  edge, and stripped of all metadata, GPS included. It is visible only inside the
+  round — never in the Freundeskreis, on public pages or through a shared vote
+  link — and the upload button carries a hint to ask everyone in the picture
+  first. It goes with its session, with the round, and with the session's result
+  if the played game is deleted or moved. Capped per tenant
+  (`MAX_PHOTOS_PER_TENANT`, default 500); only a first photo counts, so a
+  replacement at the cap still works.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is

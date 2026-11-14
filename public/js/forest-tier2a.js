@@ -80,7 +80,10 @@ function forestPathRow(round, s, { when, chosen, sPeople, thumbIcon, title, pill
        </div>
        ${faces}${pill}
      </a>`);
-  if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+  // The evening's photo takes the cover's slot when there is one (#1774), as in
+  // every other design's Chronik row (views-chronik.js, sessionThumbSrc).
+  const thumb = s.photo || (chosen && chosen.image ? coverUrl(chosen.image, COVER_THUMB) : null);
+  if (thumb) loadCover(card.querySelector('.session-card__img'), thumb);
   navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
   return card;
 }

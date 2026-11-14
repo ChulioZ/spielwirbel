@@ -255,6 +255,9 @@ const frontendGlobals = {
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',
   COVER_EXT: 'readonly', COVER_MAX_PIXELS: 'readonly',
+  // photo-policy.js + session-photo-view.js (issue #1774)
+  PHOTO_MAX_BYTES: 'readonly', PHOTO_MAX_MB: 'readonly',
+  renderSessionPhoto: 'readonly', sessionPhotoErrorKey: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',

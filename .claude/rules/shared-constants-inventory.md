@@ -885,6 +885,16 @@ while the screen still shows a challenge running. The route injects
 `isActiveGame` (`opts.isActive`), since a public/js file cannot require its
 sibling.
 
+**The forty-third is `public/js/photo-policy.js`** (#1774): what a session photo
+may be — the upload byte cap, the stored long edge, the output format and the
+decoded-pixel ceiling. The direct sibling of `cover-policy.js` and
+`avatar-policy.js`, and the plain value half: the result screen *offers* the cap
+(the pre-flight size check and the toast that states it in `{mb}`), and
+`lib/upload.js`'s photo multer instance and `lib/session-photo.js` *validate*
+against it. Its cap is deliberately twice the cover's — a phone camera photo, not
+a paste — so it must never be "tidied" into `cover-policy.js`: the two numbers
+are separate decisions that happen to share a shape.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The
