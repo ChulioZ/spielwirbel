@@ -7324,6 +7324,55 @@ module.exports = function repoContract(repo) {
 
   // The suite shares one store across cases, so assert on the delta, not on an
   // absolute count — other tests have already created users by now.
+  test('publicPlayHistory returns one row per finished, linked, dated play before the cutoff (#1732)', async () => {
+    /* The raw material of Discover's past winners: both backends must admit
+       exactly the plays publicGameAggregates' period counts admit, and stop at
+       the cutoff, so a past week's winner is decided by the same definition its
+       live card used. Unique ids per case; the store is shared. */
+    const id = uniq();
+    const other = uniq();
+    const tenant = `pph-${uniq()}`;
+    const round = await repo.createRound(tenant, { name: 'H', members: ['Ann'] });
+    const game = await repo.createGame(tenant, round.id, gameFields({
+      source: { provider: 'bgg', externalId: id, url: null },
+    }));
+    const typed = await repo.createGame(tenant, round.id, gameFields({ title: 'Handgetippt' }));
+    const play = (createdAt, over = {}) => repo.createSession(tenant, round.id, {
+      gameIds: [game.id], votes: {}, createdAt,
+      finished: true, finishedAt: createdAt, chosenGameId: game.id, ...over,
+    });
+    await play('2026-07-01T10:00:00.000Z');
+    await play('2026-08-02T21:59:59.000Z');
+    // At or after the cutoff: the running period, never history.
+    await play('2026-08-03T22:00:00.000Z');
+    // Not plays: unfinished, nothing chosen, no stamp at all.
+    await play('2026-07-02T10:00:00.000Z', { finished: false });
+    await play('2026-07-02T10:00:00.000Z', { chosenGameId: null });
+    await play(null);
+    // A hand-typed game has no provider link and so no row.
+    await play('2026-07-03T10:00:00.000Z', { gameIds: [typed.id], chosenGameId: typed.id });
+    // A demo tenant's play is never public material.
+    const demo = `demo-${uniq()}`;
+    const demoRound = await repo.createRound(demo, { name: 'D', members: ['Ann'] });
+    const demoGame = await repo.createGame(demo, demoRound.id, gameFields({
+      source: { provider: 'bgg', externalId: other, url: null },
+    }));
+    await repo.createSession(demo, demoRound.id, {
+      gameIds: [demoGame.id], votes: {}, createdAt: '2026-07-04T10:00:00.000Z',
+      finished: true, chosenGameId: demoGame.id,
+    });
+
+    const rows = await repo.publicPlayHistory('2026-08-03T22:00:00.000Z');
+    const mine = rows.filter((r) => r.externalId === id)
+      .sort((a, b) => (a.playedAt < b.playedAt ? -1 : 1));
+    assert.deepEqual(mine, [
+      { provider: 'bgg', externalId: id, tenant, playedAt: '2026-07-01T10:00:00.000Z' },
+      { provider: 'bgg', externalId: id, tenant, playedAt: '2026-08-02T21:59:59.000Z' },
+    ]);
+    assert.ok(!rows.some((r) => r.externalId === other), 'demo tenants are excluded');
+    assert.ok(!JSON.stringify(rows).includes('Handgetippt'));
+  });
+
   test('listUsers returns every user for the operator account list', async () => {
     const before = await repo.listUsers();
     // userFields() mints a random e-mail; don't hardcode one, or a re-run

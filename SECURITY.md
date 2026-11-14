@@ -40,7 +40,9 @@ Security issues especially relevant given the current architecture:
   profile pictures are deliberately readable by every signed-in account (#841,
   privacy policy §16) and are not a finding. Note that
   *aggregate* cross-tenant figures are published **by design** on the landing
-  page and at `/entdecken`, behind k-anonymity thresholds
+  page and at `/entdecken` (`GET /api/stats/public`, and since #1732
+  `GET /api/stats/public/more` with the top ten places and every past week's and
+  month's winner), behind k-anonymity thresholds
   (`PUBLIC_STATS_MIN_*`, `lib/public-stats.js`) — a way to read those below the
   thresholds, or to attribute one of them to a particular tenant, is in scope;
   the published totals themselves are not.

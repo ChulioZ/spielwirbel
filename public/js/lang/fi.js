@@ -1844,6 +1844,11 @@ I18N.fi = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': 'Pisteet {score}',
+  'stats.showMore': 'Näytä lisää',
+  'stats.pastWinners': 'Aiemmat voittajat',
+  'stats.pastWeeksTitle': 'Pelatuimmat – aiemmat viikot',
+  'stats.pastMonthsTitle': 'Pelatuimmat – aiemmat kuukaudet',
+  'stats.topTitle': '{label} · Top 10',
   'stats.ratedPlaysOne': '{rated} · {n} sessio',
   'stats.ratedPlays': '{rated} · {n} sessiota',
   'stats.counter.players': 'pelaajaa',

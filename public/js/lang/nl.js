@@ -1876,6 +1876,11 @@ I18N.nl = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': 'Score {score}',
+  'stats.showMore': 'Meer tonen',
+  'stats.pastWinners': 'Eerdere winnaars',
+  'stats.pastWeeksTitle': 'Meest gespeeld – eerdere weken',
+  'stats.pastMonthsTitle': 'Meest gespeeld – eerdere maanden',
+  'stats.topTitle': '{label} · Top 10',
   'stats.ratedPlaysOne': '{rated} · {n} sessie',
   'stats.ratedPlays': '{rated} · {n} sessies',
   'stats.counter.players': 'spelers',

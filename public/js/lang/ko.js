@@ -1818,6 +1818,11 @@ I18N.ko = {
   // The popup listing the games behind a favourite name (#1560): its title, then each game's score.
   'stats.favListTitle': '{label} · {name}',
   'stats.favListScore': '점수 {score}',
+  'stats.showMore': '더 보기',
+  'stats.pastWinners': '이전 우승작',
+  'stats.pastWeeksTitle': '가장 많이 플레이 – 지난 주',
+  'stats.pastMonthsTitle': '가장 많이 플레이 – 지난 달',
+  'stats.topTitle': '{label} · 상위 10',
   'stats.ratedPlaysOne': '{rated} · 세션 {n}회',
   'stats.ratedPlays': '{rated} · 세션 {n}회',
   'stats.counter.players': '명의 참가자',

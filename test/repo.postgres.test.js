@@ -863,6 +863,7 @@ if (!process.env.DATABASE_URL) {
     });
     await admin.connect();
     let rows;
+    let history;
     try {
       await admin.query('DROP ROLE IF EXISTS gs_pubstats_probe');
       await admin.query("CREATE ROLE gs_pubstats_probe LOGIN PASSWORD 'probe'");
@@ -874,14 +875,16 @@ if (!process.env.DATABASE_URL) {
       url.password = 'probe';
       const child = execFileSync(process.execPath, ['-e', `
         const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
-        repo.publicGameAggregates()
-          .then((r) => { console.log('RESULT:' + JSON.stringify(r)); return repo.end(); })
+        Promise.all([repo.publicGameAggregates(), repo.publicPlayHistory('9999-12-31T00:00:00.000Z')])
+          .then(([r, h]) => { console.log('RESULT:' + JSON.stringify(r)); console.log('HISTORY:' + JSON.stringify(h)); return repo.end(); })
           .catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
 
       const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
       assert.ok(line, `the probe child produced no result: ${child}`);
       rows = JSON.parse(line.slice('RESULT:'.length));
+      const hist = child.split('\n').find((l) => l.startsWith('HISTORY:'));
+      history = JSON.parse(hist.slice('HISTORY:'.length));
     } finally {
       await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
       await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
@@ -895,6 +898,9 @@ if (!process.env.DATABASE_URL) {
     // missed atx() on any one of them would zero only that column.
     const row = rows.find((r) => r.externalId === externalId);
     assert.ok(row, 'the games read was invisible without the admin escape');
+    // The past-winners read (#1732) is a fourth statement under the same escape.
+    assert.equal(history.filter((h) => h.externalId === externalId).length, 1,
+      'the play-history read was invisible without the admin escape');
     assert.equal(row.owners, 1, 'the owner read was invisible without the admin escape');
     assert.equal(row.plays.week.count, 1, 'the plays read was invisible without the admin escape');
     assert.equal(row.ratings.count, 1, 'the ratings read was invisible without the admin escape');

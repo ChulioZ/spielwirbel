@@ -583,6 +583,14 @@ not accounts — most people in a round never hold one, which is the point of th
 app — and „games“ counts the active Regal only, so wishes and archived games are
 excluded.
 
+The `/entdecken` screen additionally fetches `GET /api/stats/public/more`
+(issue #1732, same `404` rule): the top ten places of the shelf, all-time,
+best-rated and name cards, and every completed week's and month's most played
+game. It is a separate cached payload so the landing page's response does not
+grow with the history, and the past winners are judged against the week and
+month cards' own floors below — read at rebuild time, so a raised floor
+applies to the history too.
+
 Two properties are worth knowing. **Game names come from BoardGameGeek, never
 from the title someone typed** — the aggregate is keyed on the provider link and
 the display name is resolved from the provider, so no user-authored byte can
@@ -628,11 +636,12 @@ rather than falling back to the default.
 
 The payload is rebuilt by the background scheduler and served from memory —
 nothing is computed per request and nothing is stored — and
-`PUBLIC_STATS_RESOLVE_MAX` (default 62 since issue #1648, 50 since #1424, 30
-since #1557, was 20) caps how many *new* provider lookups one rebuild may make —
-the podiums spend first (up to seven candidates each, for a list of three
-places that may hold up to five tied entries), the favourite
-cards (below) whatever is left. A rebuild that hits the cap publishes shorter
+`PUBLIC_STATS_RESOLVE_MAX` (default 120 since issue #1732, 62 since #1648, 50
+since #1424, 30 since #1557, was 20) caps how many *new* provider lookups one
+rebuild may make — the podiums spend first (up to seven candidates each, for a
+list of three places that may hold up to five tied entries), the favourite
+cards (below) next, and Discover's longer lists (the top ten and the past
+winners, below) whatever is left. A rebuild that hits the cap publishes shorter
 lists and the next one completes them. Only games that could actually reach a podium are resolved
 (ranking happens on the raw numbers first) and successful lookups are memoized,
 so a steady state costs no upstream requests.

@@ -168,6 +168,19 @@ function fmtMonthKey(key) {
   return fmtMonth(new Date(Number(m[1]), Number(m[2]) - 1, 1));
 }
 
+// A Discover past-winners week (#1732), named by its Monday 'YYYY-MM-DD', as
+// the range it covers in the reader's language — „19.–25. Okt. 2026",
+// "Oct 19 – 25, 2026". Built in LOCAL time for fmtMonthKey's reason, and as a
+// range rather than an ISO week number, which nobody reads.
+function fmtWeekKey(key) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+  if (!m) return '';
+  const from = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const to = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + 6);
+  return new Intl.DateTimeFormat(localeTag(locale), { day: 'numeric', month: 'short', year: 'numeric' })
+    .formatRange(from, to);
+}
+
 // A lent box's day (#1775), 'YYYY-MM-DD' → „3.11." — built in LOCAL time for
 // fmtMonthKey's reason: parsed as an instant, the day is UTC midnight and reads
 // as the day before for anyone west of UTC. The year only when it is not this
