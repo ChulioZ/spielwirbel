@@ -220,6 +220,9 @@ lib/
                      bounded once for both writers — the single add (flat
                      multipart fields) and the bulk import (a map beside
                      `covers`) — so they cannot accept different things (#742)
+  redact-copies.js   which Chronik lines and friend-feed rows copy a game title
+                     or member name, so an operator redaction blanks them too —
+                     shared by both repo backends (#1825)
   recommend.js       "das könnte euch auch gefallen" (issue #682): the taste
                      profile built from a round's own shelf and sessions, and
                      the deterministic weighted score that ranks the corpus

@@ -123,6 +123,14 @@ returns the previous value.
   those lines. The loan itself stays, so a lent box stays out of the draw.
 - A **scoring category** (#1822) is redacted by name; its id survives so a
   session's stored `scoreParts` still resolve. Tombstones are listed and redactable.
+- A **game title or member name** (#1825) also blanks its COPIES: the Chronik
+  lines that quote it and, for a title, the friend-feed rows of every account
+  that can act on the round (owner tenant + grantees). Which copy matches is
+  `lib/redact-copies.js`, shared by both backends: by `gameId` where a line has
+  one, by the old text where it has none (`game_deleted`, `member_*`, every feed
+  row) — so a same-named twin in that round goes too, accepted for a takedown.
+  The Postgres activity write is RLS-scoped, so it runs in the tenant `tx`, never
+  `atx()`; the plain-role probe pins it.
 
 There are **no rating comments** (votes are numeric), so user-authored text is
 exactly: round name, game title, member name, tag name, expansion title,
