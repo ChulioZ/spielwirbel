@@ -706,9 +706,12 @@ if (!process.env.DATABASE_URL) {
     const assert = require('node:assert/strict');
     const tenant = `pg-metrics-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(tenant, { name: 'Gezählt', members: ['Ann'] });
-    await repo.createGame(tenant, round.id, {
+    const counted = await repo.createGame(tenant, round.id, {
       title: 'Gezähltes Spiel', minPlayers: 1, maxPlayers: 4, image: null, source: null,
     });
+    // A purchase price, so the Spiele adoption figures (#1803) read from the
+    // RLS-scoped `games` table have something to find.
+    await repo.updateGame(tenant, round.id, counted.id, { purchasePrice: { amount: 999, currency: 'EUR' } });
     // Guests on the session and a tag on the round, so the adoption figures
     // read from the RLS-scoped tables have something to find: a zero there is
     // exactly what a read outside atx() would report.
@@ -794,6 +797,8 @@ if (!process.env.DATABASE_URL) {
       'the session adoption figures were empty without the admin escape — not reading under atx()');
     assert.ok(out.adoption.roundsWithTags >= 1,
       'the round adoption figures were empty without the admin escape');
+    assert.ok(out.adoption.gamesWithPurchasePrice >= 1,
+      'the Spiele adoption figures were empty without the admin escape');
     /* The design tile (#1201) reads `users`, which carries no RLS — so it is
        plain knex, not atx(), and must still come back under a plain role. The
        seeded account above answered the chooser, so it counts on a line and a

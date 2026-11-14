@@ -37,7 +37,7 @@ load".
 a **limit** is `used / limit` with a graded pill. „Funktionsnutzung" is GROUPED
 BY PARENT POPULATION (#1480, `adoptionCards()`/`renderGroups()`): one card per
 denominator, the population first, then count + muted whole-percent share —
-of the line above when indented (Regal union, cover union, funnel). No pills:
+of the line above when indented (Regal union, funnel). No pills:
 low uptake is no fault. A bare count without a parent is what it was cleaned
 of („Freundschaften & Einladungen" is parentless only because those rows carry
 no tenant). A zero parent renders „—", never „NaN %"; a first line never „100 %".
