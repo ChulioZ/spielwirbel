@@ -11748,6 +11748,24 @@ kbd {
 .result-points__name { font-weight: 700; }
 .result-points__value { font-weight: 800; font-variant-numeric: tabular-nums; }
 .result-points__line--automa { color: var(--ink-soft); }
+
+/* The evening's photo (#1774), after its points. The frame shows the whole
+   picture (`contain`, not `cover`): a photo of the final board is read for its
+   details, and cropping it to a fixed shape would cut exactly those. The height
+   cap keeps a portrait phone photo from turning the result into a long scroll —
+   at 375px wide a 3:4 portrait would otherwise be ~500px tall. */
+.session-photo { margin: 0 0 20px; }
+.session-photo[hidden] { display: none !important; }
+.session-photo__frame {
+  margin: 0; border-radius: var(--radius-md); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-1);
+  display: flex; justify-content: center;
+}
+.session-photo__img { display: block; max-width: 100%; max-height: min(70vh, 560px); width: auto; height: auto; object-fit: contain; }
+.session-photo__actions { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 8px; }
+.session-photo__hint { margin: 6px 0 0; font-size: var(--text-sm); }
+.session-photo.is-busy { opacity: 0.6; pointer-events: none; }
+.session-card__photo-mark { color: var(--ink-soft); font-size: 0.9em; }
 .result-points__record { color: var(--good); font-weight: 800; font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* The WINNER SPOTLIGHT (#897). This screen used to open with the podium stage,

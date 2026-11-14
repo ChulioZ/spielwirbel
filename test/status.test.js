@@ -96,7 +96,7 @@ test('every quota ceiling is paired with the highest value anyone holds', async 
 
   const s = await instanceStatus();
   // Keyed exactly like quotas, so the panel can zip the two without a mapping.
-  assert.deepEqual(Object.keys(s.metrics.peaks).sort(), ['gamesPerRound', 'messagesPerTenant', 'roundsPerTenant', 'tagsPerRound']);
+  assert.deepEqual(Object.keys(s.metrics.peaks).sort(), ['gamesPerRound', 'messagesPerTenant', 'photosPerTenant', 'roundsPerTenant', 'tagsPerRound']);
   assert.ok(s.metrics.peaks.gamesPerRound >= 3);
   assert.ok(s.metrics.peaks.tagsPerRound >= 2);
   assert.ok(s.metrics.peaks.roundsPerTenant >= 1);

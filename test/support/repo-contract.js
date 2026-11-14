@@ -1829,7 +1829,7 @@ module.exports = function repoContract(repo) {
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', image: '/uploads/w.png' }));
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.wishGame(T, round.id, game.id, true);
-    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/w.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/w.png', photos: [] });
     assert.equal((await repo.getRound(T, round.id)).games.length, 0);
   });
 
@@ -1936,7 +1936,7 @@ module.exports = function repoContract(repo) {
   test('deleteGame accepts a guest game, and writes no game_deleted entry', async () => {
     const round = await freshRound();
     const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true, image: '/uploads/a.png' }));
-    assert.deepEqual(await repo.deleteGame(T, round.id, g.id), { image: '/uploads/a.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, g.id), { image: '/uploads/a.png', photos: [] });
     assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_deleted').length, 0);
   });
 
@@ -1972,7 +1972,7 @@ module.exports = function repoContract(repo) {
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Done', image: '/uploads/d.png' }));
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.completeGame(T, round.id, game.id, true);
-    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/d.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/d.png', photos: [] });
     assert.equal((await repo.getRound(T, round.id)).games.length, 0);
   });
 
@@ -1989,7 +1989,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.retireGame(T, round.id, game.id, true);
     const result = await repo.deleteGame(T, round.id, game.id);
-    assert.deepEqual(result, { image: '/uploads/x.png' });
+    assert.deepEqual(result, { image: '/uploads/x.png', photos: [] });
 
     const after = await repo.getRound(T, round.id);
     assert.equal(after.games.length, 1);
@@ -2221,8 +2221,8 @@ module.exports = function repoContract(repo) {
     assert.equal(after.finished, true);
     assert.deepEqual(after.winnerIds, ['m1']);
 
-    assert.equal(await repo.deleteSession(T, round.id, session.id), true);
-    assert.equal(await repo.deleteSession(T, round.id, session.id), false);
+    assert.deepEqual(await repo.deleteSession(T, round.id, session.id), { images: [] });
+    assert.equal(await repo.deleteSession(T, round.id, session.id), null);
   });
 
   // A session logged after the fact (#1616) is inserted LAST while belonging
@@ -3583,7 +3583,7 @@ module.exports = function repoContract(repo) {
     await repo.createGame(T, dst.id, gameFields({ title: 'Keeper' }));
 
     const result = await repo.moveGames(T, src.id, dst.id);
-    assert.deepEqual(result, { movedGames: 3, mergedTags: 1, createdTags: 1 });
+    assert.deepEqual(result, { movedGames: 3, mergedTags: 1, createdTags: 1, photos: [] });
 
     const after = await repo.getRound(T, src.id);
     const target = await repo.getRound(T, dst.id);
@@ -3705,7 +3705,7 @@ module.exports = function repoContract(repo) {
     // An archived game is movable like any other; the request order (C, A) is
     // deliberately not the shelf order — the move follows the SHELF.
     const result = await repo.moveGames(T, src.id, dst.id, null, [c.id, a.id, b.id]);
-    assert.deepEqual(result, { movedGames: 3, mergedTags: 0, createdTags: 2 });
+    assert.deepEqual(result, { movedGames: 3, mergedTags: 0, createdTags: 2, photos: [] });
 
     let after = await repo.getRound(T, src.id);
     let target = await repo.getRound(T, dst.id);
@@ -3725,7 +3725,7 @@ module.exports = function repoContract(repo) {
     const keep2 = await repo.createGame(T, src2.id, gameFields({ title: 'Keep2', tagIds: [idle.id] }));
 
     assert.deepEqual(await repo.moveGames(T, src2.id, dst2.id, null, [picked.id]),
-      { movedGames: 1, mergedTags: 0, createdTags: 1 });
+      { movedGames: 1, mergedTags: 0, createdTags: 1, photos: [] });
 
     after = await repo.getRound(T, src2.id);
     target = await repo.getRound(T, dst2.id);
@@ -3800,7 +3800,7 @@ module.exports = function repoContract(repo) {
     // so the tagged game trips a zero cap and the untagged one sails past it.
     assert.equal(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [one.id]), 'quota_tags');
     assert.deepEqual(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [two.id]),
-      { movedGames: 1, mergedTags: 0, createdTags: 0 });
+      { movedGames: 1, mergedTags: 0, createdTags: 0, photos: [] });
   });
 
   test('moveGames refuses a missing, identical or over-quota target', async () => {
@@ -3828,14 +3828,14 @@ module.exports = function repoContract(repo) {
 
     // Within the caps it goes through.
     const ok = await repo.moveGames(T, src.id, dst.id, { maxGames: 2, maxTags: 1 });
-    assert.deepEqual(ok, { movedGames: 2, mergedTags: 0, createdTags: 1 });
+    assert.deepEqual(ok, { movedGames: 2, mergedTags: 0, createdTags: 1, photos: [] });
   });
 
   test('moveGames on an empty source round is a no-op with no feed entry', async () => {
     const src = await freshRound();
     const dst = await freshRound();
     const result = await repo.moveGames(T, src.id, dst.id);
-    assert.deepEqual(result, { movedGames: 0, mergedTags: 0, createdTags: 0 });
+    assert.deepEqual(result, { movedGames: 0, mergedTags: 0, createdTags: 0, photos: [] });
     assert.deepEqual(await repo.listActivities(T, src.id), []);
     assert.deepEqual(await repo.listActivities(T, dst.id), []);
   });
@@ -4143,7 +4143,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.cancelSession(OTHER, round.id, session.id, true), null);
     assert.equal(await repo.removeSessionGame(OTHER, round.id, session.id, game.id), null);
     assert.equal(await repo.saveSessionResults(OTHER, round.id, session.id, {}), null);
-    assert.equal(await repo.deleteSession(OTHER, round.id, session.id), false);
+    assert.equal(await repo.deleteSession(OTHER, round.id, session.id), null);
     assert.equal(await repo.setBackground(OTHER, round.id, { type: 'none' }), null);
     assert.equal(await repo.addTag(OTHER, round.id, 'evil'), null);
     assert.equal(await repo.deleteTag(OTHER, round.id, 'any'), false);
@@ -6972,6 +6972,130 @@ module.exports = function repoContract(repo) {
     assert.ok(user);
   });
 
+  /* ------------------------- session photos (#1774) ------------------------ */
+  /* The photo is a key in the session's blob; everything below is about the one
+     place its object key lives going away, and about the operator surfaces that
+     must see it. A fresh random tenant per case keeps the instance-wide reads
+     (owner lookup, references, metrics) independent of every other case. */
+  const photoTenant = () => `ph-${Math.random().toString(16).slice(2)}`;
+  async function photoRound(tn, name = 'Fotos') {
+    const round = await repo.createRound(tn, { name, members: ['Ann'] });
+    const g = await repo.createGame(tn, round.id, gameFields({ title: 'Catan' }));
+    const played = await repo.createSession(tn, round.id, {
+      gameIds: [g.id], votes: {}, done: true, chosenGameId: g.id, finished: true, winnerIds: [],
+      createdAt: new Date().toISOString(),
+    });
+    return { round, g, played };
+  }
+
+  test('setSessionPhoto sets, replaces and clears — only on a played session', async () => {
+    const tn = photoTenant();
+    const { round, g, played } = await photoRound(tn);
+    const open = await repo.createSession(tn, round.id, { gameIds: [g.id], votes: {}, createdAt: new Date().toISOString() });
+
+    assert.equal(await repo.setSessionPhoto(tn, round.id, open.id, '/uploads/p0.webp'), 'not_played');
+    assert.equal(await repo.setSessionPhoto(tn, round.id, 'nope', '/uploads/p0.webp'), null);
+    assert.equal(await repo.setSessionPhoto(OTHER, round.id, played.id, '/uploads/p0.webp'), null, 'another tenant');
+
+    const first = await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/p1.webp');
+    assert.equal(first.previous, null);
+    assert.equal(first.session.photo, '/uploads/p1.webp');
+    const second = await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/p2.webp');
+    assert.equal(second.previous, '/uploads/p1.webp', 'the replaced path is handed back');
+    assert.equal((await repo.getSession(tn, round.id, played.id)).photo, '/uploads/p2.webp');
+    assert.equal(await repo.countSessionPhotos(tn), 1);
+    assert.equal(await repo.countSessionPhotos(OTHER) >= 0, true);
+
+    // Clearing is allowed in any state and leaves the key ABSENT on both backends.
+    const cleared = await repo.setSessionPhoto(tn, round.id, played.id, null);
+    assert.equal(cleared.previous, '/uploads/p2.webp');
+    assert.equal('photo' in (await repo.getSession(tn, round.id, played.id)), false);
+    assert.equal(await repo.countSessionPhotos(tn), 0);
+    assert.equal(typeof await repo.countSessionPhotos(tn), 'number');
+  });
+
+  test('deleteSession and deleteRound hand the photo path back', async () => {
+    const tn = photoTenant();
+    const a = await photoRound(tn, 'Eins');
+    await repo.setSessionPhoto(tn, a.round.id, a.played.id, '/uploads/del-s.webp');
+    assert.deepEqual(await repo.deleteSession(tn, a.round.id, a.played.id), { images: ['/uploads/del-s.webp'] });
+
+    const b = await photoRound(tn, 'Zwei');
+    await repo.setSessionPhoto(tn, b.round.id, b.played.id, '/uploads/del-r.webp');
+    assert.deepEqual(await repo.deleteRound(tn, b.round.id), { images: ['/uploads/del-r.webp'] });
+  });
+
+  test('a game delete or move hands back the photos of sessions it emptied or un-played', async () => {
+    const tn = photoTenant();
+    const { round, g, played } = await photoRound(tn);
+    // A second session holding TWO games, played on Catan: it survives the
+    // delete, but its result — and with it the photo — goes.
+    const other = await repo.createGame(tn, round.id, gameFields({ title: 'Azul' }));
+    const both = await repo.createSession(tn, round.id, {
+      gameIds: [g.id, other.id], votes: {}, done: true, chosenGameId: g.id, finished: true, winnerIds: [],
+      createdAt: new Date().toISOString(),
+    });
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/emptied.webp');
+    await repo.setSessionPhoto(tn, round.id, both.id, '/uploads/unplayed.webp');
+    await repo.retireGame(tn, round.id, g.id, true);
+
+    const res = await repo.deleteGame(tn, round.id, g.id);
+    assert.deepEqual(res.photos.slice().sort(), ['/uploads/emptied.webp', '/uploads/unplayed.webp']);
+    const kept = await repo.getSession(tn, round.id, both.id);
+    assert.equal(kept.finished, false);
+    assert.equal('photo' in kept, false, 'the un-played session lost its photo key');
+
+    // The move path scrubs the same way.
+    const m = await photoRound(tn, 'Quelle');
+    const dst = await repo.createRound(tn, { name: 'Ziel', members: ['Bo'] });
+    await repo.setSessionPhoto(tn, m.round.id, m.played.id, '/uploads/moved.webp');
+    const moved = await repo.moveGames(tn, m.round.id, dst.id, null, [m.g.id]);
+    assert.deepEqual(moved.photos, ['/uploads/moved.webp']);
+  });
+
+  test('the operator surfaces see a session photo: owner, takedown, references, summary, erasure', async () => {
+    const tn = photoTenant();
+    const { round, played } = await photoRound(tn, 'Moderiert');
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/op.webp');
+
+    const owner = await repo.findImageOwner('/uploads/op.webp');
+    assert.deepEqual(
+      { kind: owner.kind, tenantId: owner.tenantId, roundId: owner.roundId, roundName: owner.roundName, sessionId: owner.sessionId },
+      { kind: 'session', tenantId: tn, roundId: round.id, roundName: 'Moderiert', sessionId: played.id },
+    );
+    assert.ok((await repo.referencedImages()).includes('/uploads/op.webp'),
+      'an unlisted photo would be offered to the operator as a deletable orphan');
+    assert.ok((await repo.tenantSummary(tn)).images.includes('/uploads/op.webp'));
+
+    assert.equal(await repo.takedownImage('/uploads/op.webp'), 1);
+    assert.equal('photo' in (await repo.getSession(tn, round.id, played.id)), false);
+    assert.equal(await repo.findImageOwner('/uploads/op.webp'), null);
+
+    // Erasure collects a photo with the tenant's covers.
+    const tn2 = photoTenant();
+    const user = await repo.createUser({ ...userFields(), tenantId: tn2 });
+    const e = await photoRound(tn2, 'Weg');
+    await repo.setSessionPhoto(tn2, e.round.id, e.played.id, '/uploads/erased.webp');
+    const out = await repo.eraseAccount(user.id);
+    assert.ok(out.images.includes('/uploads/erased.webp'));
+  });
+
+  test('the metrics count photos of played sessions and the fullest tenant', async () => {
+    const before = await repo.instanceMetrics();
+    const tn = photoTenant();
+    const { round, played } = await photoRound(tn);
+    const again = await repo.createSession(tn, round.id, {
+      gameIds: played.gameIds, votes: {}, done: true, chosenGameId: played.chosenGameId,
+      finished: true, winnerIds: [], createdAt: new Date().toISOString(),
+    });
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/m1.webp');
+    await repo.setSessionPhoto(tn, round.id, again.id, '/uploads/m2.webp');
+    const after = await repo.instanceMetrics();
+    assert.equal(after.adoption.funnel.photo - before.adoption.funnel.photo, 2);
+    assert.ok(after.peaks.photosPerTenant >= 2);
+    assert.equal(typeof after.peaks.photosPerTenant, 'number');
+  });
+
   test('databaseSize answers a number of bytes, or null — never a string', async () => {
     // pg hands bigint back as a STRING; a missing Number() would make this
     // backend answer '8384512' where the JSON one answers a number.
@@ -8300,7 +8424,7 @@ module.exports = function repoContract(repo) {
     assert.ok(await repo.deleteSession(T, round.id, deleted.id));
     assert.deepEqual(await counted(), { [byGame.id]: 1, [byMove.id]: 1, [survives.id]: 1 }, 'deleteSession');
     await repo.retireGame(T, round.id, drop.id, true);
-    assert.deepEqual(await repo.deleteGame(T, round.id, drop.id), { image: null });
+    assert.deepEqual(await repo.deleteGame(T, round.id, drop.id), { image: null, photos: [] });
     assert.deepEqual(await counted(), { [byMove.id]: 1, [survives.id]: 1 }, 'a game delete that empties a session');
     assert.ok(await repo.moveGames(T, round.id, dst.id, null, [mover.id]));
     assert.deepEqual(await counted(), { [survives.id]: 1 },

@@ -130,6 +130,8 @@ const MOUNTS = [
   // The same router again, for one session's comments (#1782). The app-mount
   // scan above cannot see this one (its regex stops at the `:sid`).
   ['/sessions/:sid/messages', '../lib/routes/round-messages'],
+  // The session photo (#1774), likewise behind a `:sid` the scan cannot see.
+  ['/sessions/:sid/photo', '../lib/routes/session-photo'],
   ['/tags', '../lib/routes/tags'],
   ['/filters', '../lib/routes/saved-filters'],
   ['/lookup', '../lib/routes/lookup'],
