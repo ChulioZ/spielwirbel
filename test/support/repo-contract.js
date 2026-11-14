@@ -6471,8 +6471,9 @@ module.exports = function repoContract(repo) {
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
       'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
-      'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
+      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame',
+      'gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride',
+      'sessionsWithGuests', 'sessionsWithTeams',
       'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
       'sessionsImported', 'sessionsImportedBgStats',
       'sessionsWithPoints', 'sessionsWithAutoma',
@@ -6487,17 +6488,20 @@ module.exports = function repoContract(repo) {
         name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
       });
 
-      // A linked game wearing the PROVIDER's cover.
+      // An ordinary linked game that uses none of the Spiele features.
       await repo.createGame(tn, r.id, gameFields({
         title: 'Verknüpft',
         image: 'https://cf.geekdo-images.test/x.jpg',
         source: { provider: 'bgg', externalId: '13' },
       }));
-      // A hand-typed game wearing bytes THIS instance stores, owned by someone,
-      // with an expansion on the shelf.
+      // The four Spiele features (#1803), all on ONE game.
       const own = await repo.createGame(tn, r.id, gameFields({ title: 'Eigen', image: '/uploads/a.webp' }));
-      await repo.updateGame(tn, r.id, own.id, { ownerIds: [r.members[0].id] });
-      await repo.setGameExpansions(tn, r.id, own.id, [{ title: 'Erweiterung' }], null);
+      await repo.updateGame(tn, r.id, own.id, {
+        purchasePrice: { amount: 4999, currency: 'EUR' },
+        scoreCategories: [{ id: 'v', name: 'Vögel' }],
+        playtimeOverride: { min: 60, max: 90 },
+      });
+      await repo.setGameLoan(tn, r.id, own.id, { to: 'Kim', since: '2026-11-01' });
       // The three shelf states, on ONE round, so the union counts once.
       const shelved = await repo.createGame(tn, r.id, gameFields({ title: 'Regal' }));
       await repo.updateGame(tn, r.id, shelved.id, { retired: true, completed: true, wish: true });
@@ -6532,6 +6536,58 @@ module.exports = function repoContract(repo) {
       assert.equal(m.content.games, mid.content.games + 5);
       assert.equal(m.content.sessions, mid.content.sessions + 1);
       assert.equal(m.accounts.total, mid.accounts.total + 1);
+    });
+
+    await t.test('the Spiele figures count presence only — not cleared, not BGG categories, not demos (#1803)', async () => {
+      const KEYS = ['gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride'];
+      const mid = await repo.instanceMetrics();
+      const tn = `sp-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Spiele', members: ['Ann'] });
+
+      /* BoardGameGeek's `categories` on a game WITHOUT scoring categories: the
+         field mix-up this figure would make if it read the wrong key. */
+      const bgg = await repo.createGame(tn, r.id, gameFields({ title: 'BGG', source: { provider: 'bgg', externalId: '9' } }));
+      await repo.setGameProviderInfo(tn, r.id, bgg.id, {
+        weight: 2.5, minPlaytime: 30, maxPlaytime: 60, minAge: 10,
+        categories: ['Economic'], mechanics: ['Trading'], rating: 7,
+      });
+
+      // Every feature set and then CLEARED again — the clear is absence.
+      const cleared = await repo.createGame(tn, r.id, gameFields({ title: 'Zurück' }));
+      await repo.updateGame(tn, r.id, cleared.id, {
+        purchasePrice: { amount: 999, currency: 'EUR' },
+        scoreCategories: [{ id: 'a', name: 'Gold' }],
+        playtimeOverride: { min: 20, max: 30 },
+      });
+      await repo.updateGame(tn, r.id, cleared.id, { purchasePrice: null, scoreCategories: [], playtimeOverride: null });
+      await repo.setGameLoan(tn, r.id, cleared.id, { to: 'Bo', since: '2026-11-01' });
+      await repo.setGameLoan(tn, r.id, cleared.id, null);
+
+      // The positive game.
+      const used = await repo.createGame(tn, r.id, gameFields({ title: 'Genutzt' }));
+      await repo.updateGame(tn, r.id, used.id, {
+        purchasePrice: { amount: 2999, currency: 'EUR' },
+        scoreCategories: [{ id: 'b', name: 'Karten' }],
+        playtimeOverride: { min: 45, max: 60 },
+      });
+      await repo.setGameLoan(tn, r.id, used.id, { to: 'Kim', since: '2026-11-02' });
+
+      // A DEMO tenant's game using all four must not count.
+      const dt = `demo-${tn}`;
+      const dr = await repo.createRound(dt, { name: 'Demo', members: ['Ann'] });
+      const demo = await repo.createGame(dt, dr.id, gameFields({ title: 'Demo' }));
+      await repo.updateGame(dt, dr.id, demo.id, {
+        purchasePrice: { amount: 2999, currency: 'EUR' },
+        scoreCategories: [{ id: 'c', name: 'Punkte' }],
+        playtimeOverride: { min: 45, max: 60 },
+      });
+      await repo.setGameLoan(dt, dr.id, demo.id, { to: 'Kim', since: '2026-11-02' });
+
+      const m = await repo.instanceMetrics();
+      for (const key of KEYS) {
+        assert.equal(m.adoption[key] - mid.adoption[key], 1, `${key} counted ${m.adoption[key] - mid.adoption[key]}, not 1`);
+      }
+      assert.equal(m.adoption.gamesTotal - mid.adoption.gamesTotal, 3, 'the denominator holds all three real games');
     });
 
     await t.test('an imported session counts under its own source, and in the total (#1665)', async () => {
@@ -6842,7 +6898,8 @@ module.exports = function repoContract(repo) {
       await repo.createSavedFilter(tn, r.id, {
         name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
       });
-      await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
+      const eins = await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
+      await repo.updateGame(tn, r.id, eins.id, { purchasePrice: { amount: 1999, currency: 'EUR' } });
       await repo.createSession(tn, r.id, {
         gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
         scores: { m1: 12 }, automa: { name: 'Bot' },
@@ -6869,7 +6926,7 @@ module.exports = function repoContract(repo) {
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
         'accountsVerified', 'accountsDisabled',
-        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats',
+        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithPurchasePrice', 'accountsWithBgStats',
         'sessionsWithPoints', 'sessionsWithAutoma']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }

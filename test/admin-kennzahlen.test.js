@@ -50,8 +50,9 @@ const STATUS = (over = {}) => ({
     adoption: {
       roundsWithRetired: 3, roundsWithCompleted: 1, roundsWithWish: 5, roundsWithAnyShelf: 7,
       roundsWithTags: 6, roundsWithSavedFilters: 4, roundsWithGuestGame: 3,
-      gamesLinked: 55, gamesWithOwnCover: 12, gamesWithProviderCover: 40,
-      gamesWithOwners: 9, gamesWithExpansions: 4,
+      /* #1803. Chosen so a line dividing by `content.games` (90) instead of
+         `gamesTotal` (80) renders a different share for every one of them. */
+      gamesWithPurchasePrice: 20, gamesLent: 8, gamesWithScoreCategories: 16, gamesWithPlaytimeOverride: 12,
       sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
       sessionsImported: 8, sessionsImportedBgStats: 4, sessionsImportedBgg: 2, sessionsImportedMyludo: 2,
       // #1675: the automa is NOT a subset of points (it may be stored alone),
@@ -359,13 +360,10 @@ test('every card renders exactly: parent first, then count + share of its parent
       title: 'Spiele',
       total: '80',
       lines: [
-        ['verknüpft', '55', '69 %', 0],
-        ['von Hand', '25', '31 %', 0],
-        ['mit Besitzer*in', '9', '11 %', 0],
-        ['mit Erweiterungen', '4', '5 %', 0],
-        ['mit Titelbild', '52', '65 %', 0],
-        ['eigenes Bild', '12', '23 %', 1],
-        ['vom Anbieter', '40', '77 %', 1],
+        ['mit Kaufpreis', '20', '25 %', 0],
+        ['aktuell verliehen', '8', '10 %', 0],
+        ['mit Wertungskategorien', '16', '20 %', 0],
+        ['Spielzeit korrigiert', '12', '15 %', 0],
       ],
     },
     {

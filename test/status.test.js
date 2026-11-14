@@ -306,7 +306,7 @@ test('a name planted in a metrics KEY is caught, not just in a value', async () 
      the point is the SWEEP, not today's data. */
   const planted = {
     accounts: { total: 1 },
-    adoption: { gamesLinked: 0 },
+    adoption: { gamesLent: 0 },
     designAdoption: { byDesign: { 'GEHEIMER-DESIGNNAME': 2 } },
   };
   const serialized = JSON.stringify(planted);
@@ -487,9 +487,10 @@ test('„Wochenquiz diese Woche" counts accounts with an answer in THIS week\'s 
 test('an excluded tenant leaves the adoption card but not the counters', async () => {
   const tenant = `excl-${uniq()}`;
   const round = await repo.createRound(tenant, { name: 'Ausgenommen', members: ['Ann', 'Bo'] });
-  await repo.createGame(tenant, round.id, {
+  const game = await repo.createGame(tenant, round.id, {
     title: 'Eins', minPlayers: 1, maxPlayers: 4, image: '/uploads/x.webp', source: null,
   });
+  await repo.updateGame(tenant, round.id, game.id, { purchasePrice: { amount: 3999, currency: 'EUR' } });
   await repo.createSession(tenant, round.id, {
     gameIds: [], votes: votesBy(2), createdAt: iso(1), finished: true, winnerIds: ['m1'],
   });
@@ -511,7 +512,7 @@ test('an excluded tenant leaves the adoption card but not the counters', async (
   assert.equal(p.gamesTotal - a.gamesTotal, 1);
   assert.equal(p.sessionsTotal - a.sessionsTotal, 1);
   assert.equal(p.accountsTotal - a.accountsTotal, 1);
-  assert.equal(p.gamesWithOwnCover - a.gamesWithOwnCover, 1);
+  assert.equal(p.gamesWithPurchasePrice - a.gamesWithPurchasePrice, 1);
   assert.equal(p.accountsWithBgStats - a.accountsWithBgStats, 1);
   assert.equal(p.accountsWithAvatar - a.accountsWithAvatar, 1);
   assert.equal(p.accountsPlayedQuiz - a.accountsPlayedQuiz, 1);

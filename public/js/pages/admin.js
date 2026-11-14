@@ -574,18 +574,17 @@
       ],
     };
 
-    const covered = a.gamesWithOwnCover + a.gamesWithProviderCover;
+    /* Rebuilt in #1803 around features still being adopted; linking, covers,
+       owners and expansions were dropped as settled. „mit Wertungskategorien"
+       is the round's own scoring categories, never BoardGameGeek's. */
     const spiele = {
       title: 'Spiele',
       total: games,
       lines: [
-        line('verknüpft', a.gamesLinked, games),
-        line('von Hand', games - a.gamesLinked, games),
-        line('mit Besitzer*in', a.gamesWithOwners, games),
-        line('mit Erweiterungen', a.gamesWithExpansions, games),
-        line('mit Titelbild', covered, games),
-        line('eigenes Bild', a.gamesWithOwnCover, covered, 1),
-        line('vom Anbieter', a.gamesWithProviderCover, covered, 1),
+        line('mit Kaufpreis', a.gamesWithPurchasePrice, games),
+        line('aktuell verliehen', a.gamesLent, games),
+        line('mit Wertungskategorien', a.gamesWithScoreCategories, games),
+        line('Spielzeit korrigiert', a.gamesWithPlaytimeOverride, games),
       ],
     };
 
