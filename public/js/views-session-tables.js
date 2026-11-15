@@ -209,7 +209,8 @@ async function showTableBuilder(round, session, gamesHint) {
         ? tableFeedback(
           { gameId: child.chosenGameId, personIds: seated.map((p) => p.id) },
           session.votes || {},
-          tileValue
+          tileValue,
+          sessionVoteWeights(round, session)
         )
         : null;
       const pill = fb && fb.avg !== null
@@ -302,6 +303,9 @@ async function showTableBuilder(round, session, gamesHint) {
     actions.appendChild(confirmBtn);
     body.appendChild(actions);
 
+    // The ballot weights (#1830), once per render: they depend on the history,
+    // not on the arrangement being edited.
+    const weights = sessionVoteWeights(round, session);
     paint();
 
     // Everything the screen shows is recomputed from `tables` on every paint, so
@@ -326,7 +330,9 @@ async function showTableBuilder(round, session, gamesHint) {
       tables.forEach((table, index) => {
         const game = gameById.get(table.gameId);
         const personIds = tablePeopleIds(table, partyById);
-        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, tileValue);
+        // Weighted exactly as the server weighted its proposals (#1830), or the
+        // builder would call the recommended split worse than an edited one.
+        const fb = tableFeedback({ gameId: table.gameId, personIds }, session.votes || {}, tileValue, weights);
         // Seats, not parties (#1610): an own-seat team takes its headcount.
         const size = table.partyIds.reduce((n, pid) => n + ((partyById.get(pid) || {}).seats || 1), 0);
         const tooSmall = size < minSeats;
@@ -574,7 +580,7 @@ function renderTischTable(round, session, games, children, child, index, voted, 
 function renderTischTableTafel(round, session, games, children, child, seated) {
   const personIds = seated.map((p) => p.id);
   const rows = games.map((g) => {
-    const fb = tableFeedback({ gameId: g.id, personIds }, session.votes || {}, tileValue);
+    const fb = tableFeedback({ gameId: g.id, personIds }, session.votes || {}, tileValue, sessionVoteWeights(round, session));
     const score = fb.avg === null ? 0 : fb.avg;
     return { game: g, score, shown: displayScore(score), count: personIds.length };
   });

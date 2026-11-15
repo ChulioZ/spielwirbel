@@ -85,27 +85,37 @@ function seatRating(votes, personId, gameId) {
    Over the SEATED only, never over everyone — the whole point of the pair is to
    answer "is this table alright" for the people actually at it. The lowest is
    what makes a bad split visible at a glance; the average alone hides one
-   miserable person behind five happy ones. */
-function tableFeedback(table, votes, tileValue) {
+   miserable person behind five happy ones.
+
+   `weights` (#1830) is an optional Map personId -> INTEGER percent from
+   vote-boost.js: a boosted seat's tile counts `w` times where everyone else's
+   counts 100, so `sum` stays an exact integer and scoreSplit stays
+   deterministic. Absent (the setting off, or nobody boosted) every seat counts
+   once, which is today's arithmetic byte for byte. `violations` stays a list of
+   PEOPLE — a weight is more say, not a second unhappy person. */
+function tableFeedback(table, votes, tileValue, weights) {
   const personIds = (table && table.personIds) || [];
   const gameId = table && table.gameId;
   let sum = 0;
+  let weightTotal = 0;
   let lowest = null;
   const violations = [];
   personIds.forEach((pid) => {
     const r = seatRating(votes, pid, gameId);
+    const w = weights ? (weights.get(pid) || 100) : 1;
+    weightTotal += w;
     // Summed through the SAME curve the single-table results screen scores with
     // (#893), so the two paths cannot disagree about what one evening is worth.
     // `NEUTRAL_RATING = 3` needs no adjustment: `tileValue(3) === 3`, so an
     // absent vote is worth exactly what it was worth before, by construction.
-    sum += tileValue(r);
+    sum += w * tileValue(r);
     // `lowest` stays the RAW rating. `tileValue` is strictly increasing, so the
     // lexicographic ordering is identical either way, and the raw value is what
     // the builder screen prints and the proposal persists.
     if (lowest === null || r < lowest) lowest = r;
     if (r <= VIOLATION_MAX) violations.push(pid);
   });
-  return { sum, avg: personIds.length ? sum / personIds.length : null, lowest, violations };
+  return { sum, avg: weightTotal ? sum / weightTotal : null, lowest, violations };
 }
 
 // Every seat count from `minSeats` up to `maxParties` this game can seat,
@@ -474,7 +484,7 @@ const MAX_TABLE_PROPOSALS = 5;
 
    `minSeats` is the session's minimum table size (#1730), read through
    `minTableSeatsOf` by the caller; absent, the default. */
-function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS }) {
+function proposeTableSplits({ parties, games, votes, seed, tileValue, weights = null, fitsPlayerCount, minSeats = DEFAULT_MIN_TABLE_SEATS }) {
   const partyList = (parties || []).filter((p) => p && Array.isArray(p.personIds) && p.personIds.length);
   const seatsById = new Map(partyList.map((p) => [p.id, Number.isInteger(p.seats) && p.seats > 0 ? p.seats : 1]));
   const total = [...seatsById.values()].reduce((n, w) => n + w, 0);
@@ -497,7 +507,7 @@ function proposeTableSplits({ parties, games, votes, seed, tileValue, fitsPlayer
   const cells = new Map();
   partyList.forEach((p) => {
     usable.forEach((gid) => {
-      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, tileValue);
+      const fb = tableFeedback({ gameId: gid, personIds: p.personIds }, votes, tileValue, weights);
       cells.set(p.id + ' ' + gid, {
         sum: fb.sum,
         lowest: fb.lowest === null ? NEUTRAL_RATING : fb.lowest,

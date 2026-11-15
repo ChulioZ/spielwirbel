@@ -339,11 +339,6 @@ I18N.ko = {
   'recap.divisive': '의견이 가장 갈린 게임',
   'recap.favourites': '즐겨 찾는 게임',
   'recap.thin': '아직 그림을 그릴 만큼 평가가 모이지 않았어요 — 계속 플레이하다 보면 쌓여요.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': '누구의 최애가 테이블에 오르나요',
-  'recap.tasteShareNone': '최애 게임이 아직 테이블에 오르지 않았어요',
-  'recap.tasteShareOne': '최애 게임이 테이블에 한 번 올랐어요',
-  'recap.tasteShareMany': '최애 게임이 테이블에 {n}번 올랐어요',
 
   'periodRecap.title': '월과 연도',
   'periodRecap.lead': '월이나 연도를 골라 — 무엇을 플레이했는지 공유해 보세요.',
@@ -1051,10 +1046,6 @@ I18N.ko = {
   'member.bestGameNone': '아직 이긴 게임이 없어요',
   'member.favorite': '가장 좋아하는 게임',
   'member.favoriteNone': '아직 평가가 없어요',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': '최애 게임 중 아직 테이블에 오른 게임이 없어요',
-  'member.tasteShareOne': '최애 게임 중 하나가 테이블에 올랐어요',
-  'member.tasteShareMany': '최애 게임 중 {n}개가 테이블에 올랐어요',
   'member.tasteNear': '취향이 가장 비슷한 사람:',
   'member.tasteFar': '취향이 가장 다른 사람:',
   'member.ownedTitleOne': '{name}의 게임 {n}개',
@@ -1330,11 +1321,13 @@ I18N.ko = {
   'lobby.crumb': '투표',
   'lobby.title': '투표 진행 중',
   'lobby.sub': '게임 {n}개를 뽑았어요. 모두 투표하면 결선이 시작돼요.',
-  'lobby.drawBoost': '오늘은 {name} 님의 최애 게임에 기회를 더 줘요',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': '추첨',
   'drawBoost.label': '덜 뽑힌 사람에게 기회를',
-  'drawBoost.note': '켜 두면 자리에 있는 사람 중 최애 게임이 가장 적게 플레이된 사람의 최애 게임이 뽑힐 확률이 두 배가 돼요. 투표는 그대로예요.',
+  'drawBoost.note': '켜 두면 최근에 별로였던 게임을 한 사람이 더 많은 발언권을 가져요. 투표에서 그 사람의 표가 더 무겁게 반영되고, 최애 게임이 뽑힐 확률도 높아져요. 다시 마음에 드는 게임을 하면 초기화돼요.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '오늘은 {names} 님의 발언권이 조금 더 커요',
+  'voteBoost.hint': '오늘은 {names} 님의 발언권이 조금 더 커요',
   // The group challenge (#1779).
   'challenge.title': '챌린지',
   'challenge.goal.newGamesOne': '한 번도 안 해 본 게임 {n}개',
@@ -1374,8 +1367,8 @@ I18N.ko = {
   'challenge.moment.completed': '챌린지 달성: {goal}',
   'challenge.moment.advanced': '챌린지: {goal}',
   'challenge.chronik': '챌린지 달성',
-  'drawBoost.toast.on': '추가 기회 켜짐',
-  'drawBoost.toast.off': '추가 기회 꺼짐',
+  'drawBoost.toast.on': '발언권 더 주기 켜짐',
+  'drawBoost.toast.off': '발언권 더 주기 꺼짐',
   'lobby.subOne': '게임 {n}개를 뽑았어요. 모두 투표하면 결선이 시작돼요.',
   'lobby.voted': '투표함',
   'lobby.waiting': '기다리는 중',

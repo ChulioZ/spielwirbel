@@ -506,19 +506,7 @@ What the app does, in detail. For a short overview see the
     #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite. From the round's sixth played
-    session it also says **whose taste the table follows** (#1776): for each
-    member with at least two favourites (games their average rating draws as
-    the top face; a retired game is nobody's), how often one of them was played
-    with that member at the table, in words („Favoriten kamen 9× auf den
-    Tisch") — no percentages, no places. The member page carries the matching
-    line („Von den Favoriten kamen 4 auf den Tisch", distinct favourites), and
-    hides it with the Abzeichen under „Einfacher Modus". An opt-in round setting
-    in Einstellungen, **„Wer zu kurz kommt, ist dran"** (#1777, off by default),
-    acts on the same numbers: when one seated member is strictly behind, their
-    favourites are twice as likely to be drawn into the vote, and the lobby
-    says so once („Heute mit Extra-Chance für die Lieblingsspiele von Ben"). The
-    vote, the scores and the winner are untouched. Pokale is the all-time record; the
+    most, and every member's own favourite. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that
@@ -695,6 +683,22 @@ What the app does, in detail. For a short overview see the
   in the round can do, so a missing player or a flat battery never strands the
   evening. Because votes are saved as they are given rather than held until the
   end, an interrupted evening loses at most the card someone was on.
+- **„Wer zu kurz kommt, ist dran"** (#1777, redefined by #1830) – an opt-in round
+  setting in Einstellungen, off by default. With it on, whoever recently played
+  games they did not enjoy gets more say next time. Each played session adds to a
+  member's boost by how they rated the game they actually played — „passt
+  schon" +10 %, „nicht so" +25 %, „gar nicht" +50 % — and a game they rated „gut"
+  or „begeistert" resets it; boosts add up uncapped, absent members keep theirs,
+  guests and removed members are never boosted. Where someone did not rate the
+  game they played (a „Jetzt spielen" evening, a late arrival, a split table), their
+  earlier ratings of that game stand in. The boost acts in two places: their
+  ballot weighs more in that session's result and in the table-split proposals,
+  and their favourites are likelier to be drawn into the vote. The lobby and the
+  result name who has a little more say („Anna hat heute etwas mehr Mitsprache")
+  without any number. It only ever acts inside a session that started with the
+  setting on, so switching it later re-ranks no old result — and the shelf, the
+  Spielepass, Discover, the Pokale and every other statistic keep scoring the
+  plain stored votes.
 - **Voting by shared link, without an account** – any running session can be
   shared as one URL (a "share" button in the lobby, mint-on-demand) or held up
   as a **QR code** beside it, which is the faster of the two at a table: five

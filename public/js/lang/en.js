@@ -356,11 +356,6 @@ I18N.en = {
   'recap.divisive': 'Most divisive',
   'recap.favourites': 'Favourites',
   'recap.thin': 'Not enough ratings for a picture yet — keep playing, it will come.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'Whose favourites reach the table',
-  'recap.tasteShareNone': 'Favourites have not reached the table yet',
-  'recap.tasteShareOne': 'Favourites reached the table once',
-  'recap.tasteShareMany': 'Favourites reached the table {n} times',
 
   // The per-period recap (#800): one calendar month or year, shareable as an image.
   'periodRecap.title': 'Month & year',
@@ -1107,10 +1102,6 @@ I18N.en = {
   'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
   'member.favoriteNone': 'No ratings yet',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'None of the favourites has reached the table yet',
-  'member.tasteShareOne': 'One of the favourites reached the table',
-  'member.tasteShareMany': '{n} of the favourites reached the table',
   'member.tasteNear': 'Closest taste:',
   'member.tasteFar': 'Most different taste:',
   'member.ownedTitleOne': '{n} game owned by {name}',
@@ -1413,11 +1404,13 @@ I18N.en = {
   'lobby.crumb': 'Voting',
   'lobby.title': 'Voting in progress',
   'lobby.sub': '{n} games drawn. Once everyone has voted, the finale begins.',
-  'lobby.drawBoost': 'Extra chance today for {name}’s favourites',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Draw',
   'drawBoost.label': 'Give the overlooked a turn',
-  'drawBoost.note': 'When on, the favourites of whoever at the table has seen theirs played least get double the chance to be drawn. The vote itself stays exactly the same.',
+  'drawBoost.note': 'When on, whoever recently played games they did not enjoy gets more say: their vote counts for more, and their favourites are likelier to be drawn. A game they enjoy again resets it.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '{names} has a little more say today',
+  'voteBoost.hint': '{names} have a little more say today',
   // The group challenge (#1779).
   'challenge.title': 'Challenge',
   'challenge.goal.newGamesOne': '{n} game never played before',
@@ -1457,8 +1450,8 @@ I18N.en = {
   'challenge.moment.completed': 'Challenge done: {goal}',
   'challenge.moment.advanced': 'Challenge: {goal}',
   'challenge.chronik': 'Challenge done',
-  'drawBoost.toast.on': 'Extra chance is on',
-  'drawBoost.toast.off': 'Extra chance is off',
+  'drawBoost.toast.on': 'More say is on',
+  'drawBoost.toast.off': 'More say is off',
   'lobby.subOne': '{n} game drawn. Once everyone has voted, the finale begins.',
   'lobby.voted': 'voted',
   'lobby.waiting': 'waiting',

@@ -251,10 +251,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
-  draw-boost.js      the opt-in draw boost (issue #1777): which seated member
-                     is strictly behind on favourites reaching the table
-                     (taste-share.js), and the weighted draw that gives their
-                     favourites 2x the chance — the plain shuffle when off
+  draw-boost.js      the draw half of „Wer zu kurz kommt, ist dran" (issues
+                     #1777, #1830): each seated, boosted member's favourites
+                     weigh 100 + their boost (vote-boost.js) in a weighted
+                     draw — the plain shuffle when off or when nothing changes
   game-owners.js     which members of a round own a game: the owner-id
                      validation and the per-seat memory of the last selection,
                      shared by the add-game and BGG-import write paths
@@ -560,8 +560,8 @@ lib/
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
-    draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
-                                             on/off — issue #1777)
+    draw-boost.js    …/draw-boost           (PATCH the round's „Wer zu kurz
+                                             kommt" setting on/off — #1777, #1830)
     challenge.js     …/challenge            (POST to start the group challenge,
                                              DELETE to end or archive it — #1779)
     round-messages.js …/messages            (the round chat: page, post, edit, delete,
@@ -696,13 +696,12 @@ public/
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
-    taste-share.js   whose favourites reach the table: per member, the games
-                     they rate at the top face and how often one was played
-                     with them seated — the Rückblick list, the member page's
-                     line, and the input #1777's draw boost reuses (issue #1776)
-    draw-boost-setting.js  the draw boost's Einstellungen toggle and the
-                     lobby's one line naming whose favourites got the extra
-                     chance (issue #1777)
+    vote-boost.js    the rating-based boost (issue #1830): who recently played
+                     games they did not enjoy and by how much, their favourites,
+                     and each session's ballot weights — shared by the result
+                     screen, the table split and the server draw
+    draw-boost-setting.js  the „Wer zu kurz kommt" Einstellungen toggle and the
+                     hint naming who has more say tonight (issues #1777, #1830)
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)

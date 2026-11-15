@@ -338,11 +338,6 @@ I18N.fi = {
   'recap.divisive': 'Eniten mielipiteitä jakava',
   'recap.favourites': 'Suosikit',
   'recap.thin': 'Arvioita ei ole vielä tarpeeksi kokonaiskuvaan — pelatkaa lisää, kyllä se siitä.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'Kenen suosikit päätyvät pöytään',
-  'recap.tasteShareNone': 'Suosikit eivät ole vielä päätyneet pöytään',
-  'recap.tasteShareOne': 'Suosikit päätyivät pöytään kerran',
-  'recap.tasteShareMany': 'Suosikit päätyivät pöytään {n} kertaa',
 
   'periodRecap.title': 'Kuukausi ja vuosi',
   'periodRecap.lead': 'Valitse kuukausi tai vuosi — ja jaa se, mitä pelasitte.',
@@ -1062,10 +1057,6 @@ I18N.fi = {
   'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
   'member.favoriteNone': 'Ei vielä arvioita',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'Suosikeista yksikään ei ole vielä päätynyt pöytään',
-  'member.tasteShareOne': 'Suosikeista yksi päätyi pöytään',
-  'member.tasteShareMany': 'Suosikeista {n} päätyi pöytään',
   'member.tasteNear': 'Lähin maku:',
   'member.tasteFar': 'Täysin eri maku:',
   'member.ownedTitleOne': '{n} peli, jonka omistaa {name}',
@@ -1346,11 +1337,13 @@ I18N.fi = {
   'lobby.crumb': 'Äänestys',
   'lobby.title': 'Äänestys käynnissä',
   'lobby.sub': '{n} peliä arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
-  'lobby.drawBoost': 'Tänään lisämahdollisuus suosikeille: {name}',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Arvonta',
   'drawBoost.label': 'Vuoro sille, joka on jäänyt paitsi',
-  'drawBoost.note': 'Kun tämä on päällä, sen pöydän ääressä olevan suosikit, jonka suosikkeja on pelattu vähiten, arvotaan kaksi kertaa todennäköisemmin. Äänestys ei muutu.',
+  'drawBoost.note': 'Kun tämä on päällä, se, joka on viime aikoina pelannut pelejä, joista ei pitänyt, saa enemmän sananvaltaa: hänen äänensä painaa enemmän ja hänen suosikkinsa arvotaan todennäköisemmin. Peli, josta hän taas pitää, nollaa tämän.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '{names} saa tänään vähän enemmän sananvaltaa',
+  'voteBoost.hint': '{names} saavat tänään vähän enemmän sananvaltaa',
   // The group challenge (#1779).
   'challenge.title': 'Haaste',
   'challenge.goal.newGamesOne': '{n} koskaan pelaamaton peli',
@@ -1390,8 +1383,8 @@ I18N.fi = {
   'challenge.moment.completed': 'Haaste suoritettu: {goal}',
   'challenge.moment.advanced': 'Haaste: {goal}',
   'challenge.chronik': 'Haaste suoritettu',
-  'drawBoost.toast.on': 'Lisämahdollisuus on päällä',
-  'drawBoost.toast.off': 'Lisämahdollisuus on pois',
+  'drawBoost.toast.on': 'Lisää sananvaltaa on päällä',
+  'drawBoost.toast.off': 'Lisää sananvaltaa on pois',
   'lobby.subOne': '{n} peli arvottu. Kun kaikki ovat äänestäneet, finaali alkaa.',
   'lobby.voted': 'äänesti',
   'lobby.waiting': 'odottaa',

@@ -1,12 +1,12 @@
-/* Spielwirbel – the round's draw-boost setting (#1777, „Wer zu kurz kommt, ist
-   dran") and the lobby's one line about it.
+/* Spielwirbel – the round's „Wer zu kurz kommt, ist dran" setting (#1777,
+   redefined by #1830) and the one line that names who it favours tonight.
 
-   The setting is a per-round toggle, off by default. With it on the SERVER draw
-   (lib/draw-boost.js — the only implementation, there is no client re-draw)
-   gives the favourites of the seated member whose favourites reached the table
-   least a better chance of entering the vote. Nothing here computes who that
-   is: the lobby names the member the server stored on the session
-   (`drawBoostMemberId`), present only when the boost actually changed the odds.
+   The setting is a per-round toggle, off by default. With it on, a member who
+   recently played games they did not enjoy gets more say: the SERVER draw
+   (lib/draw-boost.js — there is no client re-draw) favours their favourites,
+   and a session started with it on (`session.voteBoost`) weighs their ballot
+   more in the result. Who that is comes from vote-boost.js, never from a
+   stored list.
 
    Its own file rather than more of views-round-settings.js, which sits at its
    700-line budget (.claude/rules/token-friendly-source-files.md).
@@ -52,13 +52,17 @@ function renderDrawBoostSection(round) {
   return frag;
 }
 
-/* The lobby's line, or null: „Heute mit Extra-Chance für die Lieblingsspiele
-   von Ben". No numbers, by the issue's voting stance — it says that the boost
-   applied and for whom, never by how much. */
-function drawBoostNote(round, session) {
-  const mid = session && session.drawBoostMemberId;
-  const member = mid && (round.members || []).find((m) => m.id === mid);
-  if (!member) return null;
-  return h(`<p class="muted live-vote__boost"><i class="ti ti-heart" aria-hidden="true"></i>
-      ${esc(t('lobby.drawBoost', { name: member.name }))}</p>`);
+/* The hint, or null: „Anna und Ben haben heute etwas mehr Mitsprache" (#1830).
+   Shown on the lobby and on the result screen of a session that started with
+   the boost on, naming the seated members who are boosted — the same members
+   whose ballots the result weighs (vote-boost.js), so it cannot announce a say
+   the screen does not give. No numbers, by the voting stance: faces, not
+   percentages. */
+function voteBoostNote(round, session) {
+  const ids = boostedSeatIds(round, session);
+  if (!ids.length) return null;
+  const names = ids.map((id) => (round.members.find((m) => m.id === id) || {}).name).filter(Boolean);
+  if (!names.length) return null;
+  return h(`<p class="muted vote-boost-note"><i class="ti ti-heart" aria-hidden="true"></i>
+      ${esc(tn(names.length, 'voteBoost.hintOne', 'voteBoost.hint', { names: joinNames(names) }))}</p>`);
 }

@@ -362,11 +362,6 @@ I18N.it = {
   'recap.divisive': 'Più divisivo',
   'recap.favourites': 'Preferiti',
   'recap.thin': 'Non ci sono ancora valutazioni sufficienti per un quadro d’insieme — continuate a giocare, arriverà.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'Di chi sono i preferiti che arrivano in tavola',
-  'recap.tasteShareNone': 'I preferiti non sono ancora arrivati in tavola',
-  'recap.tasteShareOne': 'I preferiti sono arrivati in tavola una volta',
-  'recap.tasteShareMany': 'I preferiti sono arrivati in tavola {n} volte',
 
   // Il riepilogo per periodo (#800): un mese o un anno, condivisibile come immagine.
   'periodRecap.title': 'Mese e anno',
@@ -1092,10 +1087,6 @@ I18N.it = {
   'member.bestGameNone': 'Nessun gioco ancora vinto',
   'member.favorite': 'Gioco preferito',
   'member.favoriteNone': 'Ancora nessuna valutazione',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'Nessuno dei preferiti è ancora arrivato in tavola',
-  'member.tasteShareOne': 'Uno dei preferiti è arrivato in tavola',
-  'member.tasteShareMany': '{n} dei preferiti sono arrivati in tavola',
   'member.tasteNear': 'Gusti più simili:',
   'member.tasteFar': 'Gusti più diversi:',
   'member.ownedTitleOne': '{n} gioco di {name}',
@@ -1379,11 +1370,13 @@ I18N.it = {
   'lobby.crumb': 'Votazione',
   'lobby.title': 'Votazione in corso',
   'lobby.sub': '{n} giochi estratti. Quando tutti avranno votato, comincia il finale.',
-  'lobby.drawBoost': 'Oggi più chance per i preferiti di {name}',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Estrazione',
   'drawBoost.label': 'Tocca a chi è rimasto indietro',
-  'drawBoost.note': 'Se attivo, i preferiti della persona al tavolo i cui preferiti sono stati giocati meno hanno il doppio delle probabilità di essere estratti. Il voto non cambia.',
+  'drawBoost.note': 'Se attivo, chi di recente ha giocato a giochi che non gli sono piaciuti ha più voce in capitolo: il suo voto conta di più e i suoi preferiti hanno più probabilità di essere estratti. Un gioco che torna a piacergli azzera tutto.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': 'Oggi {names} ha un po’ più voce in capitolo',
+  'voteBoost.hint': 'Oggi {names} hanno un po’ più voce in capitolo',
   // The group challenge (#1779).
   'challenge.title': 'Sfida',
   'challenge.goal.newGamesOne': '{n} gioco mai giocato',
@@ -1423,8 +1416,8 @@ I18N.it = {
   'challenge.moment.completed': 'Sfida completata: {goal}',
   'challenge.moment.advanced': 'Sfida: {goal}',
   'challenge.chronik': 'Sfida completata',
-  'drawBoost.toast.on': 'Chance extra attiva',
-  'drawBoost.toast.off': 'Chance extra disattivata',
+  'drawBoost.toast.on': 'Più voce attiva',
+  'drawBoost.toast.off': 'Più voce disattivata',
   'lobby.subOne': '{n} gioco estratto. Quando tutti avranno votato, comincia il finale.',
   'lobby.voted': 'ha votato',
   'lobby.waiting': 'in attesa',

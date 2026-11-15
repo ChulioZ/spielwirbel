@@ -186,7 +186,7 @@ const frontendGlobals = {
   tagFilterChips: 'readonly', ownerFilterChips: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
-  tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
+  tileValue: 'readonly', scoreRatings: 'readonly', scoreWeightedRatings: 'readonly', scoreTally: 'readonly',
   SHRINK_M: 'readonly', PRIOR_DEFAULT: 'readonly',
   PRIOR_EVENINGS: 'readonly', PICK_VALUE: 'readonly',
   shrinkScore: 'readonly', eveningEvidence: 'readonly',
@@ -382,10 +382,10 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
-  // taste-share.js (#1776): whose favourites reach the table
-  TASTE_SHARE_FROM_SESSIONS: 'readonly', TASTE_SHARE_MIN_FAVOURITES: 'readonly',
-  tasteShare: 'readonly', tasteShareRows: 'readonly',
-  renderTasteShare: 'readonly', memberTasteShareLine: 'readonly',
+  // vote-boost.js (#1830): the rating-based boost for the vote and the draw
+  BOOST_STEP: 'readonly', BOOST_RESET_FROM: 'readonly', VOTE_WEIGHT_BASE: 'readonly', voteBoostDeps: 'readonly',
+  boostAfter: 'readonly', memberBoosts: 'readonly', favouritesByMember: 'readonly',
+  sessionVoteWeights: 'readonly', boostedSeatIds: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
   periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',
@@ -536,8 +536,8 @@ const frontendGlobals = {
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
   renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
-  // draw-boost-setting.js (#1777) — the Einstellungen toggle and the lobby line
-  renderDrawBoostSection: 'readonly', drawBoostNote: 'readonly',
+  // draw-boost-setting.js (#1777, #1830) — the Einstellungen toggle and the boost hint
+  renderDrawBoostSection: 'readonly', voteBoostNote: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   // round-export.js (#1702) — the round settings' data export.

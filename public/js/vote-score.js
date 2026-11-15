@@ -127,6 +127,36 @@ function scoreRatings(ratings) {
   return scoreTally(tiles);
 }
 
+/* Score WEIGHTED ratings (#1830): `pairs` is [{ rating, weight }], weight an
+   integer percent from vote-boost.js. The score is the weighted mean through the
+   SAME curve, Σ w·tileValue(r) / Σ w, so a boosted ballot moves a game further
+   without the scale itself changing. `count`, `low` and `vetoes` stay counts
+   of PEOPLE, unweighted — the reason line („1× gar nicht") states how many said
+   it, and a weight is not a second person.
+
+   Only a session that started with the boost on, and has someone boosted at the
+   table, ever reaches this; every other caller keeps `scoreRatings`, which is
+   what keeps the unboosted path byte for byte what it was. */
+function scoreWeightedRatings(pairs) {
+  let sum = 0;
+  let total = 0;
+  let count = 0;
+  let low = null;
+  let vetoes = 0;
+  (Array.isArray(pairs) ? pairs : []).forEach((p) => {
+    const v = p ? tileValue(p.rating) : null;
+    const w = p ? p.weight : null;
+    if (v === null || !Number.isInteger(w) || w <= 0) return;
+    sum += w * v;
+    total += w;
+    count += 1;
+    if (low === null || p.rating < low) low = p.rating;
+    if (p.rating === 1) vetoes += 1;
+  });
+  if (!count) return null;
+  return { score: sum / total, count, low, vetoes };
+}
+
 /* Score a per-tile HISTOGRAM: `tiles[k]` is how many votes landed on tile k.
 
    Same curve, same return shape and the same null-on-empty contract as
@@ -373,7 +403,7 @@ function playCounts(round) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreTally,
+    TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreWeightedRatings, scoreTally,
     SHRINK_M, PRIOR_DEFAULT, PRIOR_EVENINGS, PICK_VALUE,
     shrinkScore, eveningEvidence, shelfScore, playCounts,
   };
