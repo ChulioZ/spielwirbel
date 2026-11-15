@@ -38,9 +38,15 @@ function roundOf(flag) {
 test('shelf, game stats and per-session stats are identical with the boost on and off', (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
-  const read = (expr, flag) => dom.run(`JSON.stringify((() => { const round = ${JSON.stringify(roundOf(flag))}; return ${expr}; })())`);
+  // The fixture goes in as a VALUE on the context, never spliced into source:
+  // every string evaluated below is a constant.
+  const read = (expr, flag) => {
+    dom.context.__round = roundOf(flag);
+    return dom.run(`JSON.stringify((() => { const round = __round; return ${expr}; })())`);
+  };
   // The flagged round really does weight its result — or this spec proves nothing.
-  const weights = dom.run(`JSON.stringify([...sessionVoteWeights(${JSON.stringify(roundOf(true))}, ${JSON.stringify(roundOf(true).sessions[2])})])`);
+  dom.context.__round = roundOf(true);
+  const weights = dom.run('JSON.stringify([...sessionVoteWeights(__round, __round.sessions[2])])');
   assert.equal(weights, JSON.stringify([['m1', 200], ['m2', 100], ['m3', 100]]));
   for (const expr of [
     "roundScoreIndex(round, round.games).byGame",
