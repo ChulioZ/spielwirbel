@@ -42,6 +42,7 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `team-picker.js` | who can be put in a team |
 | `views-pokale.js` | standings, streaks, trophies |
 | `recap.js` | the Lieblingsspiele card (`memberFavourites`) — a retired member gets none |
+| `vote-boost.js` | who „Wer zu kurz kommt, ist dran" may boost, and whose favourites the draw weights (#1830) |
 | `round-rail.js`, `views-round-start.js` | the member strips, Der Tisch's seat captions, the retire banner's vote floor |
 | `ocean-hub.js`, `bruecke-hub.js`, `programmheft-hub.js`, `forest-hub.js` | each design's hub seat captions (Forest also prints the member count) |
 | `views-badges.js` | whose Abzeichen the section and the hub's preview line list |
@@ -52,8 +53,8 @@ filter `activeMembers()` (`public/js/member-active.js`):
 | `lib/routes/saved-filters.js` | which seats a saved filter stores |
 
 Grep for both `activeMembers(` and `!m.retired` before assuming the table is
-complete. **Two files spell the predicate out instead of calling the helper** —
-`recap.js` and `owner-picker.js` — because they are `require`d
+complete. **Three files spell the predicate out instead of calling the helper** —
+`recap.js`, `owner-picker.js` and `vote-boost.js` — because they are `require`d
 from Node, and a `public/js` file cannot `require` a sibling. That is the same
 constraint that makes `shelfScoreOf` and `tileValue` injected parameters. It is
 one predicate, not a list or a formula, so the copy is licensed; if it ever

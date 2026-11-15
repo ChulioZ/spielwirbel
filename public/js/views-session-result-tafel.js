@@ -33,13 +33,22 @@ function resultArchivedBadge(g, session) {
       : '');
 }
 
-function tallyResultRows(games, people, session) {
+/* `weights` (#1830) is vote-boost.js's sessionVoteWeights: null unless the
+   session started with the boost on and someone at the table is boosted, in
+   which case each ballot weighs its integer percent through the same curve. The
+   share text, the share card and the podium all read these rows, so none of
+   them can re-score the evening differently from the screen. */
+function tallyResultRows(games, people, session, weights) {
   // Tally per game.
   const rows = games.map((g) => {
     const ratings = [];
+    const pairs = [];
     people.forEach((p) => {
       const v = (session.votes[p.id] || {})[g.id];
-      if (v && Number.isFinite(v.rating)) ratings.push(v.rating);
+      if (v && Number.isFinite(v.rating)) {
+        ratings.push(v.rating);
+        if (weights) pairs.push({ rating: v.rating, weight: weights.get(p.id) || VOTE_WEIGHT_BASE });
+      }
     });
     const sum = ratings.reduce((a, b) => a + b, 0);
     const avg = ratings.length ? sum / ratings.length : 0;
@@ -47,7 +56,7 @@ function tallyResultRows(games, people, session) {
     // curve, so a game one person does not want to play stops outranking a game
     // everybody is fine with. `avg` stays for the share text's raw fallback and
     // for anything describing the votes rather than the game.
-    const sc = scoreRatings(ratings);
+    const sc = weights ? scoreWeightedRatings(pairs) : scoreRatings(ratings);
     // Indexed by rating, so slot 0 is a permanent hole the chart below skips —
     // the same shape (and the same reason) as vote-score.js's TILE_VALUE.
     const dist = [0, 0, 0, 0, 0, 0];

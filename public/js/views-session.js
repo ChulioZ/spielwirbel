@@ -1326,7 +1326,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook || forestLook;
 
   // Tally per game: ranked rows with tie-aware places (views-session-result-tafel.js).
-  const rows = tallyResultRows(games, people, session);
+  // Weighted by the boost (#1830) only when this session started with it on.
+  const rows = tallyResultRows(games, people, session, sessionVoteWeights(round, session));
 
   /* The screen's ONE context (#1543). The Tafel, the table band and the session
      controls live in their own files (views-session-result-tafel.js, -band.js,
@@ -1445,6 +1446,11 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // headline, then the Tafel drives in row by row (`--print-i` below). Only the
   // reveal — never a cold load or a Chronik visit.
   if (brueckeLook && reveal) head.setAttribute('data-decrypt', '');
+  // Who had a little more say in this result (#1830) — only on a ranking, and
+  // only where the session started with the boost on. Inside the heading's text
+  // column, which every design's composition keeps.
+  const boostNote = hasVotes ? voteBoostNote(round, session) : null;
+  if (boostNote) head.firstElementChild.appendChild(boostNote);
 
   // „Teilen": hand the group chat what this screen says, as plain text (#526).
   // Hidden outright where neither API exists — which is a real case, not a

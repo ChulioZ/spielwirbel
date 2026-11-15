@@ -361,11 +361,6 @@ I18N.nl = {
   'recap.divisive': 'Meest verdeeld',
   'recap.favourites': 'Favorieten',
   'recap.thin': 'Nog te weinig beoordelingen voor een beeld — blijf spelen, het komt vanzelf.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'Wiens favorieten op tafel komen',
-  'recap.tasteShareNone': 'Favorieten kwamen nog niet op tafel',
-  'recap.tasteShareOne': 'Favorieten kwamen één keer op tafel',
-  'recap.tasteShareMany': 'Favorieten kwamen {n}× op tafel',
 
   'periodRecap.title': 'Maand & jaar',
   'periodRecap.lead': 'Kies een maand of een jaar — en deel wat jullie gespeeld hebben.',
@@ -1088,10 +1083,6 @@ I18N.nl = {
   'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
   'member.favoriteNone': 'Nog geen beoordelingen',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'Van de favorieten kwam er nog geen op tafel',
-  'member.tasteShareOne': 'Van de favorieten kwam er één op tafel',
-  'member.tasteShareMany': 'Van de favorieten kwamen er {n} op tafel',
   'member.tasteNear': 'Meest verwante smaak:',
   'member.tasteFar': 'Totaal andere smaak:',
   'member.ownedTitleOne': '{n} spel van {name}',
@@ -1375,11 +1366,13 @@ I18N.nl = {
   'lobby.crumb': 'Stemmen',
   'lobby.title': 'Stemmen loopt',
   'lobby.sub': '{n} spellen getrokken. Zodra iedereen gestemd heeft, begint de finale.',
-  'lobby.drawBoost': 'Vandaag extra kans voor de favorieten van {name}',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Trekking',
   'drawBoost.label': 'Wie tekortkomt, is aan de beurt',
-  'drawBoost.note': 'Als dit aan staat, hebben de favorieten van wie aan tafel zijn favorieten het minst gespeeld zag, twee keer zoveel kans om getrokken te worden. Aan de stemming verandert niets.',
+  'drawBoost.note': 'Als dit aan staat, krijgt wie onlangs spellen speelde die niet bevielen meer inspraak: die stem telt zwaarder en de eigen favorieten worden eerder getrokken. Een spel dat weer bevalt, zet het terug.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '{names} heeft vandaag wat meer inspraak',
+  'voteBoost.hint': '{names} hebben vandaag wat meer inspraak',
   // The group challenge (#1779).
   'challenge.title': 'Uitdaging',
   'challenge.goal.newGamesOne': '{n} nooit eerder gespeeld spel',
@@ -1419,8 +1412,8 @@ I18N.nl = {
   'challenge.moment.completed': 'Uitdaging gehaald: {goal}',
   'challenge.moment.advanced': 'Uitdaging: {goal}',
   'challenge.chronik': 'Uitdaging gehaald',
-  'drawBoost.toast.on': 'Extra kans staat aan',
-  'drawBoost.toast.off': 'Extra kans staat uit',
+  'drawBoost.toast.on': 'Meer inspraak staat aan',
+  'drawBoost.toast.off': 'Meer inspraak staat uit',
   'lobby.subOne': '{n} spel getrokken. Zodra iedereen gestemd heeft, begint de finale.',
   'lobby.voted': 'gestemd',
   'lobby.waiting': 'wachtend',

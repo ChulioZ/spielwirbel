@@ -1,16 +1,14 @@
 'use strict';
 
-// #1777 — the opt-in draw boost for the member whose favourites reach the table
-// least. Exercises lib/draw-boost.js directly under a seeded RNG; the route
-// wiring and the round setting are test/draw-boost-route.test.js's subject.
+// #1830 — the draw half of „Wer zu kurz kommt, ist dran": every seated, boosted
+// member pushes their favourites by 100 + Σ boost. Exercises lib/draw-boost.js
+// under a seeded RNG; the route wiring is test/draw-boost-route.test.js's.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { DRAW_BOOST_WEIGHT, boostedMember, drawGames } = require('../lib/draw-boost');
+const { drawGames, drawWeights } = require('../lib/draw-boost');
 const { shuffle } = require('../lib/draw');
-const { TASTE_SHARE_FROM_SESSIONS } = require('../public/js/taste-share');
-const { RATING_MAX } = require('../public/js/rating-faces');
 
 // mulberry32 — a tiny deterministic RNG, so every number below is reproducible.
 function seeded(seed) {
@@ -24,103 +22,77 @@ function seeded(seed) {
   };
 }
 
-const top = { rating: RATING_MAX };
 const SEATS = ['ana', 'ben', 'cem'];
 const GAMES = Array.from({ length: 10 }, (_, i) => ({ id: `g${i}`, title: `G${i}` }));
+const top = { rating: 5 };
 
-/* Ben's favourites are g1/g2 and never reached the table; Ana's (g3/g4) and
-   Cem's (g5/g6) did, three evenings each. So Ben is STRICTLY behind (0 vs 3/3). */
-function fixture({ played = TASTE_SHARE_FROM_SESSIONS, chosen } = {}) {
-  const picks = chosen || ['g3', 'g5', 'g3', 'g5', 'g3', 'g5', 'g3', 'g5'].slice(0, played);
-  const sessions = picks.map((gid, i) => ({
-    id: `s${i}`, finished: true, memberIds: SEATS, chosenGameId: gid, votes: {},
-  }));
-  sessions[0].votes = {
-    ana: { g3: top, g4: top },
-    ben: { g1: top, g2: top },
-    cem: { g5: top, g6: top },
-  };
+/* Favourites (rated 5 in an earlier vote): Ana g1, Ben g2 + g3, Cem g4.
+   Played history: Ana sat through g9, which she rated 1 (+50); Ben through g8,
+   rated 2 (+25). Cem enjoyed his (g7, a 4). */
+function fixture() {
   return {
     members: SEATS.map((id) => ({ id, name: id })),
     games: GAMES,
-    sessions,
+    sessions: [
+      { id: 'v', createdAt: '2026-01-01T20:00:00.000Z', memberIds: SEATS, finished: false, cancelled: true,
+        votes: { ana: { g1: top }, ben: { g2: top, g3: top }, cem: { g4: top } } },
+      { id: 'a', createdAt: '2026-01-02T20:00:00.000Z', memberIds: SEATS, finished: true, chosenGameId: 'g9',
+        votes: { ana: { g9: { rating: 1 } } } },
+      { id: 'b', createdAt: '2026-01-03T20:00:00.000Z', memberIds: SEATS, finished: true, chosenGameId: 'g8',
+        votes: { ben: { g8: { rating: 2 } }, cem: { g8: { rating: 4 } } } },
+    ],
   };
 }
 
-test('the weight is pinned: a favourite is exactly twice as likely to be drawn', () => {
-  assert.equal(DRAW_BOOST_WEIGHT, 2);
+test('draw weights are 100 + Σ boost over the seated members who favour the game', () => {
+  const w = Object.fromEntries(drawWeights(fixture(), GAMES, SEATS));
+  assert.equal(w.g1, 150, 'Ana +50');
+  assert.equal(w.g2, 125, 'Ben +25');
+  assert.equal(w.g3, 125);
+  assert.equal(w.g4, 100, 'Cem is not boosted');
+  assert.equal(w.g0, 100);
+  for (const v of Object.values(w)) assert.ok(Number.isInteger(v), `integer weight ${v}`);
+  // An unseated member pushes nothing.
+  assert.equal(drawWeights(fixture(), GAMES, ['ben', 'cem']).get('g1'), 100);
 });
 
-test('boostedMember: the one seated member strictly behind, else nobody', () => {
-  assert.equal(boostedMember(fixture(), SEATS), 'ben');
-  // Ben not seated: Ana and Cem tie at three evenings, so nobody is behind.
-  assert.equal(boostedMember(fixture(), ['ana', 'cem']), null);
-  // Alone at the table there is nobody to be behind.
-  assert.equal(boostedMember(fixture(), ['ben']), null);
-  // A young round reads as noise, the Rückblick's own bar.
-  assert.equal(boostedMember(fixture({ played: TASTE_SHARE_FROM_SESSIONS - 1 }), SEATS), null);
-  // Everyone tied (Ben's favourites played as often as the others'): no boost.
-  const tied = fixture({ chosen: ['g1', 'g3', 'g5', 'g1', 'g3', 'g5'] });
-  assert.equal(boostedMember(tied, SEATS), null);
-  // A member with a single favourite has no taste to fall behind on.
-  const single = fixture();
-  single.sessions[0].votes.ben = { g1: top };
-  assert.equal(boostedMember(single, SEATS), null);
-});
-
-test('boost OFF is byte-identical to the plain shuffle under the same seed', () => {
+test('a game two boosted members favour adds both boosts', () => {
   const round = fixture();
-  for (const seed of [1, 42, 1777]) {
+  round.sessions[0].votes.ana.g2 = top;
+  assert.equal(drawWeights(round, GAMES, SEATS).get('g2'), 175);
+});
+
+test('nothing to change is the plain shuffle, byte for byte, with the same RNG calls', () => {
+  const round = fixture();
+  const noFavsInPool = GAMES.filter((g) => !['g1', 'g2', 'g3'].includes(g.id));
+  for (const seed of [1, 42, 1830]) {
     const plain = shuffle(GAMES.slice(), seeded(seed)).slice(0, 3);
-    const off = drawGames(round, GAMES, 3, { boost: false, seatedIds: SEATS, rng: seeded(seed) });
-    assert.deepEqual(off, { picked: plain, boostMemberId: null });
-    // On, but nobody behind, takes the same path.
-    const none = drawGames(round, GAMES, 3, { boost: true, seatedIds: ['ana', 'cem'], rng: seeded(seed) });
-    assert.deepEqual(none, { picked: plain, boostMemberId: null });
+    const cases = [
+      ['off', GAMES, { boost: false, seatedIds: SEATS }],
+      ['nobody boosted seated', GAMES, { boost: true, seatedIds: ['cem'] }],
+      ['whole pool', GAMES, { boost: true, seatedIds: SEATS }, 10],
+    ];
+    for (const [label, pool, opts, n = 3] of cases) {
+      const want = shuffle(pool.slice(), seeded(seed)).slice(0, Math.min(n, pool.length));
+      assert.deepEqual(drawGames(round, pool, n, { ...opts, rng: seeded(seed) }), { picked: want }, label);
+    }
+    const p2 = shuffle(noFavsInPool.slice(), seeded(seed)).slice(0, 3);
+    assert.deepEqual(drawGames(round, noFavsInPool, 3, { boost: true, seatedIds: SEATS, rng: seeded(seed) }), { picked: p2 }, 'no boosted favourite in the pool');
+    assert.equal(plain.length, 3);
   }
 });
 
-test('boost ON reports the member only when it can change the draw', () => {
+test('boosted, a single draw picks each game in proportion to its weight', () => {
   const round = fixture();
-  assert.equal(drawGames(round, GAMES, 3, { boost: true, seatedIds: SEATS, rng: seeded(1) }).boostMemberId, 'ben');
-  // Every game drawn anyway: no extra chance to speak of.
-  assert.equal(drawGames(round, GAMES, 10, { boost: true, seatedIds: SEATS, rng: seeded(1) }).boostMemberId, null);
-  // None of Ben's favourites in the pool.
-  const pool = GAMES.filter((g) => g.id !== 'g1' && g.id !== 'g2');
-  assert.equal(drawGames(round, pool, 3, { boost: true, seatedIds: SEATS, rng: seeded(1) }).boostMemberId, null);
-});
-
-test('boost ON: a single draw picks each favourite ~2x as often as any other game', () => {
-  const round = fixture();
-  const rng = seeded(1777);
-  const N = 12000;
+  const rng = seeded(1830);
+  const N = 20000;
   const hits = new Map(GAMES.map((g) => [g.id, 0]));
   for (let i = 0; i < N; i++) {
     const { picked } = drawGames(round, GAMES, 1, { boost: true, seatedIds: SEATS, rng });
     hits.set(picked[0].id, hits.get(picked[0].id) + 1);
   }
-  // Weights 2,2 + eight 1s = 12, so a favourite is 1/6 and the rest 1/12 each.
-  const fav = (hits.get('g1') + hits.get('g2')) / 2 / N;
-  const rest = GAMES.filter((g) => g.id !== 'g1' && g.id !== 'g2')
-    .reduce((n, g) => n + hits.get(g.id), 0) / 8 / N;
-  assert.ok(Math.abs(fav - 1 / 6) < 0.012, `favourite share ${fav}`);
-  assert.ok(Math.abs(fav / rest - DRAW_BOOST_WEIGHT) < 0.2, `ratio ${fav / rest}`);
-});
-
-test('boost ON: in a three-game draw the favourites come up measurably more often', () => {
-  const round = fixture();
-  const N = 6000;
-  const rate = (boost) => {
-    const rng = seeded(7);
-    let n = 0;
-    for (let i = 0; i < N; i++) {
-      const { picked } = drawGames(round, GAMES, 3, { boost, seatedIds: SEATS, rng });
-      n += picked.filter((g) => g.id === 'g1' || g.id === 'g2').length;
-    }
-    return n / (2 * N);
-  };
-  const off = rate(false);
-  const on = rate(true);
-  assert.ok(Math.abs(off - 0.3) < 0.02, `baseline ${off}`); // 3 of 10
-  assert.ok(on > off * 1.4, `boosted ${on} vs ${off}`);
+  // 150 + 125 + 125 + seven × 100 = 1100.
+  assert.ok(Math.abs(hits.get('g1') / N - 150 / 1100) < 0.01, `g1 ${hits.get('g1') / N}`);
+  assert.ok(Math.abs(hits.get('g2') / N - 125 / 1100) < 0.01, `g2 ${hits.get('g2') / N}`);
+  assert.ok(Math.abs(hits.get('g0') / N - 100 / 1100) < 0.01, `g0 ${hits.get('g0') / N}`);
 });

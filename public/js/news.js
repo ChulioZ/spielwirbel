@@ -50,6 +50,51 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1830, „Wer zu kurz kommt, ist dran" redefined. Not a new capability, but it
+   * moves result numbers people have seen and removes a Pokale list, so it earns
+   * an `improved` entry (.claude/rules/keep-readme-current.md).
+   */
+  {
+    revision: '2026-11-15',
+    kind: 'improved',
+    de: {
+      title: '„Wer zu kurz kommt, ist dran" neu gedacht',
+      body: 'Die Einstellung achtet jetzt darauf, wie euch die zuletzt gespielten Spiele gefallen haben. Wer Spiele erwischt hat, die keinen Spaß gemacht haben, bekommt in der nächsten Session mehr Mitsprache: Die eigene Stimme zählt mehr, und die eigenen Lieblingsspiele werden eher gezogen. Lobby und Ergebnis sagen, wer das ist. Deshalb kann ein Ergebnis anders ausfallen als der reine Durchschnitt. Die Rückblick-Liste „Wessen Favoriten auf den Tisch kommen" ist dafür weggefallen.',
+    },
+    en: {
+      title: '„Wer zu kurz kommt, ist dran" rethought',
+      body: 'The setting now looks at how you liked the games you played lately. Whoever got stuck with games they did not enjoy gets more say in the next session: their vote counts for more, and their favourites are likelier to be drawn. The lobby and the result say who that is, so a result can differ from the plain average. The Rückblick list of whose favourites reach the table has gone in exchange.',
+    },
+    es: {
+      title: '„Wer zu kurz kommt, ist dran", repensado',
+      body: 'El ajuste ahora tiene en cuenta cuánto os gustaron los últimos juegos. Quien jugó a juegos que no le gustaron tiene más voz en la siguiente sesión: su voto cuenta más y sus favoritos tienen más opciones en el sorteo. La sala y el resultado dicen quién es, así que un resultado puede diferir de la media simple. A cambio desaparece la lista del resumen de quién ve sus favoritos en la mesa.',
+    },
+    fr: {
+      title: '« Wer zu kurz kommt, ist dran » repensé',
+      body: 'Le réglage tient désormais compte de ce que vous avez pensé des derniers jeux joués. Qui est tombé sur des jeux qui ne lui ont pas plu a davantage voix au chapitre à la session suivante : son vote compte plus et ses favoris ont plus de chances d’être tirés. Le salon et le résultat disent de qui il s’agit, donc un résultat peut différer de la simple moyenne. En contrepartie, la liste du bilan sur les favoris qui arrivent sur la table disparaît.',
+    },
+    it: {
+      title: '„Wer zu kurz kommt, ist dran" ripensato',
+      body: 'L’impostazione ora guarda a quanto vi sono piaciuti gli ultimi giochi. Chi si è ritrovato con giochi che non gli sono piaciuti ha più voce in capitolo nella sessione successiva: il suo voto conta di più e i suoi preferiti hanno più probabilità di essere estratti. La sala e il risultato dicono chi è, quindi un risultato può differire dalla semplice media. In cambio sparisce l’elenco del riepilogo sui preferiti che arrivano in tavola.',
+    },
+    nl: {
+      title: '„Wer zu kurz kommt, ist dran" herzien',
+      body: 'De instelling kijkt nu naar hoe jullie de laatst gespeelde spellen vonden. Wie spellen trof die niet bevielen, krijgt in de volgende sessie meer inspraak: die stem telt zwaarder en de eigen favorieten worden eerder getrokken. De lobby en de uitslag zeggen wie dat is, dus een uitslag kan afwijken van het gewone gemiddelde. Daarvoor is de terugbliklijst over wiens favorieten op tafel komen verdwenen.',
+    },
+    pt: {
+      title: '„Wer zu kurz kommt, ist dran" repensado',
+      body: 'A definição agora tem em conta o quanto gostaram dos últimos jogos. Quem apanhou jogos de que não gostou tem mais voz na sessão seguinte: o seu voto conta mais e os seus favoritos têm mais chance de ser sorteados. A sala e o resultado dizem quem é, por isso um resultado pode diferir da média simples. Em troca, desaparece a lista do resumo sobre de quem são os favoritos que chegam à mesa.',
+    },
+    fi: {
+      title: '„Wer zu kurz kommt, ist dran" uudistettu',
+      body: 'Asetus katsoo nyt, miten viimeksi pelatut pelit maistuivat. Se, joka joutui pelaamaan pelejä, joista ei pitänyt, saa seuraavassa sessiossa enemmän sananvaltaa: hänen äänensä painaa enemmän ja hänen suosikkinsa arvotaan todennäköisemmin. Aula ja tulos kertovat, kuka se on, joten tulos voi poiketa pelkästä keskiarvosta. Vastineeksi katsauksen lista siitä, kenen suosikit päätyvät pöytään, on poistettu.',
+    },
+    ko: {
+      title: '„Wer zu kurz kommt, ist dran" 새로워졌어요',
+      body: '이제 이 설정은 최근에 플레이한 게임이 얼마나 마음에 들었는지를 봐요. 별로였던 게임을 하게 된 사람은 다음 세션에서 발언권이 더 커져요. 그 사람의 표가 더 무겁게 반영되고 최애 게임이 뽑힐 확률도 높아져요. 대기실과 결과 화면에서 누구인지 알려 주므로 결과가 단순 평균과 다를 수 있어요. 대신 돌아보기의 „누구의 최애가 테이블에 오르나요" 목록은 없어졌어요.',
+    },
+  },
+  /*
    * #1774, session photos. A capability that did not exist: the Chronik held
    * only numbers, never the evening itself.
    */

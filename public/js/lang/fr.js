@@ -363,11 +363,6 @@ I18N.fr = {
   'recap.divisive': 'Le plus clivant',
   'recap.favourites': 'Favoris',
   'recap.thin': 'Pas encore assez de notes pour dresser un portrait — continuez à jouer, ça viendra.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'Les favoris de qui arrivent sur la table',
-  'recap.tasteShareNone': 'Ses favoris ne sont pas encore arrivés sur la table',
-  'recap.tasteShareOne': 'Ses favoris sont arrivés une fois sur la table',
-  'recap.tasteShareMany': 'Ses favoris sont arrivés {n} fois sur la table',
 
   // Le bilan par période (#800) : un mois ou une année, partageable en image.
   'periodRecap.title': 'Mois et année',
@@ -1093,10 +1088,6 @@ I18N.fr = {
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
   'member.favoriteNone': 'Pas encore de note',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'Aucun des favoris n’est encore arrivé sur la table',
-  'member.tasteShareOne': 'Un des favoris est arrivé sur la table',
-  'member.tasteShareMany': '{n} des favoris sont arrivés sur la table',
   'member.tasteNear': 'Goûts les plus proches :',
   'member.tasteFar': 'Goûts les plus différents :',
   'member.ownedTitleOne': '{n} jeu de {name}',
@@ -1380,11 +1371,13 @@ I18N.fr = {
   'lobby.crumb': 'Vote',
   'lobby.title': 'Vote en cours',
   'lobby.sub': '{n} jeux tirés. Dès que tout le monde a voté, la finale commence.',
-  'lobby.drawBoost': 'Aujourd’hui, un coup de pouce pour les favoris de {name}',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Tirage',
   'drawBoost.label': 'Un coup de pouce pour les oubliés',
-  'drawBoost.note': 'Activé, les favoris de la personne à table dont les favoris ont été le moins joués ont deux fois plus de chances d’être tirés. Le vote ne change pas.',
+  'drawBoost.note': 'Activé, qui a récemment joué à des jeux qui ne lui ont pas plu a davantage voix au chapitre : son vote compte plus et ses favoris ont plus de chances d’être tirés. Un jeu qui lui plaît de nouveau remet le compteur à zéro.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '{names} a un peu plus voix au chapitre aujourd’hui',
+  'voteBoost.hint': '{names} ont un peu plus voix au chapitre aujourd’hui',
   // The group challenge (#1779).
   'challenge.title': 'Défi',
   'challenge.goal.newGamesOne': '{n} jeu jamais joué',
@@ -1424,8 +1417,8 @@ I18N.fr = {
   'challenge.moment.completed': 'Défi réussi : {goal}',
   'challenge.moment.advanced': 'Défi : {goal}',
   'challenge.chronik': 'Défi réussi',
-  'drawBoost.toast.on': 'Coup de pouce activé',
-  'drawBoost.toast.off': 'Coup de pouce désactivé',
+  'drawBoost.toast.on': 'Plus de voix activé',
+  'drawBoost.toast.off': 'Plus de voix désactivé',
   'lobby.subOne': '{n} jeu tiré. Dès que tout le monde a voté, la finale commence.',
   'lobby.voted': 'a voté',
   'lobby.waiting': 'en attente',

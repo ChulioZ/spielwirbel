@@ -363,11 +363,6 @@ I18N.pt = {
   'recap.divisive': 'Mais divisivo',
   'recap.favourites': 'Favoritos',
   'recap.thin': 'Ainda não há avaliações suficientes para um retrato — continuem jogando, ele vem.',
-  // #1776: per member, how often one of their favourites was played with them at the table.
-  'recap.tasteShare': 'De quem são os favoritos que chegam à mesa',
-  'recap.tasteShareNone': 'Os favoritos ainda não chegaram à mesa',
-  'recap.tasteShareOne': 'Os favoritos chegaram à mesa uma vez',
-  'recap.tasteShareMany': 'Os favoritos chegaram à mesa {n} vezes',
 
   'periodRecap.title': 'Mês e ano',
   'periodRecap.lead': 'Escolha um mês ou um ano — e compartilhe o que vocês jogaram.',
@@ -1090,10 +1085,6 @@ I18N.pt = {
   'member.bestGameNone': 'Nenhum jogo ganho ainda',
   'member.favorite': 'Jogo favorito',
   'member.favoriteNone': 'Nenhuma avaliação ainda',
-  // #1776: how many distinct favourites of this member reached the table.
-  'member.tasteShareNone': 'Nenhum dos favoritos chegou ainda à mesa',
-  'member.tasteShareOne': 'Um dos favoritos chegou à mesa',
-  'member.tasteShareMany': '{n} dos favoritos chegaram à mesa',
   'member.tasteNear': 'Gosto mais parecido:',
   'member.tasteFar': 'Gosto mais diferente:',
   'member.ownedTitleOne': '{n} jogo de {name}',
@@ -1377,11 +1368,13 @@ I18N.pt = {
   'lobby.crumb': 'Votação',
   'lobby.title': 'Votação em andamento',
   'lobby.sub': '{n} jogos sorteados. Quando todo mundo votar, começa o grande final.',
-  'lobby.drawBoost': 'Hoje com chance extra para os favoritos de {name}',
   // The opt-in draw boost (#1777), a round setting in Einstellungen.
   'drawBoost.title': 'Sorteio',
   'drawBoost.label': 'Vez de quem ficou para trás',
-  'drawBoost.note': 'Ativado, os favoritos da pessoa à mesa cujos favoritos foram menos jogados têm o dobro de chance de ser sorteados. A votação não muda.',
+  'drawBoost.note': 'Ativado, quem jogou há pouco jogos de que não gostou tem mais voz: o seu voto conta mais e os seus favoritos têm mais chance de ser sorteados. Um jogo de que volte a gostar repõe tudo.',
+  // #1830: the hint naming who is boosted in this session — names only, never a number.
+  'voteBoost.hintOne': '{names} tem hoje um pouco mais de voz',
+  'voteBoost.hint': '{names} têm hoje um pouco mais de voz',
   // The group challenge (#1779).
   'challenge.title': 'Desafio',
   'challenge.goal.newGamesOne': '{n} jogo nunca jogado',
@@ -1421,8 +1414,8 @@ I18N.pt = {
   'challenge.moment.completed': 'Desafio concluído: {goal}',
   'challenge.moment.advanced': 'Desafio: {goal}',
   'challenge.chronik': 'Desafio concluído',
-  'drawBoost.toast.on': 'Chance extra ativada',
-  'drawBoost.toast.off': 'Chance extra desativada',
+  'drawBoost.toast.on': 'Mais voz ativada',
+  'drawBoost.toast.off': 'Mais voz desativada',
   'lobby.subOne': '{n} jogo sorteado. Quando todo mundo votar, começa o grande final.',
   'lobby.voted': 'votou',
   'lobby.waiting': 'aguardando',

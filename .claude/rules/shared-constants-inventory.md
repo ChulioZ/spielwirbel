@@ -827,22 +827,26 @@ repo contract the only witness. `roundGameDuration` (the Spielepass median),
 `sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
 (Pokale's „Längste Session") are client-only.
 
-**The thirty-seventh is `public/js/taste-share.js`** (#1776, required by #1777):
-`tasteShare`, whose favourites reached the table how often, plus its two bars
-`TASTE_SHARE_FROM_SESSIONS`/`TASTE_SHARE_MIN_FAVOURITES`. The Pokale Rückblick and
-the member page state it; `lib/draw-boost.js` acts on it, weighting the draw
-towards the member strictly behind. One file because the lobby announces whose
-favourites got the extra chance, and a server copy that counted evenings or
-favourites differently would name a member the Rückblick shows as level — a
-claim the group can check against a screen and find false. Called with its
-siblings injected as `deps` (Node has no shared scope), so a forgotten argument
-throws instead of computing something else.
+**The thirty-seventh is `public/js/vote-boost.js`** (#1830, replacing #1776's
+`taste-share.js`): who recently played games they did not enjoy and by how much
+(`memberBoosts`, `BOOST_STEP`), each member's favourites (`favouritesByMember`),
+and a session's ballot weights (`sessionVoteWeights`). `lib/draw-boost.js` weights
+the draw by it and `lib/session-split.js` the table proposals; the result screen,
+the builder and the hint read the same functions. One file because the hint names
+who has more say tonight and the result weighs exactly those ballots — a server
+fold that ordered sessions, read the fallback rating or treated a split table
+differently would boost someone the result screen does not, or split tables on
+weights the builder then scores differently, with nothing red. Called with its
+siblings injected as `deps` (`BOOST_DEPS` in `lib/draw-boost.js`, the one copy
+the server passes), so a forgotten argument throws under Node rather than
+computing something else.
 
-**The thirty-eighth is `public/js/rating-faces.js`** (#1537, required by #1777):
-`ratingRung`/`RATING_MAX`, the one rounding of a person's average to a face. It
-decides what a FAVOURITE is (the top face) for the draw boost exactly as for every
-screen that shows faces; a server rounding of its own would boost games the
-member's own page does not show as favourites.
+**The thirty-eighth is `public/js/rating-faces.js`** (#1537, required by #1777
+and #1830): `ratingRung`/`RATING_MAX`, the one rounding of a person's average to
+a face. It decides what a FAVOURITE is (the top face) for the draw exactly as for
+every screen that shows faces, and it is the rounding of the boost's fallback
+rating (a member's earlier mean of the game they played); a server rounding of its
+own would boost a member the result screen does not.
 
 **The thirty-ninth is `public/js/purchase-price.js`** (#1773):
 `PURCHASE_PRICE_CURRENCIES` and `PURCHASE_PRICE_MAX_CENTS`, which the game
