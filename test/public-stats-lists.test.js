@@ -7,6 +7,17 @@ const { app, createRound } = require('./helpers');
 
 const publicStats = require('../lib/public-stats');
 const bgg = require('../lib/providers/bgg');
+require('./support/bgg-details-via-detail')(bgg);
+
+// The budget counts REQUESTS since #1832, and a request carries up to
+// MAX_THING_IDS games — so a fixture small enough to read fits in one. Shrinking
+// the batch to one id makes "the budget ran out mid-list" reachable with three
+// games; test/public-stats-batching.test.js covers the real 20-id batches.
+function oneIdPerRequest(t) {
+  const real = bgg.MAX_THING_IDS;
+  bgg.MAX_THING_IDS = 1;
+  t.after(() => { bgg.MAX_THING_IDS = real; });
+}
 const repo = require('../lib/repo');
 
 /*
@@ -113,9 +124,10 @@ test('an unresolvable entry is skipped and the next one takes its place', async 
   assert.deepEqual(ids(built.games.mostOwned), ['a', 'c', 'd']);
 });
 
-test('a run that exhausts the budget publishes a SHORTER list, and the memo finishes it', async () => {
+test('a run that exhausts the budget publishes a SHORTER list, and the memo finishes it', async (t) => {
   openShelfFloors();
   process.env.PUBLIC_STATS_RESOLVE_MAX = '2';
+  oneIdPerRequest(t);
   stubProvider();
   await seedShelves({ a: 4, b: 3, c: 2 });
 
@@ -126,6 +138,23 @@ test('a run that exhausts the budget publishes a SHORTER list, and the memo fini
   const second = await publicStats.rebuild();
   assert.deepEqual(ids(second.games.mostOwned), ['a', 'b', 'c'], 'the memo costs nothing, so the third fits');
   assert.equal(hops, 3, 'only the missing entry was asked for');
+});
+
+test('a budget that runs out STOPS the list: an unknown game is never jumped by a known one below it', async (t) => {
+  // The corpus names d, the provider would name the rest. One request of one id
+  // names a; b was never asked, so the list must end there — publishing d in
+  // b's place would reorder the podium rather than shorten it.
+  openShelfFloors();
+  process.env.PUBLIC_STATS_RESOLVE_MAX = '1';
+  oneIdPerRequest(t);
+  stubProvider();
+  await seedShelves({ a: 4, b: 3, c: 2, d: 1 });
+  await repo.replaceCorpus([{ externalId: 'd', name: 'Korpus d', rank: 1 }], {});
+  await repo.updateCorpusEntries([{ externalId: 'd', enrichedAt: '2026-11-01T00:00:00.000Z', info: { designers: [] } }]);
+  t.after(() => repo.replaceCorpus([], {}));
+
+  const built = await publicStats.rebuild();
+  assert.deepEqual(ids(built.games.mostOwned), ['a']);
 });
 
 test('the favourite cards are ranked lists of names too', async () => {

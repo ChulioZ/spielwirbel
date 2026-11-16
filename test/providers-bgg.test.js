@@ -1229,3 +1229,43 @@ test('designers are stored as BGG gives them, the (Uncredited) sentinel included
   </item></items>`;
   assert.deepEqual(bgg.parseThing(two, '2').designers, ['Antoine Bauza', 'Bruno Cathala']);
 });
+
+test('details (#1832) parses EACH item on its own, so a batch never lends one game another\'s name', () => {
+  const xml = `<items>
+    <item type="boardgame" id="13"><thumbnail>https://cf.geekdo-images.com/13.png</thumbnail>
+      <name type="primary" value="CATAN"/><link type="boardgamedesigner" id="1" value="Klaus Teuber"/></item>
+    <item type="boardgameexpansion" id="325"><name type="alternate" value="Seefahrer"/>
+      <name type="primary" value="Catan: Seafarers"/></item>
+    <item type="boardgame" id="999"></item>
+  </items>`;
+  const items = bgg.parseDetails(xml);
+  assert.deepEqual(items.map((i) => [i.providerId, i.title, i.imageUrl, i.url]), [
+    ['13', 'CATAN', 'https://cf.geekdo-images.com/13.png', 'https://boardgamegeek.com/boardgame/13'],
+    ['325', 'Catan: Seafarers', null, 'https://boardgamegeek.com/boardgameexpansion/325'],
+    ['999', null, null, 'https://boardgamegeek.com/boardgame/999'],
+  ]);
+  assert.deepEqual(items[0].designers, ['Klaus Teuber']);
+  assert.deepEqual(items[1].designers, [], 'the first game\'s designer does not leak into the second');
+});
+
+test('details asks ONE plain batch of at most MAX_THING_IDS and reports exactly what it asked', async (t) => {
+  process.env.BGG_API_TOKEN = 'test-token';
+  const calls = [];
+  const original = global.fetch;
+  global.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return { status: 200, text: async () => '<items></items>' };
+  };
+  t.after(() => { global.fetch = original; delete process.env.BGG_API_TOKEN; });
+
+  const ids = Array.from({ length: 25 }, (_, i) => String(500 + i));
+  const { asked } = await bgg.details([...ids, ids[0], 'not-a-bgg-id']);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(asked, ids.slice(0, 20));
+  assert.equal(calls[0].searchParams.get('id'), ids.slice(0, 20).join(','));
+  assert.equal(calls[0].searchParams.get('stats'), null, 'the rebuild reads nothing stats=1 adds');
+
+  delete process.env.BGG_API_TOKEN;
+  assert.deepEqual(await bgg.details(ids), { items: [], asked: [] }, 'no token: nothing asked');
+  assert.equal(calls.length, 1);
+});

@@ -638,15 +638,19 @@ rather than falling back to the default.
 
 The payload is rebuilt by the background scheduler and served from memory —
 nothing is computed per request and nothing is stored — and
-`PUBLIC_STATS_RESOLVE_MAX` (default 120 since issue #1732, 62 since #1648, 50
-since #1424, 30 since #1557, was 20) caps how many *new* provider lookups one
-rebuild may make — the podiums spend first (up to seven candidates each, for a
-list of three places that may hold up to five tied entries), the favourite
-cards (below) next, and Discover's longer lists (the top ten and the past
-winners, below) whatever is left. A rebuild that hits the cap publishes shorter
-lists and the next one completes them. Only games that could actually reach a podium are resolved
-(ranking happens on the raw numbers first) and successful lookups are memoized,
-so a steady state costs no upstream requests.
+`PUBLIC_STATS_RESOLVE_MAX` (default 8) caps how many provider **requests** one
+rebuild may send (issue #1832; until then it counted games, and its default had
+grown to 120). Each request asks BoardGameGeek about up to 20 games at once, so 8
+covers up to 160 games. Games are named from the memo first, then from the BGG
+corpus, and only the rest go upstream: the podiums first (up to seven candidates
+each, for a list of three places that may hold up to five tied entries), the
+favourite cards (below) next, and Discover's longer lists (the top ten and the
+past winners, below) with whatever is left. A rebuild that hits the cap publishes
+shorter lists and the next one completes them. If BGG answers `429`, the rebuild
+stops looking names up for that run, logs `public_stats_throttled` once and
+publishes what it knows. Only games that could actually reach a podium are
+resolved (ranking happens on the raw numbers first), and successful lookups are
+memoized, so a steady state sends no upstream requests.
 
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and

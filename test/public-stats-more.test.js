@@ -9,6 +9,17 @@ const publicStats = require('../lib/public-stats');
 const { pastWinners, historyCutoff } = require('../lib/public-stats-more');
 const { periodKeysOf, periodBoundaries } = require('../lib/calendar-periods');
 const bgg = require('../lib/providers/bgg');
+require('./support/bgg-details-via-detail')(bgg);
+
+// The budget counts REQUESTS since #1832, and a request carries up to
+// MAX_THING_IDS games — so a fixture small enough to read fits in one. Shrinking
+// the batch to one id makes "the budget ran out mid-list" reachable with three
+// games; test/public-stats-batching.test.js covers the real 20-id batches.
+function oneIdPerRequest(t) {
+  const real = bgg.MAX_THING_IDS;
+  bgg.MAX_THING_IDS = 1;
+  t.after(() => { bgg.MAX_THING_IDS = real; });
+}
 const repo = require('../lib/repo');
 
 /*
@@ -178,10 +189,11 @@ test('past winners are named by the provider and carry no count', async () => {
   assert.equal((await request(app).get('/api/stats/public/more')).body.pastWinners.week, undefined);
 });
 
-test('the longer lists are spent LAST: a budget the cards use up publishes none of them', async () => {
+test('the longer lists are spent LAST: a budget the cards use up publishes none of them', async (t) => {
   process.env.PUBLIC_STATS_MIN_SHELVES = '1';
   process.env.PUBLIC_STATS_MIN_OWNER_TENANTS = '1';
   process.env.PUBLIC_STATS_RESOLVE_MAX = '3';
+  oneIdPerRequest(t);
   stubProvider();
   await seedShelves({ b1: 6, b2: 5, b3: 4, b4: 3, b5: 2 });
   const built = await publicStats.rebuild();
