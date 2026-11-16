@@ -1477,6 +1477,8 @@ I18N.fi = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Vaihda plus/miinus valitussa kentässä',
   'points.categories.signShort': 'Etumerkki',
+  'points.categories.locked': 'Katkoviivalla merkityt luokat ovat voimassa tässä pelissä kaikissa porukoissa, eikä niitä voi muuttaa täällä. Voit lisätä omia luokkia niiden alle.',
+  'points.categories.shared': 'Luokat voivat päätyä nimettöminä yhteisiin peliasetuksiin.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} äänesti',
   'log.votedFor': '{actor} äänesti pelaajan {name} puolesta',

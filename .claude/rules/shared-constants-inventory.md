@@ -736,7 +736,10 @@ are what the editor offers and what `PATCH …/games/:gid` stores (via
 `lib/routes/games.js`), and `parseScoreParts`/`consistentScoreParts` are what the
 grid sends and what `PUT …/scores` accepts — a breakdown must add up to its
 total on both sides, so a server copy of the sum rule would 400 a sheet the
-client let through.
+client let through. **#1787's `lib/game-categories.js` reads the same file**: the
+locked-edit check bounds an operator base by `SCORE_CATEGORY_MAX`/`_NAME_MAX`,
+and its overlay builds the effective sheet from `scoreCategoryList`, so a base
+the editor could not have offered can never be confirmed.
 
 **The twenty-ninth is `public/js/simple-mode.js`** (#1646): the „Einfacher
 Modus" feature ids (`SIMPLE_MODE_FEATURES`, grouped as Konto renders them), the

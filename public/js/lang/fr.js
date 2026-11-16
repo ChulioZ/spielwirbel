@@ -1511,6 +1511,8 @@ I18N.fr = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Inverser plus/moins du champ sélectionné',
   'points.categories.signShort': 'Signe',
+  'points.categories.locked': 'Les catégories en pointillés s’appliquent à ce jeu dans tous les groupes et ne peuvent pas être modifiées ici. Tu peux ajouter les tiennes en dessous.',
+  'points.categories.shared': 'Les catégories peuvent alimenter anonymement les réglages de jeu communs.',
   'points.categoryRecord': '{category} : {points} · {name}',
   'log.votedSelf': '{name} a voté',
   'log.votedFor': '{actor} a voté pour {name}',

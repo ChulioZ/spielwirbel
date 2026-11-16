@@ -131,6 +131,7 @@ const GLOBAL_DISPOSITION = {
   bgg_links: { erase: false, export: false, why: 'BGG ids for category/mechanic/designer names (#1638); holds no personal data' },
   last_prices: { erase: false, export: false, why: 'cached third-party prices per game; holds no personal data' },
   game_scoring_settings: { erase: false, export: false, why: 'the operator\'s confirmed scoring direction per BGG id (#1786); no round, tenant or person' },
+  game_category_settings: { erase: false, export: false, why: 'the operator\'s confirmed base scoring categories per BGG id (#1787); category names only, no round, tenant or person' },
 };
 
 // knex's own bookkeeping is not a store of ours at all.

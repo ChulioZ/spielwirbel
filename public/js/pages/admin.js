@@ -128,6 +128,10 @@
     }
     body.appendChild(dl);
 
+    // A card's own controls (the category card's name inputs, #1787) — built by
+    // that card with textContent/value, never markup, like everything here.
+    if (spec.node) body.appendChild(spec.node);
+
     if (spec.text) {
       const block = document.createElement('p');
       block.className = 'detail__text';
@@ -286,7 +290,8 @@
     loadCorpus();
     refreshLog();
     loadPasskeys();
-    // The cards in their own files (js/pages/admin-scoring.js, #1786) start here.
+    // The cards in their own files (js/pages/admin-scoring.js, #1786;
+    // js/pages/admin-categories.js, #1787) start here.
     // They get the shared row dialog through the event rather than a global:
     // page scripts declare none (eslint.config.js's pages block).
     document.dispatchEvent(new CustomEvent('admin:panel', { detail: { openDetail } }));

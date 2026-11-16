@@ -257,7 +257,13 @@ function paintGridTotals(grid) {
 /* The game's „Wertungskategorien" editor (#1780): an ordered list of names, up
    to SCORE_CATEGORY_MAX. Ids travel with the rows, so a rename keeps the
    category's history; a row left blank is dropped, and an empty list returns
-   the sheet to one field per player. `onSave(list)` sends `[{ id?, name }]`. */
+   the sheet to one field per player. `onSave(list)` sends `[{ id?, name }]`.
+
+   A BASE confirmed by the operator for every round (#1787) arrives as the
+   game's first `scoreCategoriesLocked` entries, each `locked`: those rows are
+   read-only and cannot move or go, and no row can move above them — the route
+   refuses any of that with a 409, so the editor never offers it. They still
+   travel in the saved list, unchanged, which is what the route checks. */
 function showScoreCategoriesEditor(game, onSave) {
   const meta = new Map(); // li -> category id (absent for a new row)
   let list;
@@ -270,8 +276,11 @@ function showScoreCategoriesEditor(game, onSave) {
       const seen = new Map();
       let ok = true;
       items.forEach((li, i) => {
-        li.querySelector('.score-cats__up').disabled = i === 0;
-        li.querySelector('.score-cats__down').disabled = i === items.length - 1;
+        const locked = li.classList.contains('score-cats__row--locked');
+        const prev = items[i - 1];
+        li.querySelector('.score-cats__up').disabled = locked || i === 0 || prev.classList.contains('score-cats__row--locked');
+        li.querySelector('.score-cats__down').disabled = locked || i === items.length - 1;
+        li.querySelector('.score-cats__remove').disabled = locked;
         const input = li.querySelector('input');
         input.setAttribute('aria-label', t('points.categories.name', { n: i + 1 }));
         const key = input.value.trim().toLocaleLowerCase();
@@ -291,6 +300,10 @@ function showScoreCategoriesEditor(game, onSave) {
           <button type="button" class="btn btn--sm score-cats__remove" aria-label="${esc(t('points.categories.remove'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </li>`);
       if (category) meta.set(li, category.id);
+      if (category && category.locked) {
+        li.classList.add('score-cats__row--locked');
+        li.querySelector('input').readOnly = true;
+      }
       li.querySelector('.score-cats__up').addEventListener('click', () => { if (li.previousElementSibling) li.previousElementSibling.before(li); sync(); li.querySelector('.score-cats__up').focus(); });
       li.querySelector('.score-cats__down').addEventListener('click', () => { if (li.nextElementSibling) li.nextElementSibling.after(li); sync(); li.querySelector('.score-cats__down').focus(); });
       li.querySelector('.score-cats__remove').addEventListener('click', () => {
@@ -305,6 +318,10 @@ function showScoreCategoriesEditor(game, onSave) {
     activeScoreCategories(game).forEach(addRow);
     addBtn.addEventListener('click', () => { addRow(null).querySelector('input').focus(); sync(); });
     wrap.appendChild(addBtn);
+    if (game.scoreCategoriesLocked) wrap.appendChild(h(`<p class="score-cats__note">${esc(t('points.categories.locked'))}</p>`));
+    // A BGG-linked game's set may be offered to the operator as a shared base
+    // (#1787) — said where the names are typed, as the policy promises.
+    if (game.source && game.source.provider === 'bgg') wrap.appendChild(h(`<p class="score-cats__note">${esc(t('points.categories.shared'))}</p>`));
     list.addEventListener('input', sync);
     sheet.querySelector('.sheet__actions').before(wrap);
     if (!list.children.length) addRow(null);

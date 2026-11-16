@@ -1461,6 +1461,8 @@ I18N.ko = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': '선택한 칸의 플러스/마이너스 전환',
   'points.categories.signShort': '부호',
+  'points.categories.locked': '점선으로 표시된 항목은 모든 모임에서 이 게임에 적용되며 여기서 바꿀 수 없습니다. 그 아래에 직접 항목을 추가할 수 있습니다.',
+  'points.categories.shared': '항목은 익명으로 공용 게임 설정에 반영될 수 있습니다.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name}이(가) 투표했어요',
   'log.votedFor': '{actor}이(가) {name} 대신 투표했어요',

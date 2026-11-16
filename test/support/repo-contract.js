@@ -8628,4 +8628,52 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGameScoringSetting(bgg), false);
     assert.equal(await repo.getGameScoringSetting(bgg), null);
   });
+
+  // #1787: the rows behind „Wertungskategorien". One row per (round, BGG id)
+  // whose games with that id carry ACTIVE categories — every such game's list,
+  // in order, no session needed. Excluded: demo tenants, unlinked games, a game
+  // whose categories are all removed. No round id in the rows.
+  test('gameCategoryRounds reports each round\'s active category lists per BGG id, demo and unlinked excluded', async () => {
+    const bgg = String(700000000 + crypto.randomInt(1e8));
+    const src = { provider: 'bgg', externalId: bgg, url: null };
+    const seed = async (tenant, lists, { source = src, title = 'Wing' } = {}) => {
+      const round = await repo.createRound(tenant, { name: 'R', members: ['A'], importFromRoundId: null });
+      for (const cats of lists) {
+        const g = await repo.createGame(tenant, round.id, gameFields({ title, source }));
+        await repo.updateGame(tenant, round.id, g.id, { scoreCategories: cats });
+      }
+      return round;
+    };
+    const made = [];
+    made.push([T, await seed(T, [[{ id: 'a', name: 'Vögel' }, { id: 'x', name: 'Alt', removed: true }, { id: 'b', name: 'Eier' }],
+      [{ id: 'c', name: 'Boni' }]])]);
+    made.push([OTHER, await seed(OTHER, [[{ id: 'd', name: 'Vögel' }]], { title: 'Wingspan' })]);
+    made.push(['demo-gc', await seed('demo-gc', [[{ id: 'e', name: 'Demo' }]])]);
+    made.push([T, await seed(T, [[{ id: 'f', name: 'Frei' }]], { source: null })]);
+    made.push([T, await seed(T, [[{ id: 'g', name: 'Weg', removed: true }]])]);
+
+    const mine = (await repo.gameCategoryRounds()).filter((r) => r.bggId === bgg)
+      .sort((a, b) => b.sets.length - a.sets.length);
+    assert.deepEqual(mine, [
+      { bggId: bgg, sets: [['Vögel', 'Eier'], ['Boni']], titles: ['Wing'] },
+      { bggId: bgg, sets: [['Vögel']], titles: ['Wingspan'] },
+    ]);
+    for (const [tenant, round] of made) await repo.deleteRound(tenant, round.id);
+  });
+
+  test('game category settings round-trip: put replaces, get/list read, delete reports', async () => {
+    const bgg = String(600000000 + crypto.randomInt(1e8));
+    assert.equal(await repo.getGameCategorySetting(bgg), null);
+    await repo.putGameCategorySetting(bgg, { state: 'dismissed', dismissedAt: 'd', dismissedAtRounds: 2, dismissedAtSets: 1, title: 'X' });
+    const categories = [{ id: 'gabc', name: 'Vögel', match: ['vögel', 'vogel'] }];
+    const stored = await repo.putGameCategorySetting(bgg, { state: 'confirmed', categories, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(stored, { bggId: bgg, state: 'confirmed', categories, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(await repo.getGameCategorySetting(bgg), stored, 'the dismissal fields are gone, not merged');
+    assert.deepEqual((await repo.listGameCategorySettings()).find((x) => x.bggId === bgg), stored);
+    // Independent of the direction table: its row is untouched by this one.
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+    assert.equal(await repo.deleteGameCategorySetting(bgg), true);
+    assert.equal(await repo.deleteGameCategorySetting(bgg), false);
+    assert.equal(await repo.getGameCategorySetting(bgg), null);
+  });
 };

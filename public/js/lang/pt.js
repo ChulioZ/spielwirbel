@@ -1508,6 +1508,8 @@ I18N.pt = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Alternar mais/menos no campo selecionado',
   'points.categories.signShort': 'Sinal',
+  'points.categories.locked': 'As categorias tracejadas valem para este jogo em todos os grupos e não podem ser alteradas aqui. Você pode adicionar as suas abaixo delas.',
+  'points.categories.shared': 'As categorias podem ser incorporadas de forma anônima às configurações de jogo compartilhadas.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} votou',
   'log.votedFor': '{actor} votou por {name}',
