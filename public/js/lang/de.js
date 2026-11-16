@@ -1526,6 +1526,7 @@ I18N.de = {
   'points.top': '{name}: {points}',
   'points.record': 'Rekord: {points} · {name} · {date}',
   'points.lowWins': 'Niedrigere Punktzahl gewinnt',
+  'points.lowWinsLocked': 'Für alle Runden festgelegt',
   'points.automa.add': 'Automa hinzufügen',
   'points.automa.remove': 'Automa entfernen',
   'points.automa.default': 'Automa',

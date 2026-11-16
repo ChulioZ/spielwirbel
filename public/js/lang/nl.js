@@ -1486,6 +1486,7 @@ I18N.nl = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Laagste score wint',
+  'points.lowWinsLocked': 'Vastgelegd voor alle groepen',
   'points.automa.add': 'Automa toevoegen',
   'points.automa.remove': 'Automa verwijderen',
   'points.automa.default': 'Automa',

@@ -1457,6 +1457,7 @@ I18N.fi = {
   'points.top': '{name}: {points}',
   'points.record': 'Ennätys: {points} · {name} · {date}',
   'points.lowWins': 'Pienin pistemäärä voittaa',
+  'points.lowWinsLocked': 'Asetettu kaikille porukoille',
   'points.automa.add': 'Lisää automa',
   'points.automa.remove': 'Poista automa',
   'points.automa.default': 'Automa',

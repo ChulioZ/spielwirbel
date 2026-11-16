@@ -8571,4 +8571,61 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.listRoundMessages('t-chat-erase', own.id), null, 'its own round and thread are gone');
     await repo.deleteRound(T, foreign.id);
   });
+
+  // #1786: the queue behind „Spieleinstellungen". One row per (BGG id, round)
+  // with a finished, scored session for a game linked to that id — the round's
+  // OWN switch as `low`, its distinct titles sorted. Excluded: demo tenants, an
+  // unlinked game, an unscored, unfinished or cancelled session, another
+  // provider. A round with two sessions counts once.
+  test('gameScoringRounds reports scored BGG games per round, own switch, demo and unlinked excluded', async () => {
+    const bgg = String(900000000 + crypto.randomInt(1e8));
+    const src = { provider: 'bgg', externalId: bgg, url: null };
+    const scoredSession = (gid, over = {}) => ({
+      createdAt: 't', gameIds: [gid], votes: {}, chosenGameId: gid, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      scores: { m1: 10 }, ...over,
+    });
+    const seed = async (tenant, { low = false, title = 'Golf', sessions = [{}] } = {}) => {
+      const round = await repo.createRound(tenant, { name: 'R', members: ['A'], importFromRoundId: null });
+      const g = await repo.createGame(tenant, round.id, gameFields({ title, source: src }));
+      if (low) await repo.updateGame(tenant, round.id, g.id, { lowScoreWins: true });
+      for (const over of sessions) await repo.createSession(tenant, round.id, scoredSession(g.id, over));
+      return round;
+    };
+    const made = [];
+    made.push([T, await seed(T, { low: true, sessions: [{}, {}] })]);
+    made.push([OTHER, await seed(OTHER, { title: 'Golf!' })]);
+    // Each of these must contribute nothing.
+    made.push(['demo-gs', await seed('demo-gs', { low: true })]);
+    made.push([T, await seed(T, { sessions: [{ scores: undefined }] })]);
+    made.push([T, await seed(T, { sessions: [{ finished: false, done: false }] })]);
+    made.push([T, await seed(T, { sessions: [{ cancelled: true, cancelledAt: 't' }] })]);
+    const unlinked = await repo.createRound(T, { name: 'U', members: ['A'], importFromRoundId: null });
+    const ug = await repo.createGame(T, unlinked.id, gameFields({ title: 'Golf' }));
+    await repo.createSession(T, unlinked.id, scoredSession(ug.id));
+    made.push([T, unlinked]);
+
+    const mine = (await repo.gameScoringRounds()).filter((r) => r.bggId === bgg)
+      .sort((a, b) => Number(b.low) - Number(a.low));
+    assert.deepEqual(mine, [
+      { bggId: bgg, low: true, titles: ['Golf'] },
+      { bggId: bgg, low: false, titles: ['Golf!'] },
+    ]);
+    for (const [tenant, round] of made) await repo.deleteRound(tenant, round.id);
+  });
+
+  // The global settings table: upsert replaces the whole row, get/list read it
+  // back, delete reports whether a row went.
+  test('game scoring settings round-trip: put replaces, get/list read, delete reports', async () => {
+    const bgg = String(800000000 + crypto.randomInt(1e8));
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+    await repo.putGameScoringSetting(bgg, { state: 'dismissed', dismissedAt: 'd', dismissedAtRounds: 2, title: 'X' });
+    const stored = await repo.putGameScoringSetting(bgg, { state: 'confirmed', lowScoreWins: true, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(stored, { bggId: bgg, state: 'confirmed', lowScoreWins: true, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(await repo.getGameScoringSetting(bgg), stored, 'the dismissal fields are gone, not merged');
+    assert.deepEqual((await repo.listGameScoringSettings()).find((x) => x.bggId === bgg), stored);
+    assert.equal(await repo.deleteGameScoringSetting(bgg), true);
+    assert.equal(await repo.deleteGameScoringSetting(bgg), false);
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+  });
 };

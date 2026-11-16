@@ -1441,6 +1441,7 @@ I18N.ko = {
   'points.top': '{name}: {points}',
   'points.record': '기록: {points} · {name} · {date}',
   'points.lowWins': '낮은 점수가 이겨요',
+  'points.lowWinsLocked': '모든 모임에 고정됨',
   'points.automa.add': '오토마 추가',
   'points.automa.remove': '오토마 삭제',
   'points.automa.default': '오토마',

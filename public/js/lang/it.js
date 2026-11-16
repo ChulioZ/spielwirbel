@@ -1490,6 +1490,7 @@ I18N.it = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Vince il punteggio più basso',
+  'points.lowWinsLocked': 'Fissato per tutti i gruppi',
   'points.automa.add': 'Aggiungi un automa',
   'points.automa.remove': 'Rimuovi l’automa',
   'points.automa.default': 'Automa',

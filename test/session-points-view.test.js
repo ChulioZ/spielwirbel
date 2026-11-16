@@ -148,6 +148,27 @@ test('the game page shows the record, the stamp’s best line, and switches the 
   assert.deepEqual(patch.body, { lowScoreWins: true });
 });
 
+// #1786: the operator confirmed the direction for every round. The read overlay
+// hands the page `scoringLocked` plus the confirmed value — the switch shows it,
+// disabled, says why, and a change event sends nothing.
+test('a locked game shows the fixed direction, disabled, and never PATCHes', async () => {
+  const s1 = finished('s1', '2026-03-01T19:00:00.000Z', { m1: 40, m2: 55 });
+  const round = roundFixture([s1], { lowScoreWins: true, scoringLocked: true });
+  const sent = recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));
+  dom.set('fetchRoundFresh', async () => round);
+  await dom.call('showGameDetail', round.id, 'g1');
+  const box = dom.app.querySelector('.gd-record__dir input');
+  assert.equal(box.checked, true, 'the confirmed value');
+  assert.equal(box.disabled, true);
+  assert.match(dom.app.querySelector('.gd-record__locked').textContent, /Für alle Runden festgelegt/);
+  // Lower score wins: Anna's 40 is the record, not Ben's 55.
+  assert.match(dom.app.querySelector('.gd-record__line').textContent, /Rekord: 40 · Anna/);
+  box.checked = false;
+  box.dispatchEvent(new dom.window.Event('change'));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(sent.find((c) => c.method === 'PATCH'), undefined);
+});
+
 test('a game nobody has scored shows no record and no switch', async () => {
   const round = roundFixture([finished('s1', '2026-03-01T19:00:00.000Z', null)]);
   recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));

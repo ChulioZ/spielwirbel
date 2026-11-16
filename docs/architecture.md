@@ -195,6 +195,10 @@ lib/
                      bounded, resumable enrichment pass that fills each row's
                      attributes from /thing. A local candidate pool exists
                      because BGG's API has no browse or attribute search at all
+  game-scoring.js    the operator-confirmed scoring direction per BGG game
+                     (#1786): the read overlay the repo facade applies to every
+                     round and game, its cached confirmed map, and the fold of
+                     the backends' per-round rows into the admin queue
   bgg-links.js       the instance-wide BGG link table's write and server-side
                      read (#1638): every BGG parse's category/mechanic/designer
                      ids are recorded best-effort, so a name can link to its
@@ -504,6 +508,9 @@ lib/
       shared.js      the schemas and the paging shape more than one needs
       status.js      instance status + the recent warn/error ring buffer
       corpus.js      the licensed BGG corpus ingest (issue #681)
+      game-scoring.js „Spieleinstellungen" (#1786): the queue of scored BGG
+                     games, confirm/dismiss/revoke a scoring direction for
+                     every round, CSV/copy export — counts only
       storage.js     object-storage usage + the orphan estimate (issue #941),
                      behind a button because it lists the whole bucket; reports
                      only, never deletes
@@ -628,6 +635,8 @@ public/
       kontakt.js     kontakt.html's own script (the bilingual contact form)
       admin.js       admin.html's own script, so no privileged code ships in
                      the SPA
+      admin-scoring.js the panel's „Spieleinstellungen" card (#1786), started
+                     by admin.js's `admin:panel` event
       face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
                      <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
