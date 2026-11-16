@@ -389,6 +389,9 @@ function playTopPointsText(round, play) {
 // or null while no play of the game carries points. The switch lives HERE, where
 // its effect is visible, rather than among the game's facts: a game nobody has
 // scored has no direction to choose. `onToggle(next)` persists it.
+// `game.scoringLocked` (#1786): the operator fixed the direction for every round,
+// so the switch shows the fixed value, disabled, with a line saying why — the
+// server refuses a change anyway (409), this keeps the refusal off the screen.
 // Per-category records (#1780) follow as a short list — „Vögel: 48 · Anna".
 function renderGamePointRecord(round, game, records, onToggle) {
   if (!records.record) return null;
@@ -398,11 +401,12 @@ function renderGamePointRecord(round, game, records, onToggle) {
   const cats = gameCategoryRecords(round, game);
   const el = h(`<div class="gd-record">
       <p class="gd-record__line">${iconText('ti-medal', t('points.record', { points: fmtCount(points), name, date: fmtDate(session.createdAt) }))}</p>
-      <label class="gd-record__dir"><input type="checkbox"${game.lowScoreWins ? ' checked' : ''}> ${esc(t('points.lowWins'))}</label>
+      <label class="gd-record__dir"><input type="checkbox"${game.lowScoreWins ? ' checked' : ''}${game.scoringLocked ? ' disabled' : ''}> ${esc(t('points.lowWins'))}</label>
+      ${game.scoringLocked ? `<p class="gd-record__locked">${esc(t('points.lowWinsLocked'))}</p>` : ''}
       ${cats.length ? `<ul class="gd-record__cats">${cats.map(({ category, record }) => `<li>${esc(t('points.categoryRecord', {
         category: category.name, points: fmtCount(record.points), name: partyName(record) }))}</li>`).join('')}</ul>` : ''}
     </div>`);
   const box = el.querySelector('input');
-  box.addEventListener('change', () => onToggle(box.checked));
+  if (!game.scoringLocked) box.addEventListener('change', () => onToggle(box.checked));
   return el;
 }

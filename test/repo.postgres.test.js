@@ -916,4 +916,64 @@ if (!process.env.DATABASE_URL) {
     // And nothing user-authored crossed the boundary, even under the escape.
     assert.ok(!JSON.stringify(rows).includes('Getippter Titel'));
   });
+
+  /* „Spieleinstellungen" (#1786), as a NON-superuser. gameScoringRounds reads
+     games and sessions, both RLS-scoped: outside atx() a plain role sees ZERO
+     rows with no error, and the operator's queue would read as "no game has
+     ever been scored" on production only. The settings writes run on the same
+     role, because the table is global and must need no tenant setting at all. */
+  test('the scoring queue reads under the admin escape and the settings table needs no tenant, as a plain role', async () => {
+    const assert = require('node:assert/strict');
+    const tenant = `t-scoring-${Date.now()}`;
+    const bggId = String(700000000 + Math.floor(Math.random() * 1e8));
+    const round = await repo.createRound(tenant, { name: 'Probe', members: ['A'], importFromRoundId: null });
+    const game = await repo.createGame(tenant, round.id, {
+      title: 'Golf', minPlayers: 1, maxPlayers: 4, image: null, source: { provider: 'bgg', externalId: bggId, url: null },
+    });
+    await repo.updateGame(tenant, round.id, game.id, { lowScoreWins: true });
+    await repo.createSession(tenant, round.id, {
+      createdAt: 't', gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true, scores: { m1: 3 },
+    });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    let out;
+    try {
+      await admin.query('DROP ROLE IF EXISTS gs_scoring_probe');
+      await admin.query("CREATE ROLE gs_scoring_probe LOGIN PASSWORD 'probe'");
+      await admin.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gs_scoring_probe');
+      await admin.query('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO gs_scoring_probe');
+      const url = new URL(process.env.DATABASE_URL);
+      url.username = 'gs_scoring_probe';
+      url.password = 'probe';
+      const child = execFileSync(process.execPath, ['-e', `
+        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
+        (async () => {
+          const rows = (await repo.gameScoringRounds()).filter((r) => r.bggId === ${JSON.stringify(bggId)});
+          await repo.putGameScoringSetting(${JSON.stringify(bggId)}, { state: 'confirmed', lowScoreWins: false });
+          const stored = await repo.getGameScoringSetting(${JSON.stringify(bggId)});
+          const removed = await repo.deleteGameScoringSetting(${JSON.stringify(bggId)});
+          console.log('RESULT:' + JSON.stringify({ rows, stored, removed }));
+          await repo.end();
+        })().catch((err) => { console.error(err.stack); process.exit(1); });
+      `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
+      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
+      assert.ok(line, `the probe child produced no result: ${child}`);
+      out = JSON.parse(line.slice('RESULT:'.length));
+    } finally {
+      await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_scoring_probe').catch(() => {});
+      await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_scoring_probe').catch(() => {});
+      await admin.query('DROP ROLE IF EXISTS gs_scoring_probe').catch(() => {});
+      await admin.end();
+    }
+    assert.deepEqual(out.rows, [{ bggId, low: true, titles: ['Golf'] }],
+      'the scored round was invisible without the admin escape — not reading under atx()');
+    assert.deepEqual(out.stored, { bggId, state: 'confirmed', lowScoreWins: false });
+    assert.equal(out.removed, true);
+    await repo.deleteRound(tenant, round.id);
+  });
 }

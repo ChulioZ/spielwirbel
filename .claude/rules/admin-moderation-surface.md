@@ -8,9 +8,9 @@ paths:
 ---
 # The operator moderation surface (#268/#273/#274/#275) — traps
 
-**Since #996 it is `lib/routes/admin/`, not one file.** Eight sub-routers
-(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`, and
-`passkeys` since #1670) plus
+**Since #996 it is `lib/routes/admin/`, not one file.** Nine sub-routers
+(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`,
+`passkeys` since #1670, and `game-scoring` since #1786) plus
 `shared.js` (the schemas and paging shape more than one needs) and `index.js`,
 which owns the login pair, the `ADMIN_PASSWORD` gate and the mounts.
 

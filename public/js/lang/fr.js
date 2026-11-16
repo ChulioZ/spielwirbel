@@ -1491,6 +1491,7 @@ I18N.fr = {
   'points.top': '{name} : {points}',
   'points.record': 'Record : {points} · {name} · {date}',
   'points.lowWins': 'Le score le plus bas gagne',
+  'points.lowWinsLocked': 'Fixé pour tous les groupes',
   'points.automa.add': 'Ajouter un automa',
   'points.automa.remove': 'Retirer l’automa',
   'points.automa.default': 'Automa',

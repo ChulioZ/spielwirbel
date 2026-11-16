@@ -1530,6 +1530,7 @@ I18N.en = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Lower score wins',
+  'points.lowWinsLocked': 'Set for all rounds',
   // #1672: the bot opponent of a solo/co-op game — a line beside the people, never one of them.
   'points.automa.add': 'Add an automa',
   'points.automa.remove': 'Remove the automa',

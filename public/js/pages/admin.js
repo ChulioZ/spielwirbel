@@ -286,6 +286,10 @@
     loadCorpus();
     refreshLog();
     loadPasskeys();
+    // The cards in their own files (js/pages/admin-scoring.js, #1786) start here.
+    // They get the shared row dialog through the event rather than a global:
+    // page scripts declare none (eslint.config.js's pages block).
+    document.dispatchEvent(new CustomEvent('admin:panel', { detail: { openDetail } }));
   }
 
   // ---- admin passkeys (#1670) ----------------------------------------------

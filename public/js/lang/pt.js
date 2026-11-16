@@ -1488,6 +1488,7 @@ I18N.pt = {
   'points.top': '{name}: {points}',
   'points.record': 'Recorde: {points} · {name} · {date}',
   'points.lowWins': 'Vence a menor pontuação',
+  'points.lowWinsLocked': 'Definido para todos os grupos',
   'points.automa.add': 'Adicionar um automa',
   'points.automa.remove': 'Remover o automa',
   'points.automa.default': 'Automa',

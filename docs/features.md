@@ -902,7 +902,12 @@ What the app does, in detail. For a short overview see the
   first score or a tie is not. The game page shows the round's **record** (score,
   who, when) above its play history, each scored stamp names that evening's
   best, and the switch **„Niedrigere Punktzahl gewinnt"** there flips bests,
-  records and the order for golf-style games. Points never decide the winner,
+  records and the order for golf-style games. For a BoardGameGeek-linked game
+  the operator can fix that direction **for every round** (#1786, the admin
+  panel's „Spieleinstellungen", which lists only counts of what rounds set);
+  the switch then shows the fixed value, disabled, as „Für alle Runden
+  festgelegt", and the round's own setting returns if the operator revokes it.
+  Points never decide the winner,
   which is still tapped as before. Bests and records are derived from the
   sessions, never stored, so deleting or re-dating a session corrects them.
   **„Automa hinzufügen"** (issue #1672) adds the bot opponent of a solo or co-op
