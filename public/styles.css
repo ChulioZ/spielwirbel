@@ -7580,6 +7580,9 @@ a.k-tile:focus-visible,
 .score-cats__row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: center; gap: 6px; }
 .score-cats__name[aria-invalid="true"] { border-color: var(--danger); }
 .score-cats__add { margin-bottom: 16px; }
+/* A base the operator confirmed for every round (#1787): read-only, so it reads as text, not a field. */
+.score-cats__row--locked .score-cats__name { background: transparent; border-style: dashed; }
+.score-cats__note { margin: 0 0 12px; font-size: var(--text-sm); color: var(--ink-soft); }
 .points-automa__toggle { justify-self: start; margin-top: 4px; }
 
 /* „Wer wie gewertet hat" (#1190): one tile per person behind the game's score —

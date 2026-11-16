@@ -151,6 +151,55 @@ test('the editor reorders, removes, refuses a duplicate, and PATCHes the list', 
   assert.deepEqual(patch.body, { scoreCategories: [{ id: 'cb', name: 'Eier' }, { name: 'Boni' }] });
 });
 
+// #1787: a base the operator confirmed arrives as the first, `locked` entries.
+test('locked base rows are read-only and fixed, extras stay below them, and the save carries the base unchanged', async () => {
+  const base = [{ id: 'gV', name: 'Vögel', locked: true }, { id: 'gE', name: 'Eier', locked: true }];
+  const round = roundFixture([], {
+    scoreCategories: [...base, { id: 'co', name: 'Ozeanien' }], scoreCategoriesLocked: 2,
+    source: { provider: 'bgg', externalId: '266192' },
+  });
+  const sent = recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));
+  dom.set('fetchRoundFresh', async () => round);
+  await dom.call('showGameDetail', round.id, 'g1');
+  dom.app.querySelector('.gd-menu').click();
+  const pops = dom.document.querySelectorAll('.popover--menu');
+  [...pops[pops.length - 1].querySelectorAll('.popover__opt')].find((b) => /Wertungskategorien/.test(b.textContent)).click();
+
+  const sheet = dom.document.querySelector('.sheet');
+  const rows = () => [...sheet.querySelectorAll('.score-cats__row')];
+  const [v, e, o] = rows();
+  for (const li of [v, e]) {
+    assert.ok(li.classList.contains('score-cats__row--locked'));
+    assert.equal(li.querySelector('input').readOnly, true);
+    for (const b of ['up', 'down', 'remove']) assert.equal(li.querySelector(`.score-cats__${b}`).disabled, true, b);
+  }
+  assert.equal(o.querySelector('.score-cats__up').disabled, true, 'an extra cannot move above the base');
+  assert.equal(o.querySelector('.score-cats__remove').disabled, false);
+  const notes = [...sheet.querySelectorAll('.score-cats__note')].map((p) => p.textContent);
+  assert.equal(notes.length, 2);
+  assert.match(notes[0], /gestrichelten Kategorien gelten/);
+  assert.match(notes[1], /anonym in die gemeinsamen Spieleinstellungen/);
+
+  sheet.querySelector('.score-cats__add').click();
+  type(rows()[3].querySelector('input'), 'Nektar');
+  sheet.querySelector('.sheet__actions .btn--primary').click();
+  const patch = await waitFor(() => sent.find((c) => c.method === 'PATCH'), { label: 'the game PATCH' });
+  assert.deepEqual(patch.body, { scoreCategories: [
+    { id: 'gV', name: 'Vögel' }, { id: 'gE', name: 'Eier' }, { id: 'co', name: 'Ozeanien' }, { name: 'Nektar' },
+  ] });
+});
+
+test('an unlinked game shows neither note', async () => {
+  const round = roundFixture([]);
+  recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));
+  dom.set('fetchRoundFresh', async () => round);
+  await dom.call('showGameDetail', round.id, 'g1');
+  dom.app.querySelector('.gd-menu').click();
+  const pops = dom.document.querySelectorAll('.popover--menu');
+  [...pops[pops.length - 1].querySelectorAll('.popover__opt')].find((b) => /Wertungskategorien/.test(b.textContent)).click();
+  assert.equal(dom.document.querySelector('.sheet').querySelectorAll('.score-cats__note').length, 0);
+});
+
 test('the game page lists per-category records; the member page shows per-category bests', async () => {
   const s1 = finished('s1', '2026-03-01T19:00:00.000Z', { scores: { m1: 30, m2: 25 }, scoreParts: { m1: { ca: 20, cb: 10 }, m2: { ca: 13, cb: 12 } } });
   const s2 = finished('s2', '2026-03-08T19:00:00.000Z', { scores: { m1: 31 }, scoreParts: { m1: { ca: 31 } } });

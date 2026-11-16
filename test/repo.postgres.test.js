@@ -921,7 +921,8 @@ if (!process.env.DATABASE_URL) {
      games and sessions, both RLS-scoped: outside atx() a plain role sees ZERO
      rows with no error, and the operator's queue would read as "no game has
      ever been scored" on production only. The settings writes run on the same
-     role, because the table is global and must need no tenant setting at all. */
+     role, because the table is global and must need no tenant setting at all.
+     #1787's category list reads `games` the same way and is checked alongside. */
   test('the scoring queue reads under the admin escape and the settings table needs no tenant, as a plain role', async () => {
     const assert = require('node:assert/strict');
     const tenant = `t-scoring-${Date.now()}`;
@@ -930,7 +931,7 @@ if (!process.env.DATABASE_URL) {
     const game = await repo.createGame(tenant, round.id, {
       title: 'Golf', minPlayers: 1, maxPlayers: 4, image: null, source: { provider: 'bgg', externalId: bggId, url: null },
     });
-    await repo.updateGame(tenant, round.id, game.id, { lowScoreWins: true });
+    await repo.updateGame(tenant, round.id, game.id, { lowScoreWins: true, scoreCategories: [{ id: 'c1', name: 'Löcher' }] });
     await repo.createSession(tenant, round.id, {
       createdAt: 't', gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: 't',
       finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true, scores: { m1: 3 },
@@ -957,7 +958,11 @@ if (!process.env.DATABASE_URL) {
           await repo.putGameScoringSetting(${JSON.stringify(bggId)}, { state: 'confirmed', lowScoreWins: false });
           const stored = await repo.getGameScoringSetting(${JSON.stringify(bggId)});
           const removed = await repo.deleteGameScoringSetting(${JSON.stringify(bggId)});
-          console.log('RESULT:' + JSON.stringify({ rows, stored, removed }));
+          const catRows = (await repo.gameCategoryRounds()).filter((r) => r.bggId === ${JSON.stringify(bggId)});
+          await repo.putGameCategorySetting(${JSON.stringify(bggId)}, { state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
+          const catStored = await repo.getGameCategorySetting(${JSON.stringify(bggId)});
+          const catRemoved = await repo.deleteGameCategorySetting(${JSON.stringify(bggId)});
+          console.log('RESULT:' + JSON.stringify({ rows, stored, removed, catRows, catStored, catRemoved }));
           await repo.end();
         })().catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
@@ -974,6 +979,10 @@ if (!process.env.DATABASE_URL) {
       'the scored round was invisible without the admin escape — not reading under atx()');
     assert.deepEqual(out.stored, { bggId, state: 'confirmed', lowScoreWins: false });
     assert.equal(out.removed, true);
+    assert.deepEqual(out.catRows, [{ bggId, sets: [['Löcher']], titles: ['Golf'] }],
+      'the category set was invisible without the admin escape — not reading under atx()');
+    assert.deepEqual(out.catStored, { bggId, state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
+    assert.equal(out.catRemoved, true);
     await repo.deleteRound(tenant, round.id);
   });
 }

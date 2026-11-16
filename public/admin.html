@@ -403,6 +403,36 @@
           <p class="msg" id="scoringMsg" role="alert" hidden></p>
         </section></div>
 
+        <!-- „Wertungskategorien" (#1787): confirm a BGG game's base scoring
+             categories for every round, from the sets rounds have typed. Names
+             and counts only — never a round, tenant or person. Driven by
+             js/pages/admin-categories.js. -->
+        <div class="card-slot"><section class="card" id="categoriesCard">
+          <h2>Wertungskategorien</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Die Kategorien-Sätze, die Runden für ein BGG-Spiel angelegt haben, mit der
+            Zahl der Runden je Satz. Ein bestätigter Satz steht danach in jeder Runde
+            zuerst und lässt sich dort nicht mehr umbenennen, entfernen oder umsortieren;
+            eigene Kategorien kann jede Runde dahinter ergänzen. Demo-Runden zählen nicht.
+          </p>
+          <div class="row filters" role="group" aria-label="Status">
+            <select id="categoriesState" aria-label="Status">
+              <option value="open">offen</option>
+              <option value="confirmed">bestätigt</option>
+              <option value="dismissed">zurückgestellt</option>
+              <option value="">alle</option>
+            </select>
+          </div>
+          <p class="sub count" id="categoriesCount" hidden></p>
+          <div class="scroll"><table id="categoriesTable"><tbody></tbody></table></div>
+          <div class="row" style="margin-top: 1rem;">
+            <button class="ghost small" id="categoriesCsv">CSV herunterladen</button>
+            <button class="ghost small" id="categoriesJson">JSON herunterladen</button>
+            <button class="ghost small" id="categoriesCopy">Kopieren</button>
+          </div>
+          <p class="msg" id="categoriesMsg" role="alert" hidden></p>
+        </section></div>
+
         <div class="card-slot"><section class="card">
           <h2>Protokoll</h2>
           <!-- Filtering (#275): the log is also what gets handed over on a
@@ -579,5 +609,6 @@
   <script src="/js/passkey.js"></script>
   <script src="/js/pages/admin.js"></script>
   <script src="/js/pages/admin-scoring.js"></script>
+  <script src="/js/pages/admin-categories.js"></script>
 </body>
 </html>

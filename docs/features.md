@@ -907,6 +907,13 @@ What the app does, in detail. For a short overview see the
   panel's „Spieleinstellungen", which lists only counts of what rounds set);
   the switch then shows the fixed value, disabled, as „Für alle Runden
   festgelegt", and the round's own setting returns if the operator revokes it.
+  The same goes for the **scoring categories** (#1787, „Wertungskategorien" in
+  the admin panel, which lists the category sets rounds typed with how many
+  rounds use each — names and counts, no round or person): a confirmed set
+  stands first in every round's sheet, cannot be renamed, removed or reordered
+  there, and a round's categories of the same name keep their history under it;
+  a round may still add its own categories after it, and revoking gives every
+  round its own sheet back.
   Points never decide the winner,
   which is still tapped as before. Bests and records are derived from the
   sessions, never stored, so deleting or re-dating a session corrects them.

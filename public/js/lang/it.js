@@ -1510,6 +1510,8 @@ I18N.it = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Inverti più/meno nel campo selezionato',
   'points.categories.signShort': 'Segno',
+  'points.categories.locked': 'Le categorie tratteggiate valgono per questo gioco in tutti i gruppi e non si possono modificare qui. Puoi aggiungerne di tue sotto.',
+  'points.categories.shared': 'Le categorie possono confluire in forma anonima nelle impostazioni di gioco condivise.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} ha votato',
   'log.votedFor': '{actor} ha votato per {name}',

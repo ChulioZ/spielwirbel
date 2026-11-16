@@ -1506,6 +1506,8 @@ I18N.nl = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Plus/min wisselen in het gekozen veld',
   'points.categories.signShort': 'Teken',
+  'points.categories.locked': 'De gestippelde categorieën gelden voor dit spel in alle groepen en kun je hier niet wijzigen. Eronder kun je je eigen categorieën toevoegen.',
+  'points.categories.shared': 'Categorieën kunnen anoniem worden opgenomen in de gedeelde spelinstellingen.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} heeft gestemd',
   'log.votedFor': '{actor} stemde voor {name}',

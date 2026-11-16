@@ -1517,6 +1517,8 @@ I18N.es = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Cambiar más/menos del campo seleccionado',
   'points.categories.signShort': 'Signo',
+  'points.categories.locked': 'Las categorías con borde discontinuo se aplican a este juego en todos los grupos y no se pueden cambiar aquí. Puedes añadir las tuyas debajo.',
+  'points.categories.shared': 'Las categorías pueden incorporarse de forma anónima a los ajustes de juego compartidos.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} ha votado',
   'log.votedFor': '{actor} ha votado por {name}',

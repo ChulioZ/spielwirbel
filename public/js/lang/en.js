@@ -1551,6 +1551,8 @@ I18N.en = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Switch plus/minus of the selected field',
   'points.categories.signShort': 'Sign',
+  'points.categories.locked': 'The dashed categories apply to this game in every round and can’t be changed here. You can add your own below them.',
+  'points.categories.shared': 'Categories may feed anonymously into the shared game settings.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} voted',
   'log.votedFor': '{actor} voted for {name}',

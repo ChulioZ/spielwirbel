@@ -199,6 +199,11 @@ lib/
                      (#1786): the read overlay the repo facade applies to every
                      round and game, its cached confirmed map, and the fold of
                      the backends' per-round rows into the admin queue
+  game-categories.js its sibling for scoring CATEGORIES (#1787): a confirmed
+                     base set goes first in every round's sheet, locked, round
+                     categories of the same name map onto it (session parts
+                     re-keyed on read, translated back on write), extras after;
+                     plus the lock on an edit and the admin fold of the sets
   bgg-links.js       the instance-wide BGG link table's write and server-side
                      read (#1638): every BGG parse's category/mechanic/designer
                      ids are recorded best-effort, so a name can link to its
@@ -511,6 +516,10 @@ lib/
       game-scoring.js „Spieleinstellungen" (#1786): the queue of scored BGG
                      games, confirm/dismiss/revoke a scoring direction for
                      every round, CSV/copy export — counts only
+      game-categories.js „Wertungskategorien" (#1787): the category sets rounds
+                     typed per BGG game, confirm (spelling correctable) /
+                     dismiss / revoke a base set for every round, CSV/copy —
+                     names and counts, never a round or person
       storage.js     object-storage usage + the orphan estimate (issue #941),
                      behind a button because it lists the whole bucket; reports
                      only, never deletes
@@ -637,6 +646,7 @@ public/
                      the SPA
       admin-scoring.js the panel's „Spieleinstellungen" card (#1786), started
                      by admin.js's `admin:panel` event
+      admin-categories.js the „Wertungskategorien" card (#1787), the same way
       face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
                      <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,

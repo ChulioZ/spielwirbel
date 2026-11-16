@@ -1546,6 +1546,8 @@ I18N.de = {
   'points.categories.cell': '{category} – {name}',
   'points.categories.sign': 'Plus/Minus im gewählten Feld umschalten',
   'points.categories.signShort': 'Vorzeichen',
+  'points.categories.locked': 'Die gestrichelten Kategorien gelten für dieses Spiel in allen Runden und lassen sich hier nicht ändern. Eigene Kategorien kannst du darunter ergänzen.',
+  'points.categories.shared': 'Kategorien können anonym in die gemeinsamen Spieleinstellungen einfließen.',
   'points.categoryRecord': '{category}: {points} · {name}',
   'log.votedSelf': '{name} hat abgestimmt',
   'log.votedFor': '{actor} hat für {name} abgestimmt',
