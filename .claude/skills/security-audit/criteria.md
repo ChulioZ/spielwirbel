@@ -158,7 +158,9 @@ that a generic scanner does not know about.
 ### S-012 — Rate limits protect auth and contact, and are read per `createApp()`
 - **Status:** adopted · 2026-07-24
 - **Source:** `lib/app.js` · `.claude/rules/security-middleware.md`
-- **Check:** A global limiter plus tighter `AUTH_RATE_LIMIT_MAX` on the auth routes and a
+- **Check:** A global limiter (per verified account, else per IP — #1836) plus tighter
+  `AUTH_RATE_LIMIT_MAX` on every credential route (`credentialLimit`, per route — a
+  credential endpoint without it is the finding) and a
   contact limiter. Ceilings are read from env **inside** `createApp()`, never bound at
   module load. `/healthz` sits before the limiter so uptime probes aren't throttled. Note
   the store is in-memory per instance — and so is the per-account chat limiter

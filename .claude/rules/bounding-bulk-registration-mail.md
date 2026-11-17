@@ -59,7 +59,7 @@ stays healthy and the operator gets a log line instead of a flagged account.
   the breaker exists to protect.
 - **The mount order matters.** `app.use('/api/account/register', registerLimiter)`
   must come **before** `app.use('/api/account', …)`, or the account router fields
-  the request first and the limiter never runs. It *stacks* with `authLimiter`
+  the request first and the limiter never runs. It *stacks* with the credential limiter
   rather than replacing it — a signup spends one from each.
 
 ## `sentAt` is stamped even when the send was refused — leave it

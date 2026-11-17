@@ -30,7 +30,8 @@ the shared-password gate. Things that will bite if you forget them:
 - **Coexistence, not replacement.** lib/auth.js (the shared gate) still exists
   for instances that set AUTH_PASSWORD — production no longer does, but a
   self-hosted checkout may, alone or layered. /api/account mounts *before* the
-  gate (like /api/auth) behind the same AUTH_RATE_LIMIT_MAX limiter. test/helpers.js
+  gate (like /api/auth); its credential routes carry the AUTH_RATE_LIMIT_MAX
+  limiter per route (#1836, `lib/route-limits.js`). test/helpers.js
   raises that ceiling for the shared test app — an account-flow test making more
   requests than the default ceiling in `lib/app.js` would otherwise flake with
   429s (see security-middleware.md).

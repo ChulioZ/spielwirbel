@@ -14,8 +14,9 @@ actually protect anything here.
 
 ## The IP limiter is not the defence
 
-All of `/api/account` sits behind `authLimiter` (`lib/app.js`,
-`AUTH_RATE_LIMIT_MAX`, default 100 per window). That reads like enough. It is
+Every mail-sending account endpoint carries the credential limiter
+(`credentialLimit`, `lib/route-limits.js`, `AUTH_RATE_LIMIT_MAX`, default 100
+per IP per window — since #1836 per route rather than on the whole router). That reads like enough. It is
 not, for this class of endpoint, because the limiter counts **requests from one
 IP** while the thing being abused is **someone else's inbox**: an attacker who
 rotates addresses spends one request per IP and still delivers unlimited mail to

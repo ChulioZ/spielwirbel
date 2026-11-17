@@ -55,7 +55,10 @@ behind these choices — and why they are not up for casual revision — are in
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
   [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
   with a generous global limit, which the static shell assets are exempt from
-  (#464) so a page load costs one request rather than ~50.
+  (#464) so a page load costs one request rather than ~50. A signed-in request
+  is counted per verified account, an anonymous one per IP; a stricter per-IP
+  cap rides only the routes that try a credential or a secret token (#1836,
+  `lib/route-limits.js`).
   Mutating request bodies are validated at the router boundary with
   [zod](https://zod.dev/) schemas (via `lib/validate.js`).
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
@@ -160,6 +163,9 @@ lib/
                      stateless, scope-separated signed challenge. The
                      attestation/assertion crypto itself is
                      @simplewebauthn/server's; this is the policy around it
+  route-limits.js    which requests the limiters count (#1836): the per-route
+                     credential and image-upload limiters, and the general
+                     limiter's verified-account-or-IP key
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round, … (issue #139; inert unless
                      ACCOUNTS_ENABLED, except saved filters/round, #1328)
@@ -507,7 +513,8 @@ lib/
                                              lib/app.js; the sub-routers compose
                                              in index.js, because they share the
                                              prefix and seven mounts would run
-                                             authLimiter seven times — issue #996)
+                                             every app-level middleware seven
+                                             times — issue #996)
       index.js       the gate, the two-factor login (password, then passkey —
                      #1670), passkey enrollment, logout/me, and the mounts
       shared.js      the schemas and the paging shape more than one needs

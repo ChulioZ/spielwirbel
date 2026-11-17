@@ -43,6 +43,10 @@ process.env.VOTE_LINK_RATE_LIMIT_MAX = '1000000';
 // a 429 that looks like a broken endpoint. That spec drives the real ceiling
 // itself on a throwaway app.
 process.env.CLIENT_ERROR_RATE_LIMIT_MAX = '1000000';
+// And for the image-upload cap (#1836, default 30/window): the cover specs
+// upload far more than that from one source. test/rate-limit-scope.test.js
+// drives the real ceiling on a throwaway app.
+process.env.IMAGE_UPLOAD_RATE_LIMIT_MAX = '1000000';
 
 // Keep the observability request logger quiet during the ordinary suite so test
 // output isn't buried under one JSON line per request. test/observability.test.js

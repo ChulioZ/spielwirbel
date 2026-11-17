@@ -31,7 +31,9 @@ client can then spoof `X-Forwarded-For` and evade the limits. Verify it after
 setting it — see [`deploy-railway.md`](deploy-railway.md)
 ("Verifying `TRUST_PROXY`").
 
-Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
+Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min — counted per
+**account** for a request carrying a valid access token, per IP otherwise,
+issue #1836),
 `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5),
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
 `DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below), and
@@ -43,6 +45,9 @@ address), and
 `AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
 one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
 lower ceiling than the account surface around it), and
+`IMAGE_UPLOAD_RATE_LIMIT_MAX` (cover and session-photo uploads, per **account**
+per 15 min, default 30 — the same decoding-cost argument; a JSON game edit does
+not count, issue #1836), and
 `CLIENT_ERROR_RATE_LIMIT_MAX` (browser-side fault reports, per 15 min, default
 20 — see below).
 
@@ -218,8 +223,13 @@ the whole app behind a single shared password — an unauthenticated visitor get
 login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app
 stays open with no access control (the default for a bare local checkout; the
 maintainer's hosted instance instead runs the account model below, with no shared
-password). Tune the login brute-force
-limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 100). The session is
+password). Tune the brute-force limit with `AUTH_RATE_LIMIT_MAX` (credential
+attempts per IP per 15 min, default 100). Since #1836 it is spent only by the
+routes that try a password or a secret token — the shared and account logins,
+refresh, the verify/reset/confirm/change links, account deletion, register and
+demo, the passkey login pair, joining by invite link, and the operator's
+password, passkey and enrollment steps. Ordinary signed-in requests, including
+every authenticated operator action, fall under `RATE_LIMIT_MAX` only. The session is
 a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
 
 User accounts (issue #135): the token-first account model — register with

@@ -19,9 +19,10 @@ Two things about that shape are load-bearing:
 - **The composition is in `index.js`, NOT in `lib/app.js`** — unlike the five
   `/api/account` sub-routers #996 argued from. Those have distinct path
   prefixes; these do not (`/status`, `/users`, `/log` all sit directly under
-  `/api/admin`), so seven mounts on one prefix would run `authLimiter` seven
-  times per request and silently divide `AUTH_RATE_LIMIT_MAX` by seven — the
-  exact trap `lib/routes/passkeys.js` carries a comment about.
+  `/api/admin`), so seven mounts on one prefix would run every app-level
+  middleware seven times per request. (It was first argued for the auth
+  limiter, divided by seven; since #1836 that limiter rides the four credential
+  routes per route and the authenticated panel does not spend it.)
 - **The gate is applied once, before the mounts.** A sub-router re-applying
   `requireAdmin` would be harmless today and would become the place someone
   reads the gate from, at which point removing it from `index.js` looks safe.
