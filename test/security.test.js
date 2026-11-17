@@ -142,46 +142,9 @@ test('the asset exemption does not cover /uploads, navigations or made-up asset 
   }
 });
 
-// #399: the credential-free boot probe GET /api/account/me must not sit behind
-// the auth brute-force limiter — every hard page load spends one request on it,
-// so shared-IP browsing could trip the ceiling, and a 429 there sent the client
-// into a reload loop. Exactly /me is exempt: the credential endpoints and
-// /inbox (a GET on the same router) stay limited, and the global limiter still
-// covers /me itself.
-test('the auth limiter skips GET /api/account/me but still guards the rest', async () => {
-  const saved = {};
-  for (const k of ['RATE_LIMIT_MAX', 'AUTH_RATE_LIMIT_MAX', 'ACCOUNTS_ENABLED', 'SESSION_SECRET']) {
-    saved[k] = process.env[k];
-  }
-  process.env.RATE_LIMIT_MAX = '1000000';
-  process.env.AUTH_RATE_LIMIT_MAX = '2';
-  process.env.ACCOUNTS_ENABLED = 'true';
-  process.env.SESSION_SECRET = 'security-test-secret';
-  try {
-    const limited = createApp();
-    // Exhaust the tiny auth ceiling with credential requests.
-    for (let i = 0; i < 2; i++) {
-      const res = await request(limited)
-        .post('/api/account/login').send({ email: 'a@b.c', password: 'wrong-password' });
-      assert.equal(res.status, 401);
-    }
-    const blockedLogin = await request(limited)
-      .post('/api/account/login').send({ email: 'a@b.c', password: 'wrong-password' });
-    assert.equal(blockedLogin.status, 429);
-    assert.deepEqual(blockedLogin.body, { error: 'rate_limited' });
-    // A GET on the same router that is NOT the boot probe is still limited …
-    const blockedInbox = await request(limited).get('/api/account/inbox');
-    assert.equal(blockedInbox.status, 429);
-    // … but the boot probe answers normally (401: accounts on, no token).
-    const me = await request(limited).get('/api/account/me');
-    assert.equal(me.status, 401);
-    assert.deepEqual(me.body, { error: 'invalid_token' });
-  } finally {
-    for (const [k, v] of Object.entries(saved)) {
-      if (v === undefined) delete process.env[k]; else process.env[k] = v;
-    }
-  }
-});
+// #399's GET /api/account/me exemption is gone with the router-wide strict
+// limiter it was carved out of (#1836): the strict budget now rides only the
+// credential routes, which test/rate-limit-scope.test.js pins route by route.
 
 // #448: registration mails a verification link to any address a caller names,
 // and re-registering the same address sends nothing — so a per-account cooldown

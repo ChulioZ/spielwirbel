@@ -79,9 +79,9 @@ of **every** matching mount, so an ordinary `/api/account/login` request would
 spend **two** from `AUTH_RATE_LIMIT_MAX` instead of one — silently halving the
 brute-force ceiling for login, register and refresh.
 
-Hence one mount, with the login pair under `/api/account/passkeys/login`. The
-same trap applies to any future account sub-router: put it on its own path
-prefix, never on a second `/api/account` mount. (A router-level `router.use()`
+Hence one mount, with the login pair under `/api/account/passkeys/login`.
+Since #1836 the limiter is per route (`credentialLimit`), so this half is gone;
+the shape still holds for any other router-level middleware. (A router-level `router.use()`
 gate is the other half of this — mounted at `/api/account` it would field
 *every* account path, so `accounts_disabled` would start 404ing `/login`.)
 

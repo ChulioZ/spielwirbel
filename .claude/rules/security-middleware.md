@@ -53,8 +53,10 @@ Security headers (`helmet`) and rate limiting (`express-rate-limit`) are wired i
   report the hotlink as an open gap (`.claude/rules/deferred-weakness-attributions-rot.md`).
 
 - **The ceilings are meaningless if `req.ip` isn't the caller — see
-  `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every limiter here keys on
-  `req.ip`, which is decided by `TRUST_PROXY` (a hop *count*). Production ran one
+  `.claude/rules/trust-proxy-is-a-hop-count.md`.** Every per-IP limiter here keys
+  on `req.ip` (the general one only for an anonymous request since #1836 —
+  `.claude/rules/rate-limits-count-credentials-not-sessions.md`), which is
+  decided by `TRUST_PROXY` (a hop *count*). Production ran one
   too low, so `req.ip` was Railway's edge proxy and all four ceilings were buckets
   shared by every visitor behind it. Check `req.ip` against a real client address
   before trusting any per-IP reasoning about these limits.
