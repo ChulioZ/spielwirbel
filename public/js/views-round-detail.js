@@ -295,6 +295,7 @@ async function showGameDetail(rid, gameId) {
   const editImage = (anchor) => openImagePopover(editorCtx, anchor);
   const editExpansions = (anchor) => openExpansionEditor(editorCtx, anchor);
   const editPrice = (anchor) => openPurchasePricePopover(editorCtx, anchor);
+  const editPitch = (anchor) => openPitchPopover(editorCtx, anchor);
   // A wish's live current price, once the price section has one (#1773) —
   // „Ins Regal" offers to take it over as the purchase price.
   let wishLivePrice = null;
@@ -484,6 +485,12 @@ async function showGameDetail(rid, gameId) {
     line.append(h1, scoreBig);
   }
 
+  // The round's pitch line (#1837), under the title and above the chips — the
+  // same sentence the vote card shows, editable in place. With none, the way
+  // in is an empty chip in the row below, like every other editor here.
+  const pitchLine = gamePitchLine(game, editPitch);
+  if (pitchLine) chips.before(pitchLine);
+
   // The chips move OUT of the <h1> (#1039). They were appended into the heading
   // so they could sit beside the title's last line; the row is now its own flex
   // line, which also takes four interactive controls out of a heading's
@@ -553,6 +560,10 @@ async function showGameDetail(rid, gameId) {
     } else if (!sparse) {
       chips.append(editableTag('tag--custom tag--empty tag--price', esc(t('purchasePrice.set')), editPrice));
     }
+  }
+
+  if (!pitchLine && !sparse) {
+    chips.append(editableTag('tag--custom tag--empty', esc(t('pitch.set')), editPitch));
   }
 
   // What the round owns for this game (#653), as a chip instead of the 110px

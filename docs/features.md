@@ -73,6 +73,16 @@ What the app does, in detail. For a short overview see the
   round, the sheet says so — separately for the shelf and for the archive — but
   never stops you saving it, since a second copy is sometimes exactly what you
   mean.
+- **One sentence per game** (#1837) – a round can write a short line about a
+  game in its own words („Würfel als Arbeiter, fies, 45 min"), at most 90
+  characters on one line. It shows under the title on every vote card — the
+  hot-seat wizard and the shared vote link, in every design — and on the game's
+  page, where tapping it edits it; a game without one shows an invitation chip
+  there instead, and the add-game sheet has an optional field for it. A game
+  without a line renders its vote card exactly as before. It travels with a
+  copied or moved game and is a column (`pitch`) in the round export's
+  `games.csv`. Nothing is machine-written or taken from BGG; it is the group's
+  own words, for people at the table who do not know the game.
 - **Know what you are voting on** – a game linked to BoardGameGeek carries its
   community **complexity** (the 1–5 weight, shown to one decimal), its **playing
   time**, a **minimum age**, BGG's **categories** and **mechanics**, and its

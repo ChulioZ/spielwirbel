@@ -6026,6 +6026,23 @@ a.k-tile:focus-visible,
   font-size: 64px; /* glyph, not type */
 }
 .vote__title { text-align: center; font-size: var(--text-2xl); font-weight: 800; padding: 6px 20px; margin: 0; }
+/* The round's pitch line under the title (#1837), on every card. Secondary ink
+   so the title stays the heading; `anywhere` because a 90-character line with
+   one long unbroken word must wrap rather than widen the card. A game without a
+   pitch renders no element at all, so none of this costs it a pixel. */
+.vote__pitch {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  line-height: 1.35;
+  margin: 2px 20px 4px;
+  overflow-wrap: anywhere;
+}
+/* The composed designs place it in their card grid's own `pitch` area, under
+   the title. Compounded past (0,2,0) on purpose: the Klassisch split grid's
+   `.vote--split .vote__pitch` row pin below would otherwise TIE with it and win
+   or lose on source order (.claude/rules/label-rows-lose-to-field-label.md). */
+.vote.vote--composed .vote__card .vote__pitch { grid-area: pitch; text-align: left; margin: 4px 0 0; }
 /* „Die anderen schauen kurz weg." ON the card (#1191). Klassisch already says
    it one screen earlier, on the handover, so showing it twice would be a change
    to a design this issue does not touch — Der Tisch merges the two screens'
@@ -6246,15 +6263,19 @@ a.k-tile:focus-visible,
     max-width: 940px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr auto auto auto auto 1fr;
+    grid-template-rows: auto 1fr auto auto auto auto auto 1fr;
     column-gap: 10px;
     padding-bottom: 4px;
   }
   .vote--split .vote-progress { grid-column: 1 / -1; grid-row: 1; }
   .vote--split .vote__who { grid-row: 3; }
   .vote--split .vote__title { grid-row: 4; }
-  .vote--split .vote__q { grid-row: 5; }
-  .vote--split .rating { grid-row: 6; }
+  /* Pinned like every other row (see above): unpinned, the pitch (#1837) would
+     take the free spacer slot and render above the person line. Without a
+     pitch its auto row is empty and collapses to nothing. */
+  .vote--split .vote__pitch { grid-row: 5; }
+  .vote--split .vote__q { grid-row: 6; }
+  .vote--split .rating { grid-row: 7; }
   .vote--split .vote__img {
     grid-column: 1;
     grid-row: 2 / -1;
@@ -6263,6 +6284,7 @@ a.k-tile:focus-visible,
   }
   .vote--split .vote__who,
   .vote--split .vote__title,
+  .vote--split .vote__pitch,
   .vote--split .vote__q,
   .vote--split .rating { grid-column: 2; }
 }
@@ -6353,6 +6375,7 @@ a.k-tile:focus-visible,
     margin: 10px 20px 6px;
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
+  .vote .vote__pitch { margin: 0 20px 2px; font-size: var(--text-sm); }
   .vote .vote__q { margin: 2px 20px; font-size: var(--text-md); }
   /* The row carried SIX tiles between #797 and #909, which cost 20% of the
      horizontal budget. Measured at 390x640 with the old 20px/10px: the tiles
@@ -7273,6 +7296,24 @@ a.k-tile:focus-visible,
    on the card's. */
 .gd-cover { position: relative; width: 100%; }
 .gd-edition { margin: 8px 0 0; font-size: var(--text-sm); line-height: 1.4; }
+/* The pitch line under the game page's title (#1837): the round's own sentence
+   about the game, a real <button> that opens its editor. Reset to read as text
+   — the hover underline and the focus ring are what say it is editable. */
+.gd-pitch {
+  display: block;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--text-md);
+  line-height: 1.4;
+  color: var(--ink-soft);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.gd-pitch:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* `flex: 1 1 240px`, not `0 1 auto`. Two reasons, and the first is a bug:
    a flex line wraps on its items' HYPOTHETICAL sizes and only shrinks within a
@@ -8468,6 +8509,14 @@ a.k-tile:focus-visible,
 :is(.popover--playtime, .editor--playtime) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 :is(.popover--playtime, .editor--playtime) .pp-row .input { width: 80px; }
 .pp-hint { font-size: var(--text-sm); }
+/* The pitch editor (#1837). A popover is shrink-to-fit, so the input states its
+   own width rather than a % that would resolve against itself
+   (.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md). */
+:is(.popover--pitch, .editor--pitch) .pp-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+:is(.popover--pitch, .editor--pitch) .pitch-input { width: min(340px, 72vw); max-width: 100%; }
+:is(.popover--pitch, .editor--pitch) .editor-row__control { flex-wrap: wrap; }
+.pitch-count { display: block; margin-top: 4px; font-size: var(--text-sm); }
+.pitch-count.is-over { color: var(--danger); }
 .pp-reset { align-self: flex-start; }
 /* Capped because a popover cannot be scrolled into view, and hit the same way
    (#722): a round's tag list grows without bound — ~34 in the report — the

@@ -3209,6 +3209,33 @@ module.exports = function repoContract(repo) {
     assert.equal(read.title, 'Brass: Birmingham');
   });
 
+  /* ---------------------------- Pitch line (#1837) ------------------------- */
+
+  test('createGame and updateGame store a pitch, copyGames carries it, and a cleared one leaves NO key', async () => {
+    const src = await freshRound({ name: 'Pitched' });
+    const dst = await freshRound({ name: 'Pitched copy' });
+    const made = await repo.createGame(T, src.id, gameFields({ title: 'Kartographen', pitch: 'Karten zeichnen, ruhig' }));
+    assert.equal(made.pitch, 'Karten zeichnen, ruhig', 'createGame keeps a typed pitch');
+    const plain = await repo.createGame(T, src.id, gameFields({ title: 'Plain' }));
+    assert.equal('pitch' in plain, false, 'absent until written');
+
+    const set = await repo.updateGame(T, src.id, plain.id, { pitch: 'Würfel als Arbeiter' });
+    assert.equal(set.pitch, 'Würfel als Arbeiter');
+
+    const untouched = await repo.createGame(T, src.id, gameFields({ title: 'Untouched' }));
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [made.id, untouched.id]));
+    const copied = (await repo.getRound(T, dst.id)).games;
+    assert.equal(copied.find((g) => g.title === 'Kartographen').pitch, 'Karten zeichnen, ruhig');
+    assert.equal('pitch' in copied.find((g) => g.title === 'Untouched'), false,
+      'a copy must not invent a pitch the source never had');
+
+    // Cleared alongside another field in the same patch: absent, never null.
+    await repo.updateGame(T, src.id, plain.id, { title: 'Plain again', pitch: null });
+    const read = (await repo.getRound(T, src.id)).games.find((g) => g.id === plain.id);
+    assert.equal('pitch' in read, false);
+    assert.equal(read.title, 'Plain again');
+  });
+
   /* -------------------------- Game owners (#971) --------------------------- */
 
   test('createGame stores ownerIds, and leaves the key OFF when there are none', async () => {
