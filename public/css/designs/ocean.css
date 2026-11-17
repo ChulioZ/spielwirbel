@@ -2185,7 +2185,7 @@
   isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "img" "title" "meta" "q" "rating";
+  grid-template-areas: "img" "title" "pitch" "meta" "q" "rating";
   padding: 0;
   background: none;
 }
@@ -2330,8 +2330,8 @@
   :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote__card {
     grid-area: card;
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto auto 1fr auto;
-    grid-template-areas: "img ." "img title" "img meta" "img q" "img ." "rating rating";
+    grid-template-rows: 1fr auto auto auto auto 1fr auto;
+    grid-template-areas: "img ." "img title" "img pitch" "img meta" "img q" "img ." "rating rating";
     column-gap: 24px;
     padding: 28px;
     border-radius: var(--radius-xl);

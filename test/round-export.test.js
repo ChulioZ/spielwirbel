@@ -36,7 +36,7 @@ function roundFixture() {
       { id: 'm4', name: '=HYPERLINK("x")', color: '#378add' },
     ],
     games: [
-      { id: 'g1', title: 'Catan', minPlayers: 3, maxPlayers: 4, tagIds: ['t1'], ownerIds: ['m1', 'm2'],
+      { id: 'g1', title: 'Catan', minPlayers: 3, maxPlayers: 4, tagIds: ['t1'], ownerIds: ['m1', 'm2'], pitch: 'Handeln, "bauen", streiten',
         minPlaytime: 60, maxPlaytime: 120, playtimeOverride: { min: 45, max: 90 }, weight: 2.3,
         source: { provider: 'bgg', externalId: '13' }, expansions: [{ title: 'Seefahrer', minPlayers: 3, maxPlayers: 4 }],
         // #1780: one live category and one removed that an old session still holds.
@@ -154,6 +154,9 @@ test('games.csv labels every state and reads playtime through the override (#170
   assert.equal(games.g6.lent_to, 'Nachbarin');
   assert.equal(games.g1.lent_to, '');
   assert.equal(games.g1.lent_since, '');
+  // The round's pitch line (#1837), quoted through the CSV writer; none is empty.
+  assert.equal(games.g1.pitch, 'Handeln, "bauen", streiten');
+  assert.equal(games.g2.pitch, '');
 });
 
 test('sessions.csv: outcomes, endings, guests, teams, splits and date-only days (#1702)', (t) => {

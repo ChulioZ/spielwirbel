@@ -58,6 +58,17 @@ const ratingMark = (avg) => {
    into what a screen reader announces. Until #1530 Klassisch printed a digit
    instead of a word, and its markup was byte-for-byte the pre-#1268 inline
    loop; that promise ended here deliberately. */
+/* The round's pitch line under the title (#1837) — one sentence the group wrote
+   about the game, so a voter who does not know it learns what it is before
+   rating it. The SAME markup on every card (both hot-seat cards and both link
+   cards), so a design styles one element. A game without one renders nothing
+   at all: no empty paragraph, no gap. The text is the round's own and goes in
+   through esc() — never raw. */
+function votePitchHtml(game) {
+  const text = game && typeof game.pitch === 'string' ? game.pitch.trim() : '';
+  return text ? `<p class="vote__pitch">${esc(text)}</p>` : '';
+}
+
 /* Whether the worn design composes its vote card here rather than drawing
    Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
    composition and add their own side columns; Das Programmheft (#1374) takes
@@ -191,6 +202,7 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
       <div class="vote__card">
         <div class="vote__img${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
+        ${votePitchHtml(game)}
         ${meta ? `<p class="vote__meta">${esc(meta)}</p>` : ''}
         <div class="vote__q" id="voteQ">${esc(t(designIs('bruecke') ? 'vote.questionBruecke' : 'vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>

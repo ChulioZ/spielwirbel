@@ -85,6 +85,10 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
             <span class="muted">${esc(t('addGame.playersUnit'))}</span>
           </div>
         </div>
+        ${guest ? '' : `<div class="field">
+          <label for="pitch">${esc(t('pitch.addLabel'))}</label>
+          <input id="pitch" class="input" type="text" autocomplete="off" placeholder="${esc(t('pitch.placeholder'))}" />
+        </div>`}
         <div class="field"${guest ? ' hidden' : ''}>
           <label>${esc(t('addGame.tagsLabel'))}</label>
           <div class="filter-chips" id="tagSeg" hidden></div>
@@ -440,6 +444,11 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     if (!Number.isInteger(minPlayers) || minPlayers < 1 || !Number.isInteger(maxPlayers) || maxPlayers < 1)
       return toast(t('addGame.toast.needPlayers'));
     if (maxPlayers < minPlayers) return toast(t('addGame.toast.playersRange'));
+    // The optional pitch line (#1837), checked by the route's own function. Not
+    // offered to a guest's box (the sheet's nameless mode keeps its fields).
+    const pitchInput = form.querySelector('#pitch');
+    const pitch = pitchInput ? gamePitchFrom(pitchInput.value) : { pitch: null };
+    if (pitch.error) return toast(t('pitch.tooLong', { max: GAME_PITCH_MAX }));
     const fd = new FormData();
     fd.append('title', title);
     fd.append('minPlayers', minPlayers);
@@ -451,6 +460,8 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
     // ordinary add-game request byte-identical to what it has always been.
     if (wish) fd.append('wish', 'true');
     if (guest) fd.append('guestGame', 'true');
+    // Only when one was typed, so a plain add stays byte-identical on the wire.
+    if (pitch.pitch) fd.append('pitch', pitch.pitch);
     if (pastedBlob) {
       // Pre-flight against the shared cap so an oversize screenshot is refused
       // here, with a message that states the limit, rather than after the whole
@@ -495,6 +506,8 @@ function showAddGameForm(round, { wish = false, title = '', hit = null, dirty = 
         setCoverPicker(null);
         lookup.closeMenu();
         form.querySelector('#title').value = '';
+        // A pitch describes the game just saved, never the next one.
+        if (pitchInput) pitchInput.value = '';
         refreshDupHint();
         setImage(null);
         form.querySelector('#title').focus();

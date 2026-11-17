@@ -902,6 +902,15 @@ against it. Its cap is deliberately twice the cover's — a phone camera photo, 
 a paste — so it must never be "tidied" into `cover-policy.js`: the two numbers
 are separate decisions that happen to share a shape.
 
+**The forty-fourth is `public/js/game-pitch.js`** (#1837): a game's pitch line —
+`GAME_PITCH_MAX` and `gamePitchFrom`, which the game page's editor and the
+add-game sheet check with and `POST`/`PATCH …/games` validate with. The plain
+offer/validate shape, with one property worth naming: the length is counted in
+CHARACTERS (code points), so the inputs carry no `maxlength`, which counts UTF-16
+units — an emoji-heavy line would be cut short in the browser and accepted by
+the route, the quiet direction of the palette bug. The counter states the cap
+instead.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

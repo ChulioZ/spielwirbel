@@ -895,6 +895,8 @@ public/
     purchase-price.js a game's purchase price: the currencies and ceiling the
                      route also validates with, the cost per session and the
                      tie-aware „Bester Kauf" (issue #1773)
+    game-pitch.js    a game's one-sentence pitch line: the length cap and the
+                     check the editor and POST/PATCH …/games share (issue #1837)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -1114,6 +1116,9 @@ public/
     game-editor-price.js  the game page's purchase-price chip and editor, and
                      the „Ins Regal" offer to take a wish's current price
                      over (#1773)
+    game-editor-pitch.js  the game page's pitch line and its editor (#1837);
+                     the vote cards draw the same line via `votePitchHtml`
+                     (vote-card-composed.js)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-

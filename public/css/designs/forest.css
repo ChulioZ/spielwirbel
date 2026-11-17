@@ -3041,7 +3041,7 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "img" "title" "meta" "q" "rating";
+  grid-template-areas: "img" "title" "pitch" "meta" "q" "rating";
   padding: 0;
   background: none;
 }
@@ -3262,8 +3262,8 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__card {
     grid-area: card;
     grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr auto auto;
-    grid-template-areas: "img title" "img meta" "img ." "q q" "rating rating";
+    grid-template-rows: auto auto auto 1fr auto auto;
+    grid-template-areas: "img title" "img pitch" "img meta" "img ." "q q" "rating rating";
     column-gap: 28px;
     padding: 0 32px 32px;
     border-radius: 0 0 var(--radius-xl) var(--radius-xl);

@@ -532,6 +532,10 @@ const frontendGlobals = {
   isValidPurchasePrice: 'readonly', parsePurchaseAmount: 'readonly', costPerPlay: 'readonly', bestBuy: 'readonly',
   fmtPurchaseCents: 'readonly', purchasePriceChipText: 'readonly', defaultPurchaseCurrency: 'readonly',
   openPurchasePricePopover: 'readonly', askAcquireWithPrice: 'readonly',
+  // game-pitch.js (#1837, pure, shared with the route), game-editor-pitch.js
+  // (its editor and the game page's line) and the vote cards' pitch line
+  GAME_PITCH_MAX: 'readonly', gamePitchFrom: 'readonly',
+  openPitchPopover: 'readonly', gamePitchLine: 'readonly', votePitchHtml: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',

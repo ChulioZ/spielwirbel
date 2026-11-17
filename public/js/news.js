@@ -55,6 +55,46 @@ const NEWS = [
    * an `improved` entry (.claude/rules/keep-readme-current.md).
    */
   {
+    revision: '2026-11-17',
+    kind: 'new',
+    de: {
+      title: 'Ein Satz zu jedem Spiel',
+      body: 'Schreibt zu einem Spiel einen kurzen Satz in euren eigenen Worten, etwa „Würfel als Arbeiter, fies, 45 min". Er steht beim Abstimmen unter dem Titel, auch über den geteilten Link, sodass alle wissen, worum es geht, bevor sie bewerten. Ihr tragt ihn auf der Seite des Spiels ein oder gleich beim Hinzufügen.',
+    },
+    en: {
+      title: 'One sentence for every game',
+      body: 'Write a short line about a game in your own words, like “dice as workers, mean, 45 min”. It shows under the title while voting, on the shared link too, so everyone knows what a game is before rating it. Add it on the game’s page or right when you add the game.',
+    },
+    es: {
+      title: 'Una frase para cada juego',
+      body: 'Escribid una frase corta sobre un juego con vuestras propias palabras, por ejemplo «dados como trabajadores, malvado, 45 min». Aparece bajo el título al votar, también en el enlace compartido, para que todos sepan de qué va antes de valorarlo. Se añade en la página del juego o al añadirlo.',
+    },
+    fr: {
+      title: 'Une phrase pour chaque jeu',
+      body: 'Écrivez une courte phrase sur un jeu avec vos propres mots, par exemple « des dés comme ouvriers, méchant, 45 min ». Elle s’affiche sous le titre pendant le vote, y compris via le lien partagé, pour que chacun sache de quoi il s’agit avant de noter. Ajoutez-la sur la page du jeu ou dès son ajout.',
+    },
+    it: {
+      title: 'Una frase per ogni gioco',
+      body: 'Scrivete una breve frase su un gioco con parole vostre, per esempio «dadi come lavoratori, cattivo, 45 min». Compare sotto il titolo durante il voto, anche tramite il link condiviso, così tutti sanno di cosa si tratta prima di valutare. La aggiungete nella pagina del gioco o subito quando lo inserite.',
+    },
+    nl: {
+      title: 'Eén zin bij elk spel',
+      body: 'Schrijf in je eigen woorden een korte zin over een spel, bijvoorbeeld „dobbelstenen als arbeiders, gemeen, 45 min". Die staat bij het stemmen onder de titel, ook via de gedeelde link, zodat iedereen weet waar het over gaat voordat hij beoordeelt. Je vult hem in op de pagina van het spel of meteen bij het toevoegen.',
+    },
+    pt: {
+      title: 'Uma frase para cada jogo',
+      body: 'Escrevam uma frase curta sobre um jogo, com as vossas palavras, por exemplo «dados como trabalhadores, maldoso, 45 min». Aparece por baixo do título ao votar, também pelo link partilhado, para que todos saibam do que se trata antes de avaliar. Adiciona-se na página do jogo ou logo ao adicioná-lo.',
+    },
+    fi: {
+      title: 'Yksi lause jokaiselle pelille',
+      body: 'Kirjoittakaa pelistä lyhyt lause omin sanoin, esimerkiksi ”nopat työläisinä, ilkeä, 45 min”. Se näkyy äänestäessä otsikon alla, myös jaetun linkin kautta, joten kaikki tietävät, mistä on kyse, ennen kuin arvioivat. Lisäätte sen pelin sivulla tai heti peliä lisätessä.',
+    },
+    ko: {
+      title: '게임마다 한 문장',
+      body: '게임을 여러분의 말로 짧게 한 문장으로 소개해 보세요. 예: „주사위가 일꾼, 얄밉다, 45분". 투표할 때 제목 아래에 표시되고 공유 링크에서도 보이니, 모두가 평가하기 전에 어떤 게임인지 알 수 있어요. 게임 페이지에서 쓰거나 게임을 추가할 때 바로 쓸 수 있어요.',
+    },
+  },
+  {
     revision: '2026-11-15',
     kind: 'improved',
     de: {
