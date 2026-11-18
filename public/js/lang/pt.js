@@ -1585,6 +1585,7 @@ I18N.pt = {
   'vote.back': 'Voltar',
   'vote.who': 'Avaliando agora:',
   'vote.question': 'Quanta vontade você tem de jogar isso?',
+  'vote.tasteHint': 'Talvez você goste – parecido com {names}',
   'vote.scaleLow': 'nenhuma',
   'vote.scaleHigh': 'muita',
   'vote.scale2': 'pouca',

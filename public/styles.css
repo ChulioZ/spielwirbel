@@ -6043,6 +6043,22 @@ a.k-tile:focus-visible,
    `.vote--split .vote__pitch` row pin below would otherwise TIE with it and win
    or lose on source order (.claude/rules/label-rows-lose-to-field-label.md). */
 .vote.vote--composed .vote__card .vote__pitch { grid-area: pitch; text-align: left; margin: 4px 0 0; }
+/* The voter's own taste hint (#1839): „Könnte dir gefallen – wie Azul und
+   Patchwork", on a game this voter has never rated or played. Deliberately the
+   QUIETEST line on the card — muted, small, below the pitch — because it is a
+   nudge on a game the voter cannot judge yet, not a verdict; a louder line would
+   anchor the rating it exists to inform. Words only, never a number (#1530).
+   Absent for every other game, so it costs them nothing. */
+.vote__hint {
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-style: italic;
+  line-height: 1.35;
+  margin: 0 20px 4px;
+  overflow-wrap: anywhere;
+}
+.vote.vote--composed .vote__card .vote__hint { grid-area: hint; text-align: left; margin: 2px 0 0; }
 /* „Die anderen schauen kurz weg." ON the card (#1191). Klassisch already says
    it one screen earlier, on the handover, so showing it twice would be a change
    to a design this issue does not touch — Der Tisch merges the two screens'
@@ -6263,7 +6279,7 @@ a.k-tile:focus-visible,
     max-width: 940px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto 1fr auto auto auto auto auto 1fr;
+    grid-template-rows: auto 1fr auto auto auto auto auto auto 1fr;
     column-gap: 10px;
     padding-bottom: 4px;
   }
@@ -6274,8 +6290,10 @@ a.k-tile:focus-visible,
      take the free spacer slot and render above the person line. Without a
      pitch its auto row is empty and collapses to nothing. */
   .vote--split .vote__pitch { grid-row: 5; }
-  .vote--split .vote__q { grid-row: 6; }
-  .vote--split .rating { grid-row: 7; }
+  /* The taste hint (#1839) under the pitch, pinned for the same reason. */
+  .vote--split .vote__hint { grid-row: 6; }
+  .vote--split .vote__q { grid-row: 7; }
+  .vote--split .rating { grid-row: 8; }
   .vote--split .vote__img {
     grid-column: 1;
     grid-row: 2 / -1;
@@ -6285,6 +6303,7 @@ a.k-tile:focus-visible,
   .vote--split .vote__who,
   .vote--split .vote__title,
   .vote--split .vote__pitch,
+  .vote--split .vote__hint,
   .vote--split .vote__q,
   .vote--split .rating { grid-column: 2; }
 }
@@ -6376,6 +6395,11 @@ a.k-tile:focus-visible,
   }
   .vote .vote__title { padding: 2px 20px; font-size: var(--text-xl); }
   .vote .vote__pitch { margin: 0 20px 2px; font-size: var(--text-sm); }
+  .vote .vote__hint { margin: 0 20px 2px; font-size: var(--text-xs); }
+  /* The hint's own 18px (16px line + 2px margin) comes out of the cover, the
+     one elastic part: measured at 390x640 (#1839), a card with both a pitch and
+     a hint ran 8px past the fold without this, and fits with it. */
+  .vote:has(.vote__hint) .vote__img { height: max(110px, min(260px, calc(100svh - 465px))); }
   .vote .vote__q { margin: 2px 20px; font-size: var(--text-md); }
   /* The row carried SIX tiles between #797 and #909, which cost 20% of the
      horizontal budget. Measured at 390x640 with the old 20px/10px: the tiles

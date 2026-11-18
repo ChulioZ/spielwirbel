@@ -693,6 +693,15 @@ const frontendGlobals = {
   memberStats: 'readonly', bestGameValue: 'readonly', BEST_GAME_PRIOR_PLAYS: 'readonly', bestGameSub: 'readonly',
   // taste-neighbour.js (#1778): die Tischkarte's closest / most different taste
   TASTE_MIN_SHARED: 'readonly', tasteAverages: 'readonly', tasteDistance: 'readonly', tasteNeighbours: 'readonly', memberTasteLine: 'readonly',
+  // taste-vector.js (#1839, the similarity math shared with lib/recommend.js),
+  // vote-hint.js (the vote card's taste hint) and its card line
+  clamp01: 'readonly', accumulate: 'readonly', normalize: 'readonly', prefixSums: 'readonly',
+  attainable: 'readonly', cosine: 'readonly',
+  TASTE_HINT_NEUTRAL: 'readonly', TASTE_HINT_MIN_RATED: 'readonly', TASTE_HINT_MIN_MATCH: 'readonly',
+  TASTE_HINT_WEIGHTS: 'readonly', TASTE_HINT_NAMES: 'readonly', TASTE_HINT_KEYS: 'readonly',
+  hintValues: 'readonly', hasTasteMetadata: 'readonly', voterKnowsGame: 'readonly',
+  voterTasteProfile: 'readonly', tasteMatch: 'readonly', hintNamedGames: 'readonly',
+  voteTasteHint: 'readonly', voteHintHtml: 'readonly', voteHintDeps: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
   // The group challenge (#1779): challenges.js + views-challenges.js.
   CHALLENGE_KINDS: 'readonly', CHALLENGE_COUNTED: 'readonly', CHALLENGE_N_MIN: 'readonly', CHALLENGE_N_MAX: 'readonly',

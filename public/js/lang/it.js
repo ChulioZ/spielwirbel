@@ -1587,6 +1587,7 @@ I18N.it = {
   'vote.back': 'Indietro',
   'vote.who': 'Sta valutando:',
   'vote.question': 'Quanta voglia hai di giocarci?',
+  'vote.tasteHint': 'Potrebbe piacerti – come {names}',
   'vote.scaleLow': 'per niente',
   'vote.scaleHigh': 'moltissima',
   'vote.scale2': 'non molto',

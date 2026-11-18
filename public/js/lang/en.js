@@ -1633,6 +1633,10 @@ I18N.en = {
   'vote.back': 'Back',
   'vote.who': 'Now rating:',
   'vote.question': 'How much would you like to play this?',
+  // The vote card's taste hint (#1839), on a game the voter has never rated or
+  // played: {names} is one or two of the round's own games they like, joined
+  // by joinNames. Words only, never a number, never negative.
+  'vote.tasteHint': 'You might like this – like {names}',
   // The word under each mood face, lowest first — and, since #1530, the face's
   // whole accessible name: no digit is shown or spoken (#145, #1530).
   'vote.scaleLow': 'not at all',

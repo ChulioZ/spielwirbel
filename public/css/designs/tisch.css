@@ -3322,11 +3322,12 @@
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr);
   /* The two 1fr rows centre title and meta against the cover's height. */
-  grid-template-rows: 1fr auto auto auto 1fr auto auto;
+  grid-template-rows: 1fr auto auto auto auto 1fr auto auto;
   grid-template-areas:
     "img ."
     "img title"
     "img pitch"
+    "img hint"
     "img meta"
     "img ."
     "q q"
@@ -4435,11 +4436,12 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .vote__card {
     grid-template-columns: 176px minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto auto auto 1fr auto;
+    grid-template-rows: 1fr auto auto auto auto auto 1fr auto;
     grid-template-areas:
       "img ."
       "img title"
       "img pitch"
+      "img hint"
       "img meta"
       "img q"
       "img ."

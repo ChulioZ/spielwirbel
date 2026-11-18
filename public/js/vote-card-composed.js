@@ -69,6 +69,23 @@ function votePitchHtml(game) {
   return text ? `<p class="vote__pitch">${esc(text)}</p>` : '';
 }
 
+/* The voter's own taste hint under the pitch (#1839): „Könnte dir gefallen –
+   wie Azul und Patchwork" on a game this voter has never rated or played, when
+   it resembles the games they like (vote-hint.js decides; this only draws).
+   The SAME markup on every in-app card, like the pitch, so a design styles one
+   element. `person` is whoever's seat is voting, so on a shared device the hint
+   follows the seat. A guest, a game without metadata, or no match renders
+   nothing at all. The names are the round's own titles, through esc().
+
+   Not on the shared-link card, on purpose: the ballot carries no round data to
+   derive it from, and serving it would hand a member's taste to anyone who taps
+   their name on a link nobody signs in to. */
+function voteHintHtml(round, person, game) {
+  const liked = voteTasteHint(round, person && person.id, game);
+  if (!liked) return '';
+  return `<p class="vote__hint">${esc(t('vote.tasteHint', { names: joinNames(liked.map((g) => g.title)) }))}</p>`;
+}
+
 /* Whether the worn design composes its vote card here rather than drawing
    Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
    composition and add their own side columns; Das Programmheft (#1374) takes
@@ -187,7 +204,7 @@ function voteFeltMarks(gameN, gameTotal) {
   return `<span class="vote-felt__dots" aria-hidden="true">${dots.join('')}</span>`;
 }
 
-function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
+function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff, hint }) {
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
   return h(`<div class="vote vote--split vote--composed">
       <div class="vote-felt">
@@ -203,6 +220,7 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
         <div class="vote__img${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         ${votePitchHtml(game)}
+        ${hint || ''}
         ${meta ? `<p class="vote__meta">${esc(meta)}</p>` : ''}
         <div class="vote__q" id="voteQ">${esc(t(designIs('bruecke') ? 'vote.questionBruecke' : 'vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>

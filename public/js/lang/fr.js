@@ -1588,6 +1588,7 @@ I18N.fr = {
   'vote.go': 'C’est parti ›',
   'vote.back': 'Retour',
   'vote.question': 'À quel point as-tu envie d’y jouer ?',
+  'vote.tasteHint': 'Pourrait te plaire – comme {names}',
   'vote.scaleLow': 'pas du tout',
   'vote.scaleHigh': 'à fond',
   'vote.scale2': 'plutôt pas',

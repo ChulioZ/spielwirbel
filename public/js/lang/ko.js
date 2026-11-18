@@ -1536,6 +1536,7 @@ I18N.ko = {
   'vote.back': '뒤로',
   'vote.who': '평가하는 사람:',
   'vote.question': '이 게임을 얼마나 하고 싶으세요?',
+  'vote.tasteHint': '{names} 같은 게임이라 마음에 드실 수도 있어요',
   'vote.scaleLow': '전혀',
   'vote.scaleHigh': '정말로',
   'vote.scale2': '별로',

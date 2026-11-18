@@ -1623,6 +1623,10 @@ I18N.de = {
   'vote.back': 'Zurück',
   'vote.who': 'Es bewertet:',
   'vote.question': 'Wie gern möchtest du das spielen?',
+  // The vote card's taste hint (#1839), on a game the voter has never rated or
+  // played: {names} is one or two of the round's own games they like, joined
+  // by joinNames. Words only, never a number, never negative.
+  'vote.tasteHint': 'Könnte dir gefallen – wie {names}',
   // The word under each mood face, lowest first — and, since #1530, the face's
   // whole accessible name: no digit is shown or spoken (#145, #1530).
   'vote.scaleLow': 'gar nicht',
