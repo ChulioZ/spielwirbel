@@ -86,5 +86,5 @@ function tasteNeighbours(round, mid, deps) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { TASTE_MIN_SHARED, tasteDistance, tasteNeighbours };
+  module.exports = { TASTE_MIN_SHARED, tasteAverages, tasteDistance, tasteNeighbours };
 }

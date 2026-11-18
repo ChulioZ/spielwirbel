@@ -55,6 +55,46 @@ const NEWS = [
    * an `improved` entry (.claude/rules/keep-readme-current.md).
    */
   {
+    revision: '2026-11-18',
+    kind: 'new',
+    de: {
+      title: 'Könnte dir gefallen',
+      body: 'Kennst du ein Spiel noch nicht, hilft dir die Abstimmungskarte jetzt mit einer leisen Zeile: Ähnelt es Spielen, die du in eurer Runde gern magst, nennt sie bis zu zwei davon, etwa „Könnte dir gefallen – wie Patchwork und Azul". Sie erscheint, sobald du ein paar Spiele bewertet hast, nur für dich und nie mit einer Zahl.',
+    },
+    en: {
+      title: 'You might like this',
+      body: 'When you don’t know a game yet, the vote card now helps with one quiet line: if it resembles games you like in your round, it names up to two of them, like “You might like this – like Patchwork and Azul”. It appears once you have rated a few games, only for you, and never with a number.',
+    },
+    es: {
+      title: 'Podría gustarte',
+      body: 'Si todavía no conoces un juego, la tarjeta de votación te ayuda ahora con una línea discreta: si se parece a juegos que te gustan en vuestro grupo, nombra hasta dos, por ejemplo «Podría gustarte: se parece a Patchwork y Azul». Aparece cuando ya has valorado unos cuantos juegos, solo para ti y nunca con un número.',
+    },
+    fr: {
+      title: 'Pourrait te plaire',
+      body: 'Quand tu ne connais pas encore un jeu, la carte de vote t’aide désormais d’une ligne discrète : s’il ressemble à des jeux que tu aimes dans votre groupe, elle en nomme jusqu’à deux, par exemple « Pourrait te plaire – comme Patchwork et Azul ». Elle apparaît dès que tu as noté quelques jeux, rien que pour toi et jamais avec un chiffre.',
+    },
+    it: {
+      title: 'Potrebbe piacerti',
+      body: 'Se non conosci ancora un gioco, la carta di voto ora ti aiuta con una riga discreta: se somiglia a giochi che ti piacciono nel vostro gruppo, ne nomina fino a due, per esempio «Potrebbe piacerti – come Patchwork e Azul». Compare quando hai già valutato qualche gioco, solo per te e mai con un numero.',
+    },
+    nl: {
+      title: 'Misschien iets voor jou',
+      body: 'Ken je een spel nog niet, dan helpt de stemkaart je nu met één rustige regel: lijkt het op spellen die je in jullie groep graag speelt, dan noemt hij er tot twee, bijvoorbeeld „Misschien iets voor jou – zoals Patchwork en Azul". Hij verschijnt zodra je een paar spellen hebt beoordeeld, alleen voor jou en nooit met een getal.',
+    },
+    pt: {
+      title: 'Talvez você goste',
+      body: 'Quando ainda não conhece um jogo, o cartão de votação agora ajuda com uma linha discreta: se ele se parece com jogos de que você gosta no seu grupo, nomeia até dois, por exemplo «Talvez você goste – parecido com Patchwork e Azul». Aparece depois de avaliar alguns jogos, só para você e nunca com um número.',
+    },
+    fi: {
+      title: 'Voisit pitää tästä',
+      body: 'Kun et vielä tunne peliä, äänestyskortti auttaa nyt yhdellä hillityllä rivillä: jos peli muistuttaa porukkanne pelejä, joista pidät, se mainitsee niistä enintään kaksi, esimerkiksi ”Voisit pitää tästä – kuten Patchwork ja Azul”. Rivi näkyy, kun olet arvioinut muutaman pelin, vain sinulle eikä koskaan numeroiden kanssa.',
+    },
+    ko: {
+      title: '마음에 드실 수도 있어요',
+      body: '아직 모르는 게임이라면 이제 투표 카드가 조용한 한 줄로 도와드려요. 모임에서 좋아하신 게임과 비슷하면 그중 최대 두 개를 알려 줘요. 예: „Patchwork 그리고 Azul 같은 게임이라 마음에 드실 수도 있어요". 몇 가지 게임을 평가하고 나면 나타나고, 본인에게만 보이며 숫자는 절대 표시되지 않아요.',
+    },
+  },
+  {
     revision: '2026-11-17',
     kind: 'new',
     de: {

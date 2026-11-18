@@ -928,6 +928,9 @@ public/
                      averaging, so a game one person does not want to play
                      stops outranking a game everybody is fine with. Required
                      by lib/recommend.js and lib/session-split.js (issue #893)
+    taste-vector.js  the taste-vector math — affinity-weighted frequency, L2
+                     normalisation and the profile-rescaled cosine — shared by
+                     lib/recommend.js and the vote card's taste hint (#1839)
     rating-faces.js  the mood face each rung of the 1-5 scale wears, so the two
                      vote cards and the session result distribution name a
                      rating with the same glyph; also the scale's own bounds,
@@ -1171,6 +1174,9 @@ public/
                      whose is most different (mean difference of per-game
                      average ratings, ≥ 5 shared games) — die Tischkarte's
                      taste line (issue #1778)
+    vote-hint.js     the vote card's taste hint: whether a game the voter has
+                     never rated or played resembles the games they like, and
+                     which two of them to name (issue #1839)
     achievements.js  the Abzeichen catalogue (41 entries: member, round,
                      account) and their states, tiers and earning dates,
                      replayed on demand from the finished sessions — nothing

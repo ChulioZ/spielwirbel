@@ -901,6 +901,7 @@ function startVoting(round, session, games, people, opts = {}) {
         <div class="vote__img${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
         ${votePitchHtml(game)}
+        ${voteHintHtml(round, person, game)}
         <div class="vote__secret"><i class="ti ti-eye-off" aria-hidden="true"></i> ${esc(t('vote.handoverSub'))}</div>
         <div class="vote__q" id="voteQ">${esc(t('vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>
@@ -924,6 +925,7 @@ function startVoting(round, session, games, people, opts = {}) {
       game,
       meta: voteMetaLine(game, round),
       handoff: voteHandoffLine(turn, !opts.skipIntro),
+      hint: voteHintHtml(round, person, game),
     });
     if (oceanWorn()) {
       // DOM order is the 1440 reading order: who has rated, the card, what is

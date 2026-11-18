@@ -1594,6 +1594,7 @@ I18N.es = {
   'vote.back': 'Atrás',
   'vote.who': 'Ahora valora:',
   'vote.question': '¿Cuánto te apetece jugar a esto?',
+  'vote.tasteHint': 'Podría gustarte: se parece a {names}',
   'vote.scaleLow': 'nada',
   'vote.scaleHigh': 'muchísimo',
   'vote.scale2': 'más bien no',

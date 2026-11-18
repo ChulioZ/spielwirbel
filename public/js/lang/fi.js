@@ -1554,6 +1554,7 @@ I18N.fi = {
   'vote.back': 'Takaisin',
   'vote.who': 'Nyt arvioi:',
   'vote.question': 'Kuinka mielelläsi pelaisit tämän?',
+  'vote.tasteHint': 'Voisit pitää tästä – kuten {names}',
   'vote.scaleLow': 'en lainkaan',
   'vote.scaleHigh': 'ehdottomasti',
   'vote.scale2': 'en oikein',

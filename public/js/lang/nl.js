@@ -1583,6 +1583,7 @@ I18N.nl = {
   'vote.back': 'Terug',
   'vote.who': 'Beoordeelt nu:',
   'vote.question': 'Hoe graag zou je dit willen spelen?',
+  'vote.tasteHint': 'Misschien iets voor jou – zoals {names}',
   'vote.scaleLow': 'helemaal niet',
   'vote.scaleHigh': 'heel graag',
   'vote.scale2': 'liever niet',

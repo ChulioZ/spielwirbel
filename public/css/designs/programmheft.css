@@ -5196,7 +5196,7 @@
 :root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
-  grid-template-areas: "img title" "img pitch" "img meta" "q q" "rating rating" "scale scale";
+  grid-template-areas: "img title" "img pitch" "img hint" "img meta" "q q" "rating rating" "scale scale";
   align-items: end;
   column-gap: var(--space-4);
   padding: 0;
@@ -5344,8 +5344,8 @@
   :root[data-design="programmheft"] .vote--ph .vote-felt { grid-template-areas: "back who dots" "secret secret secret"; }
   :root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
     grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto auto 1fr;
-    grid-template-areas: "img title" "img pitch" "img meta" "img q" "img rating" "img scale";
+    grid-template-rows: auto auto auto auto auto auto 1fr;
+    grid-template-areas: "img title" "img pitch" "img hint" "img meta" "img q" "img rating" "img scale";
     align-items: start;
     column-gap: var(--space-6);
     padding-top: var(--space-3);

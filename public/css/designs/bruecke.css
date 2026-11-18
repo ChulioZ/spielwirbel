@@ -1492,7 +1492,7 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "img" "title" "pitch" "meta" "q" "rating";
+  grid-template-areas: "img" "title" "pitch" "hint" "meta" "q" "rating";
   padding: var(--space-4);
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1684,8 +1684,8 @@
   :root[data-design="bruecke"][data-scheme="dark"] .vote--bruecke .vote__card {
     grid-area: card;
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto 1fr auto;
-    grid-template-areas: "img title" "img pitch" "img meta" "img q" "img ." "rating rating";
+    grid-template-rows: auto auto auto auto auto 1fr auto;
+    grid-template-areas: "img title" "img pitch" "img hint" "img meta" "img q" "img ." "rating rating";
     column-gap: var(--space-5);
     padding: var(--space-5);
   }

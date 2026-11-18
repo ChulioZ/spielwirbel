@@ -911,6 +911,16 @@ units — an emoji-heavy line would be cut short in the browser and accepted by
 the route, the quiet direction of the palette bug. The counter states the cap
 instead.
 
+**The forty-fifth is `public/js/taste-vector.js`** (#1839): the taste-vector
+math — `accumulate`, `normalize`, `prefixSums`, `attainable`, `cosine` and
+`clamp01` — moved out of `lib/recommend.js` so the vote card's taste hint
+(`vote-hint.js`) measures "similar" with the recommender's own arithmetic. Logic,
+and nothing validates it across the boundary: a drifted copy would let the hint
+call a game a match the recommender scores as a stranger, with nothing red. The
+hint reads it through injected `deps` under Node, since a public/js file cannot
+require a sibling. The measurements in its comments are the recommender's and
+still bind both callers.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

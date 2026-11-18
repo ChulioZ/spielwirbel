@@ -83,6 +83,15 @@ What the app does, in detail. For a short overview see the
   copied or moved game and is a column (`pitch`) in the round export's
   `games.csv`. Nothing is machine-written or taken from BGG; it is the group's
   own words, for people at the table who do not know the game.
+- **„Könnte dir gefallen"** (#1839) – on a game a voter has never rated or
+  played, the vote card can add one quiet line naming up to two games from the
+  round that *they* liked and that share its mechanics, categories or designer
+  („Könnte dir gefallen – wie Patchwork und Azul"). It follows whoever's seat is
+  voting, appears only once that person has rated at least five games with BGG
+  data, and never says anything negative or shows a number. It is worked out on
+  the device from the round's own ratings and stores nothing. It is not shown
+  on the shared vote link, which carries no round data and is opened without
+  signing in.
 - **Know what you are voting on** – a game linked to BoardGameGeek carries its
   community **complexity** (the 1–5 weight, shown to one decimal), its **playing
   time**, a **minimum age**, BGG's **categories** and **mechanics**, and its
