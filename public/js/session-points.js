@@ -339,34 +339,8 @@ function sessionPointsLabel(session) {
   return t(any ? 'points.edit' : 'points.add');
 }
 
-// The result's points block, best first, or null when the session has none.
-// Uses the result-people row so it sits in the same rhythm as „Wer dabei war"
-// and „Als Team" above it.
-// The automa (#1672) closes the list, after the people and outside their
-// ranking: it is what they played against, not one of them.
-function renderSessionPoints(round, session) {
-  const lines = sessionPointLines(round, session);
-  const automa = parseAutoma(session.automa);
-  if (!lines.length && !automa) return null;
-  const names = new Map(sessionParties(round, session).map((p) => [p.id, p.name]));
-  const automaLine = automa ? `<li class="result-points__line result-points__line--automa">
-          <span class="result-points__name">${iconText('ti-robot', automa.name)}</span>${Number.isInteger(automa.points)
-            ? `
-          <span class="result-points__value">${esc(fmtCount(automa.points))}</span>` : ''}
-        </li>` : '';
-  return h(`<div class="result-people result-points">
-      <span class="result-people__label">${esc(t('points.label'))}</span>
-      <ol class="result-points__list">${lines.map((l) => `<li class="result-points__line">
-          <span class="result-points__name">${esc(names.get(l.party.id) || '')}</span>
-          <span class="result-points__value">${esc(fmtCount(l.points))}</span>${l.newRecord
-            ? `<span class="result-points__record">${iconText('ti-medal', t('points.newRecord'))}</span>`
-            : ''}
-        </li>`).join('')}${automaLine}</ol>
-    </div>`);
-}
-
 // The points block as plain data, for the share (#1726): the same lines in the
-// same order as renderSessionPoints, the automa last, each marked as a winner
+// same order as the result's party list (#1846), the automa last, each marked as a winner
 // when anyone in its party won. [] when nothing was counted.
 function sessionSharePoints(round, session, winnerIds) {
   const won = new Set(winnerIds || []);

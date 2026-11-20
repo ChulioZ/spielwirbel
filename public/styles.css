@@ -12009,16 +12009,10 @@ kbd {
 .result-people__person { display: inline-flex; align-items: center; gap: 7px; }
 .result-people__person .avatar { width: 28px; height: 28px; font-size: 11px; /* glyph, not type */ }
 .result-people__name { font-size: var(--text-sm); font-weight: 700; }
-/* The evening's points (#1630), best first. An ordered list in the same row
-   rhythm as „Wer dabei war" above it: the order IS the content, so it reads
-   left to right and wraps like text rather than tiling. Names are inherited
-   ink; the „neuer Rekord" mark takes --good, which every design measures as
-   text against its page. */
-.result-points__list { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; }
-.result-points__line { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-sm); }
-.result-points__name { font-weight: 700; }
+/* The evening's points (#1630) as the party list prints them (#1846): the
+   number in tabular figures; the „neuer Rekord" mark takes --good, which every
+   design measures as text against its page. */
 .result-points__value { font-weight: 800; font-variant-numeric: tabular-nums; }
-.result-points__line--automa { color: var(--ink-soft); }
 
 /* The evening's photo (#1774), after its points. The frame shows the whole
    picture (`contain`, not `cover`): a photo of the final board is read for its
