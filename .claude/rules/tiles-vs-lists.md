@@ -86,7 +86,9 @@ Three things about that are load-bearing:
 Re-deciding these costs a browser session each; the reasoning is here so it
 doesn't have to be redone.
 
-- **Session results** — a ranking (see above), and since #1056 a **single**
+- **Session results** — a ranking (see above; since #1846 the evening's column
+  stands BESIDE it once a game is chosen, which leaves the ranking itself one
+  list), and since #1056 a **single**
   component: die Tafel. It had a stage until #897 and a winner spotlight until
   #1056, and each removal was the same argument one step further — the stage
   restated the top three places twenty pixels above rows that already stated

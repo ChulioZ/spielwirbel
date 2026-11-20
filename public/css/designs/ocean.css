@@ -2427,48 +2427,6 @@
   box-shadow: var(--shadow-2);
 }
 
-/* --- The result (O2.4 at 390, O4.4 at 1440, rearranged by #1430) ----------
-   Der Tisch's result composition (result-tafel-composed.js), arranged by
-   composeOceanResult into two columns: the SIDE column (the people as a ring
-   row, the sentence, the whale, the foot) and the TAFEL column (the ranking,
-   then the log). Two columns from 1280px, where the screen takes --w-detail;
-   one column below, in the same order.
-
-   This DEPARTS FROM O4.4 ON PURPOSE. The sheet draws people 230 | whale 1fr |
-   Tafel 500 with the foot under the Tafel, and it was drawn with three rows.
-   Measured at eight (#1430, 1440×900): the Tafel was 440px wide and 1394px
-   tall, the document 1927px, ~1000px stood empty under the people and the
-   whale, and „Noch eine Session" came after the whole list. So the Tafel takes
-   the wide column (uncapped since #1724: a 760px cap left ~150px dead on the right,
-   and a ~900px row reads fine with the distribution and pill beside the
-   title, #1430) and the side
-   column pins beside it. */
-@media (min-width: 1280px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean {
-    display: grid;
-    grid-template-columns: minmax(400px, 460px) minmax(0, 1fr);
-    column-gap: 32px;
-    align-items: start;
-  }
-  /* The foot on ONE line in the side column: „Noch eine Session" at its own
-     width rather than a 12em basis, which pushed „Mehr" to a second line and
-     the column 56px taller. A long locale still wraps — nothing overflows. */
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side .result-foot__again { flex: 1 1 auto; }
-}
-/* Pinned while the Tafel scrolls — but only where the whole side column fits
-   under the top bar. A sticky column taller than the viewport strands its own
-   bottom: the foot would stay cut off until the very end of the scroll. The
-   height is the column's measured one at 1440 with a badge moment and a
-   played game (~730px: the people row, the sentence, the badge, the whale, the
-   foot) plus the 80px offset and some slack; below it the column is static,
-   which is what it was before. `align-self: start` comes from the grid's
-   `align-items`, without which the item would stretch and have no travel. */
-@media (min-width: 1280px) and (min-height: 900px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side {
-    position: sticky;
-    top: 80px;
-  }
-}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .page-head--result { margin-bottom: 16px; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-title {
   font-family: var(--font-display);
@@ -2659,12 +2617,11 @@
    row, only its place moves, and it stays LAST in the DOM (the grid area is
    what moves it, never `order`). 131–158px rows became ~70–95.
 
-   A viewport breakpoint rather than a container query (there is none in the
-   repo, and WebKit is the engine a new one would need checking in): from 720px
-   the Tafel is ≥ ~600px wide in both of Ocean's arrangements — the single
-   column below 1280, and the Tafel column from 1280, whose floor is ~650px at
-   a 1280 viewport. Below it the two-line row above stands. */
-@media (min-width: 720px) {
+   By the Tafel's own width since #1846 (`.result-main` is the `tafel`
+   container, styles.css), where it was `@media (min-width: 720px)` and could
+   not see the evening column narrowing the Tafel (632px at 1280, rows
+   107–121px). Below it the two-line row above stands. */
+@container tafel (min-width: 600px) {
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow,
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip) {
     grid-template-columns: 20px 44px minmax(0, 1fr) auto auto auto;
@@ -2709,10 +2666,14 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-foot[hidden] { display: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-foot__again {
-  flex: 1 1 12em;
+  /* Its own line, „Teilen · Mehr" sharing the next (#1846): at a 12em basis
+     „Mehr" wrapped alone under the other two in the side column. */
+  flex: 1 1 100%;
   justify-content: center;
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean :is(.result-foot__share, .result-foot__more) {
+  flex: 1 1 0;
+  justify-content: center;
   border-color: var(--control-edge);
   background: var(--control-fill);
   color: var(--ink);

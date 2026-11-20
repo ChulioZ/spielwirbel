@@ -1311,20 +1311,15 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   /* Der Tisch composes this screen differently (#1275, T2.5/T4.4): compact rows
      under a header row, the people on the felt head, and a foot of its own. The
      markup lives in result-tafel-composed.js; every branch below is on this one
-     flag, and Klassisch is the path it leaves alone. Ocean (#1213, O2.4/O4.4)
-     shares the composition and arranges it in columns at the end
-     (composeOceanResult, views-session-ocean.js). */
+     flag, and Klassisch is the path it leaves alone. Ocean (#1213), Die Brücke
+     (#1240), Das Programmheft (#1374) and Forest (#1468) share that markup. The
+     COLUMNS are one composition for all six since #1846 (result-compose.js),
+     chosen by the evening's phase rather than by the design. */
   const oceanLook = oceanWorn();
-  // Die Brücke (#1240, B2.5/B4.3) takes the same composition and arranges it in
-  // two panels at the end (composeBrueckeResult, views-session-bruecke.js).
   const brueckeLook = designIs('bruecke');
-  // Das Programmheft (#1374, P2.4/P4.3) takes it too, as Der Tisch lays it out
-  // — the band and its foot in the column beside the Tafel — and prints the
-  // report's kicker over the headline and every step's count in the Tafel.
+  // Das Programmheft prints the report's kicker over the headline and every
+  // step's count in the Tafel.
   const phLook = designIs('programmheft');
-  // Forest (#1468, F2.4/F4.3) takes it too and arranges it in two columns at
-  // the end (#1568) — the people, the sentence over the grown tree, the fact
-  // line and the foot beside the Tafel (composeForestResult).
   const forestLook = forestWorn();
   const tischLook = designIs('tisch') || oceanLook || brueckeLook || phLook || forestLook;
 
@@ -1516,6 +1511,9 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   // Who took part in this session — the people whose votes make up the result.
   let peopleEl = null;
+  // What sits under the head and spans both columns (#1846): who was there and
+  // the teams line. resultPlace() hides them once the party list names everyone.
+  const headExtras = [];
   if (people.length) {
     // A guest has no member page, so their entry is a <span>, not an <a>: an
     // anchor with no href is neither focusable nor styled as a link, so emitting
@@ -1539,8 +1537,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
     });
     // Under Der Tisch „Wer dabei war" sits ON the felt head, under its sentence,
     // as the sheet draws it (T2.5, T4.4).
-    if (tischLook) head.firstElementChild.appendChild(peopleEl);
-    else screen.appendChild(peopleEl);
+    if (tischLook && !(oceanLook || forestLook)) head.firstElementChild.appendChild(peopleEl);
+    else {
+      // Ocean and Forest frame „Wer dabei war" in a wrapper of their own, under
+      // the head (O4.4, F4.3); everyone else sets it under the head as it is.
+      const wrapCls = oceanLook ? 'ocean-result__people' : (forestLook ? 'forest-result__people' : null);
+      const holder = wrapCls ? h(`<div class="${wrapCls}"></div>`) : peopleEl;
+      if (wrapCls) holder.appendChild(peopleEl);
+      screen.appendChild(holder);
+      headExtras.push(holder);
+    }
   }
 
   // Who played together (#575). Listed as its own row rather than folded into
@@ -1548,7 +1554,7 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   // entry per person, and a team is a different fact about the same people.
   const teamParties = parties.filter((p) => p.team);
   if (teamParties.length) {
-    screen.appendChild(
+    const teamsEl = screen.appendChild(
       h(`<div class="result-people">
            <span class="result-people__label">${esc(t('result.teams'))}</span>
            <span class="result-people__list">${teamParties
@@ -1560,13 +1566,16 @@ async function showResults(round, session, gamesHint, reveal, plain) {
              .join('')}</span>
          </div>`)
     );
+    headExtras.push(teamsEl);
   }
 
-  // The evening's points (#1630), best first, with the „neuer Rekord" marks —
-  // after who was here and who played together, since the points belong to
-  // those same seats. Absent until someone enters them.
-  const pointsEl = session.finished ? renderSessionPoints(round, session) : null;
-  if (pointsEl) screen.appendChild(pointsEl);
+  /* The evening's points (#1630) are no block of their own any more (#1846):
+     after a game they ride in the party list (resultRenderParties,
+     views-session-verdict.js), one row per party with its crown, its points,
+     the „neuer Rekord" mark and a „Wie war's?" seat per person — instead of
+     „Wer dabei war", „Punkte", the band's winner seats and the verdict block
+     each naming the same people again. */
+  const partySlot = h('<div class="result-party-slot" hidden></div>');
 
 
   /* Der Tisch (#1057) — the chosen game, as a band above the Tafel, and the
@@ -1609,8 +1618,8 @@ async function showResults(round, session, gamesHint, reveal, plain) {
   const resultFoot = h('<div class="result-foot" hidden></div>');
 
   // The ranked rows (#1056) and their gold top group, appended to the screen.
-  Object.assign(rs, { screen, titleEl, forestFacts, peopleEl, shareNow, when,
-    badgeMoment, tischSlot, tisch, resultFoot, startPlayer });
+  Object.assign(rs, { screen, head, headExtras, titleEl, forestFacts, peopleEl, shareNow, when,
+    badgeMoment, tischSlot, tisch, resultFoot, startPlayer, partySlot });
   buildResultTafel(rs);
 
   /* The phone's one CTA (#1057). Desktop gets NO action bar: a sticky bar inside
@@ -1667,15 +1676,10 @@ async function showResults(round, session, gamesHint, reveal, plain) {
 
   // The foot sits under the table band, ahead of the ranking (#1430): the next
   // evening is what this screen is for once it is settled, and the destructive
-  // pair is one tap away behind „Mehr". Der Tisch and Das Programmheft keep it
-  // inside the slot, the one grid item that travels beside the Tafel; the rest
-  // compose their own side column from a foot that is a child of the screen.
-  if (tischLook && !(oceanLook || brueckeLook || forestLook)) tischSlot.appendChild(resultFoot);
-  else screen.appendChild(resultFoot);
-  if (oceanLook) composeOceanResult(screen, head, peopleEl);
-  if (forestLook) composeForestResult(screen, head, peopleEl, forestFacts);
-  if (brueckeLook) composeBrueckeResult(screen);
-  if (!tischLook) composeKlassischResult(screen);
+  // pair is one tap away behind „Mehr". One composition for every design
+  // (#1846, result-compose.js) places it — in the head row while deciding.
+  screen.appendChild(resultFoot);
+  composeResultScreen(rs);
 }
 
 /* The one post-session install offer (#616), or null.

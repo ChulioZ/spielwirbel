@@ -23,7 +23,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp, flush } = require('./support/dom');
-const { rulesOf, declaredValue, mediaBlocks } = require('./support/css');
+const { rulesOf, declaredValue, mediaBlocks, atBlocks } = require('./support/css');
 
 const HEAD = '/* ===== #1468 — Session loop: Neue Session, vote card, finale, result, several tables ===== */';
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/forest.css'), 'utf8');
@@ -300,26 +300,21 @@ test('an unsettled session has no place in the count, so the fact line is hidden
   assert.equal(q(dom, '.forest-result__facts').hidden, true);
 });
 
-// #1568: two columns, departing from F4.3's three on purpose (drawn with a few
-// rows, measured at eight), as Ocean's did in #1430. The foot sits under the
-// headline — after the ~520px tree it fell under the fold (operator decision)
-// — so „Noch eine Session" comes ahead of the scene and the ranking in tab
-// order too, which is intended.
-test('the result is two columns in DOM order: side (people · head · foot · scene · facts), then the Tafel', async (t) => {
+// #1846: the one composition every design shares (result-compose.js). Forest
+// keeps its column on the left; the scene's fact line follows the band in it.
+test('the result: head and people, then the evening column (foot · band · facts · parties), then the Tafel', async (t) => {
   const dom = await result(t);
   const screen = q(dom, '.result-screen');
   assert.ok(screen.classList.contains('result-screen--forest'));
-  assert.deepEqual([...screen.children].map((el) => el.className),
-    ['forest-result__side', 'forest-result__tafel']);
-  const side = q(dom, '.forest-result__side');
-  assert.deepEqual([...side.children].map((el) => el.className.split(' ')[0]),
-    ['forest-result__people', 'page-head', 'result-foot', 'tisch-slot', 'forest-result__facts']);
-  assert.ok(side.querySelector('.result-people__person.is-winner'), 'the people are the side column\'s ring row');
-  const list = q(dom, '.forest-result__tafel');
-  assert.deepEqual([...list.children].map((el) => el.className.split(' ')[0]).slice(0, 2), ['badge-moment', 'tafel'],
-    'the badge moment opens the Tafel column, then the ranking');
-  assert.equal(list.querySelector('.result-foot'), null, 'the foot is not under the Tafel any more');
-  assert.match(text(side.querySelector('.result-foot__again')), /Noch eine Session/, 'tables.oneMore, never „Noch eine Runde"');
+  assert.deepEqual([...screen.children].map((el) => el.className.split(' ')[0]),
+    ['page-head', 'forest-result__people', 'result-cols']);
+  const aside = q(dom, '.result-aside');
+  assert.deepEqual([...aside.children].map((el) => el.className.split(' ')[0]),
+    ['badge-moment', 'result-foot', 'tisch-slot', 'forest-result__facts', 'result-party-slot'],
+    'the foot leads the column, ahead of the ~300px tree (#1568)');
+  assert.ok(q(dom, '.result-party.is-winner'), 'the winner is crowned in the party list');
+  assert.equal(q(dom, '.result-main').firstElementChild.className.split(' ')[0], 'tafel');
+  assert.match(text(aside.querySelector('.result-foot__again')), /Noch eine Session/, 'tables.oneMore, never „Noch eine Runde"');
   assert.equal(text(q(dom, '.tisch__actions-label')), 'Falls etwas anders lief');
 });
 
@@ -399,18 +394,21 @@ test('the hidden cards are the dusk, and only there does a firefly shine', () =>
 // title and a still-choosing row's action inline — from 720px at every width
 // above, in both arrangements. The bars stay last in the DOM; only the grid
 // area moves.
-const wideRules = () => mediaBlocks(SECTION)
-  .filter(([mq]) => /^\(min-width:\s*720px\)$/.test(mq.trim()))
+// By the Tafel's own width since #1846 — `.result-main` is the `tafel`
+// container (styles.css) — not a viewport query that could not see the
+// evening column narrowing the Tafel beside it.
+const wideRules = () => atBlocks(SECTION, 'container')
+  .filter(([mq]) => /^tafel \(min-width:\s*\d+px\)$/.test(mq.trim()))
   .flatMap(([, css]) => rulesOf(css));
 const wideBody = (sel) => {
   // Split the group on its top-level commas only: `:has(a, b)` holds one.
   const members = (group) => group.split(/,(?![^(]*\))/).map((x) => x.trim());
   const hit = wideRules().find(([s]) => members(s).includes(F + sel));
-  assert.ok(hit, `forest.css has no ≥720px rule for ${sel}`);
+  assert.ok(hit, `forest.css has no wide-Tafel rule for ${sel}`);
   return hit[1];
 };
 
-test('from 720px a Forest row is one line, the distribution between the title and the leaf — settled or choosing', () => {
+test('on a wide Tafel a Forest row is one line, the distribution between the title and the leaf — settled or choosing', () => {
   for (const sel of ['.result-screen--forest .tafel .trow', '.result-screen--forest .tafel .trow:has(.play-btn, .trow__chip)']) {
     const areas = declaredValue(wideBody(sel), 'grid-template-areas')
       .split('"').filter((x) => x.trim()).map((x) => x.trim().split(/\s+/));
@@ -423,7 +421,7 @@ test('from 720px a Forest row is one line, the distribution between the title an
     && rulesOf(css).some(([s]) => s.includes('.trow'))), 'a row rule still stops at 1279px');
 });
 
-test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+test('on a wide Tafel „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
   // #1724: an inline flow, not a max-content | 1fr grid — the grid let a long
   // title take the whole row and squeezed the owners into a sliver that broke
   // word by word. As an inline-block the owners line drops under a long title
@@ -440,23 +438,6 @@ test('from 720px „Gehört …" sits beside the title; the veto pill keeps a li
   assert.equal(declaredValue(pill, 'width'), 'fit-content');
 });
 
-test('from 1280px the Tafel column takes the rest of the screen — no cap leaving a dead strip on the right (#1724)', () => {
-  const desk = mediaBlocks(SECTION).filter(([q]) => /^\(min-width:\s*1280px\)$/.test(q.trim())).flatMap(([, css]) => rulesOf(css));
-  const hit = desk.find(([s]) => s === F + '.result-screen--forest');
-  assert.ok(hit, 'no 1280px rule for the result screen');
-  assert.equal(declaredValue(hit[1], 'grid-template-columns'), 'minmax(400px, 460px) minmax(0, 1fr)');
-});
+// The columns and the pinned evening column are the shared composition's
+// since #1846 — test/result-phase-layout.test.js holds both.
 
-test('the side column is pinned only where it fits the viewport: sticky behind a min-height gate, never without', () => {
-  const sel = F + '.result-screen--forest .forest-result__side';
-  const blocks = mediaBlocks(SECTION);
-  const gated = blocks.filter(([mq]) => /min-width:\s*1280px/.test(mq) && /min-height:\s*\d+px/.test(mq));
-  assert.ok(gated.some(([, css]) => rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b))),
-    'no height-gated sticky rule for the side column');
-  for (const [mq, css] of blocks) {
-    if (/min-height/.test(mq)) continue;
-    assert.ok(!rulesOf(css).some(([s, b]) => s === sel && /position:\s*sticky/.test(b)), `ungated sticky in @media ${mq}`);
-  }
-  assert.ok(!RULES.some(([s, b]) => s === sel && /position:\s*sticky/.test(b) && !gated.some(([, css]) => css.includes(b))),
-    'no top-level sticky on the side column');
-});

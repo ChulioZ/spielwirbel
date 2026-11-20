@@ -266,18 +266,19 @@ async function result(t, design, over) {
   return dom;
 }
 
-test('the Brücke result stands in two panels: the sentence and the Tafel, then the game and the foot', async (t) => {
+test('the Brücke result: the sentence spans, the evening column sits right of the Tafel panel', async (t) => {
   const dom = await result(t, 'bruecke');
   const screen = q(dom, '.result-screen');
   assert.ok(screen.classList.contains('result-screen--bruecke'));
-  assert.deepEqual([...screen.children].map((el) => el.className),
-    ['bruecke-result__main', 'bruecke-result__side']);
-  const main = q(dom, '.bruecke-result__main');
-  assert.ok(main.querySelector('.page-head--result'));
+  assert.ok(screen.classList.contains('result-screen--aside-end'), 'the column is drawn on the right (B4.3)');
+  assert.deepEqual([...screen.children].map((el) => el.classList[0]), ['page-head', 'result-cols']);
+  // DOM order = phone order: the band comes BEFORE the ranking on a phone
+  // (#1846, defect 2 — it used to follow the Tafel, the log and the comments).
+  const [aside, main] = q(dom, '.result-cols').children;
+  assert.ok(aside.classList.contains('result-aside'));
+  assert.ok(aside.querySelector('.tisch[data-state="done"]'), 'the played game heads the evening column');
   assert.ok(main.querySelector('.tafel'));
-  const side = q(dom, '.bruecke-result__side');
-  assert.ok(side.querySelector('.tisch[data-state="done"]'), 'the played game heads the side panel');
-  assert.ok(side.lastElementChild.classList.contains('result-foot'), 'the foot stays the last block');
+  assert.ok(aside.querySelector('.result-foot'), 'the foot rides in the evening column');
 });
 
 test('the headline names the winner in its own voice, and the sentence stays the app\'s', async (t) => {
@@ -305,7 +306,7 @@ test('the veto pill reads „1× kein Schub", never „kein Veto"', async (t) =>
 test('Klassisch keeps its one-column result and one-voice headline', async (t) => {
   const dom = await result(t, null);
   assert.equal(q(dom, '.result-screen--bruecke'), null);
-  assert.equal(q(dom, '.bruecke-result__main'), null);
+  assert.ok(!q(dom, '.result-screen').classList.contains('result-screen--aside-end'), 'Klassisch keeps its column on the left');
   assert.equal(q(dom, '.result-title__won'), null);
   assert.doesNotMatch(dom.app.textContent, /Schub/);
 });

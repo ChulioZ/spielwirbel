@@ -35,6 +35,12 @@ function renderStartPlayer(round, getParties) {
   let key = null; // null: the first refresh always builds (labels the button)
   let timer = null;
   let drawn = false;
+  // On the results screen the ring stays folded until the first press (#1846):
+  // the button is the offer, and eight faces beside it before anyone asked cost
+  // a 13" its fold. `is-folded` is styled only under `.result-screen`, so the
+  // „Jetzt spielen" sheet shows the ring as it did.
+  let pressed = false;
+  const fold = () => el.classList.toggle('is-folded', !pressed);
 
   const label = () => {
     btn.innerHTML = drawn
@@ -50,6 +56,8 @@ function renderStartPlayer(round, getParties) {
     drawn = false;
     el.removeAttribute('aria-busy');
     answer.textContent = '';
+    pressed = false;
+    fold();
     ring.innerHTML = parties.map((party) => `<li class="start-player__seat" data-id="${esc(party.id)}">
         <span class="start-player__faces">${party.people.map(face).join('')}</span>
         <span class="start-player__name">${esc(party.name)}</span>
@@ -75,6 +83,8 @@ function renderStartPlayer(round, getParties) {
 
   btn.addEventListener('click', () => {
     if (timer || !canDrawStartPlayer(parties)) return;
+    pressed = true;
+    fold();
     const pick = pickStartPlayer(parties);
     const idx = parties.indexOf(pick);
     answer.textContent = '';
