@@ -1681,6 +1681,13 @@ I18N.fr = {
   'result.titleOngoing': '« {game} » a été joué — à suivre.',
   'result.play': 'Jouer',
   'result.tableTitle': 'Sur la table',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': 'C’était comment ?',
+  'result.verdict.sub': 'Après la partie, dites ce que vous en avez pensé – cela compte pour l’étagère.',
+  'result.verdict.answered': 'a répondu',
+  'result.verdict.open': 'pas encore',
+  'result.verdict.ask': '{name} : c’était comment ?',
+  'result.verdict.saved': 'Merci, {name} !',
   'result.otherGame': 'Choisir un autre jeu',
   'result.stamp': 'Joué',
   'result.wonSeatsOne': 'a gagné',
@@ -1704,6 +1711,7 @@ I18N.fr = {
   'score.infoBody': 'Le score est plus que la moyenne. Si quelqu’un n’a pas du tout envie de jouer à un jeu, cela pèse plus lourd qu’une bonne note donnée par quelqu’un d’autre — pour qu’au bout du compte vous jouiez à quelque chose qui plaise à tout le monde.',
   'score.infoThin': 'Un jeu qui n’a encore que peu d’évaluations est jugé avec plus de prudence — il faut quelques sessions pour que son score compte pleinement.',
   'score.infoPlays': 'Un jeu que vous remettez sans cesse sur la table est jugé nettement plus favorablement, même sans évaluations.',
+  'score.infoVerdict': 'Si vous dites « C’était comment ? » après la partie, votre réponse compte à la place de la supposition que tout s’est bien passé.', // #1838
   'score.evidenceOne': '{n} évaluation',
   'score.evidence': '{n} évaluations',
   'score.evidencePlaysOne': 'Pas encore évalué · joué {n}×',

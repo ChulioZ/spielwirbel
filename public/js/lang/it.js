@@ -1680,6 +1680,13 @@ I18N.it = {
   'result.titleOngoing': 'Avete giocato a «{game}». Continua.',
   'result.play': 'Gioca',
   'result.tableTitle': 'Sul tavolo',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': 'Com’è andata?',
+  'result.verdict.sub': 'Dopo la partita, dite com’è stato: conta per lo scaffale.',
+  'result.verdict.answered': 'ha risposto',
+  'result.verdict.open': 'non ancora',
+  'result.verdict.ask': '{name}: com’è andata?',
+  'result.verdict.saved': 'Grazie, {name}!',
   'result.otherGame': 'Scegli un altro gioco',
   'result.stamp': 'Giocato',
   'result.wonSeatsOne': 'ha vinto',
@@ -1703,6 +1710,7 @@ I18N.it = {
   'score.infoBody': 'Il punteggio è più della media. Se qualcuno non vuole affatto giocare a un gioco, questo pesa più di una buona valutazione di qualcun altro, così che alla fine giochiate a qualcosa che piaccia a tutti.',
   'score.infoThin': 'Un gioco con ancora poche valutazioni viene giudicato con più prudenza: servono alcune sessioni perché il suo punteggio conti del tutto.',
   'score.infoPlays': 'Un gioco che rimettete di continuo sul tavolo viene giudicato molto meglio, anche senza valutazioni.',
+  'score.infoVerdict': 'Se dopo la partita dite „Com’è andata?“, conta quello che avete detto invece di supporre che sia andata bene.', // #1838
   'score.evidenceOne': '{n} valutazione',
   'score.evidence': '{n} valutazioni',
   'score.evidencePlaysOne': 'Non ancora valutato · giocato {n}×',

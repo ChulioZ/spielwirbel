@@ -64,7 +64,7 @@ const INFO_SHEETS = {
     // Principle, never formula — see the header. The two #894 sentences state
     // thin evidence and plays in the same register: what happens, not how
     // (re-checked against #1721's evening unit — both still true).
-    body: ['score.infoBody', 'score.infoThin', 'score.infoPlays'],
+    body: ['score.infoBody', 'score.infoThin', 'score.infoPlays', 'score.infoVerdict'],
   },
   // The `win` topic explained the Siegwertung and went with it on 2026-09-22 —
   // its three keys are gone from every lang/*.js, so an entry left here would

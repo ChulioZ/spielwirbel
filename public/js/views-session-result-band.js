@@ -350,6 +350,10 @@ function resultRenderBand(rs) {
 
   tisch.appendChild(box);
   tisch.appendChild(main);
+  // „Wie war's?" (#1838) — the settled record only (it returns early while the
+  // winner picker is open), as a full-width row of the band: beside the box,
+  // the text column is too narrow on a phone for the five faces.
+  resultRenderVerdicts(rs, tisch);
   // After both are attached: focus() on a detached node does nothing.
   if (restoreChip) restoreChip.focus();
 }

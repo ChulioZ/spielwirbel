@@ -1673,6 +1673,13 @@ I18N.nl = {
   'result.titleOngoing': '“{game}” is gespeeld — wordt vervolgd.',
   'result.play': 'Spelen',
   'result.tableTitle': 'Op tafel',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': 'Hoe was het?',
+  'result.verdict.sub': 'Zeg na het spel hoe je het vond – dat telt mee voor de kast.',
+  'result.verdict.answered': 'heeft geantwoord',
+  'result.verdict.open': 'nog open',
+  'result.verdict.ask': '{name}: hoe was het?',
+  'result.verdict.saved': 'Bedankt, {name}!',
   'result.otherGame': 'Ander spel kiezen',
   'result.stamp': 'Gespeeld',
   'result.wonSeatsOne': 'heeft gewonnen',
@@ -1696,6 +1703,7 @@ I18N.nl = {
   'score.infoBody': 'De score is meer dan het gemiddelde. Als iemand een spel helemaal niet wil spelen, telt dat zwaarder dan een goede beoordeling van een ander — zodat wat jullie uiteindelijk spelen iets is waar iedereen zin in heeft.',
   'score.infoThin': 'Een spel met nog maar weinig beoordelingen wordt voorzichtiger beoordeeld — het duurt een paar sessies voordat de score volledig meetelt.',
   'score.infoPlays': 'Een spel dat je steeds weer op tafel legt, wordt veel gunstiger beoordeeld — ook zonder beoordelingen.',
+  'score.infoVerdict': 'Zeggen jullie na het spel „Hoe was het?“, dan telt wat jullie zeiden in plaats van de aanname dat het goed ging.', // #1838
   'score.evidenceOne': '{n} beoordeling',
   'score.evidence': '{n} beoordelingen',
   'score.evidencePlaysOne': 'Nog niet beoordeeld · {n}× gespeeld',

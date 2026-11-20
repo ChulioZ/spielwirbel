@@ -7068,6 +7068,31 @@ a.k-tile:focus-visible,
 .seat__name { font-weight: 700; }
 .tisch__won { color: var(--gold-deep); font-weight: 700; }
 .tisch__outcome { margin-top: 10px; font-weight: 700; color: var(--ink-soft); }
+/* „Wie war's?" (#1838) — after a played game, one row per seat at the table:
+   who has answered (a check, never the face), and the vote's own five faces for
+   the seat that is answering. A separate block under the record's actions, set
+   off by a hairline so it reads as a question to the table rather than a fourth
+   correction control. The faces WRAP: the band's text column is narrower than
+   the vote card on a phone, and five 64px tiles plus their words do not fit. */
+.verdict { margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+.tisch > .verdict { grid-column: 1 / -1; }
+.verdict__title { margin: 0; font-size: var(--text-md); }
+.verdict__sub { margin: 2px 0 10px; color: var(--ink-soft); font-size: var(--text-sm); }
+.verdict__seats { display: flex; flex-wrap: wrap; gap: 8px; }
+.verdict__seat {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0; max-width: 100%;
+  padding: 4px 12px 4px 4px; border-radius: var(--radius-pill);
+  border: 1.5px solid var(--control-edge); background: var(--control-fill);
+  color: var(--ink); font: inherit; cursor: pointer;
+}
+.verdict__seat .avatar { width: 30px; height: 30px; font-size: var(--text-xs); flex: none; }
+.verdict__seat[aria-expanded="true"] { border-color: var(--brand); }
+.verdict__name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.verdict__state { color: var(--ink-soft); font-size: var(--text-sm); white-space: nowrap; }
+.verdict__seat.is-done .verdict__state { color: var(--good); }
+.verdict__prompt { margin: 12px 0 6px; font-weight: 700; }
+.verdict__faces.rating { flex-wrap: wrap; justify-content: flex-start; gap: 8px; padding: 0; }
+.verdict__ask[hidden] { display: none !important; }
 /* The stamp, pressed onto the box — the SAME component as the game page's
    Stempelkarte (#1040), re-sized only. Reusing the class rather than a
    look-alike is what stops the two drifting.

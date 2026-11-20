@@ -1732,6 +1732,13 @@ I18N.en = {
   'result.titleOngoing': '“{game}” was played — to be continued.',
   'result.play': 'Play',
   'result.tableTitle': 'On the table',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': 'How was it?',
+  'result.verdict.sub': 'After the game, say how you liked it – it counts toward the shelf.',
+  'result.verdict.answered': 'answered',
+  'result.verdict.open': 'not yet',
+  'result.verdict.ask': '{name}: how was it?',
+  'result.verdict.saved': 'Thanks, {name}!',
   'result.otherGame': 'Pick a different game',
   'result.stamp': 'Played',
   'result.wonSeatsOne': 'won',
@@ -1755,6 +1762,7 @@ I18N.en = {
   'score.infoBody': 'The score is more than the average. If someone does not want to play a game at all, that counts for more than a good rating from someone else — so that what you end up playing is something everybody is up for.',
   'score.infoThin': 'A game with only a few ratings so far is judged more cautiously — it takes a few sessions before its score carries full weight.',
   'score.infoPlays': 'A game you keep putting on the table is judged much more favourably — even without any ratings.',
+  'score.infoVerdict': 'If you say „How was it?“ after the game, what you said counts instead of the assumption that it went well.', // #1838
   'score.evidenceOne': '{n} rating',
   'score.evidence': '{n} ratings',
   'score.evidencePlaysOne': 'Not rated yet · played {n}×',

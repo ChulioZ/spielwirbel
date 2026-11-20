@@ -375,7 +375,7 @@ function renderPokaleTab(round) {
   const recap = roundRecap(round, sessionPeople, (gid) => {
     const st = shelfIndex.byGame[gid];
     return st ? st.score : null;
-  });
+  }, sessionRatings);
 
   const { wins, ranked, winners, rankOf } = roundStandings(round);
 

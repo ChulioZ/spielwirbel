@@ -459,8 +459,8 @@ async function showMember(rid, mid) {
      membership anywhere — the "added by mistake" case, which should not leave a
      retired ghost behind. The server re-checks both; this is what to OFFER. */
   const myVotes = (round.sessions || []).some((s2) => {
-    const v = (s2.votes || {})[mid];
-    if (v && Object.keys(v).length) return true;
+    // Votes or „Wie war's?" verdicts (#1838) — either is history.
+    if (hasAnyRating(s2, mid)) return true;
     if (Array.isArray(s2.winnerIds) && s2.winnerIds.includes(mid)) return true;
     // Stored as `personIds` (#575) — a team can hold guests too.
     return (s2.teams || []).some((team) => (team.personIds || []).includes(mid));

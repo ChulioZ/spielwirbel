@@ -50,6 +50,51 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1838, „Wie war's?" after a played session. A new capability, and it moves
+   * shelf scores people have seen (they can now go DOWN), so the entry says so
+   * (.claude/rules/keep-readme-current.md).
+   */
+  {
+    revision: '2026-11-20',
+    kind: 'new',
+    de: {
+      title: "Wie war's?",
+      body: "Nach einer gespielten Session könnt ihr auf dem Ergebnis sagen, wie es war – mit denselben Gesichtern wie beim Abstimmen, ohne Zeitlimit und später noch änderbar. Was ihr sagt, zählt fürs Regal: Statt anzunehmen, dass ein gespieltes Spiel gut ankam, zählt eure Antwort. Deshalb können sich Scores im Regal jetzt auch nach unten bewegen.",
+    },
+    en: {
+      title: "How was it?",
+      body: "After a played session you can say on the result how it was – on the same faces as the vote, with no time limit, and you can change it later. What you say counts toward the shelf: instead of assuming a game you played went well, your answer counts. That is why shelf scores can now move down as well.",
+    },
+    es: {
+      title: "¿Qué tal?",
+      body: "Después de una sesión jugada podéis decir en el resultado qué tal fue, con las mismas caras que en la votación, sin límite de tiempo y pudiendo cambiarlo después. Lo que digáis cuenta para la estantería: en lugar de suponer que un juego jugado salió bien, cuenta vuestra respuesta. Por eso las puntuaciones de la estantería ahora también pueden bajar.",
+    },
+    fr: {
+      title: "C’était comment ?",
+      body: "Après une session jouée, vous pouvez dire sur le résultat comment c’était, avec les mêmes visages que pour le vote, sans limite de temps et modifiable plus tard. Ce que vous dites compte pour l’étagère : au lieu de supposer qu’un jeu joué s’est bien passé, c’est votre réponse qui compte. C’est pourquoi les scores de l’étagère peuvent désormais aussi baisser.",
+    },
+    it: {
+      title: "Com’è andata?",
+      body: "Dopo una sessione giocata potete dire sul risultato com’è andata, con le stesse facce del voto, senza limiti di tempo e modificabile in seguito. Quello che dite conta per lo scaffale: invece di supporre che un gioco giocato sia andato bene, conta la vostra risposta. Per questo i punteggi dello scaffale ora possono anche scendere.",
+    },
+    nl: {
+      title: "Hoe was het?",
+      body: "Na een gespeelde sessie kunnen jullie bij het resultaat zeggen hoe het was – met dezelfde gezichtjes als bij het stemmen, zonder tijdslimiet en later nog aan te passen. Wat jullie zeggen telt mee voor de kast: in plaats van aan te nemen dat een gespeeld spel goed viel, telt jullie antwoord. Daarom kunnen scores in de kast nu ook dalen.",
+    },
+    pt: {
+      title: "Como foi?",
+      body: "Depois de uma sessão jogada podem dizer no resultado como foi, com as mesmas caras da votação, sem limite de tempo e podendo mudar mais tarde. O que disserem conta para a estante: em vez de supor que um jogo jogado correu bem, conta a vossa resposta. Por isso as pontuações da estante agora também podem descer.",
+    },
+    fi: {
+      title: "Millainen oli?",
+      body: "Pelatun session jälkeen voitte kertoa tuloksessa, millainen se oli – samoilla kasvoilla kuin äänestyksessä, ilman aikarajaa ja myöhemmin muutettavissa. Vastauksenne lasketaan hyllyyn: oletuksen sijaan, että pelattu peli meni hyvin, lasketaan vastauksenne. Siksi hyllyn pisteet voivat nyt myös laskea.",
+    },
+    ko: {
+      title: "어땠나요?",
+      body: "플레이한 세션이 끝나면 결과 화면에서 어땠는지 투표와 같은 얼굴로 알려 줄 수 있어요. 시간 제한이 없고 나중에 바꿀 수도 있어요. 답한 내용은 선반 점수에 반영돼요. 플레이한 게임이 좋았을 거라고 가정하는 대신 여러분의 답이 반영되기 때문에, 이제 선반 점수가 내려갈 수도 있어요.",
+    },
+  },
+  /*
    * #1830, „Wer zu kurz kommt, ist dran" redefined. Not a new capability, but it
    * moves result numbers people have seen and removes a Pokale list, so it earns
    * an `improved` entry (.claude/rules/keep-readme-current.md).

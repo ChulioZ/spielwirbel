@@ -1644,6 +1644,13 @@ I18N.fi = {
   'result.titleOngoing': '”{game}” pelattiin — jatkuu myöhemmin.',
   'result.play': 'Pelaa',
   'result.tableTitle': 'Pöydällä',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': 'Millainen oli?',
+  'result.verdict.sub': 'Kertokaa pelin jälkeen, miltä se tuntui – se lasketaan hyllyyn.',
+  'result.verdict.answered': 'vastasi',
+  'result.verdict.open': 'ei vielä',
+  'result.verdict.ask': '{name}: millainen oli?',
+  'result.verdict.saved': 'Kiitos, {name}!',
   'result.otherGame': 'Valitse toinen peli',
   'result.stamp': 'Pelattu',
   'result.wonSeatsOne': 'voitti',
@@ -1667,6 +1674,7 @@ I18N.fi = {
   'score.infoBody': 'Pisteet ovat enemmän kuin keskiarvo. Jos joku ei halua pelata peliä lainkaan, se painaa enemmän kuin jonkun toisen hyvä arvio — niin että lopulta pelataan jotain, mihin kaikki ovat valmiita.',
   'score.infoThin': 'Peliä, jolla on vasta muutama arvio, arvioidaan varovaisemmin — kestää muutaman session, ennen kuin sen pisteet painavat täydellä painolla.',
   'score.infoPlays': 'Peli, jonka nostatte toistuvasti pöytään, arvioidaan selvästi suopeammin — myös ilman arvioita.',
+  'score.infoVerdict': 'Jos kerrotte pelin jälkeen „Millainen oli?“, vastauksenne lasketaan oletuksen sijaan, että peli meni hyvin.', // #1838
   'score.evidenceOne': '{n} arvio',
   'score.evidence': '{n} arviota',
   'score.evidencePlaysOne': 'Ei vielä arvioitu · pelattu {n}×',

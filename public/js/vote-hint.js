@@ -58,7 +58,7 @@ const TASTE_HINT_KEYS = Object.keys(TASTE_HINT_WEIGHTS);
 // The siblings this file reads, resolved at CALL time (they load earlier, but a
 // load-time read would still bind the hint to the load order).
 const voteHintDeps = () => ({
-  tasteAverages, isNameableGame, creditedDesigners, accumulate, normalize, prefixSums, cosine,
+  tasteAverages, isNameableGame, personRatings, creditedDesigners, accumulate, normalize, prefixSums, cosine,
 });
 
 function hintValues(game, key, credited) {
@@ -82,7 +82,7 @@ function voterKnowsGame(round, mid, gid) {
 /* The voter's taste profile, or null below the evidence floor. */
 function voterTasteProfile(round, mid, deps) {
   const d = deps || voteHintDeps();
-  const avg = d.tasteAverages(round, mid, d.isNameableGame);
+  const avg = d.tasteAverages(round, mid, d.isNameableGame, d.personRatings);
   const rated = round.games.filter((g) => g.id in avg && hasTasteMetadata(g));
   if (rated.length < TASTE_HINT_MIN_RATED) return null;
   // No `if (!liked.length) return null` here, deliberately: with nothing above

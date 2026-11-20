@@ -9,7 +9,8 @@ const { periodsOf, periodRecap, periodKeyOf, dayIndexOf, monthsBetween } = requi
 // fake would test the wrong rules.
 const { sessionPeople } = require('../public/js/session-people');
 const { RECAP_MIN_RATINGS } = require('../public/js/recap');
-const { scoreRatings, eveningEvidence, shelfScore, playCounts } = require('../public/js/vote-score');
+const { scoreRatings, eveningEvidence, shelfScore, playEvidence } = require('../public/js/vote-score');
+const { sessionRatings } = require('../public/js/session-ratings');
 const { isActiveGame } = require('../public/js/draw-pool');
 const { sessionsPlayTime } = require('../public/js/session-duration');
 
@@ -17,7 +18,8 @@ const deps = {
   peopleOf: sessionPeople, scoreOf: scoreRatings,
   // The shelf half (#894): the real ones, never a stub — a substituted shrinkage
   // is exactly the drift this file's injection discipline exists to prevent.
-  shelfOf: shelfScore, eveningsOf: eveningEvidence, playsOf: playCounts,
+  shelfOf: shelfScore, eveningsOf: eveningEvidence,
+  playsOf: (r) => playEvidence(r, sessionPeople), ratingsOf: sessionRatings,
   minRatings: RECAP_MIN_RATINGS, isActive: isActiveGame,
   playTimeOf: sessionsPlayTime,
 };

@@ -1723,6 +1723,13 @@ I18N.de = {
   'result.titleOngoing': '„{game}“ wurde gespielt – Fortsetzung folgt.',
   'result.play': 'Spielen',
   'result.tableTitle': 'Auf dem Tisch',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': "Wie war's?",
+  'result.verdict.sub': 'Sagt nach dem Spiel, wie es euch gefallen hat – das zählt fürs Regal.',
+  'result.verdict.answered': 'hat gesagt',
+  'result.verdict.open': 'noch offen',
+  'result.verdict.ask': "{name}: Wie war's?",
+  'result.verdict.saved': 'Danke, {name}!',
   'result.otherGame': 'Anderes Spiel wählen',
   'result.stamp': 'Gespielt',
   'result.wonSeatsOne': 'hat gewonnen',
@@ -1746,6 +1753,7 @@ I18N.de = {
   'score.infoBody': 'Der Score ist mehr als der Durchschnitt. Wenn jemand ein Spiel gar nicht spielen möchte, zählt das schwerer als eine gute Bewertung von jemand anderem — damit am Ende gespielt wird, worauf alle Lust haben.',
   'score.infoThin': 'Ein Spiel mit erst wenigen Bewertungen wird vorsichtiger eingeschätzt — es braucht ein paar Sessions, bis sich sein Score voll durchsetzt.',
   'score.infoPlays': 'Ein Spiel, das ihr immer wieder auf den Tisch legt, wird deutlich besser eingeschätzt — auch ohne Bewertungen.',
+  'score.infoVerdict': 'Sagt ihr nach dem Spiel „Wie war\'s?“, zählt das, was ihr gesagt habt, statt der Annahme, dass das Spiel gut ankam.', // #1838
   'score.evidenceOne': '{n} Bewertung',
   'score.evidence': '{n} Bewertungen',
   'score.evidencePlaysOne': 'Noch nicht bewertet · {n}× gespielt',
