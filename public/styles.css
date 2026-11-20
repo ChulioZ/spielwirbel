@@ -8677,6 +8677,13 @@ a.k-tile:focus-visible,
    No bounds of any kind: `.sheet` scrolls, so a `max-height` here would clip
    content nothing was constraining. */
 .editor--expansions .exp-list { display: flex; flex-direction: column; gap: 6px; }
+/* #1843: the "also change it in your other rounds" sheet — the same tick-list
+   rows as the expansions editor, with the change spelled out under each name. */
+.editor--twins .twin-intro { margin: 0 0 12px; }
+.editor--twins .twin-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.editor--twins .twin-row .ds-row__title { font-weight: 600; }
+.editor--twins .twin-row__change { display: block; overflow-wrap: anywhere; }
+.editor--twins .twin-bar { justify-content: flex-end; gap: 8px; }
 /* Compact, like the old candidate rows: this is a dialog full of names, so the
    default `.ds-row` padding costs roughly a row per three.
 

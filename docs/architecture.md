@@ -110,6 +110,8 @@ lib/
     card-patch.js    which of a provider's cover + player range may fill an
                      existing game (never overwrite) — shared by both backends'
                      fillGameCards
+    game-twins.js    the row shape and order of findGamesByBggId (#1843), shared
+                     by both backends
     tile-histograms.js  one sort order for the Discover aggregate's per-evening
                      histograms (#1721), so both backends fold the same sum
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
@@ -579,6 +581,9 @@ lib/
                                              friends leaderboard; global per account)
     bgg-links.js     /api/bgg-links         (category/mechanic/designer names ->
                                              BGG ids (#1638); instance-wide, POST)
+    game-twins.js    /api/game-twins        (the same BGG game in the caller's
+                                             other writable rounds (#1843); read
+                                             only, outside /api/rounds/:rid)
     invite-links.js  …/invite-links         (the owner's round invite links (#1515):
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
@@ -1122,6 +1127,9 @@ public/
     game-editor-pitch.js  the game page's pitch line and its editor (#1837);
                      the vote cards draw the same line via `votePitchHtml`
                      (vote-card-composed.js)
+    game-twins.js    after a title, player-range, playing-time or pitch edit,
+                     offers the same change in the caller's other rounds holding
+                     that BGG game (#1843)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-
