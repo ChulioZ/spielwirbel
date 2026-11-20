@@ -83,6 +83,18 @@ What the app does, in detail. For a short overview see the
   copied or moved game and is a column (`pitch`) in the round export's
   `games.csv`. Nothing is machine-written or taken from BGG; it is the group's
   own words, for people at the table who do not know the game.
+- **„Auch in deinen anderen Runden ändern?"** (#1843) – every game detail is
+  stored per round, so a group that keeps one game in several rounds would
+  otherwise repeat each fix by hand. After a title, player range, playing time
+  or pitch is saved on the game page, and the game is linked to BGG, the app
+  looks for the same BGG game in the user's other rounds they can edit — their
+  own and those shared with them — and offers a sheet listing each one with its
+  current value → the new one. Rounds that held the old value are ticked,
+  rounds that differ are listed unticked, and rounds already showing the new
+  value are left out. Applying saves each ticked round through its own ordinary
+  edit, so a round the user can no longer edit is refused for that round alone
+  and the toast says how many went through. Nothing appears for an unlinked
+  game or one no other round holds; skipping leaves the saved edit as it is.
 - **„Könnte dir gefallen"** (#1839) – on a game a voter has never rated or
   played, the vote card can add one quiet line naming up to two games from the
   round that *they* liked and that share its mechanics, categories or designer

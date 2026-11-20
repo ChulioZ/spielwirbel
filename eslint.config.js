@@ -536,6 +536,8 @@ const frontendGlobals = {
   // (its editor and the game page's line) and the vote cards' pitch line
   GAME_PITCH_MAX: 'readonly', gamePitchFrom: 'readonly',
   openPitchPopover: 'readonly', gamePitchLine: 'readonly', votePitchHtml: 'readonly',
+  // game-twins.js (#1843) — "also change it in your other rounds"
+  offerTwinEdit: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',

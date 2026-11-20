@@ -263,7 +263,15 @@ async function showGameDetail(rid, gameId) {
     try {
       await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, body);
       toast(t('detail.saved'));
-      showGameDetail(rid, gameId);
+      const shown = showGameDetail(rid, gameId);
+      // #1843: offer the same change in the caller's other rounds holding this
+      // BGG game — after the save, and after the re-render has settled, so the
+      // sheet never opens under a page that is still being rebuilt. Not awaited
+      // here: the edit is done either way. `game` is this render's copy, i.e.
+      // the PRE-edit values the pre-tick rule compares against.
+      if (!imageBlob && !removeImage) {
+        Promise.resolve(shown).catch(() => {}).then(() => offerTwinEdit(rid, game, fields));
+      }
     } catch (e) {
       // The server's answer when the pre-flight above was bypassed; every other
       // code still surfaces as-is.

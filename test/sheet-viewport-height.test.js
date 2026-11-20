@@ -195,6 +195,8 @@ const LIST_DIALOGS = [
    `openEditor(…)` passing `{ list: true }` must be listed here. */
 const LIST_EDITORS = [
   ['public/js/game-editors.js', 'openExpansionEditor', 'Erweiterungen'],
+  // #1843: a list of the caller's other rounds, one tick per round.
+  ['public/js/game-twins.js', 'showTwinSheet', 'Andere Runden'],
 ];
 
 // Every `<div class="sheet …">` opening tag in a file, with the markup it opens.

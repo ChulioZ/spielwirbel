@@ -3236,6 +3236,52 @@ module.exports = function repoContract(repo) {
     assert.equal(read.title, 'Plain again');
   });
 
+  /* ----------------------- Game twins (#1843) ------------------------------ */
+
+  test('findGamesByBggId lists this tenant\'s copies of one BGG game, narrowed to a round on request', async () => {
+    // A fresh numeric id per run, so a persistent database cannot answer with an
+    // earlier run's rows.
+    const bggId = String(parseInt(crypto.randomBytes(4).toString('hex'), 16));
+    const bgg = { provider: 'bgg', externalId: bggId };
+    const a = await freshRound({ name: `Twins A ${uniq()}` });
+    const b = await freshRound({ name: `Twins B ${uniq()}` });
+    const inA = await repo.createGame(T, a.id, gameFields({ title: 'Catan', source: bgg, minPlayers: 3, maxPlayers: 4 }));
+    const inB = await repo.createGame(T, b.id, gameFields({ title: 'Die Siedler', source: bgg, minPlayers: 2, maxPlayers: 6 }));
+    await repo.updateGame(T, b.id, inB.id, { playtimeOverride: { min: 60, max: 90 }, pitch: 'Handeln, bauen' });
+    // A retired copy is still that round's copy.
+    const retired = await repo.createGame(T, b.id, gameFields({ title: 'Catan (alt)', source: bgg }));
+    await repo.retireGame(T, b.id, retired.id, true);
+    // None of these is a twin: another provider with the same id, an unlinked
+    // game of the same title, another tenant's copy.
+    await repo.createGame(T, a.id, gameFields({ title: 'Catan', source: { provider: 'other', externalId: bggId } }));
+    await repo.createGame(T, a.id, gameFields({ title: 'Catan' }));
+    const foreign = await repo.createRound(OTHER, { name: 'Foreign', members: ['X'], importFromRoundId: null });
+    await repo.createGame(OTHER, foreign.id, gameFields({ title: 'Catan', source: bgg }));
+
+    const all = await repo.findGamesByBggId(T, bggId);
+    assert.deepEqual(all.map((t) => t.gameId).sort(), [inA.id, inB.id, retired.id].sort());
+    assert.ok(all.every((t) => t.roundId === a.id || t.roundId === b.id), 'never another tenant\'s round');
+    // Ordered by round name: A before B.
+    assert.equal(all[0].roundId, a.id);
+
+    const rowA = all.find((t) => t.gameId === inA.id);
+    assert.deepEqual(rowA, {
+      roundId: a.id, roundName: a.name, gameId: inA.id, title: 'Catan',
+      minPlayers: 3, maxPlayers: 4, minPlaytime: null, maxPlaytime: null,
+    }, 'absent override and pitch are ABSENT, never null');
+    const rowB = all.find((t) => t.gameId === inB.id);
+    assert.deepEqual(rowB.playtimeOverride, { min: 60, max: 90 });
+    assert.equal(rowB.pitch, 'Handeln, bauen');
+    assert.equal(rowB.title, 'Die Siedler');
+
+    // Narrowed: only round B, which is how a granted round is read.
+    const onlyB = await repo.findGamesByBggId(T, bggId, b.id);
+    assert.deepEqual(onlyB.map((t) => t.gameId).sort(), [inB.id, retired.id].sort());
+    // A round of another tenant named as the narrowing finds nothing.
+    assert.deepEqual(await repo.findGamesByBggId(T, bggId, foreign.id), []);
+    assert.deepEqual(await repo.findGamesByBggId(T, `9${bggId}9`), [], 'an id no game carries');
+  });
+
   /* -------------------------- Game owners (#971) --------------------------- */
 
   test('createGame stores ownerIds, and leaves the key OFF when there are none', async () => {
