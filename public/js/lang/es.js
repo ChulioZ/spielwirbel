@@ -1687,6 +1687,13 @@ I18N.es = {
   'result.titleOngoing': 'Jugasteis a «{game}». Continuará.',
   'result.play': 'Jugar',
   'result.tableTitle': 'En la mesa',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': '¿Qué tal?',
+  'result.verdict.sub': 'Después de jugar, decid qué os ha parecido: cuenta para la estantería.',
+  'result.verdict.answered': 'ha respondido',
+  'result.verdict.open': 'pendiente',
+  'result.verdict.ask': '{name}: ¿qué tal?',
+  'result.verdict.saved': '¡Gracias, {name}!',
   'result.otherGame': 'Elegir otro juego',
   'result.stamp': 'Jugado',
   'result.wonSeatsOne': 'ha ganado',
@@ -1710,6 +1717,7 @@ I18N.es = {
   'score.infoBody': 'La puntuación es más que la media. Si alguien no quiere jugar a un juego para nada, eso pesa más que una buena valoración de otra persona, para que al final juguéis a algo que apetezca a todo el mundo.',
   'score.infoThin': 'Un juego con pocas valoraciones todavía se juzga con más cautela: hacen falta unas cuantas sesiones para que su puntuación cuente del todo.',
   'score.infoPlays': 'Un juego que sacáis a la mesa una y otra vez se juzga bastante mejor, incluso sin valoraciones.',
+  'score.infoVerdict': 'Si después de jugar decís „¿Qué tal?“, cuenta lo que dijisteis en lugar de suponer que fue bien.', // #1838
   'score.evidenceOne': '{n} valoración',
   'score.evidence': '{n} valoraciones',
   'score.evidencePlaysOne': 'Sin valorar todavía · jugado {n}×',

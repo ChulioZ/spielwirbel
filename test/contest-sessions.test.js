@@ -21,7 +21,8 @@ const { memberStats } = require('../public/js/member-stats');
 const { winStreak } = require('../public/js/session-tally');
 const { isNameableGame } = require('../public/js/recap');
 
-const STATS_DEPS = { sessionEnding, isContestSession, sessionPartyGroups, isNameableGame };
+const { personRatings } = require('../public/js/session-ratings');
+const STATS_DEPS = { sessionEnding, isContestSession, sessionPartyGroups, isNameableGame, personRatings };
 const STREAK_DEPS = { sessionEnding, isContestSession };
 
 const ALL = ['m1', 'm2', 'm3', 'm4'];

@@ -1,4 +1,5 @@
 'use strict';
+const { personRatings } = require('../public/js/session-ratings');
 
 /*
  * The tie rule, as decided (#1421): what a night with several winners, and a
@@ -52,7 +53,7 @@ const roundWith = (sessions) => ({
 test('1 — every tied winner counts a full win on the member page', () => {
   const round = roundWith([night(['aylin', 'nils'])]);
   // The one non-module dependency, as recap.js defines it.
-  const deps = { sessionEnding, isContestSession, sessionPartyGroups, isNameableGame: (g) => !g.retired };
+  const deps = { sessionEnding, isContestSession, sessionPartyGroups, isNameableGame: (g) => !g.retired, personRatings };
   const [a, n, m] = MEMBERS.map((id) => memberStats(round, id, deps));
   assert.equal(a.wins, 1, 'a whole win, not a half');
   assert.equal(n.wins, 1);

@@ -2302,6 +2302,43 @@ module.exports = function repoContract(repo) {
     assert.equal(plainDone.finishedAt, played);
   });
 
+  // „Wie war's?" (#1838): a verdict is set, replaced and cleared to ABSENCE, only
+  // ever on a played session's chosen game, and a game leaving the session takes
+  // its verdicts with it, as it takes its votes.
+  test('verdicts: set, replace, clear to absence; played game only; removal drops them', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields({ title: 'Other' }));
+    const session = await repo.createSession(T, round.id, {
+      createdAt: '2026-11-08T18:00:00.000Z', gameIds: [g.id, other.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions.find((x) => x.id === session.id);
+    const [a, b] = round.members.map((m) => m.id);
+
+    await repo.setSessionChoice(T, round.id, session.id, g.id);
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 4);
+    assert.equal('verdicts' in await read(), false, 'an unfinished session takes no verdict');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
+    await repo.setSessionVerdict(T, round.id, session.id, a, other.id, 4);
+    assert.equal('verdicts' in await read(), false, 'nor a verdict on a game that was not played');
+
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 4);
+    await repo.setSessionVerdict(T, round.id, session.id, b, g.id, 2);
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 5);
+    assert.deepEqual((await read()).verdicts, { [a]: { [g.id]: { rating: 5 } }, [b]: { [g.id]: { rating: 2 } } });
+
+    await repo.setSessionVerdict(T, round.id, session.id, b, g.id, null);
+    assert.deepEqual((await read()).verdicts, { [a]: { [g.id]: { rating: 5 } } }, 'clearing drops the person');
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, null);
+    assert.equal('verdicts' in await read(), false, 'clearing the last one removes the key');
+
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 3);
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('verdicts' in await read(), false, 'a removed game takes its verdicts with it');
+  });
+
   // A session's playing time (#1770). Choosing a game stamps the timer and
   // clearing the choice drops it; the finish TRANSITION records the elapsed
   // minutes (never over a figure already there); setSessionDuration sets and
@@ -7573,6 +7610,29 @@ module.exports = function repoContract(repo) {
         h.forEach((n, i) => assert.equal(typeof n, 'number', `ratings.evenings[${e}][${i}]`));
       });
       assert.equal(typeof row.owners, 'number');
+    });
+
+    await t.test('a verdict is a rating, and replaces its seat share of the lift play (#1838)', async () => {
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'V', members: ['Ann', 'Bo', 'Cy', 'Di'] });
+      const game = await repo.createGame(tenant, round.id, bgg(id));
+      const [m1, m2, m3, m4] = round.members.map((m) => m.id);
+      const votes = { [m1]: { [game.id]: { rating: 5 } }, [m2]: { [game.id]: { rating: 5 } },
+        [m3]: { [game.id]: { rating: 4 } }, [m4]: { [game.id]: { rating: 4 } } };
+      const s = await repo.createSession(tenant, round.id, {
+        createdAt: daysAgo(1), gameIds: [game.id], votes, chosenGameId: game.id, chosenAt: daysAgo(1),
+        finished: true, finishedAt: daysAgo(1), winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      });
+      const before = await rowFor(id);
+      assert.equal(before.plays.lift.sum, 5, 'with no verdict a play is a pick');
+      await repo.setSessionVerdict(tenant, round.id, s.id, m1, game.id, 1);
+      const row = await rowFor(id);
+      assert.equal(row.plays.lift.count, 1);
+      assert.equal(row.plays.lift.sum, 3, 'one „gar nicht" of four seats: (−3 + 3·5) / 4');
+      assert.equal(row.ratings.count, 5, 'four votes and one verdict');
+      assert.equal(row.ratings.tiles[1], 1);
+      assert.deepEqual(row.ratings.evenings, [[0, 0, 0, 0, 2, 2]], 'the evening stays the votes alone');
     });
   });
 

@@ -921,6 +921,20 @@ hint reads it through injected `deps` under Node, since a public/js file cannot
 require a sibling. The measurements in its comments are the recommender's and
 still bind both callers.
 
+**The forty-sixth is `public/js/session-ratings.js`** (#1838): every rating a
+session holds — a pre-play VOTE or a post-play „Wie war's?" VERDICT — as one
+stream (`sessionRatings`, `personRatings`, `verdictOf`, `hasAnyRating`). Logic,
+and the failure it exists to prevent is the silent one: a taste figure looping
+over `session.votes` on its own simply leaves verdicts out, with nothing red.
+The server's taste readers (`lib/recommend.js`, `lib/user-stats.js`,
+`lib/user-plays.js`, `lib/draw-boost.js`) and the member delete guard
+(`lib/routes/members.js`) require it, the client's read it off the shared scope
+or take it injected, and `test/votes-read-sites.test.js` pins every remaining
+direct `.votes` reader as ballot-only or storage. The SHELF score is the one
+taste site that takes verdicts differently — as each seat's share of a play's
+value (`playEvidence` in vote-score.js, the thirteenth) — so the Regal, the
+Chronik and Discover (`lib/repo/lift-play-value.js`) share that too.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

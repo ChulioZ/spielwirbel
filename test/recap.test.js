@@ -4,6 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { RECAP_MIN_RATINGS, roundRecap, isNameableGame } = require('../public/js/recap');
+const { sessionRatings } = require('../public/js/session-ratings');
 const { scoreRatings } = require('../public/js/vote-score');
 // The real resolver, not a stand-in: the member/guest split is the thing most of
 // these assertions are about, so a simplified fake would test the wrong rules
@@ -65,7 +66,7 @@ const shelfOf = (r) => (gid) => {
   return sc ? sc.score : null;
 };
 
-const recapOf = (r, lookup) => roundRecap(r, sessionPeople, lookup || shelfOf(r));
+const recapOf = (r, lookup) => roundRecap(r, sessionPeople, lookup || shelfOf(r), sessionRatings);
 
 // Ratings for one game from as many distinct members as needed to clear the
 // evidence bar, all at the same value.

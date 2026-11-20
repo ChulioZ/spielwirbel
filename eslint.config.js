@@ -191,6 +191,10 @@ const frontendGlobals = {
   PRIOR_EVENINGS: 'readonly', PICK_VALUE: 'readonly',
   shrinkScore: 'readonly', eveningEvidence: 'readonly',
   shelfScore: 'readonly', playCounts: 'readonly',
+  playValue: 'readonly', playEvidence: 'readonly', // #1838
+  // session-ratings.js (issue #1838): votes and „Wie war's?" verdicts as one stream
+  RATING_KINDS: 'readonly', personRatings: 'readonly', sessionRatings: 'readonly',
+  verdictOf: 'readonly', hasAnyRating: 'readonly',
   // rating-faces.js (issues #890, #909) — frontend only, by design; it also
   // holds the vote scale's own bounds since #909 folded vote-scale.js away
   MOODS: 'readonly', ratingFace: 'readonly', ratingRung: 'readonly',
@@ -735,6 +739,8 @@ const frontendGlobals = {
   resultArchivedBadge: 'readonly', tallyResultRows: 'readonly', buildResultTafel: 'readonly',
   // views-session-result-band.js (issue #1543): the table band, the headline and the finish
   resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultSaveWinners: 'readonly',
+  // views-session-verdict.js (issue #1838): „Wie war's?" on the played result
+  resultRenderVerdicts: 'readonly',
   // views-session-result-actions.js (issue #1543): row actions, cancel/delete and the footers
   resultIsSoloDirectPlay: 'readonly', resultRemoveGame: 'readonly', resultRenderAction: 'readonly',
   resultUpdateChosen: 'readonly', resultSetCancelled: 'readonly', resultConfirmCancel: 'readonly',

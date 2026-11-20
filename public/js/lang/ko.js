@@ -1624,6 +1624,13 @@ I18N.ko = {
   'result.titleOngoing': '“{game}”을(를) 플레이했어요 — 다음에 계속돼요.',
   'result.play': '플레이',
   'result.tableTitle': '테이블 위',
+  // „Wie war's?" after a played game (#1838) — the same faces as the vote.
+  'result.verdict.title': '어땠나요?',
+  'result.verdict.sub': '게임이 끝나면 어땠는지 알려 주세요. 선반 점수에 반영됩니다.',
+  'result.verdict.answered': '응답함',
+  'result.verdict.open': '아직',
+  'result.verdict.ask': '{name}: 어땠나요?',
+  'result.verdict.saved': '고마워요, {name}!',
   'result.otherGame': '다른 게임 고르기',
   'result.stamp': '플레이함',
   'result.wonSeatsOne': '승리',
@@ -1647,6 +1654,7 @@ I18N.ko = {
   'score.infoBody': '점수는 단순한 평균이 아니에요. 누군가 어떤 게임을 전혀 하고 싶어 하지 않으면, 다른 사람의 좋은 평가보다 더 크게 반영돼요 — 그래야 결국 모두가 받아들일 수 있는 게임을 하게 되니까요.',
   'score.infoThin': '아직 평가가 몇 개뿐인 게임은 더 조심스럽게 매겨져요 — 점수가 제 무게를 갖기까지는 세션이 몇 번 필요해요.',
   'score.infoPlays': '자주 테이블에 올리는 게임은 훨씬 후하게 매겨져요 — 평가가 하나도 없어도요.',
+  'score.infoVerdict': '게임 후 „어땠나요?“에 답하면, 잘 됐을 거라는 가정 대신 여러분의 답이 반영돼요.', // #1838
   'score.evidenceOne': '평가 {n}개',
   'score.evidence': '평가 {n}개',
   'score.evidencePlaysOne': '아직 평가 없음 · {n}회 플레이',

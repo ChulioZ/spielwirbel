@@ -38,16 +38,16 @@
 const TASTE_MIN_SHARED = 5;
 
 /* gameId -> that member's average rating, nameable games only. */
-function tasteAverages(round, mid, isNameable) {
+/* Votes and „Wie war's?" verdicts alike (#1838): `ratingsOf` is personRatings
+   from session-ratings.js, injected for the reason every sibling here is. */
+function tasteAverages(round, mid, isNameable, ratingsOf) {
   const nameable = new Set(round.games.filter(isNameable).map((g) => g.id));
   const sums = {};
   round.sessions.forEach((s) => {
-    const votes = (s.votes || {})[mid] || {};
-    Object.keys(votes).forEach((gid) => {
-      const v = votes[gid];
-      if (!v || !Number.isFinite(v.rating) || !nameable.has(gid)) return;
+    ratingsOf(s, mid).forEach(({ gameId: gid, rating }) => {
+      if (!nameable.has(gid)) return;
       const e = sums[gid] || (sums[gid] = { sum: 0, n: 0 });
-      e.sum += v.rating;
+      e.sum += rating;
       e.n += 1;
     });
   });
@@ -72,11 +72,11 @@ function tasteDistance(a, b) {
    or every pair at one distance): „closest" and „most different" naming the
    same person says nothing either way. */
 function tasteNeighbours(round, mid, deps) {
-  const d = deps || { isNameableGame, activeMembers };
-  const own = tasteAverages(round, mid, d.isNameableGame);
+  const d = deps || { isNameableGame, activeMembers, personRatings };
+  const own = tasteAverages(round, mid, d.isNameableGame, d.personRatings);
   const scored = d.activeMembers(round)
     .filter((m) => m.id !== mid)
-    .map((m) => ({ member: m, dist: tasteDistance(own, tasteAverages(round, m.id, d.isNameableGame)) }))
+    .map((m) => ({ member: m, dist: tasteDistance(own, tasteAverages(round, m.id, d.isNameableGame, d.personRatings)) }))
     .filter((x) => x.dist !== null);
   if (!scored.length) return { near: [], far: [] };
   const min = Math.min(...scored.map((x) => x.dist));

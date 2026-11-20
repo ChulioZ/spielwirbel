@@ -24,6 +24,7 @@ const { partyDistribution } = require('../lib/recommend');
 const { memberStats } = require('../public/js/member-stats');
 const { sessionEnding } = require('../public/js/session-outcome');
 const { isNameableGame } = require('../public/js/recap');
+const { personRatings } = require('../public/js/session-ratings');
 
 const round = {
   members: [
@@ -118,7 +119,7 @@ test('a whole-table own-seat team is a contest, won by every member', () => {
   assert.equal(sessionSeatCount(round, s), 4);
   assert.equal(sessionPartyCount(round, s), 1);
   const stats = memberStats({ ...round, games: [{ id: 'g', title: 'Coop' }], sessions: [s] }, 'm1', {
-    sessionEnding, isContestSession, sessionPartyGroups, isNameableGame,
+    sessionEnding, isContestSession, sessionPartyGroups, isNameableGame, personRatings,
   });
   assert.equal(stats.winRate, 1);
 });

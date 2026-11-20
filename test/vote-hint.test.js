@@ -14,7 +14,8 @@ const { isNameableGame } = require('../public/js/recap');
 const { creditedDesigners } = require('../public/js/provider-info-fields');
 const recommend = require('../lib/recommend');
 
-const DEPS = { tasteAverages, isNameableGame, creditedDesigners, ...vector };
+const { personRatings } = require('../public/js/session-ratings');
+const DEPS = { tasteAverages, isNameableGame, personRatings, creditedDesigners, ...vector };
 const { voteTasteHint, voterTasteProfile, tasteMatch } = hint;
 const run = (round, mid, game) => voteTasteHint(round, mid, game, DEPS);
 

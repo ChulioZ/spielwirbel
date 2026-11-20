@@ -93,11 +93,17 @@ function rawGameStats(round, gameId) {
     // `sessionRaters`, NOT `sessionPeople`: someone removed from the session
     // after rating (#1538) is out of that session, but their ratings still count
     // for the shelf — see its header in session-people.js.
-    sessionRaters(round, s).forEach((p) => {
-      const v = (s.votes[p.id] || {})[gameId];
-      if (v && Number.isFinite(v.rating)) tonight.push(v.rating);
+    //
+    // Both kinds of rating describe the game (#1838), so the histogram, `avg`
+    // and `count` read both; the rated EVENING stays the vote's alone — a
+    // verdict reaches the shelf score as its seat's share of the play instead
+    // (`playEvidence`), so counting it here too would count it twice.
+    sessionRatings(s, sessionRaters(round, s)).forEach((r) => {
+      // Map keys are strings; a game id may arrive as a number (fixtures).
+      if (r.gameId !== String(gameId)) return;
+      ratings.push(r.rating);
+      if (r.kind === 'vote') tonight.push(r.rating);
     });
-    ratings.push(...tonight);
     evenings.push(scoreRatings(tonight));
   });
   const avg = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null;
@@ -133,12 +139,12 @@ function gameRaters(round, gameId) {
     if (!s.gameIds.includes(gameId)) return;
     // The same "outside the session" set as rawGameStats (#1538), so the row
     // keeps explaining exactly the votes the score is built from.
-    sessionRaters(round, s).forEach((p) => {
-      const v = (s.votes[p.id] || {})[gameId];
-      if (!v || !Number.isFinite(v.rating)) return;
+    // Verdicts too (#1838): a „Wie war's?" is that person's rating of the game.
+    sessionRatings(s, sessionRaters(round, s)).forEach(({ person: p, gameId: gid, rating }) => {
+      if (gid !== String(gameId)) return;
       const seen = byPerson.get(p.id);
-      if (seen) { seen.sum += v.rating; seen.n += 1; return; }
-      byPerson.set(p.id, { person: p, sum: v.rating, n: 1 });
+      if (seen) { seen.sum += rating; seen.n += 1; return; }
+      byPerson.set(p.id, { person: p, sum: rating, n: 1 });
     });
   });
   return [...byPerson.values()]
@@ -161,12 +167,17 @@ function gameRaters(round, gameId) {
 // Every other field (`count`, `tiles`, `vetoes`) stays raw on purpose: they are
 // counts of what happened, and `scoreReason()` and `retireRecommendations()`
 // both read them as such.
-function shelveStats(raw, plays) {
+//
+// `play` is `playEvidence`'s { count, sum } (#1838): `plays` stays the COUNT
+// every screen prints, and the sum is what those plays are worth once
+// „Wie war's?" verdicts have replaced their seats' share of the pick.
+function shelveStats(raw, play) {
+  const plays = play ? play.count : 0;
   return {
     ...raw,
     plays,
     rawScore: raw.score,
-    score: shelfScore(raw.eveningSum, raw.ratedEvenings, plays),
+    score: shelfScore(raw.eveningSum, raw.ratedEvenings, plays, play ? play.sum : undefined),
   };
 }
 
@@ -188,8 +199,9 @@ function shelveStats(raw, plays) {
 function roundScoreIndex(round, games) {
   const shelf = games || round.games.filter(isActiveGame);
   const plays = playCounts(round);
+  const evidence = playEvidence(round, sessionPeople);
   const byGame = {};
-  shelf.forEach((g) => (byGame[g.id] = shelveStats(rawGameStats(round, g.id), plays.get(g.id) || 0)));
+  shelf.forEach((g) => (byGame[g.id] = shelveStats(rawGameStats(round, g.id), evidence.get(g.id))));
   return { plays, byGame };
 }
 
@@ -205,7 +217,7 @@ function roundScoreIndex(round, games) {
 // walks every session, so calling this in a loop is the O(n²) trap that
 // function's header describes.
 function gameStats(round, gameId) {
-  return shelveStats(rawGameStats(round, gameId), playCounts(round).get(gameId) || 0);
+  return shelveStats(rawGameStats(round, gameId), playEvidence(round, sessionPeople).get(gameId));
 }
 
 /* Retirement suggestions: games the round's accumulated votes say are dragging

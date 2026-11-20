@@ -114,6 +114,10 @@ lib/
                      by both backends
     tile-histograms.js  one sort order for the Discover aggregate's per-evening
                      histograms (#1721), so both backends fold the same sum
+    lift-play-value.js  what one Discover-lift play is worth once „Wie war's?"
+                     verdicts speak (#1838), shared by both backends
+    verdicts.js      setting and dropping a session's „Wie war's?" verdicts
+                     (#1838), the blob mutations both backends run in their lock
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
                      file under DATA_DIR, never data.json, because store.js
                      rewrites that whole file on every mutation
@@ -928,6 +932,9 @@ public/
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
                      the guest cap lib/routes/sessions.js enforces (issue #458)
+    session-ratings.js  every rating a session holds — votes and „Wie war's?"
+                     verdicts — as one stream, which every TASTE figure reads
+                     through (issue #1838); ballot figures keep reading votes
     vote-score.js    what a SET of votes is worth: the Spielwirbel-Score, a
                      per-tile value curve applied to each vote before
                      averaging, so a game one person does not want to play
@@ -1231,6 +1238,8 @@ public/
                      panel and strip), the tag section, the „ohne Spiele" chips
     views-session-result-tafel.js the results' tally and Tafel rows (#1056)
     views-session-result-band.js the results' table band, headline and finish
+    views-session-verdict.js  „Wie war's?" on a played result (issue #1838):
+                     who at the table has answered, and the vote's faces
     views-session-result-actions.js the results' row actions, cancel/delete
                      and footers (all four split out in #1543)
     session-photo-view.js the evening's photo on the results (#1774): add,

@@ -1026,7 +1026,7 @@ What the app does, in detail. For a short overview see the
   **evening**: each session that rated a game counts once with that evening's
   score, each time the group chose it counts as a pick worth the top of the scale
   (being chosen reads like „unbedingt" from the table, so another pick can never
-  lower a score), and the whole is shrunk toward a fixed neutral expectation
+  lower a score — unless the table says afterwards it was not, see „Wie war's?" below), and the whole is shrunk toward a fixed neutral expectation
   worth one evening. So a game three people rated 5,5,5 on its one evening stops
   outranking a staple the round keeps playing, a six-person evening weighs the
   same as a four-person one, and a round that runs its evenings by direct pick
@@ -1036,6 +1036,19 @@ What the app does, in detail. For a short overview see the
   and every other per-session number are deliberately **not** shrunk: there `n`
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
+- **„Wie war's?"** – after a played session, the people who sat at that table
+  can say on the result how it was, on the same five faces and words as the
+  vote: optional, seat by seat on a shared device or on their own, with no time
+  limit and editable later. The band shows *who* has answered, never *what*. A
+  verdict replaces its seat's share of the play's assumed pick value in the
+  shelf score — when the whole table answers, the play is worth the score of
+  their verdicts, and an unanswered seat keeps the assumption — so a game that
+  disappointed no longer earns full marks for being played. It also counts as a
+  rating everywhere a figure describes how someone likes a game (a member's
+  averages and favourites, the Pokale, the Chronik's period card, the taste
+  neighbour, recommendations, the draw boost's favourites and /entdecken), but
+  never where a figure describes a ballot (tonight's result, the tally, vote
+  weights, the vote link) (issue #1838).
 - **Colour marker** – each round carries **one colour**, picked right on
   Einstellungen and shown to everyone in the round: on the lobby
   tile, beside the round's name in the top bar, on the session screens and along

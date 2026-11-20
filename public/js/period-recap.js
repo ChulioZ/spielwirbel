@@ -11,7 +11,7 @@
    sibling, so injection is what keeps this file usable both as a shared-scope
    frontend script and as a CommonJS module the tests require, without a second
    copy of any rule. `deps` is { peopleOf, scoreOf, eveningsOf, shelfOf, playsOf,
-   minRatings, isActive, playTimeOf } — sessionPeople (session-people.js),
+   ratingsOf, minRatings, isActive, playTimeOf } — sessionPeople (session-people.js),
    sessionsPlayTime (session-duration.js, #1772), scoreRatings
    (vote-score.js) and RECAP_MIN_RATINGS
    (recap.js). The threshold is injected rather than re-declared here precisely
@@ -204,23 +204,20 @@ function bestRated(round, sessions, deps) {
   // The same ratings, grouped by EVENING (#1721): the shelf score counts a
   // session once, so the card has to hand it one score per session per game.
   const byEvening = new Map();
+  // Votes and „Wie war's?" verdicts both count as ratings of the game; the
+  // rated EVENING stays the vote's alone, exactly as rawGameStats reads it — a
+  // verdict reaches the score through `playsOf` instead (#1838).
   sessions.forEach((session) => {
-    const votes = session.votes || {};
     const tonight = new Map();
-    deps.peopleOf(round, session).forEach((person) => {
-      const own = votes[person.id] || {};
-      Object.keys(own).forEach((gid) => {
-        if (!known.has(gid)) return;
-        const vote = own[gid];
-        if (!vote || !Number.isFinite(vote.rating)) return;
-        const rating = vote.rating;
-        const list = ratings.get(gid) || [];
-        list.push(rating);
-        ratings.set(gid, list);
-        const mine = tonight.get(gid) || [];
-        mine.push(rating);
-        tonight.set(gid, mine);
-      });
+    deps.ratingsOf(session, deps.peopleOf(round, session)).forEach(({ gameId: gid, rating, kind }) => {
+      if (!known.has(gid)) return;
+      const list = ratings.get(gid) || [];
+      list.push(rating);
+      ratings.set(gid, list);
+      if (kind !== 'vote') return;
+      const mine = tonight.get(gid) || [];
+      mine.push(rating);
+      tonight.set(gid, mine);
     });
     tonight.forEach((list, gid) => {
       const all = byEvening.get(gid) || [];
@@ -246,7 +243,9 @@ function bestRated(round, sessions, deps) {
   // than borrowing the round's whole history; over a period covering everything
   // the two cards therefore print the same number, which
   // test/chronik-period-recap.test.js pins.
-  const plays = deps.playsOf({ sessions });
+  // { count, sum } per game (playEvidence): the round's members ride along
+  // because who sat at a table decides whose verdicts count.
+  const plays = deps.playsOf({ ...round, sessions });
   const raw = new Map();
   ratings.forEach((list, gid) => {
     const sc = deps.scoreOf(list);
@@ -259,7 +258,8 @@ function bestRated(round, sessions, deps) {
     // Since #928 the shelf score takes no prior: a game's number is a function
     // of its own votes and plays, so the period card and the all-time card
     // cannot disagree even though they read different slices of history.
-    const score = deps.shelfOf(r.sum, r.evenings, plays.get(gid) || 0);
+    const play = plays.get(gid);
+    const score = deps.shelfOf(r.sum, r.evenings, play ? play.count : 0, play ? play.sum : undefined);
     if (score === null) return;
     scores.set(gid, score);
     if (top === null || score > top) top = score;

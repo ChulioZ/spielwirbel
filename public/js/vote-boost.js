@@ -58,6 +58,7 @@ function voteBoostDeps(deps) {
     ratingMax: RATING_MAX,
     isNameableGame,
     sortByDate: sortSessionsByDate,
+    ratingsOf: sessionRatings,
   };
 }
 
@@ -129,22 +130,21 @@ function favouritesByMember(round, deps) {
   const d = voteBoostDeps(deps);
   const nameable = new Set((round.games || []).filter((g) => d.isNameableGame(g)).map((g) => g.id));
   const byMember = new Map();
+  // A guest's ratings are collected and never read: only member rows get an
+  // entry below, so no separate guest skip is needed here. A favourite is a
+  // TASTE fact, so a „Wie war's?" verdict counts like a vote (#1838, operator
+  // decision: this changes which games the boosted draw prefers). The boosts
+  // themselves (memberBoosts above) stay ballot-only — they ask whose WISHES
+  // got played, and a wish is pre-play.
   (round.sessions || []).forEach((s) => {
-    const votes = s.votes || {};
-    // A guest's ratings are collected and never read: only member rows get an
-    // entry below, so no separate guest skip is needed here.
-    d.peopleOf(round, s).forEach((p) => {
-      const own = votes[p.id] || {};
-      Object.keys(own).forEach((gid) => {
-        const v = own[gid];
-        if (!nameable.has(gid) || !v || !Number.isFinite(v.rating)) return;
-        let games = byMember.get(p.id);
-        if (!games) byMember.set(p.id, (games = new Map()));
-        const acc = games.get(gid) || { sum: 0, n: 0 };
-        acc.sum += v.rating;
-        acc.n += 1;
-        games.set(gid, acc);
-      });
+    d.ratingsOf(s, d.peopleOf(round, s)).forEach(({ person: p, gameId: gid, rating }) => {
+      if (!nameable.has(gid)) return;
+      let games = byMember.get(p.id);
+      if (!games) byMember.set(p.id, (games = new Map()));
+      const acc = games.get(gid) || { sum: 0, n: 0 };
+      acc.sum += rating;
+      acc.n += 1;
+      games.set(gid, acc);
     });
   });
   const out = new Map();
