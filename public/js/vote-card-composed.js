@@ -99,15 +99,20 @@ const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bru
 // in its own words („kein Schub" … „volle Kraft"); the middle three keep the app's.
 const voteSaidWord = (n) => (designIs('bruecke') && brueckeVoteWord(n)) || voteWord(n);
 
-function voteMoodButton(n, selected) {
+/* `label` makes a face with NO word under it, named by `label` alone — the
+   „Wie war's?" verdict (#1849), where the vote's words („unbedingt", „volle
+   Kraft") answer "do you want to play this?", not "how was it?". One markup
+   shape still, so every design's `.mood` styling reaches both. */
+function voteMoodButton(n, selected, { label } = {}) {
   // Ocean's and Die Brücke's stylesheets print only the two end words under the
   // faces; the middle three keep theirs as the tile's name.
-  const said = voteSaidWord(n);
+  const said = label || voteSaidWord(n);
+  const word = label ? '' : `<span class="mood__word">${esc(said)}</span>`;
   // aria-pressed carries the choice (#145): the selected face is otherwise
   // marked only by its fill, so nothing announced which rating was picked.
   const b = h(`<button class="mood${selected ? ' is-selected' : ''}"
            aria-pressed="${selected}" aria-label="${esc(said)}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__word">${esc(said)}</span>
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i>${word}
          </button>`);
   if (selected) {
     /* --sc, not an inline `background`: an inline background is precisely

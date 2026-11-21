@@ -82,3 +82,35 @@ test('choosing a face saves that seat\'s verdict on the played game', async (t) 
   assert.ok(seats(dom)[1].classList.contains('is-done'), 'Ben now shows as answered');
   assert.equal(band(dom).querySelector('.verdict__ask').hidden, true, 'and the faces close');
 });
+
+test('the verdict faces carry no word, and name themselves in retrospect (#1849)', async (t) => {
+  const { r, dom } = mount(t, night('s1', 5));
+  await dom.call('showResults', r, r.sessions[0], r.games, false);
+  seats(dom)[0].click();
+  const faces = [...band(dom).querySelectorAll('.verdict__faces .mood')];
+  assert.equal(faces.length, 5);
+  assert.equal(band(dom).querySelectorAll('.verdict__faces .mood__word').length, 0,
+    'no vote word under a face after the game');
+  assert.ok(faces.every((f) => f.textContent.trim() === ''), 'no visible text at all');
+  const want = [1, 2, 3, 4, 5].map((n) => dom.call('t', `result.verdict.face${n}`));
+  assert.deepEqual(faces.map((f) => f.getAttribute('aria-label')), want);
+  assert.equal(want[4], 'großartig');
+  // and the vote's own words never leak in as the name
+  assert.ok(!faces.some((f) => /unbedingt|gar nicht/.test(f.getAttribute('aria-label'))));
+});
+
+test('Der Tisch lays the word-less verdict faces out as one row, not its word rows (#1849)', () => {
+  // Tisch's `.rating` is a column of face-then-word rows on a phone and 132px
+  // tiles on a desktop; without a word both read as empty slots. CSS text only:
+  // jsdom applies no stylesheet (the layout itself was measured in a browser).
+  const css = require('node:fs').readFileSync(require('node:path').join(__dirname, '../public/css/designs/tisch.css'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, '');
+  const rule = (sel) => {
+    const at = css.indexOf(`${sel} {`);
+    assert.ok(at >= 0, `tisch.css declares ${sel}`);
+    return css.slice(at, css.indexOf('}', at));
+  };
+  const gate = ':root[data-design="tisch"][data-scheme="dark"]';
+  assert.match(rule(`${gate} .verdict__faces.rating`), /flex-direction:\s*row/);
+  assert.match(rule(`${gate} .verdict__faces.rating .mood`), /flex-direction:\s*column/);
+});

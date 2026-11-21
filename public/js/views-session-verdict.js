@@ -108,7 +108,7 @@ function resultRenderParties(rs, slot) {
     for (let n = RATING_MIN; n <= RATING_MAX; n++) {
       // Nothing preselected, even for a seat that already answered: the list
       // states who, never what (#1838). Choosing again replaces the verdict.
-      const face = voteMoodButton(n, false);
+      const face = voteMoodButton(n, false, { label: t(`result.verdict.face${n}`) });
       face.addEventListener('click', async () => {
         try {
           await api('PUT', `/api/rounds/${round.id}/sessions/${session.id}/verdicts/${person.id}`, { gameId: gid, rating: n });
