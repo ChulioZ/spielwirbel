@@ -1728,27 +1728,22 @@
 :root[data-design="bruecke"][data-scheme="dark"] .vote.vote--bruecke.vote-review { display: flex; }
 
 /* --- The result (B2.5 at 390, B4.3 at 1440, B16.3 the tie) ---------------
-   The shared result composition (result-tafel-composed.js), arranged by
-   composeBrueckeResult into the large panel (the sentence, who was there, the
-   Tafel) and the side column (the chosen game and the foot). Two panels from
-   1280px, where the screen takes --w-detail; one column below. */
+   The shared result composition (result-tafel-composed.js) in the one
+   arrangement every design shares (#1846, result-compose.js): the evening
+   column on the right of the large panel once a game is chosen, the panel
+   alone while deciding. The panel is `.result-main` — the Tafel and the
+   record; the sentence and who was there head the screen above both. */
 @media (min-width: 1280px) {
   :root[data-design="bruecke"][data-scheme="dark"] .app > *:not(.rail):not(.dock).result-screen--bruecke { max-width: var(--w-detail); }
-  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
-    column-gap: var(--space-5);
-    align-items: start;
-  }
 }
 @media (min-width: 860px) {
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__main {
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-main {
     position: relative;
     padding: var(--space-5);
     background: var(--surface);
     border: 1px solid var(--line);
   }
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__main::before {
+  :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-main::before {
     content: '';
     position: absolute;
     top: -1px;
@@ -1864,15 +1859,20 @@
     ".    .     sub  sub"
     "bars bars  bars bars";
 }
-@media (min-width: 860px) {
-  /* The distribution beside the title, where B4.3 draws its „Schub" column. */
+/* The distribution beside the title, where B4.3 draws its „Schub" column — by
+   the Tafel's own width since #1846 (`.result-main` is the `tafel` container),
+   not `@media (min-width: 860px)`. And once the row fits on one line the
+   still-choosing action stays on it, rather than the second line
+   `:has(.play-btn, .trow__chip)` gave it at every desktop width (128–151px
+   rows). */
+@container tafel (min-width: 540px) {
   :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow {
     grid-template-columns: 28px 44px minmax(0, 1fr) auto auto auto;
     grid-template-areas: "rank cover main bars pill sub";
   }
   :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel .trow:has(.play-btn, .trow__chip) {
-    grid-template-columns: 28px 44px minmax(0, 1fr) auto auto;
-    grid-template-areas: "rank cover main bars pill" ".    .     sub  sub  sub";
+    grid-template-columns: 28px 44px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "rank cover main bars pill sub";
   }
 }
 :root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .tafel-top {
@@ -1953,10 +1953,9 @@
   border-color: var(--control-edge);
   color: var(--ink);
 }
-@media (min-width: 1280px) {
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__side { display: flex; flex-direction: column; gap: var(--space-4); }
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-result__side .tisch-slot { margin: 0; }
-}
+/* The evening column as a stack of panels with one gap between them. */
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-aside { display: flex; flex-direction: column; gap: var(--space-4); }
+:root[data-design="bruecke"][data-scheme="dark"] .result-screen--bruecke .result-aside > * { margin-block: 0; }
 
 /* --- Several tables (B4.4) ------------------------------------------------
    The builder's table cards and the one-screen split result are panels; the

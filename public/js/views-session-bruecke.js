@@ -162,23 +162,6 @@ function brueckeScoreReason(st) {
   return st.vetoes ? tn(st.vetoes, 'score.reasonVetoBrueckeOne', 'score.reasonVetoBruecke', { n: st.vetoes }) : '';
 }
 
-/* The result, in two panels (B4.3): the sentence, who was there and the Tafel
-   on the large panel; the chosen game's band, the foot and „Noch eine Runde"
-   in the column beside it. On a phone the same order is one column (B2.5).
-   Called once at the end of showResults(), after the foot is appended; the
-   builders hold their nodes by reference, so moving them changes nothing they
-   do. */
-function composeBrueckeResult(screen) {
-  screen.classList.add('result-screen--bruecke');
-  const main = h('<div class="bruecke-result__main"></div>');
-  const side = h('<div class="bruecke-result__side"></div>');
-  [...screen.children].forEach((el) => {
-    const toSide = el.classList.contains('tisch-slot') || el.classList.contains('result-foot');
-    (toSide ? side : main).appendChild(el);
-  });
-  screen.replaceChildren(main, side);
-}
-
 /* The pass-device blind (#1241 — B4.6 at 1440, B6.10 at 390): the screen that
    covers the device between two people in one-device mode. It replaces the
    Klassisch handover card rather than repainting it, the way Ocean's does

@@ -154,26 +154,3 @@ function fillComposedResultFoot(foot, { again, againDisabled, share, more }) {
   foot.hidden = !foot.childElementCount;
 }
 
-/* Klassisch's arrangement (#1575), modelled on Ocean's (composeOceanResult):
-   everything ahead of the Tafel — the head, who was there, the points, the
-   table band and the foot — in a side column, the ranking and what follows it
-   in the other. styles.css lays the two side by side from 1280px; below that
-   they are two blocks in this same order, so DOM order is the visual order and
-   the foot follows the band ahead of the ranking on a phone too.
-
-   Unlike Ocean, the badge moment stays in the side column, after the headline
-   and before the table band (#1388's order, test/badges-result-moment.test.js):
-   Klassisch's side column is wider than Ocean's, and the order on a phone is
-   then exactly what it was. */
-function composeKlassischResult(screen) {
-  screen.classList.add('result-screen--klassisch');
-  const side = h('<div class="klassisch-result__side"></div>');
-  const list = h('<div class="klassisch-result__tafel"></div>');
-  const kids = [...screen.children];
-  const tafelAt = kids.findIndex((el) => el.classList.contains('tafel'));
-  kids.forEach((el, i) => {
-    if (el.classList.contains('result-foot') || (tafelAt >= 0 && i < tafelAt)) side.appendChild(el);
-    else list.appendChild(el);
-  });
-  screen.replaceChildren(side, list);
-}

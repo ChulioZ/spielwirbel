@@ -851,8 +851,12 @@ What the app does, in detail. For a short overview see the
   draws again, and the answer is shown, never stored. With reduced motion the
   answer appears at once; it is announced to screen readers either way. The
   „Jetzt spielen" sheet offers the same button once two seats are taken. Once
-  it is played, the table carries a stamp with the date and the winners as
-  seats, with the picker behind „Ändern". Recording the winner(s) is an
+  it is played, the table carries a stamp with the date, with the picker behind
+  „Ändern", and under it **each party is listed once** (issue #1846): its
+  faces, its name, a crown when it won, its points with the „neuer Rekord"
+  mark, and a „Wie war's?" seat per person — in place of „Wer dabei war", a
+  points block and the winners as seats, which named the same people up to four
+  times. Recording the winner(s) is an
   optional follow-up step afterwards; the picker stays open while winners are
   tapped, so a shared win is recorded in one go, and „Fertig" closes it. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
@@ -865,8 +869,14 @@ What the app does, in detail. For a short overview see the
   Or
   cancel the session if nothing appealed. A settled result ends on „Noch eine
   Session", „Teilen" and „Mehr" in every design — cancelling, deleting and the
-  other corrections sit behind „Mehr" — and from 1280px it lays out in two
-  columns, the chosen game and those actions beside the ranking. „Teilen" hands
+  other corrections sit behind „Mehr" (and while the winner picker is open,
+  „Noch eine Session" waits until „Fertig"). The screen is laid out **by the
+  phase of the evening** in every design (issue #1846): one column with the
+  ranking while it is still being decided, and once a game is chosen the
+  evening's column — the game on the table, its action, the foot and later the
+  party list — beside the ranking from a ~900px-wide screen, pinned while the
+  game is on the table; on a phone it simply comes first. The ranking's rows
+  take their one-line form from the ranking's own width, not the window's. „Teilen" hands
   the result to the device's share sheet as a message **and an image** in every
   design — the round, the date and the screen's own sentence, then by stage
   (issue #1726): before a game is chosen, the ranking with its ties and each
@@ -1039,7 +1049,7 @@ What the app does, in detail. For a short overview see the
 - **„Wie war's?"** – after a played session, the people who sat at that table
   can say on the result how it was, on the same five faces and words as the
   vote: optional, seat by seat on a shared device or on their own, with no time
-  limit and editable later. The band shows *who* has answered, never *what*. A
+  limit and editable later. The party list shows *who* has answered, never *what*. A
   verdict replaces its seat's share of the play's assumed pick value in the
   shelf score — when the whole table answers, the play is worth the score of
   their verdicts, and an unanswered seat keeps the assumption — so a game that

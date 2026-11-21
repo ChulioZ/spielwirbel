@@ -13,7 +13,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { loadApp } = require('./support/dom');
-const { mediaBlocks, rulesOf } = require('./support/css');
 
 const ME = 'user-me';
 
@@ -116,16 +115,15 @@ test('the foot follows the table band and comes before the ranking and the log',
   assert.equal(precedes(dom, f, screen(dom).querySelector('.session-log')), true, 'and before the log');
 });
 
-test('Klassisch composes two columns: head, people, band and foot beside the ranking', async (t) => {
+test('Klassisch takes the shared composition: head and people spanning, the evening column, the ranking', async (t) => {
   const { dom } = await results(t, { finished: true, chosenGameId: 'g1' });
   const s = screen(dom);
   assert.ok(s.classList.contains('result-screen--klassisch'));
-  assert.deepEqual([...s.children].map((c) => c.className),
-    ['klassisch-result__side', 'klassisch-result__tafel']);
-  const [side, list] = s.children;
-  assert.deepEqual([...side.children].map((c) => c.className.split(' ')[0]),
-    ['page-head', 'result-people', 'badge-moment', 'tisch-slot', 'result-foot']);
-  assert.ok(list.querySelector(':scope > .tafel'), 'the ranking is in the second column');
+  assert.deepEqual([...s.children].map((c) => c.className.split(' ')[0]), ['page-head', 'result-people', 'result-cols']);
+  const [aside, main] = s.querySelector('.result-cols').children;
+  assert.deepEqual([...aside.children].map((c) => c.className.split(' ')[0]),
+    ['badge-moment', 'tisch-slot', 'result-foot', 'result-party-slot']);
+  assert.ok(main.querySelector(':scope > .tafel'), 'the ranking is in the second column');
 });
 
 test('while nothing is chosen there is no next evening yet, and „Mehr" offers cancel before delete', async (t) => {
@@ -183,11 +181,5 @@ test('„Session löschen" behind „Mehr" deletes the session as before', async
 /* jsdom applies no external stylesheet, so the two-column arrangement is a CSS
    fact: asserted over the real rule, inside the 1280px block and nowhere else
    (.claude/rules/css-text-assertions-strip-comments.md). */
-test('the two columns open at 1280px, and below it the screen stays one column', () => {
-  const wide = mediaBlocks().filter(([q]) => /min-width:\s*1280px/.test(q) && !/height/.test(q))
-    .flatMap(([, css]) => rulesOf(css))
-    .find(([sel]) => sel.trim() === '.result-screen--klassisch');
-  assert.ok(wide, 'expected a .result-screen--klassisch rule inside a 1280px block');
-  assert.match(wide[1], /display:\s*grid/);
-  assert.match(wide[1], /grid-template-columns/);
-});
+// The columns are the shared composition's since #1846 — opened by the screen's
+// own width and the phase, never a viewport breakpoint: test/result-phase-layout.test.js.

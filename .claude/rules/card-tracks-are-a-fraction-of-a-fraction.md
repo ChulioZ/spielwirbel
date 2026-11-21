@@ -56,9 +56,10 @@ Three things about it are worth keeping:
   are a pair: a grid item's automatic minimum is its min-content size, so either
   one alone still lets a long unbroken title push the card past its column.
 - **A container query was NOT needed.** `min(px, %)` answers the same question
-  with no new CSS feature and no `container-type`, which would have been the
-  first in this stylesheet. Reach for `@container` when the *presentation* must
-  change (stack vs. side-by-side), not when a size must scale.
+  with no new CSS feature and no `container-type`. Reach for `@container` when
+  the *presentation* must change (stack vs. side-by-side), not when a size must
+  scale — the session result's columns and row form are that case (#1846,
+  `.claude/rules/result-rows-query-the-tafel-container.md`).
 - **The cap still has to respect the cover budget.** `COVER_HERO` is 480
   (`cover-size.js`), so a 340px ceiling still oversamples
   (`.claude/rules/provider-cover-sizing.md`).

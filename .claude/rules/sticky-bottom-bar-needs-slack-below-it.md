@@ -91,6 +91,13 @@ saying sticky was impossible here, on this rule's authority. A rule stating a
 mechanism is as load-bearing as code, so derive it from a case where the
 candidate mechanisms **disagree** — or say in the file that you could not.
 
+**The opposite case pins fine: the result's evening column (#1846).** It is
+`sticky; top: 80px` as a grid item beside the ranking — the TALLER sibling sets
+the row's height, so the aside's containing block runs the ranking's whole
+length and it has travel. It pins only in the table and picking phases and
+behind `min-height: 720px`, because a column taller than the viewport strands
+its own bottom (`.claude/rules/result-rows-query-the-tafel-container.md`).
+
 **Related:** `.claude/rules/regal-header-has-no-spare-room.md` (a sticky bar
 that DOES work — in flow after the grid, riding above the floating dock — and
 why its offset is one dock's number),

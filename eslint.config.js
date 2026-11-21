@@ -664,7 +664,7 @@ const frontendGlobals = {
   // views-member-points.js (#1631)
   memberPointsPanel: 'readonly', profilePointsPanel: 'readonly', memberCategoryBestsBlock: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
-  renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
+  sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
   sheetScoreCategories: 'readonly', buildPointsGrid: 'readonly', gridColumnSum: 'readonly', paintGridTotals: 'readonly', showScoreCategoriesEditor: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
@@ -738,9 +738,12 @@ const frontendGlobals = {
   // views-session-result-tafel.js (issue #1543): the results screen's tally and Tafel rows
   resultArchivedBadge: 'readonly', tallyResultRows: 'readonly', buildResultTafel: 'readonly',
   // views-session-result-band.js (issue #1543): the table band, the headline and the finish
-  resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultSaveWinners: 'readonly',
-  // views-session-verdict.js (issue #1838): „Wie war's?" on the played result
-  resultRenderVerdicts: 'readonly',
+  resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultRenderBandOnly: 'readonly', resultSaveWinners: 'readonly',
+  // views-session-verdict.js (issue #1838, #1846): the played result's party list with „Wie war's?"
+  resultRenderParties: 'readonly',
+  // result-phase.js + result-compose.js (issue #1846): the result's phase and its one composition
+  RESULT_PHASES: 'readonly', RESULT_ASIDE_END: 'readonly', resultPhaseOf: 'readonly',
+  composeResultScreen: 'readonly', resultPlace: 'readonly',
   // views-session-result-actions.js (issue #1543): row actions, cancel/delete and the footers
   resultIsSoloDirectPlay: 'readonly', resultRemoveGame: 'readonly', resultRenderAction: 'readonly',
   resultUpdateChosen: 'readonly', resultSetCancelled: 'readonly', resultConfirmCancel: 'readonly',
@@ -750,11 +753,10 @@ const frontendGlobals = {
   tischSetupDateLine: 'readonly',
   // views-session-ocean.js (issue #1213): Ocean's setup, vote sides and result columns
   oceanWorn: 'readonly', OCEAN_COUNT_BUBBLES: 'readonly', composeOceanSetup: 'readonly', paintOceanCount: 'readonly',
-  oceanVoteSides: 'readonly', composeOceanResult: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
+  oceanVoteSides: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
   oceanDive: 'readonly', // #1221, O10.1
   // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
-  composeBrueckeResult: 'readonly',
   brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
   brueckeCountPool: 'readonly', // #1248, B10.2
   // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
@@ -763,7 +765,7 @@ const frontendGlobals = {
   // views-session-forest.js (issue #1468): Forest's setup, vote sides, result columns and tables head
   forestWorn: 'readonly', FOREST_COUNT_LEAVES: 'readonly', composeForestSetup: 'readonly', forestDrawSummary: 'readonly',
   paintForestCount: 'readonly', composeForestVoteCard: 'readonly', forestVoteSides: 'readonly', forestFinaleKicker: 'readonly', forestResultKicker: 'readonly',
-  paintForestFacts: 'readonly', composeForestResult: 'readonly', composeForestTablesHead: 'readonly',
+  paintForestFacts: 'readonly', composeForestTablesHead: 'readonly',
   FOREST_DUSK_TREES: 'readonly', forestBlind: 'readonly', composeForestLobby: 'readonly', // #1469: the dusk blind and the shared vote
   programmheftBlind: 'readonly', composeProgrammheftLobby: 'readonly', // #1375
   // views-session-tables.js (issue #796)
@@ -772,7 +774,7 @@ const frontendGlobals = {
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
   composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly', splitResultTitle: 'readonly',
-  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly', composeKlassischResult: 'readonly',
+  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

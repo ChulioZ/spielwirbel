@@ -150,7 +150,7 @@ test('finishing stamps the box and opens the picker, because who won is the one 
    Only „Fertig" (or an ending, which is single-choice) closes it. The picker is
    one shared renderer for every design, so this runs against it with no design
    worn and needs no per-design twin. */
-test('several winners are recorded in a row, and „Fertig" shows them as seats', async (t) => {
+test('several winners are recorded in a row, and „Fertig" crowns them in the party list', async (t) => {
   const { dom, sent } = await show(t, { finished: true });
   // An archived session opens on the PICTURE, not on the picker.
   assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0,
@@ -172,9 +172,11 @@ test('several winners are recorded in a row, and „Fertig" shows them as seats'
 
   btn(dom, /Fertig/).click();
   assert.equal(dom.app.querySelectorAll('.winner-chips').length, 0, '„Fertig" closes it');
-  const seats = [...band(dom).querySelectorAll('.tisch__seats .seat')];
-  assert.deepEqual(seats.map((s) => s.querySelector('.seat__name').textContent.trim()), ['Anna', 'Ben']);
-  assert.match(band(dom).querySelector('.tisch__won').textContent, /haben gewonnen/);
+  // The record names its winners once (#1846): crowned rows in the party list,
+  // no second set of seats on the band.
+  assert.equal(band(dom).querySelector('.tisch__seats'), null);
+  const crowned = [...dom.app.querySelectorAll('.result-party.is-winner .result-party__name')];
+  assert.deepEqual(crowned.map((n) => n.firstChild.nextSibling.textContent.trim().split(' ')[0]), ['Anna', 'Ben']);
 });
 
 test('deselecting a winner also keeps the picker open', async (t) => {
@@ -214,17 +216,16 @@ test('closing the picker moves no focus', async (t) => {
     'the hand-back is for an OPEN picker only — closing must not pull focus anywhere');
 });
 
-test('a team win renders one seat per member', async (t) => {
+test('a team win is ONE crowned row, with a „Wie war\'s?" seat per member', async (t) => {
   const { dom } = await show(t, {
     finished: true,
     winnerIds: ['m1', 'm2'],
-    teams: [{ id: 't1', name: 'Die Zwei', memberIds: ['m1', 'm2'] }],
+    teams: [{ id: 't1', personIds: ['m1', 'm2'] }],
   });
-  const seats = [...band(dom).querySelectorAll('.tisch__seats .seat')];
-  assert.deepEqual(seats.map((s) => s.querySelector('.seat__name').textContent.trim()), ['Anna', 'Ben'],
-    'a team win is its people — that is what `winnerIds` already stores');
-  assert.match(band(dom).querySelector('.tisch__won').textContent, /haben gewonnen/,
-    'and the plural follows the seat count');
+  const rows = [...dom.app.querySelectorAll('.result-party.is-winner')];
+  assert.equal(rows.length, 1, 'a team win is its people — one party, one row');
+  assert.deepEqual([...rows[0].querySelectorAll('.verdict__seat .verdict__name')].map((n) => n.textContent), ['Anna', 'Ben']);
+  assert.match(rows[0].querySelector('.sr-only').textContent, /haben gewonnen/, 'the plural follows the party');
 });
 
 test('an ending renders its own line instead of seats', async (t) => {
@@ -401,7 +402,8 @@ const phoneRule = (sel) => phoneRules()
 test('the picking band gives its width to the answer, and outranks the table layout', () => {
   const band = phoneRule('.tisch[data-state="picking"]');
   assert.ok(band, 'the picker still renders at the table width on a phone');
-  assert.match(declaredValue(band[1], 'grid-template-columns'), /^64px/,
+  // 80px, not 64 (#1846): at 64 the stamp clipped to „GESPIEL".
+  assert.match(declaredValue(band[1], 'grid-template-columns'), /^80px/,
     'the chips get the room back only if the box column actually shrinks');
   // (0,2,0) vs (0,1,0). A second class instead of the attribute would TIE the
   // `.tisch` rule beside it and ride on source order.
@@ -410,7 +412,7 @@ test('the picking band gives its width to the answer, and outranks the table lay
 
   const box = phoneRule('.tisch[data-state="picking"] .tisch__box');
   assert.ok(box, 'the box keeps its 96px table size while the picker is open');
-  assert.equal(declaredValue(box[1], 'width'), '64px');
+  assert.equal(declaredValue(box[1], 'width'), '80px');
   assert.ok(outranks('.tisch[data-state="picking"] .tisch__box', '.tisch__box'));
 });
 

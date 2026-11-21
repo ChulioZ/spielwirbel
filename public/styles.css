@@ -4153,7 +4153,7 @@ body.vote-screen .topbar { display: none; }
 
 /* Below the rail breakpoint the stage shows the TOP TWO rows rather than all
    three, because that is exactly where the app's own row stops being one line:
-   `@media (min-width: 1280px) .tafel .trow` re-lays it as `rank cover main bars
+   `@media (min-width: 1280px) .landing-moments .tafel .trow` re-lays it as `rank cover main bars
    score action`, and under it the row is a two- or three-line grid at 145px.
    Three of those do not fit any stage box (650px of scene at 848px wide,
    measured — 50px of it landing on the caption below), and the box has to fit
@@ -6633,18 +6633,64 @@ a.k-tile:focus-visible,
 }
 .trow__menu { padding: 6px 8px; }
 
-/* From the rail breakpoint the row is ONE LINE — rank, cover, title, chart,
-   score, action — which is what keeps a six-row Tafel honest on a 13". The
-   cover drops to 44px with it: at one line its job is identification, not
-   display. */
+/* ONE LINE — rank, cover, title, chart, score, action — is what keeps a
+   six-row Tafel honest on a 13". The cover drops to 44px with it: at one line
+   its job is identification, not display.
+
+   On the result screen the row chooses that form by the TAFEL'S OWN WIDTH
+   (#1846): `.result-main` is the `tafel` container (below), and the Tafel is
+   its full width. It used to be `@media (min-width: 1280px)`, a viewport query
+   measuring the wrong box — at 1280–1470 the two-column screen gave the Tafel
+   580–626px, so titles got ~60px („Heat: / Pedal / to the / Metal"), rows
+   reached 240px and the gold row's „1× gar nicht" overlapped its bars
+   (.claude/rules/card-tracks-are-a-fraction-of-a-fraction.md, one box over).
+   720px is where this row's five fixed tracks leave the title ≥ 180px.
+
+   The landing page's Tafel (landing-moments.js) is the one outside a result
+   screen, and its stage box is sized against the viewport rule, so it keeps it
+   (test/landing-moments.test.js pins the coupling). */
 @media (min-width: 1280px) {
-  .tafel .trow {
+  .landing-moments .tafel .trow {
     grid-template-columns: 30px 44px minmax(0, 1fr) auto auto auto;
     grid-template-areas: "rank cover main bars score action";
     padding: 10px 16px;
     gap: 4px 16px;
   }
-  .trow__img { width: 44px; height: 44px; font-size: 20px; /* glyph, not type */ }
+  .landing-moments .trow__img { width: 44px; height: 44px; font-size: 20px; /* glyph, not type */ }
+}
+.result-main { container: tafel / inline-size; }
+@container tafel (min-width: 720px) {
+  .result-main .tafel .trow {
+    grid-template-columns: 30px 44px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: "rank cover main bars score action";
+    padding: 10px 16px;
+    gap: 4px 16px;
+  }
+  .result-main .trow__img { width: 44px; height: 44px; font-size: 20px; /* glyph, not type */ }
+}
+/* The compact phone row (#1846): five tracks, the action SHARING tracks 4–5
+   under the score rather than widening the score's own track — a four-track
+   version starved the title to ~90px. The rank takes a track again instead of
+   the corner (the viewport rule near the top of this sheet, which the landing
+   still uses). ~120–140px a row instead of 152–207. (0,3,0)/(0,4,0) so the
+   viewport phone rule's (0,2,0) loses on specificity, not on source order. */
+@container tafel (max-width: 519px) {
+  .result-main .tafel .trow {
+    grid-template-columns: 20px 36px minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "rank cover main main score"
+      "bars bars  bars action action";
+    padding: 10px 12px;
+    gap: 6px 8px;
+  }
+  .result-main .tafel .trow .trow__rank { position: static; font-size: var(--text-lg); }
+  /* The score's label wraps at its hyphen („Spielwirbel-/Score") in an 84px
+     track: on one line it took 144px of a 390px phone and left the title 68
+     (measured, #1846); this leaves it 146. „Spielwirbel" alone (~65px at this
+     size) is the floor test/score-label-fits.test.js holds. */
+  .result-main .tafel .trow .trow__score { text-align: right; max-width: 84px; }
+  .result-main .tafel .trow .score-label { font-size: var(--text-xs); line-height: 1.25; }
+  .result-main .tafel .trow .trow__img { width: 36px; height: 36px; font-size: 18px; /* glyph, not type */ }
 }
 
 /* The race (#1056), on the reveal path only. Every fill starts together and
@@ -6787,26 +6833,146 @@ a.k-tile:focus-visible,
   justify-content: center; align-items: center;
   gap: 10px 20px;
 }
-/* Klassisch's result (#1575): the foot — „Noch eine Session", „Teilen",
-   „Mehr" — under the table band, and from 1280px the side column it closes
-   beside the ranking (composeKlassischResult). Scoped to the class only
-   Klassisch's composer sets, so no design's own foot rules meet these.
-   The ranking keeps 580px: below that Klassisch's rows (bars beside the title,
-   chosen by viewport width, not by column) crowd and overlap — measured at
-   1280, where the side column gives way to 336px instead. 480px is the de foot
-   on one line (461px with its gaps); narrower, „Mehr" wraps under it and
-   nothing overflows. */
-.result-screen--klassisch .result-foot { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
-.result-screen--klassisch .result-foot[hidden] { display: none; }
-.result-screen--klassisch .result-foot__again { flex: 1 1 auto; justify-content: center; }
-@media (min-width: 1280px) {
-  .result-screen--klassisch {
+/* ---- The result's one composition (#1846, result-compose.js) ----
+
+   Every design, Klassisch included: head (+ people) spanning, then
+   `.result-cols` holding `.result-aside` (the evening) and `.result-main` (the
+   ranking and the record), in that DOM order — the phone order. The columns
+   follow the PHASE class resultPlace() keeps on the screen, and the screen's
+   own width (a container query), never the viewport:
+
+     deciding / solo        one column, always — there is no evening column to
+                            stand beside a 1,300–1,500px ranking yet.
+     table / picking / played  two columns from a 900px pane, the aside 340px
+                            (380 from 1100); Der Tisch, Die Brücke and Das
+                            Programmheft draw it on the right
+                            (`--aside-end`), the rest on the left.
+
+   The aside PINS in table and picking, where it carries the live action, and
+   only on a screen tall enough to hold it (a sticky column taller than the
+   viewport strands its own bottom). In played it is static: with eight people
+   it is ~830px, taller than a 13". */
+.result-screen { container: result-screen / inline-size; }
+.result-cols > * { min-width: 0; }
+/* A phase hides whole blocks by attribute (the people row once the party list
+   names everyone, the foot when it holds nothing), and nearly every one of them
+   carries a `display` of its own in some design — so the guard is `!important`
+   (.claude/rules/hidden-attribute-vs-display-rule.md, the design-sheet case). */
+.result-screen > [hidden],
+.result-screen .page-head--result > .result-foot[hidden],
+.result-screen .page-head--result .result-people[hidden],
+.result-cols .result-foot[hidden],
+.result-cols .result-party-slot[hidden],
+.result-cols .start-player[hidden],
+.result-cols .badge-moment[hidden] { display: none !important; }
+@container result-screen (min-width: 900px) {
+  .result-screen:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols {
     display: grid;
-    grid-template-columns: minmax(320px, 480px) minmax(580px, 1fr);
+    grid-template-columns: 340px minmax(0, 1fr);
     column-gap: 32px;
     align-items: start;
   }
+  .result-screen--aside-end:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols {
+    grid-template-columns: minmax(0, 1fr) 340px;
+  }
+  .result-screen--aside-end:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols > .result-aside { grid-column: 2; grid-row: 1; }
+  .result-screen--aside-end:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols > .result-main { grid-column: 1; grid-row: 1; }
+  /* In the evening column the box sits BESIDE its text at 96px, and at 80 while
+     the picker is open — stacked at the old 180px it cost 180px of the column
+     and, with eight parties' chips under it, put „Fertig" at y≈1,310 at
+     1470×870 (measured, #1846). The chips take the phone's density there. */
+  :is(.result-screen--table, .result-screen--picking, .result-screen--played) .result-aside .tisch { grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding: 14px; }
+  :is(.result-screen--table, .result-screen--picking, .result-screen--played) .result-aside .tisch__box { width: 96px; font-size: 34px; /* glyph, not type */ }
+  .result-screen--picking .result-aside .tisch { grid-template-columns: 80px minmax(0, 1fr); row-gap: 6px; }
+  .result-screen--picking .result-aside .tisch__box { width: 80px; font-size: 28px; /* glyph, not type */ }
+  .result-aside .tisch__box .stamp__date { display: none; }
+  /* While the picker is open its chip rows take the column's WHOLE width, not
+     the text track beside the box: in 256px eight parties needed three lines
+     a row, and „Fertig" fell to y≈890–970 in Die Brücke and Forest. The box
+     stays beside the kicker, title and prompt — `display: contents` lifts
+     the main column's children into the band's grid. Not under Ocean and
+     Forest, whose band is a one-column scene (the whale, the tree) with the
+     text already at its full width. */
+  .result-screen--picking:not(.result-screen--ocean, .result-screen--forest) .result-aside .tisch__main { display: contents; }
+  .result-screen--picking:not(.result-screen--ocean, .result-screen--forest) .result-aside .tisch__main > * { grid-column: 2; }
+  .result-screen--picking:not(.result-screen--ocean, .result-screen--forest) .result-aside .tisch__box { grid-row: 1 / span 4; align-self: start; }
+  .result-screen--picking:not(.result-screen--ocean, .result-screen--forest) .result-aside .tisch__main > :is(.winner-chips, .tisch__actions) { grid-column: 1 / -1; }
+  .result-aside .winner-chips { gap: 8px; }
+  .result-aside .winner-chip { font-size: var(--text-md); padding: 8px 14px; min-height: 44px; }
 }
+@container result-screen (min-width: 1100px) {
+  .result-screen:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols { grid-template-columns: 380px minmax(0, 1fr); }
+  .result-screen--aside-end:is(.result-screen--table, .result-screen--picking, .result-screen--played) > .result-cols { grid-template-columns: minmax(0, 1fr) 380px; }
+}
+@media (min-height: 720px) {
+  @container result-screen (min-width: 900px) {
+    .result-screen:is(.result-screen--table, .result-screen--picking) > .result-cols > .result-aside {
+      position: sticky;
+      top: 80px;
+    }
+  }
+}
+/* Solo direct play: band, „Wer fängt an?", foot, log and comments at the
+   reading width — there is no ranking to give the width to. */
+.result-screen--solo > * { max-width: var(--w-read); margin-inline: auto; }
+
+/* The foot. In the aside: „Noch eine Session" on its own line and „Teilen ·
+   Mehr" sharing the next (Der Tisch's rule, made shared), so „Mehr" never
+   wraps alone (#1846, defect 6) and a long locale cannot wrap the CTA's own
+   label. While deciding it sits in the head row, at the right edge; below a
+   640px pane it takes the head's last line instead. */
+.result-foot { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 20px; }
+.result-aside > .result-foot .btn { flex: 1 1 0; justify-content: center; }
+.result-aside > .result-foot .result-foot__again { flex: 1 1 100%; white-space: normal; }
+.page-head--result { flex-wrap: wrap; row-gap: 12px; }
+.page-head--result > .result-foot { flex: none; margin: 0; }
+@container result-screen (max-width: 639px) {
+  .page-head--result > .result-foot { flex: 1 1 100%; }
+}
+
+/* The played session's party list (#1846, views-session-verdict.js): one row
+   per party — name, a crown, the points and the „neuer Rekord" mark — and a
+   „Wie war's?" seat per person under it. The seats lay out as a grid, so a
+   narrow column takes two per line rather than eight stacked pills (defect 4). */
+.result-party-slot { margin: 0 0 20px; }
+.result-parties { margin-top: 0; }
+.result-parties__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.result-party {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "name points" "seats seats";
+  gap: 8px 12px;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.result-party.is-winner { border-color: var(--gold-edge); background: var(--gold-soft); }
+.result-party__name { grid-area: name; min-width: 0; font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.result-party__crown { color: var(--gold-deep); }
+.result-party__points { grid-area: points; display: inline-flex; align-items: baseline; gap: 8px; }
+.result-party__seats.verdict__seats { grid-area: seats; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.result-party--automa { grid-template-areas: "name points"; color: var(--ink-soft); }
+/* A one-person party is ONE line — name, points, then its seat — which is
+   what keeps eight people at ~60px a row instead of ~110. Its row already names
+   them, so the seat keeps the name as its accessible name and shows only the
+   face and the state. */
+.result-party--solo { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name points seats"; padding-block: 8px; }
+.result-party--solo .result-party__seats.verdict__seats { display: flex; }
+.result-party--solo .verdict__name {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ≥ 8px between the two chip rows of the winner picker — the parties and the
+   endings were two `.winner-chips` rows touching at 0px (#1846, defect 3). */
+.winner-chips + .winner-chips { margin-top: 10px; }
+
+/* „Wer fängt an?" on the results screen: the button alone until the first
+   press (start-player-view.js `is-folded`). Scoped to the screen, so the
+   „Jetzt spielen" sheet keeps its ring. */
+.result-screen .start-player.is-folded .start-player__ring { display: none; }
 .play-btn { margin-top: 8px; padding: 8px 14px; font-size: var(--text-md); }
 .trow.is-chosen {
   border-color: var(--brand);
@@ -7181,8 +7347,10 @@ a.k-tile:focus-visible,
      it in the same render that opens the picker, and it is the only
      confirmation on screen that the finish was recorded. The picker is the
      question; the stamp is the receipt. */
-  .tisch[data-state="picking"] { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; }
-  .tisch[data-state="picking"] .tisch__box { width: 64px; font-size: 24px; /* glyph, not type */ }
+  /* 80px, not 64 (#1846, defect 5): at 64 the stamp clipped to „GESPIEL". */
+  .tisch[data-state="picking"] { grid-template-columns: 80px minmax(0, 1fr); gap: 12px; }
+  .tisch[data-state="picking"] .tisch__box { width: 80px; font-size: 28px; /* glyph, not type */ }
+  .tisch[data-state="picking"] .tisch__box .stamp__date { display: none; }
 }
 .winner-chips { display: flex; flex-wrap: wrap; gap: 10px; }
 .winner-chip {
@@ -11841,16 +12009,10 @@ kbd {
 .result-people__person { display: inline-flex; align-items: center; gap: 7px; }
 .result-people__person .avatar { width: 28px; height: 28px; font-size: 11px; /* glyph, not type */ }
 .result-people__name { font-size: var(--text-sm); font-weight: 700; }
-/* The evening's points (#1630), best first. An ordered list in the same row
-   rhythm as „Wer dabei war" above it: the order IS the content, so it reads
-   left to right and wraps like text rather than tiling. Names are inherited
-   ink; the „neuer Rekord" mark takes --good, which every design measures as
-   text against its page. */
-.result-points__list { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; padding: 0; list-style: none; }
-.result-points__line { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-sm); }
-.result-points__name { font-weight: 700; }
+/* The evening's points (#1630) as the party list prints them (#1846): the
+   number in tabular figures; the „neuer Rekord" mark takes --good, which every
+   design measures as text against its page. */
 .result-points__value { font-weight: 800; font-variant-numeric: tabular-nums; }
-.result-points__line--automa { color: var(--ink-soft); }
 
 /* The evening's photo (#1774), after its points. The frame shows the whole
    picture (`contain`, not `cover`): a photo of the final board is read for its

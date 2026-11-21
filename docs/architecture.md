@@ -1236,16 +1236,20 @@ public/
     views-session.js session setup, the rating cards, finale, results
     views-session-setup-pool.js the setup's pot: the live pool preview (tile
                      panel and strip), the tag section, the „ohne Spiele" chips
+    result-phase.js  the result's phase — deciding, table, picking, played or
+                     solo — and the designs that draw its column right (#1846)
     views-session-result-tafel.js the results' tally and Tafel rows (#1056)
     views-session-result-band.js the results' table band, headline and finish
-    views-session-verdict.js  „Wie war's?" on a played result (issue #1838):
-                     who at the table has answered, and the vote's faces
+    views-session-verdict.js  the played result's party list (#1846) with
+                     „Wie war's?" (issue #1838): who has answered, the faces
     views-session-result-actions.js the results' row actions, cancel/delete
                      and footers (all four split out in #1543)
     session-photo-view.js the evening's photo on the results (#1774): add,
                      replace, remove, and the consent hint
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
+    result-compose.js the result's one composition for every design (#1846):
+                     head, the evening's column and the ranking, by phase
     views-session-tables.js the multi-table builder and, once confirmed, the split
                      summary linking to the evening's tables (issue #796)
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for
