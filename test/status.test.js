@@ -345,7 +345,8 @@ test('each funnel stage counts the sessions in that state, independently', async
   await add({ votes: votesBy(1) });                           // NOT rated: one person
   // A seat that was asked and never answered is not a rater either.
   await add({ votes: { p0: { g1: { rating: 3 } }, p1: {} } });
-  await add({ done: true });                                  // + closed
+  // Closed but nothing chosen: no stage of its own since #1823 dropped „closed".
+  await add({ done: true });
   await add({ chosenGameId: 'g1' });                          // + chosen
   await add({ finished: true, winnerIds: ['m1'] });           // + played + result
   await add({ finished: true, winnerIds: [], ending: 'lost' }); // + played + result
@@ -356,7 +357,7 @@ test('each funnel stage counts the sessions in that state, independently', async
   const b = before.metrics.adoption.funnel;
   assert.equal(f.started - b.started, 10);
   assert.equal(f.rated - b.rated, 1, 'one rater, or an empty seat entry, is not „bewertet"');
-  assert.equal(f.closed - b.closed, 1);
+  assert.equal('closed' in f, false, '#1823 removed the closed stage');
   assert.equal(f.chosen - b.chosen, 1);
   assert.equal(f.played - b.played, 3);
   assert.equal(f.result - b.result, 2, 'finished with neither winners nor an ending is unrecorded');
@@ -514,7 +515,6 @@ test('an excluded tenant leaves the adoption card but not the counters', async (
   assert.equal(p.accountsTotal - a.accountsTotal, 1);
   assert.equal(p.gamesWithPurchasePrice - a.gamesWithPurchasePrice, 1);
   assert.equal(p.accountsWithBgStats - a.accountsWithBgStats, 1);
-  assert.equal(p.accountsWithAvatar - a.accountsWithAvatar, 1);
   assert.equal(p.accountsPlayedQuiz - a.accountsPlayedQuiz, 1);
   assert.equal(p.funnel.started - a.funnel.started, 1);
   assert.equal(p.funnel.played - a.funnel.played, 1);

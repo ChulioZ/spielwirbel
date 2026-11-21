@@ -30,9 +30,10 @@ an operator hidden from `peaks` would be blind to the quota they are about to
 hit. Filter one side only and the card reports „Teilen & Freunde 140 %".
 
 So `adoption` carries **its own four totals** — `accountsTotal`, `roundsTotal`,
-`gamesTotal`, `sessionsTotal` — plus `accountsWithAvatar`, an adoption-scoped
-twin of the accounts block's own figure, and since #1480 `accountsVerified` /
-`accountsDisabled`, the twins of `accounts.verified` / `.disabled`.
+`gamesTotal`, `sessionsTotal` — plus since #1480 `accountsVerified`, the twin
+of `accounts.verified` (#1823 dropped the `accountsWithAvatar` and
+`accountsDisabled` twins with their lines; `accounts.withAvatar` / `.disabled`
+stay instance-wide).
 `adoptionCards()` reads only those.
 `designAdoption` and `social` take the exclusion in place, because both render
 as shares on that same card; nothing else reads them. `designAdoption` (#1201)
@@ -63,15 +64,16 @@ account line, and a parent counting a different population from its lines is
 exactly the >100 % trap above. The instance's real size stays readable where it
 belongs: `accounts.*` is untouched in the payload, for `lib/public-stats.js` and
 anyone reading the API. `test/admin-kennzahlen.test.js` makes the two disagree
-(40 vs 42 accounts, 28 vs 30 verified, 2 vs 3 disabled).
+(40 vs 42 accounts, 28 vs 30 verified).
 
 ## The funnel is a BUNDLE, not a pipeline (#1174)
 
-`adoption.funnel`'s seven figures are **independent shares of `started`**, and
+`adoption.funnel`'s stages are **independent shares of `started`**, and
 reading them as a shrinking pipeline is wrong in a way the numbers themselves
-will show you: a direct-pick session is created `done: true` with a game already
-chosen and `votes: {}`, so „Abstimmung beendet" routinely exceeds „von ≥2
-bewertet". `cancelled` is counted apart — an evening nobody played on purpose is
+will show you: a direct-pick session is created with a game already chosen and
+`votes: {}`, so „Spiel gewählt" routinely exceeds „von ≥2 bewertet". („Abstimmung
+beendet", `closed`, was dropped in #1823: it ran almost level with „Spiel
+gewählt".) `cancelled` is counted apart — an evening nobody played on purpose is
 a resolved outcome, not a loss.
 
 **Split parents are outside the funnel entirely; their tables are counted

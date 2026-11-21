@@ -6482,10 +6482,6 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.roundsWithWish, mid.adoption.roundsWithWish + 1);
       assert.equal(m.adoption.roundsWithCompleted, mid.adoption.roundsWithCompleted,
         'nothing was marked completed');
-      /* The UNION, which is the tile's headline and cannot be derived from the
-         three above: this round is in two of them and must count ONCE. */
-      assert.equal(m.adoption.roundsWithAnyShelf, mid.adoption.roundsWithAnyShelf + 1,
-        'a round in two shelf states is one round using the shelf, not two');
     });
 
     /* ---- #1201: which design ACCOUNTS wear ------------------------------- */
@@ -6580,23 +6576,33 @@ module.exports = function repoContract(repo) {
     // written as "the key is present" instead of "present and non-empty" passes
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
-      'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame',
+      'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithGuestGame',
+      // #1823
+      'roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge', 'roundsWithDrawBoost',
+      'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts', 'accountsWithPriceWatch',
       'gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride',
-      'sessionsWithGuests', 'sessionsWithTeams',
-      'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
+      'accountsWithPasskey',
       'sessionsImported', 'sessionsImportedBgStats',
       'sessionsWithPoints', 'sessionsWithAutoma',
     ];
+
+    // A running challenge and a finished one, in setChallenge's own shapes.
+    const CHALLENGE = { kind: 'sessions', n: 5, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' };
+    const ENDED = { ...CHALLENGE, endedAt: '2026-11-05T10:00:00.000Z' };
+    const watchFields = (externalId) => ({
+      externalId, title: `Spiel ${externalId}`, thresholdCents: 3000, destination: 'DE', currency: 'EUR', editionLang: 'DE',
+    });
 
     await t.test('every adoption figure moves on a fixture that uses the feature', async () => {
       const mid = await repo.instanceMetrics();
       const tn = `ad-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Genutzt', members: ['Ann'] });
-      await repo.addTag(tn, r.id, 'Kurz', null);
-      await repo.createSavedFilter(tn, r.id, {
-        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
-      });
+      // #1823: a running challenge, the draw boost and an invite link — TWO
+      // links (fresh seat + one seat), so the round must count once.
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [ENDED] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn, memberId: r.members[0].id });
 
       // An ordinary linked game that uses none of the Spiele features.
       await repo.createGame(tn, r.id, gameFields({
@@ -6624,18 +6630,26 @@ module.exports = function repoContract(repo) {
         votes: {},
         createdAt: daysAgo(1),
         finished: true,
-        guests: [{ id: 'g1', name: 'Gast' }],
-        teams: [{ id: 't1', personIds: [r.members[0].id, 'g1'] }],
+        chosenGameId: own.id,
         importRef: { source: 'bgstats', id: 'p1' },
         scores: { [r.members[0].id]: 42 },
         automa: { name: 'Automa', points: 38 },
       });
-      await repo.createSessionVoteLink({ tenantId: tn, roundId: r.id, sessionId: session.id });
-
-      await repo.createUser({
-        ...userFields(), tenantId: `au-${Math.random().toString(16).slice(2)}`,
-        bggUsername: 'ada', identities: [{ type: 'passkey', credentialId: 'c1' }],
+      await repo.setSessionVerdict(tn, r.id, session.id, r.members[0].id, own.id, 4);
+      // Two round-level messages and two comments on ONE session: one round
+      // with chat, one session with a comment.
+      const say = (sessionId = null) => repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-chat', text: 'Hallo', at: daysAgo(1), sessionId,
       });
+      await say(); await say(); await say(session.id); await say(session.id);
+
+      const watcher = await repo.createUser({
+        ...userFields(), tenantId: `au-${Math.random().toString(16).slice(2)}`,
+        identities: [{ type: 'passkey', credentialId: 'c1' }],
+      });
+      // Two watches, one account.
+      await repo.createPriceWatch(watcher.id, watchFields(`1${Math.floor(Math.random() * 1e8)}`));
+      await repo.createPriceWatch(watcher.id, watchFields(`2${Math.floor(Math.random() * 1e8)}`));
 
       const m = await repo.instanceMetrics();
       for (const key of ADOPTION) {
@@ -6787,13 +6801,22 @@ module.exports = function repoContract(repo) {
       const c = await repo.createUser({ ...userFields(), tenantId: `${tn}-c` });
       await repo.createFriendRequest({ requesterUserId: a.id, addresseeUserId: c.id });
 
+      // Chat (#1823): a round-level message and a session comment inside the
+      // window count together; an old one and a malformed stamp do not.
+      const started = (await repo.getRound(tn, r.id)).sessions[0];
+      const say = (at, sessionId = null) => repo.createRoundMessage(tn, r.id, { authorUserId: 'u-lw', text: 'x', at, sessionId });
+      await say(recent);
+      await say(recent, started.id);
+      await say(old);
+      await say('t');
+
       const m = await repo.instanceMetrics();
       const d = (k) => m.adoption.lastWeek[k] - mid.adoption.lastWeek[k];
       assert.deepEqual(
         Object.fromEntries(Object.keys(m.adoption.lastWeek).map((k) => [k, d(k)])),
         {
           registrations: 1, activeAccounts: 2, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
-          sessionsImported: 1, roundsShared: 1, friendships: 1,
+          sessionsImported: 1, roundsShared: 1, friendships: 1, messages: 2,
         },
       );
 
@@ -6843,6 +6866,18 @@ module.exports = function repoContract(repo) {
       // over, and the shape a round that once had a tag and lost it leaves behind.
       await repo.setGameExpansions(tn, r.id, g.id, [], null);
       await repo.updateGame(tn, r.id, g.id, { ownerIds: [] });
+      /* #1823's CLEARED shapes: a challenge set and cleared, the draw boost
+         switched on and off (Postgres then stores `false`, not NULL), and a
+         verdict given and withdrawn (the key is pruned). */
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [] });
+      await repo.setChallenge(tn, r.id, { challenge: null, history: [] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.setDrawBoost(tn, r.id, false);
+      const played = await repo.createSession(tn, r.id, {
+        gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true, chosenGameId: g.id,
+      });
+      await repo.setSessionVerdict(tn, r.id, played.id, r.members[0].id, g.id, 4);
+      await repo.setSessionVerdict(tn, r.id, played.id, r.members[0].id, g.id, null);
       await repo.createUser({
         ...userFields(), tenantId: `au0-${Math.random().toString(16).slice(2)}`,
         bggUsername: null, identities: [],
@@ -6853,6 +6888,45 @@ module.exports = function repoContract(repo) {
         assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a row that uses nothing`);
       }
       assert.equal(m.content.games, mid.content.games + 1, 'the denominator still moved');
+    });
+
+    await t.test('a DEMO round, link, message and watch move none of the #1823 figures', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `demo-ad-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Demo', members: ['Ann'] });
+      const g = await repo.createGame(tn, r.id, gameFields({ title: 'Demo' }));
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [ENDED] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
+      const session = await repo.createSession(tn, r.id, {
+        gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true, chosenGameId: g.id,
+      });
+      await repo.setSessionVerdict(tn, r.id, session.id, r.members[0].id, g.id, 5);
+      await repo.createRoundMessage(tn, r.id, { authorUserId: 'u-demo', text: 'Hi', at: new Date().toISOString() });
+      await repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-demo', text: 'Hi', at: new Date().toISOString(), sessionId: session.id,
+      });
+      const demoUser = await repo.createUser({ ...userFields(), tenantId: tn });
+      await repo.createPriceWatch(demoUser.id, watchFields(`3${Math.floor(Math.random() * 1e8)}`));
+
+      const m = await repo.instanceMetrics();
+      for (const key of ['roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge',
+        'roundsWithDrawBoost', 'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts',
+        'accountsWithPriceWatch', 'roundsTotal', 'sessionsTotal', 'accountsTotal']) {
+        assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a demo row`);
+      }
+      assert.equal(m.adoption.lastWeek.messages, mid.adoption.lastWeek.messages, 'a demo message counted');
+    });
+
+    await t.test('a FINISHED challenge alone counts as used, not as active (#1779)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `ch-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Vorbei', members: ['Ann'] });
+      await repo.setChallenge(tn, r.id, { challenge: null, history: [ENDED] });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.roundsWithChallenge - mid.adoption.roundsWithChallenge, 1,
+        'a round whose challenge finished no longer counted as having used one');
+      assert.equal(m.adoption.roundsWithActiveChallenge, mid.adoption.roundsWithActiveChallenge);
     });
 
     /* ------------------- the session funnel (#1174) ----------------------- */
@@ -6887,7 +6961,8 @@ module.exports = function repoContract(repo) {
       const d = (k) => m.adoption.funnel[k] - mid.adoption.funnel[k];
       assert.equal(d('started'), 7);
       assert.equal(d('rated'), 1, 'an empty seat entry counted as a rater');
-      assert.equal(d('closed'), 1);
+      // #1823 dropped „Abstimmung beendet": the stage must not come back.
+      assert.equal('closed' in m.adoption.funnel, false);
       assert.equal(d('chosen'), 1);
       assert.equal(d('played'), 4);
       assert.equal(d('result'), 2, 'winners or a KNOWN ending, nothing else');
@@ -6928,9 +7003,7 @@ module.exports = function repoContract(repo) {
       const mid = await repo.instanceMetrics();
       const settled = `st-${Math.random().toString(16).slice(2)}`;
       await repo.createRound(settled, { name: 'Hat eine', members: ['Ann'] });
-      await repo.createUser({
-        ...userFields(), tenantId: settled, bgStats: true, avatar: '/uploads/p.webp',
-      });
+      await repo.createUser({ ...userFields(), tenantId: settled, bgStats: true });
       await repo.createUser({
         ...userFields(), tenantId: `nr-${Math.random().toString(16).slice(2)}`, bgStats: false,
       });
@@ -6939,7 +7012,6 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 2);
       assert.equal(m.adoption.roundsTotal - mid.adoption.roundsTotal, 1);
       assert.equal(m.adoption.accountsWithBgStats - mid.adoption.accountsWithBgStats, 1);
-      assert.equal(m.adoption.accountsWithAvatar - mid.adoption.accountsWithAvatar, 1);
       /* By TENANT — the only link that exists between an account and a round.
          The Postgres side must read `rounds` under the admin escape here: a
          plain query returns zero rows rather than an error, which would report
@@ -7004,20 +7076,25 @@ module.exports = function repoContract(repo) {
     await t.test('ADMIN_EXCLUDE_TENANTS removes a tenant from the card only', async () => {
       const tn = `ex-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
-      await repo.addTag(tn, r.id, 'Kurz', null);
-      await repo.createSavedFilter(tn, r.id, {
-        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
-      });
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
       const eins = await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
       await repo.updateGame(tn, r.id, eins.id, { purchasePrice: { amount: 1999, currency: 'EUR' } });
-      await repo.createSession(tn, r.id, {
-        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
-        scores: { m1: 12 }, automa: { name: 'Bot' },
+      const sx = await repo.createSession(tn, r.id, {
+        gameIds: [eins.id], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
+        chosenGameId: eins.id, scores: { m1: 12 }, automa: { name: 'Bot' },
       });
-      await repo.createUser({
+      await repo.setSessionVerdict(tn, r.id, sx.id, r.members[0].id, eins.id, 3);
+      await repo.createRoundMessage(tn, r.id, { authorUserId: 'u-ex', text: 'x', at: new Date().toISOString() });
+      await repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-ex', text: 'x', at: new Date().toISOString(), sessionId: sx.id,
+      });
+      const exUser = await repo.createUser({
         ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch',
-        designChooserSeen: '2026-09-22', emailVerified: true, disabled: true,
+        designChooserSeen: '2026-09-22', emailVerified: true,
       });
+      await repo.createPriceWatch(exUser.id, watchFields(`4${Math.floor(Math.random() * 1e8)}`));
 
       const plain = await repo.instanceMetrics();
       /* With the variable unset each Konten twin (#1480) equals its
@@ -7025,7 +7102,6 @@ module.exports = function repoContract(repo) {
          no-op, and the baseline the exclusion below must break. */
       assert.equal(plain.adoption.accountsTotal, plain.accounts.total);
       assert.equal(plain.adoption.accountsVerified, plain.accounts.verified);
-      assert.equal(plain.adoption.accountsDisabled, plain.accounts.disabled);
       process.env.ADMIN_EXCLUDE_TENANTS = tn;
       let hidden;
       try {
@@ -7035,12 +7111,15 @@ module.exports = function repoContract(repo) {
       }
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
-        'accountsVerified', 'accountsDisabled',
-        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithPurchasePrice', 'accountsWithBgStats',
+        'accountsVerified',
+        'roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge', 'roundsWithDrawBoost',
+        'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts', 'accountsWithPriceWatch',
+        'gamesWithPurchasePrice', 'accountsWithBgStats',
         'sessionsWithPoints', 'sessionsWithAutoma']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
+      assert.equal(plain.adoption.lastWeek.messages - hidden.adoption.lastWeek.messages, 2);
       assert.equal(plain.adoption.roundsByFinished.one - hidden.adoption.roundsByFinished.one, 1);
       assert.equal(plain.designAdoption.byDesign.klassisch - hidden.designAdoption.byDesign.klassisch, 1,
         'the design tile divides by accountsTotal on the same card and must follow it');

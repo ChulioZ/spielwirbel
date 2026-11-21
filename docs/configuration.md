@@ -363,16 +363,18 @@ against each, and the Node version the answering process is running.
 **Funktionsnutzung** answers "is any of this being used". It opens on
 **Letzte sieben Tage** — registrations, active accounts (a session token issued
 in the window, so app use rather than logins), sessions started / played / cancelled
-(imports excluded) and imported, newly shared rounds and new friendships over
-the last 7 × 24 hours — then one card per
-population (issue #1480): **Konten** (verified / unverified / suspended, then
-passkey, BGG username, profile picture, BG Stats hand-off, no round yet), the
+(imports excluded) and imported, newly shared rounds, new friendships and chat
+messages over the last 7 × 24 hours — then one card per
+population (issue #1480, lines revised in #1823): **Konten** (verified, passkey,
+BG Stats hand-off, price alert, simple mode, this week's quiz, no round yet), the
 accounts that **answered the design chooser** (one line per offered design),
-**Runden** (shared, own tags, saved filters, a guest game brought along, shelf use with its three states,
-and how many sessions each round has played), **Spiele** (with a purchase price,
-currently lent out, with scoring categories, with a corrected playing time) and
-**Sessions** (guests, teams, shared vote link, and the session funnel under
-„gestartet"), plus friendships and open invitations as plain counts. Each card
+**Runden** (shared, holding a valid invite link, with a chat message, group
+challenge used — and active —, draw boost on, a guest game brought along, each
+of the three shelf states, and how many sessions each round has played),
+**Spiele** (with a purchase price, currently lent out, with scoring categories,
+with a corrected playing time) and **Sessions** (with a comment, with a „Wie
+war's?" verdict, points, automa, imports by source, and the session funnel
+under „gestartet"), plus friendships and open invitations as plain counts. Each card
 leads with its population; every line below shows the count and its whole-percent
 share of that population, or of the line it is indented under. With
 `ADMIN_EXCLUDE_TENANTS` set, every figure on the card — the account total

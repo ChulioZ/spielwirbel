@@ -712,16 +712,24 @@ if (!process.env.DATABASE_URL) {
     // A purchase price, so the Spiele adoption figures (#1803) read from the
     // RLS-scoped `games` table have something to find.
     await repo.updateGame(tenant, round.id, counted.id, { purchasePrice: { amount: 999, currency: 'EUR' } });
-    // Guests on the session and a tag on the round, so the adoption figures
-    // read from the RLS-scoped tables have something to find: a zero there is
-    // exactly what a read outside atx() would report.
-    await repo.createSession(tenant, round.id, {
-      gameIds: [], votes: {}, createdAt: new Date().toISOString(), finished: true,
-      guests: [{ id: 'g1', name: 'Gast' }],
+    // A verdict on the session and a challenge on the round (#1823), so the
+    // adoption figures read from the RLS-scoped tables have something to find:
+    // a zero there is exactly what a read outside atx() would report.
+    const played = await repo.createSession(tenant, round.id, {
+      gameIds: [counted.id], votes: {}, createdAt: new Date().toISOString(), finished: true,
+      chosenGameId: counted.id,
     });
-    await repo.addTag(tenant, round.id, 'Kurz', null);
-    // #1781: the chat peak reads round_messages, RLS-scoped like the rest.
+    await repo.setSessionVerdict(tenant, round.id, played.id, round.members[0].id, counted.id, 4);
+    await repo.setChallenge(tenant, round.id, {
+      challenge: { kind: 'sessions', n: 3, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' },
+      history: [],
+    });
+    // #1781/#1782: the chat peak and the chat/comment figures read
+    // round_messages, RLS-scoped like the rest.
     await repo.createRoundMessage(tenant, round.id, { authorUserId: 'u', text: 'hi', at: new Date().toISOString() });
+    await repo.createRoundMessage(tenant, round.id, {
+      authorUserId: 'u', text: 'gut', at: new Date().toISOString(), sessionId: played.id,
+    });
     /* An account whose OWN tenant holds that round (#1174). „Konten ohne Runde"
        joins `users` (no RLS) to `rounds` (RLS-scoped), so outside atx() the
        rounds side matches nothing and EVERY account reads as roundless — a
@@ -793,10 +801,15 @@ if (!process.env.DATABASE_URL) {
 
        (This replaces the same assertion on the weekly session series, which
        #1124 removed along with both charts.) */
-    assert.ok(out.adoption.sessionsWithGuests >= 1,
+    assert.ok(out.adoption.sessionsWithVerdicts >= 1,
       'the session adoption figures were empty without the admin escape — not reading under atx()');
-    assert.ok(out.adoption.roundsWithTags >= 1,
+    assert.ok(out.adoption.roundsWithChallenge >= 1,
       'the round adoption figures were empty without the admin escape');
+    /* #1823: chat and comments read round_messages, RLS-scoped with an
+       admin-read policy — outside atx() both read a plausible „nobody chats". */
+    assert.ok(out.adoption.roundsWithChat >= 1, 'the chat figure was empty without the admin escape');
+    assert.ok(out.adoption.sessionsWithComment >= 1, 'the comment figure was empty without the admin escape');
+    assert.ok(out.adoption.lastWeek.messages >= 2, 'the weekly message count was empty without the admin escape');
     assert.ok(out.adoption.gamesWithPurchasePrice >= 1,
       'the Spiele adoption figures were empty without the admin escape');
     /* The design tile (#1201) reads `users`, which carries no RLS — so it is
@@ -811,12 +824,12 @@ if (!process.env.DATABASE_URL) {
        figures beside them. The seeded account is verified, so a zero would be
        a dropped read rather than an empty instance. */
     assert.ok(out.adoption.accountsVerified >= 1, 'accountsVerified saw no account under a plain role');
-    assert.equal(typeof out.adoption.accountsDisabled, 'number');
     assert.equal(typeof out.adoption.roundsWithRetired, 'number');
     assert.equal(typeof out.accounts.withAvatar, 'number');
-    // session_vote_links is deliberately NOT RLS-scoped, so this one is read on
-    // plain knex — it must still come back as a number under a plain role.
-    assert.equal(typeof out.adoption.sessionsWithVoteLink, 'number');
+    // round_invite_links and price_watches are deliberately NOT RLS-scoped, so
+    // they are read on plain knex — they must still come back under a plain role.
+    assert.equal(typeof out.adoption.roundsWithInviteLink, 'number');
+    assert.equal(typeof out.adoption.accountsWithPriceWatch, 'number');
     /* The funnel and the habit bands (#1174) read `sessions`, RLS-scoped like
        the rest — and an all-zero funnel is the most plausible-looking wrong
        answer on the card, because „nobody finishes a session" is exactly the
