@@ -1,6 +1,7 @@
 'use strict';
 
-/* A retired game is never NAMED on the Pokale tab (#643).
+/* A retired game is never NAMED on the Pokale tab (#643), nor in the Rückblick,
+ * which moved from there to the foot of the Regal in #1855.
  *
  * Retiring a game is the user saying it has left the collection, so crowning it
  * "Meistgespielt" afterwards — or naming it as someone's Lieblingsspiel —
@@ -126,7 +127,9 @@ const recordLabels = (dom) => [
 test('the only card that may name a retired game is the Meistgespielt record', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
-  assert.ok(namedGames(dom.app).length >= 3, 'the tab must actually have rendered its cards');
+  // Two since #1855 moved the Rückblick's taste cards to the Regal (asserted
+  // by the next test): Meistgespielt plus Bestbewertet stay here.
+  assert.ok(namedGames(dom.app).length >= 2, 'the tab must actually have rendered its cards');
   const records = recordLabels(dom);
   const cards = [...dom.app.querySelectorAll('.pokale-card')];
   const labelled = cards.filter((c) => records.includes((c.querySelector('.pokale-card__label') || {}).textContent));
@@ -136,6 +139,24 @@ test('the only card that may name a retired game is the Meistgespielt record', a
     !elsewhere.includes('Azul'),
     'Azul is retired, yet a taste card still names it'
   );
+});
+
+// ---- the Rückblick, at the foot of the Regal since #1855 -------------------
+
+/* The Rückblick's cards are ALL taste cards, so none may name a retired game.
+   This guard moved with the section: left pointed at Pokale it would scan a tab
+   that no longer holds them and pass while looking at nothing
+   (.claude/rules/a-second-section-must-not-reuse-a-card-label.md). */
+const recapRow = (dom) => dom.app.querySelector('.regal-recap');
+
+test('the Rückblick on the Regal names no retired game', async (t) => {
+  const dom = bootApp(t);
+  await dom.call('showRound', RID, 'regal');
+  const row = recapRow(dom);
+  assert.ok(row, 'the Rückblick row is missing from the Regal');
+  const named = namedGames(row);
+  assert.ok(named.length >= 3, `the Rückblick must have rendered its cards (got ${named.length})`);
+  assert.ok(!named.includes('Azul'), 'Azul is retired, yet a Rückblick card still names it');
 });
 
 /* The period recap's own retired-game rule moved to the Chronik with the section
@@ -158,7 +179,7 @@ test('Meistgespielt still counts a retired game\'s nights — the sessions happe
 
 test('Größte Uneinigkeit skips a retired game but keeps a completed one', async (t) => {
   const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
+  await dom.call('showRound', RID, 'regal');
   // Spreads: Azul 4 (retired), Cascadia 2 (completed), Catan 0 (never divisive).
   const card = cardByLabel(dom.app, dom.run("t('recap.divisive')"));
   assert.ok(card, 'the disagreement card is missing — both archives were filtered out');
@@ -175,7 +196,7 @@ test('Größte Uneinigkeit skips a retired game but keeps a completed one', asyn
 
 test('a member whose top-rated game is retired keeps their next-best favourite', async (t) => {
   const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
+  await dom.call('showRound', RID, 'regal');
   // Anna rated Azul 5, Cascadia 4, Catan 3.
   const anna = [...dom.app.querySelectorAll('.recap-fav')].find(
     (c) => c.querySelector('.recap-fav__name').textContent === 'Anna'
@@ -207,9 +228,12 @@ test('a round whose whole shelf is retired still renders, naming no taste card',
   dom.set('isLoggedIn', () => false);
   await dom.call('showRound', RID, 'pokale');
   assert.deepEqual(namedGames(cardByLabel(dom.app, dom.run("t('pokale.mostPlayed')"))), ['Azul']);
+  // The Rückblick, on the Regal since #1855: no taste card, and the row says
+  // „keep going" rather than vanishing.
+  await dom.call('showRound', RID, 'regal');
   assert.equal(cardByLabel(dom.app, dom.run("t('recap.divisive')")), undefined);
   assert.equal(dom.app.querySelectorAll('.recap-fav').length, 0);
-  assert.ok(dom.app.querySelector('.recap__totals'), 'the Rückblick totals still render');
+  assert.ok(dom.app.querySelector('.regal-recap .recap__thin'), 'the Rückblick row still renders, with its thin-data line');
 });
 
 // ---- what must NOT have changed -------------------------------------------
@@ -222,16 +246,6 @@ test('Bestbewertet keeps its active-only filter — no completed game appears th
   // appearing here would mean the retired-only rule had leaked into a card that
   // is deliberately about what the group can still reach for.
   assert.deepEqual(namedGames(card), ['Catan']);
-});
-
-test('the archive totals chip still counts both archives', async (t) => {
-  const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
-  const chips = [...dom.app.querySelectorAll('.recap__totals .stat-chip')].map((c) => c.textContent);
-  assert.ok(
-    chips.includes(dom.run("t('recap.archived', { n: 2 })")),
-    'the „n aussortiert" chip counts the archive, not games on display — it stays'
-  );
 });
 
 // ---- the member detail page -----------------------------------------------

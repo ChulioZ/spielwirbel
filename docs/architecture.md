@@ -728,7 +728,7 @@ public/
     bgstats.js       builds the BG Stats createPlay link a finished session can
                      be handed to — one play per URL, nothing sent server-side
                      (issue #485)
-    recap.js         the round's taste record behind the Pokale tab's Rückblick:
+    recap.js         the round's taste record behind the Regal's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
     vote-boost.js    the rating-based boost (issue #1830): who recently played
@@ -1113,7 +1113,8 @@ public/
                           the Chronik's shareable month/year recap section, and
                           the share delivery its card (and the account recap's
                           and the Regal-Steckbrief's) goes out through (#1345)
-    views-pokale.js       Pokale tab: podium + fun stats, and the Rückblick
+    views-pokale.js       Pokale tab: podium + fun stats
+    views-recap.js        the Rückblick, one folded row at the foot of the Regal
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer
     views-recommend.js    "das könnte euch auch gefallen": ranked games the

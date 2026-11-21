@@ -614,7 +614,7 @@ const frontendGlobals = {
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   roundStandings: 'readonly',
   gameCardHead: 'readonly', wireGameCardHead: 'readonly',
-  renderRecapSection: 'readonly',
+  regalRecapRow: 'readonly', // views-recap.js (#1855)
   // views-period-recap.js (#1345, split out of views-chronik.js) — the Chronik's
   // per-period recap section and the share delivery its card, the account recap
   // and the Regal-Steckbrief go out through

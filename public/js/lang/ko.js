@@ -334,7 +334,6 @@ I18N.ko = {
   'recap.lead': '선반이 말해 주는 여러분 — 이 모임의 모든 평가로부터.',
   'recap.ratingsOne': '평가 {n}개',
   'recap.ratings': '평가 {n}개',
-  'recap.archived': '{n}개 보관됨',
   'recap.worstRated': '가장 낮은 평가',
   'recap.divisive': '의견이 가장 갈린 게임',
   'recap.favourites': '즐겨 찾는 게임',

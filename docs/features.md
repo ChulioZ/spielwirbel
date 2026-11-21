@@ -490,7 +490,12 @@ What the app does, in detail. For a short overview see the
     always there, because a list is not less worth reaching for being empty.
   - **Regal** (shelf) – under its heading, once the Regal-Steckbrief has
     enough to say, its one sentence („Meist für 2–4 Personen · …") as a link
-    to the full Steckbrief. Then the game collection as a card grid with one „Filter"
+    to the full Steckbrief. At the foot of the shelf, one folded **Rückblick**
+    row (#484, here since #1855) opens to what the round's accumulated ratings
+    say about the group: the worst-rated game, the one it disagrees about most,
+    and every member's own favourite — or a „keep going" line while there is too
+    little to say; hidden with the statistics under „Einfacher Modus". Above it,
+    the game collection as a card grid with one „Filter"
     control holding the custom-tag chips, an **owner** filter (once anybody on
     the shelf is marked as owning a box: pick one or more members to see the
     games any of them owns), a **player-count** filter („Personen": pick one
