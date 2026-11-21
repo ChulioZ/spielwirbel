@@ -488,7 +488,9 @@ What the app does, in detail. For a short overview see the
     shelf outgrows the handful of covers it shows — before that the hero's own
     count already says everything the strip could. Only the off-shelf group is
     always there, because a list is not less worth reaching for being empty.
-  - **Regal** (shelf) – the game collection as a card grid with one „Filter"
+  - **Regal** (shelf) – under its heading, once the Regal-Steckbrief has
+    enough to say, its one sentence („Meist für 2–4 Personen · …") as a link
+    to the full Steckbrief. Then the game collection as a card grid with one „Filter"
     control holding the custom-tag chips, an **owner** filter (once anybody on
     the shelf is marked as owning a box: pick one or more members to see the
     games any of them owns), a **player-count** filter („Personen": pick one
@@ -515,7 +517,9 @@ What the app does, in detail. For a short overview see the
     (Durchgespielt, Aussortieren, unlinking the provider) live in a „…" menu —
     and every „…" menu in the app keeps one order: change, share, what can be
     undone, and last whatever asks a destructive question (#1195).
-  - **Chronik** – one month-grouped timeline of everything that happened:
+  - **Chronik** – under its heading, from the first played session, the
+    Rundenpuls as one folded line („2 Sessions in 12 Monaten · Vor 4 Tagen
+    gespielt") that opens to the rest of the card. Then one month-grouped timeline of everything that happened:
     games added / retired / restored and session outcomes. A run of shelf
     changes (games added, retired, completed, moved, imported) folds behind one
     „N Regal-Änderungen" line, so the sessions carry the page; member events

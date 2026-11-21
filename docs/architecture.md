@@ -1103,6 +1103,8 @@ public/
     views-shelf-profile.js
                           the Regal-Steckbrief: its Start card, its screen
                           (/round/:rid/shelf-profile) and its share (#1173)
+    round-head-lines.js   the Rundenpuls folded under the Chronik heading and
+                          the Steckbrief's sentence under the Regal's (#1852)
     regal-bulk.js         the Regal's selection mode and its four bulk actions
                           (tags, owners, retire, delete), lifted out of
                           views-regal.js so each is editable on its own (#1000)

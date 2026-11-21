@@ -141,6 +141,9 @@ function renderRegalTab(round, activeGames) {
   if (bruecke) gamesSec.classList.add('bruecke-regal');
   if (forest) gamesSec.classList.add('forest-regal');
   gamesSec.appendChild(gamesHead);
+  // The Steckbrief's sentence as one link under the heading (#1852, round-head-lines.js).
+  const profileLine = regalProfileLine(round, activeGames, statsByGame);
+  if (profileLine) gamesSec.appendChild(profileLine);
 
   const grid = h('<div class="cards"></div>');
 

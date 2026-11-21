@@ -213,7 +213,7 @@ function renderChronikTab(round, activities) {
       secHead.appendChild(h(`<span class="chronik__count">${esc(tn(counted.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
     }
   }
-  sec.appendChild(secHead);
+  sec.append(...[secHead, chronikPulseLine(round)].filter(Boolean)); // + the folded Rundenpuls (#1852)
 
   // Filter chips: everything / sessions only / shelf changes only. `is-on` is
   // driven by the remembered choice rather than hard-coded onto "all", or the

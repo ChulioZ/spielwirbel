@@ -133,6 +133,10 @@ function boot(t, design, round = roundWith(SESSIONS)) {
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   dom.set('toast', () => {});
+  // The Chronik's folded Rundenpuls (#1852) counts days back from TODAY, so it
+  // would make the golden a function of the date the suite runs on. It is
+  // covered in every design by test/round-head-lines.test.js instead.
+  dom.set('chronikPulseLine', () => null);
   return dom;
 }
 
