@@ -1047,8 +1047,9 @@ What the app does, in detail. For a short overview see the
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
 - **„Wie war's?"** – after a played session, the people who sat at that table
-  can say on the result how it was, on the same five faces and words as the
-  vote: optional, seat by seat on a shared device or on their own, with no time
+  can say on the result how it was, on the vote's five faces — alone, with no word under them (the vote's
+  words answer "do you want to play this?"; each face is named in retrospect
+  for screen readers, #1849): optional, seat by seat on a shared device or on their own, with no time
   limit and editable later. The party list shows *who* has answered, never *what*. A
   verdict replaces its seat's share of the play's assumed pick value in the
   shelf score — when the whole table answers, the play is worth the score of

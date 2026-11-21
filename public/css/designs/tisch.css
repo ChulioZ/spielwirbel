@@ -3487,6 +3487,27 @@
   border-color: var(--gold-edge);
   transform: none;
 }
+/* „Wie war's?" (#1849) draws the same plates with NO word, so the phone's
+   face-then-word rows above would be five wide bars holding one glyph each at
+   their left edge, and the desktop's 132px tile a tall empty slot. Faces alone
+   fit one row at every width: five equal plates, the glyph centred. One extra
+   class outweighs both the rule above and its desktop @media twin, so source
+   order does not matter here. */
+:root[data-design="tisch"][data-scheme="dark"] .verdict__faces.rating {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 0;
+}
+:root[data-design="tisch"][data-scheme="dark"] .verdict__faces.rating .mood {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 88px;
+  min-height: 56px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+}
 
 /* The handover screen keeps the person's own colour — it is the one screen in
    the app that is deliberately NOT the design's palette, because its whole job
