@@ -624,7 +624,7 @@ const frontendGlobals = {
   shelfProfileDeps: 'readonly', SHELF_DIM_TITLES: 'readonly', shelfSeatName: 'readonly',
   shelfBandLabel: 'readonly', shelfGapText: 'readonly', shelfDims: 'readonly',
   shelfBars: 'readonly', shelfGapList: 'readonly',
-  hubShelfProfileCard: 'readonly', shelfHeadlineClause: 'readonly', shelfHeadlineText: 'readonly',
+  hubShelfProfileCard: 'readonly', chronikPulseLine: 'readonly', regalProfileLine: 'readonly', shelfHeadlineClause: 'readonly', shelfHeadlineText: 'readonly',
   SHELF_TIME_MAX: 'readonly', SHELF_TIME_ORDER: 'readonly', shelfPanel: 'readonly',
   shelfTopPanel: 'readonly', shelfShareModel: 'readonly', shareShelfProfile: 'readonly',
   showShelfProfile: 'readonly',
