@@ -538,6 +538,12 @@ function buildNotifyForm(me) {
     'notifyRoundInvitations', t('konto.notify.invitations'), me.notifyRoundInvitations, mailToast));
   wrap.appendChild(buildPrefToggle(
     'notifyFriendRequests', t('konto.notify.friends'), me.notifyFriendRequests, mailToast));
+  // #1784: not a mail switch — chat never mails — so it gets its own sentence
+  // rather than sitting under the e-mail intro above.
+  wrap.appendChild(h(`<p class="muted konto-notify__intro">${esc(t('konto.notify.chatIntro'))}</p>`));
+  wrap.appendChild(buildPrefToggle(
+    'notifyChatInbox', t('konto.notify.chat'), me.notifyChatInbox,
+    (want) => (want ? 'konto.notify.chatOn' : 'konto.notify.chatOff')));
   return wrap;
 }
 

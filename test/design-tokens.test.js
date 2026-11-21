@@ -76,7 +76,7 @@ test('the four reading steps never fall below the accessibility floor', () => {
    the assertion below, so a new literal cannot slip in beside them. */
 const GLYPH_LITERALS = [
   // avatar initials, sized to the circle
-  '.avatar', '.avatar--add', '.avatar-stack__more', '.recap-fav__who .avatar', '.taste-share__row .avatar', '.result-people__person .avatar',
+  '.avatar', '.avatar--add', '.avatar-stack__more', '.recap-fav__who .avatar', '.result-people__person .avatar',
   '.stage__voter-avatar .avatar', '.nr-seat__avatar', '.nr-seat--empty .nr-seat__avatar',
   '.podium__avatar', '.podium__col--multi .podium__avatar',
   '.podium--single .podium__col--multi .podium__avatar',
@@ -93,6 +93,10 @@ const GLYPH_LITERALS = [
   '.e-tile__img', '.e-tile__who .avatar',
   // …and the same box shrunk while the winner picker is open (#1139).
   '.tisch[data-state="picking"] .tisch__box',
+  // the result's covers at the Tafel's width and in the evening column (#1846)
+  '.landing-moments .trow__img', '.result-main .trow__img', '.result-main .tafel .trow .trow__img',
+  ':is(.result-screen--table, .result-screen--picking, .result-screen--played) .result-aside .tisch__box',
+  '.result-screen--picking .result-aside .tisch__box',
   '.friends-invite__icon',
   /* The Tischkarte's initials watermark (#1075) — a letterform used as
      furniture in the card's text-free corner, sized to the card rather than to

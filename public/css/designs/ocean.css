@@ -305,6 +305,7 @@
    half from styles.css, so a new small display-face rule fails there until it
    is added here. Font only, so it belongs to the voice and is not gated. */
 :root[data-design="ocean"] :is(
+  .verdict__title,
   .remove-person__heading, .guest-offer__title,
   .avatar, .nr-seat__avatar, .handover__avatar,
   .dock__item, .sort-select, .chip, .tag-mode__opt, .fbar__trigger, .mfilter__label,
@@ -2185,7 +2186,7 @@
   isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "img" "title" "meta" "q" "rating";
+  grid-template-areas: "img" "title" "pitch" "hint" "meta" "q" "rating";
   padding: 0;
   background: none;
 }
@@ -2330,8 +2331,8 @@
   :root[data-design="ocean"]:not([data-scheme="dark"]) .vote--ocean .vote__card {
     grid-area: card;
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
-    grid-template-rows: 1fr auto auto auto 1fr auto;
-    grid-template-areas: "img ." "img title" "img meta" "img q" "img ." "rating rating";
+    grid-template-rows: 1fr auto auto auto auto auto 1fr auto;
+    grid-template-areas: "img ." "img title" "img pitch" "img hint" "img meta" "img q" "img ." "rating rating";
     column-gap: 24px;
     padding: 28px;
     border-radius: var(--radius-xl);
@@ -2426,48 +2427,6 @@
   box-shadow: var(--shadow-2);
 }
 
-/* --- The result (O2.4 at 390, O4.4 at 1440, rearranged by #1430) ----------
-   Der Tisch's result composition (result-tafel-composed.js), arranged by
-   composeOceanResult into two columns: the SIDE column (the people as a ring
-   row, the sentence, the whale, the foot) and the TAFEL column (the ranking,
-   then the log). Two columns from 1280px, where the screen takes --w-detail;
-   one column below, in the same order.
-
-   This DEPARTS FROM O4.4 ON PURPOSE. The sheet draws people 230 | whale 1fr |
-   Tafel 500 with the foot under the Tafel, and it was drawn with three rows.
-   Measured at eight (#1430, 1440×900): the Tafel was 440px wide and 1394px
-   tall, the document 1927px, ~1000px stood empty under the people and the
-   whale, and „Noch eine Session" came after the whole list. So the Tafel takes
-   the wide column (uncapped since #1724: a 760px cap left ~150px dead on the right,
-   and a ~900px row reads fine with the distribution and pill beside the
-   title, #1430) and the side
-   column pins beside it. */
-@media (min-width: 1280px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean {
-    display: grid;
-    grid-template-columns: minmax(400px, 460px) minmax(0, 1fr);
-    column-gap: 32px;
-    align-items: start;
-  }
-  /* The foot on ONE line in the side column: „Noch eine Session" at its own
-     width rather than a 12em basis, which pushed „Mehr" to a second line and
-     the column 56px taller. A long locale still wraps — nothing overflows. */
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side .result-foot__again { flex: 1 1 auto; }
-}
-/* Pinned while the Tafel scrolls — but only where the whole side column fits
-   under the top bar. A sticky column taller than the viewport strands its own
-   bottom: the foot would stay cut off until the very end of the scroll. The
-   height is the column's measured one at 1440 with a badge moment and a
-   played game (~730px: the people row, the sentence, the badge, the whale, the
-   foot) plus the 80px offset and some slack; below it the column is static,
-   which is what it was before. `align-self: start` comes from the grid's
-   `align-items`, without which the item would stretch and have no travel. */
-@media (min-width: 1280px) and (min-height: 900px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .ocean-result__side {
-    position: sticky;
-    top: 80px;
-  }
-}
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .page-head--result { margin-bottom: 16px; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-title {
   font-family: var(--font-display);
@@ -2658,12 +2617,11 @@
    row, only its place moves, and it stays LAST in the DOM (the grid area is
    what moves it, never `order`). 131–158px rows became ~70–95.
 
-   A viewport breakpoint rather than a container query (there is none in the
-   repo, and WebKit is the engine a new one would need checking in): from 720px
-   the Tafel is ≥ ~600px wide in both of Ocean's arrangements — the single
-   column below 1280, and the Tafel column from 1280, whose floor is ~650px at
-   a 1280 viewport. Below it the two-line row above stands. */
-@media (min-width: 720px) {
+   By the Tafel's own width since #1846 (`.result-main` is the `tafel`
+   container, styles.css), where it was `@media (min-width: 720px)` and could
+   not see the evening column narrowing the Tafel (632px at 1280, rows
+   107–121px). Below it the two-line row above stands. */
+@container tafel (min-width: 600px) {
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow,
   :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .tafel .trow:has(.play-btn, .trow__chip) {
     grid-template-columns: 20px 44px minmax(0, 1fr) auto auto auto;
@@ -2708,10 +2666,14 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-foot[hidden] { display: none; }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean .result-foot__again {
-  flex: 1 1 12em;
+  /* Its own line, „Teilen · Mehr" sharing the next (#1846): at a 12em basis
+     „Mehr" wrapped alone under the other two in the side column. */
+  flex: 1 1 100%;
   justify-content: center;
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .result-screen--ocean :is(.result-foot__share, .result-foot__more) {
+  flex: 1 1 0;
+  justify-content: center;
   border-color: var(--control-edge);
   background: var(--control-fill);
   color: var(--ink);
@@ -4627,10 +4589,36 @@
     grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
   }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean > .live-vote__people > :not(.live-person) { grid-column: 1 / -1; }
+  /* The composition that is safe at ANY row width is the default (#1817) —
+     the boxes at the edge, no count, „Für …" whole on a line of its own — and
+     the inline key + count below only where a container query says the row is
+     wide. Der Tisch's twin, for its reason (tisch.css): with the inline key as
+     the default, a Safari that ignores `@container` but flows two-up starved
+     the key's track to a few px (measured in WebKit: 43px, three lines). */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__people > .live-person {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__name { grid-column: 2 / 4; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
+    grid-column: 2 / -1;
+    grid-row: 3;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__dots { grid-column: 4; }
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { display: none; }
+  /* Der Tisch's `2 / span 2`, for its reason: a two-row roster is shorter than
+     the panel, which on row 2 alone holds „Jetzt abstimmen" below its foot. */
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote.live-vote--ocean > .live-vote__panel { grid-row: 2 / span 2; }
+}
+/* One wide row: „Für …" inline between the text and the bubbles, the count
+   beside them. 930 = two 460px tracks and the 10px gap, where the rows turn
+   two-up; 700 is the narrowest one-up row that still leaves the key's track
+   ~160px with the bubbles at their cap and the count (tisch.css has the sum). */
+@container ocean-roster (min-width: 700px) and (max-width: 929.98px) {
   :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__people > .live-person {
     grid-template-columns: auto auto minmax(0, 1fr) auto 122px;
   }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__name { grid-column: 2 / 4; }
   :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
     grid-column: 3;
     grid-row: 2;
@@ -4640,26 +4628,9 @@
     white-space: normal;
     text-align: center;
   }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__dots { grid-column: 4; }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { grid-column: 5; }
-  /* Der Tisch's `2 / span 2`, for its reason: a two-row roster is shorter than
-     the panel, which on row 2 alone holds „Jetzt abstimmen" below its foot. */
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote.live-vote--ocean > .live-vote__panel { grid-row: 2 / span 2; }
-}
-/* 930 = two 460px tracks and the 10px gap. */
-@container ocean-roster (min-width: 930px) {
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-vote__people > .live-person {
-    grid-template-columns: auto auto minmax(0, 1fr) auto;
-  }
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress { display: none; }
-  /* „Für …" back on a line of its own, whole. With ten games the bubbles take
-     their 160px cap and the key's track in a two-up row is ~150px, so the label
-     broke as „Für / Maximilian" (measured at 1440 and 1512, Safari). */
-  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-vote__hotseat-btn {
-    grid-column: 2 / -1;
-    grid-row: 3;
-    margin-top: 6px;
-    white-space: nowrap;
+  :root[data-design="ocean"]:not([data-scheme="dark"]) .live-vote--ocean .live-person > .live-person__progress {
+    display: block;
+    grid-column: 5;
   }
 }
 

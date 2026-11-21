@@ -522,6 +522,10 @@ if (!process.env.DATABASE_URL) {
     const game = await repo.createGame(tenant, round.id, {
       title: 'Illegal title', minPlayers: 1, maxPlayers: 4, image: null, source: null,
     });
+    // #1822's two kinds ride the same child: a loan (whose name also sits on an
+    // ACTIVITIES row — a second RLS-scoped table) and a scoring category.
+    await repo.setGameLoan(tenant, round.id, game.id, { to: 'Illegal borrower', since: '2026-11-03' });
+    await repo.updateGame(tenant, round.id, game.id, { scoreCategories: [{ id: 'c1', name: 'Illegal category' }] });
 
     const admin = new Client({
       connectionString: process.env.DATABASE_URL,
@@ -591,7 +595,12 @@ if (!process.env.DATABASE_URL) {
       const child = execFileSync(process.execPath, ['-e', `
         const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
         repo.redactText(${JSON.stringify({ kind: 'game', roundId: round.id, id: game.id })}, '[entfernt]')
-          .then((out) => { console.log('RESULT:' + JSON.stringify(out)); return repo.end(); })
+          .then(async (out) => {
+            console.log('RESULT:' + JSON.stringify(out));
+            await repo.redactText(${JSON.stringify({ kind: 'loan', roundId: round.id, id: game.id })}, '[entfernt]');
+            await repo.redactText(${JSON.stringify({ kind: 'scoreCategory', roundId: round.id, id: 'c1' })}, '[entfernt]');
+            return repo.end();
+          })
           .catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url2.toString() }, encoding: 'utf8' });
 
@@ -608,6 +617,16 @@ if (!process.env.DATABASE_URL) {
     // The value must actually have CHANGED, not merely been reported as changed.
     const after = await repo.getRound(tenant, round.id);
     assert.equal(after.games[0].title, '[entfernt]', 'the redaction did not land as a non-superuser');
+    assert.equal(after.games[0].loan.to, '[entfernt]', 'the loan redaction did not land as a non-superuser');
+    assert.equal(after.games[0].scoreCategories[0].name, '[entfernt]', 'the category redaction did not land');
+    const lentLine = (await repo.listActivities(tenant, round.id)).find((a) => a.type === 'game_lent');
+    assert.equal(lentLine.to, '[entfernt]', 'the Chronik copy of the borrower did not change as a non-superuser');
+    // #1825: the game's title is copied onto its Chronik lines too (game_added
+    // here, and the game_lent line above), a second RLS-scoped table.
+    const titleLines = (await repo.listActivities(tenant, round.id)).filter((a) => a.gameId === game.id);
+    assert.ok(titleLines.length >= 2);
+    assert.deepEqual([...new Set(titleLines.map((a) => a.title))], ['[entfernt]'],
+      'the Chronik copy of the title did not change as a non-superuser');
 
     // The cross-tenant reads resolve without any tenant scope in hand — that is
     // the half the admin escape legitimately provides.
@@ -687,19 +706,30 @@ if (!process.env.DATABASE_URL) {
     const assert = require('node:assert/strict');
     const tenant = `pg-metrics-${Math.random().toString(16).slice(2)}`;
     const round = await repo.createRound(tenant, { name: 'Gezählt', members: ['Ann'] });
-    await repo.createGame(tenant, round.id, {
+    const counted = await repo.createGame(tenant, round.id, {
       title: 'Gezähltes Spiel', minPlayers: 1, maxPlayers: 4, image: null, source: null,
     });
-    // Guests on the session and a tag on the round, so the adoption figures
-    // read from the RLS-scoped tables have something to find: a zero there is
-    // exactly what a read outside atx() would report.
-    await repo.createSession(tenant, round.id, {
-      gameIds: [], votes: {}, createdAt: new Date().toISOString(), finished: true,
-      guests: [{ id: 'g1', name: 'Gast' }],
+    // A purchase price, so the Spiele adoption figures (#1803) read from the
+    // RLS-scoped `games` table have something to find.
+    await repo.updateGame(tenant, round.id, counted.id, { purchasePrice: { amount: 999, currency: 'EUR' } });
+    // A verdict on the session and a challenge on the round (#1823), so the
+    // adoption figures read from the RLS-scoped tables have something to find:
+    // a zero there is exactly what a read outside atx() would report.
+    const played = await repo.createSession(tenant, round.id, {
+      gameIds: [counted.id], votes: {}, createdAt: new Date().toISOString(), finished: true,
+      chosenGameId: counted.id,
     });
-    await repo.addTag(tenant, round.id, 'Kurz', null);
-    // #1781: the chat peak reads round_messages, RLS-scoped like the rest.
+    await repo.setSessionVerdict(tenant, round.id, played.id, round.members[0].id, counted.id, 4);
+    await repo.setChallenge(tenant, round.id, {
+      challenge: { kind: 'sessions', n: 3, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' },
+      history: [],
+    });
+    // #1781/#1782: the chat peak and the chat/comment figures read
+    // round_messages, RLS-scoped like the rest.
     await repo.createRoundMessage(tenant, round.id, { authorUserId: 'u', text: 'hi', at: new Date().toISOString() });
+    await repo.createRoundMessage(tenant, round.id, {
+      authorUserId: 'u', text: 'gut', at: new Date().toISOString(), sessionId: played.id,
+    });
     /* An account whose OWN tenant holds that round (#1174). „Konten ohne Runde"
        joins `users` (no RLS) to `rounds` (RLS-scoped), so outside atx() the
        rounds side matches nothing and EVERY account reads as roundless — a
@@ -771,10 +801,17 @@ if (!process.env.DATABASE_URL) {
 
        (This replaces the same assertion on the weekly session series, which
        #1124 removed along with both charts.) */
-    assert.ok(out.adoption.sessionsWithGuests >= 1,
+    assert.ok(out.adoption.sessionsWithVerdicts >= 1,
       'the session adoption figures were empty without the admin escape — not reading under atx()');
-    assert.ok(out.adoption.roundsWithTags >= 1,
+    assert.ok(out.adoption.roundsWithChallenge >= 1,
       'the round adoption figures were empty without the admin escape');
+    /* #1823: chat and comments read round_messages, RLS-scoped with an
+       admin-read policy — outside atx() both read a plausible „nobody chats". */
+    assert.ok(out.adoption.roundsWithChat >= 1, 'the chat figure was empty without the admin escape');
+    assert.ok(out.adoption.sessionsWithComment >= 1, 'the comment figure was empty without the admin escape');
+    assert.ok(out.adoption.lastWeek.messages >= 2, 'the weekly message count was empty without the admin escape');
+    assert.ok(out.adoption.gamesWithPurchasePrice >= 1,
+      'the Spiele adoption figures were empty without the admin escape');
     /* The design tile (#1201) reads `users`, which carries no RLS — so it is
        plain knex, not atx(), and must still come back under a plain role. The
        seeded account above answered the chooser, so it counts on a line and a
@@ -787,12 +824,12 @@ if (!process.env.DATABASE_URL) {
        figures beside them. The seeded account is verified, so a zero would be
        a dropped read rather than an empty instance. */
     assert.ok(out.adoption.accountsVerified >= 1, 'accountsVerified saw no account under a plain role');
-    assert.equal(typeof out.adoption.accountsDisabled, 'number');
     assert.equal(typeof out.adoption.roundsWithRetired, 'number');
     assert.equal(typeof out.accounts.withAvatar, 'number');
-    // session_vote_links is deliberately NOT RLS-scoped, so this one is read on
-    // plain knex — it must still come back as a number under a plain role.
-    assert.equal(typeof out.adoption.sessionsWithVoteLink, 'number');
+    // round_invite_links and price_watches are deliberately NOT RLS-scoped, so
+    // they are read on plain knex — they must still come back under a plain role.
+    assert.equal(typeof out.adoption.roundsWithInviteLink, 'number');
+    assert.equal(typeof out.adoption.accountsWithPriceWatch, 'number');
     /* The funnel and the habit bands (#1174) read `sessions`, RLS-scoped like
        the rest — and an all-zero funnel is the most plausible-looking wrong
        answer on the card, because „nobody finishes a session" is exactly the
@@ -844,6 +881,7 @@ if (!process.env.DATABASE_URL) {
     });
     await admin.connect();
     let rows;
+    let history;
     try {
       await admin.query('DROP ROLE IF EXISTS gs_pubstats_probe');
       await admin.query("CREATE ROLE gs_pubstats_probe LOGIN PASSWORD 'probe'");
@@ -855,14 +893,16 @@ if (!process.env.DATABASE_URL) {
       url.password = 'probe';
       const child = execFileSync(process.execPath, ['-e', `
         const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
-        repo.publicGameAggregates()
-          .then((r) => { console.log('RESULT:' + JSON.stringify(r)); return repo.end(); })
+        Promise.all([repo.publicGameAggregates(), repo.publicPlayHistory('9999-12-31T00:00:00.000Z')])
+          .then(([r, h]) => { console.log('RESULT:' + JSON.stringify(r)); console.log('HISTORY:' + JSON.stringify(h)); return repo.end(); })
           .catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
 
       const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
       assert.ok(line, `the probe child produced no result: ${child}`);
       rows = JSON.parse(line.slice('RESULT:'.length));
+      const hist = child.split('\n').find((l) => l.startsWith('HISTORY:'));
+      history = JSON.parse(hist.slice('HISTORY:'.length));
     } finally {
       await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
       await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_pubstats_probe').catch(() => {});
@@ -876,6 +916,9 @@ if (!process.env.DATABASE_URL) {
     // missed atx() on any one of them would zero only that column.
     const row = rows.find((r) => r.externalId === externalId);
     assert.ok(row, 'the games read was invisible without the admin escape');
+    // The past-winners read (#1732) is a fourth statement under the same escape.
+    assert.equal(history.filter((h) => h.externalId === externalId).length, 1,
+      'the play-history read was invisible without the admin escape');
     assert.equal(row.owners, 1, 'the owner read was invisible without the admin escape');
     assert.equal(row.plays.week.count, 1, 'the plays read was invisible without the admin escape');
     assert.equal(row.ratings.count, 1, 'the ratings read was invisible without the admin escape');
@@ -885,5 +928,74 @@ if (!process.env.DATABASE_URL) {
     row.ratings.tiles.forEach((n, i) => assert.equal(typeof n, 'number', `tiles[${i}]`));
     // And nothing user-authored crossed the boundary, even under the escape.
     assert.ok(!JSON.stringify(rows).includes('Getippter Titel'));
+  });
+
+  /* „Spieleinstellungen" (#1786), as a NON-superuser. gameScoringRounds reads
+     games and sessions, both RLS-scoped: outside atx() a plain role sees ZERO
+     rows with no error, and the operator's queue would read as "no game has
+     ever been scored" on production only. The settings writes run on the same
+     role, because the table is global and must need no tenant setting at all.
+     #1787's category list reads `games` the same way and is checked alongside. */
+  test('the scoring queue reads under the admin escape and the settings table needs no tenant, as a plain role', async () => {
+    const assert = require('node:assert/strict');
+    const tenant = `t-scoring-${Date.now()}`;
+    const bggId = String(700000000 + Math.floor(Math.random() * 1e8));
+    const round = await repo.createRound(tenant, { name: 'Probe', members: ['A'], importFromRoundId: null });
+    const game = await repo.createGame(tenant, round.id, {
+      title: 'Golf', minPlayers: 1, maxPlayers: 4, image: null, source: { provider: 'bgg', externalId: bggId, url: null },
+    });
+    await repo.updateGame(tenant, round.id, game.id, { lowScoreWins: true, scoreCategories: [{ id: 'c1', name: 'Löcher' }] });
+    await repo.createSession(tenant, round.id, {
+      createdAt: 't', gameIds: [game.id], votes: {}, chosenGameId: game.id, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true, scores: { m1: 3 },
+    });
+
+    const admin = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
+    });
+    await admin.connect();
+    let out;
+    try {
+      await admin.query('DROP ROLE IF EXISTS gs_scoring_probe');
+      await admin.query("CREATE ROLE gs_scoring_probe LOGIN PASSWORD 'probe'");
+      await admin.query('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO gs_scoring_probe');
+      await admin.query('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO gs_scoring_probe');
+      const url = new URL(process.env.DATABASE_URL);
+      url.username = 'gs_scoring_probe';
+      url.password = 'probe';
+      const child = execFileSync(process.execPath, ['-e', `
+        const repo = require(${JSON.stringify(require.resolve('../lib/repo/postgres'))});
+        (async () => {
+          const rows = (await repo.gameScoringRounds()).filter((r) => r.bggId === ${JSON.stringify(bggId)});
+          await repo.putGameScoringSetting(${JSON.stringify(bggId)}, { state: 'confirmed', lowScoreWins: false });
+          const stored = await repo.getGameScoringSetting(${JSON.stringify(bggId)});
+          const removed = await repo.deleteGameScoringSetting(${JSON.stringify(bggId)});
+          const catRows = (await repo.gameCategoryRounds()).filter((r) => r.bggId === ${JSON.stringify(bggId)});
+          await repo.putGameCategorySetting(${JSON.stringify(bggId)}, { state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
+          const catStored = await repo.getGameCategorySetting(${JSON.stringify(bggId)});
+          const catRemoved = await repo.deleteGameCategorySetting(${JSON.stringify(bggId)});
+          console.log('RESULT:' + JSON.stringify({ rows, stored, removed, catRows, catStored, catRemoved }));
+          await repo.end();
+        })().catch((err) => { console.error(err.stack); process.exit(1); });
+      `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
+      const line = child.split('\n').find((l) => l.startsWith('RESULT:'));
+      assert.ok(line, `the probe child produced no result: ${child}`);
+      out = JSON.parse(line.slice('RESULT:'.length));
+    } finally {
+      await admin.query('REVOKE ALL ON ALL TABLES IN SCHEMA public FROM gs_scoring_probe').catch(() => {});
+      await admin.query('REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM gs_scoring_probe').catch(() => {});
+      await admin.query('DROP ROLE IF EXISTS gs_scoring_probe').catch(() => {});
+      await admin.end();
+    }
+    assert.deepEqual(out.rows, [{ bggId, low: true, titles: ['Golf'] }],
+      'the scored round was invisible without the admin escape — not reading under atx()');
+    assert.deepEqual(out.stored, { bggId, state: 'confirmed', lowScoreWins: false });
+    assert.equal(out.removed, true);
+    assert.deepEqual(out.catRows, [{ bggId, sets: [['Löcher']], titles: ['Golf'] }],
+      'the category set was invisible without the admin escape — not reading under atx()');
+    assert.deepEqual(out.catStored, { bggId, state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
+    assert.equal(out.catRemoved, true);
+    await repo.deleteRound(tenant, round.id);
   });
 }

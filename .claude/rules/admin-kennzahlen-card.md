@@ -37,7 +37,7 @@ load".
 a **limit** is `used / limit` with a graded pill. „Funktionsnutzung" is GROUPED
 BY PARENT POPULATION (#1480, `adoptionCards()`/`renderGroups()`): one card per
 denominator, the population first, then count + muted whole-percent share —
-of the line above when indented (Regal union, cover union, funnel). No pills:
+of the line above when indented (the active challenge, the funnel). No pills:
 low uptake is no fault. A bare count without a parent is what it was cleaned
 of („Freundschaften & Einladungen" is parentless only because those rows carry
 no tenant). A zero parent renders „—", never „NaN %"; a first line never „100 %".
@@ -109,14 +109,14 @@ non-superuser role returns **zero rows rather than an error** — and **zero is 
 plausible reading for an adoption figure**, so the panel would report „nobody
 uses anything" on a production instance full of data while every superuser-run
 test stayed green. `test/repo.postgres.test.js` holds it with a plain-role child
-process, seeded so `sessionsWithGuests` and `roundsWithTags` must be non-zero
+process, seeded so `sessionsWithVerdicts`, `roundsWithChat` and the other
+`round_messages`/`rounds` figures must be non-zero (#1823)
 (`.claude/rules/admin-cross-tenant-escape.md` §4).
 
-**`session_vote_links` is the one that is correctly OUTSIDE `atx()`** — it is
-deliberately not tenant-scoped and not under RLS (its own migration says why:
-the `/vote/:token` caller is unauthenticated, so there is no `app.tenant_id` to
-scope by), and it carries its tenant inside `data` rather than as a column, which
-is what the demo filter reads. Check a table's migration before choosing a side;
+**`round_invite_links` is correctly OUTSIDE `atx()`** — not tenant-scoped and not
+under RLS (the token produces the tenant, so no `app.tenant_id` exists to scope
+by); it carries the owner's tenant inside `data`, which the demo filter reads
+(`price_watches`, keyed by account, goes through `users`). Check a table's migration before choosing a side;
 guessing is how a figure becomes a permanent zero.
 
 ## Smaller things
@@ -133,7 +133,7 @@ guessing is how a figure becomes a permanent zero.
   grouped adoption cards carry no pill at all, and their percentages are
   computed in the panel too — see the two card shapes above.
 - The un-scoped, no-RLS tables `instanceMetrics` also reads (`users`,
-  `round_grants`, `invitations`, `friendships`, `session_vote_links`) take plain
+  `round_grants`, `invitations`, `friendships`, `round_invite_links`, …) take plain
   `knex` — everything else goes under `atx()`, per the section above.
 - **Demo tenants are excluded from every metric except the demo row**, by the
   `demo-` tenant prefix (`.claude/rules/guest-demo-accounts.md` §1). `demo.live`

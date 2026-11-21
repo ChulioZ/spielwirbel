@@ -55,7 +55,10 @@ behind these choices — and why they are not up for casual revision — are in
   (CSP, `X-Content-Type-Options`, frame options, HSTS) and
   [express-rate-limit](https://express-rate-limit.mintlify.app/) caps requests
   with a generous global limit, which the static shell assets are exempt from
-  (#464) so a page load costs one request rather than ~50.
+  (#464) so a page load costs one request rather than ~50. A signed-in request
+  is counted per verified account, an anonymous one per IP; a stricter per-IP
+  cap rides only the routes that try a credential or a secret token (#1836,
+  `lib/route-limits.js`).
   Mutating request bodies are validated at the router boundary with
   [zod](https://zod.dev/) schemas (via `lib/validate.js`).
   TLS is expected to terminate at a reverse proxy (`TRUST_PROXY` then forwards
@@ -107,8 +110,14 @@ lib/
     card-patch.js    which of a provider's cover + player range may fill an
                      existing game (never overwrite) — shared by both backends'
                      fillGameCards
+    game-twins.js    the row shape and order of findGamesByBggId (#1843), shared
+                     by both backends
     tile-histograms.js  one sort order for the Discover aggregate's per-evening
                      histograms (#1721), so both backends fold the same sum
+    lift-play-value.js  what one Discover-lift play is worth once „Wie war's?"
+                     verdicts speak (#1838), shared by both backends
+    verdicts.js      setting and dropping a session's „Wie war's?" verdicts
+                     (#1838), the blob mutations both backends run in their lock
     corpus-file.js   the JSON backend's BGG-corpus store (issue #681) — its OWN
                      file under DATA_DIR, never data.json, because store.js
                      rewrites that whole file on every mutation
@@ -142,6 +151,9 @@ lib/
                      INSIDE the ceiling (never cropped), EXIF/GPS stripped, plus
                      the "already converted?" predicate the operator backfill
                      presses against (issue #867)
+  session-photo.js   re-encodes an uploaded session photo to a bounded webp —
+                     EXIF orientation applied first, then every tag (GPS
+                     included) dropped (issue #1774)
   auth.js            shared-password gate (active when AUTH_PASSWORD is set)
   admin.js           operator gate for the moderation surface (separate
                      ADMIN_PASSWORD; 404s unless set — issue #268)
@@ -157,6 +169,9 @@ lib/
                      stateless, scope-separated signed challenge. The
                      attestation/assertion crypto itself is
                      @simplewebauthn/server's; this is the policy around it
+  route-limits.js    which requests the limiters count (#1836): the per-route
+                     credential and image-upload limiters, and the general
+                     limiter's verified-account-or-IP key
   quota.js           per-tenant state caps — rounds/tenant, games/round,
                      tags/round, members/round, … (issue #139; inert unless
                      ACCOUNTS_ENABLED, except saved filters/round, #1328)
@@ -192,6 +207,15 @@ lib/
                      bounded, resumable enrichment pass that fills each row's
                      attributes from /thing. A local candidate pool exists
                      because BGG's API has no browse or attribute search at all
+  game-scoring.js    the operator-confirmed scoring direction per BGG game
+                     (#1786): the read overlay the repo facade applies to every
+                     round and game, its cached confirmed map, and the fold of
+                     the backends' per-round rows into the admin queue
+  game-categories.js its sibling for scoring CATEGORIES (#1787): a confirmed
+                     base set goes first in every round's sheet, locked, round
+                     categories of the same name map onto it (session parts
+                     re-keyed on read, translated back on write), extras after;
+                     plus the lock on an edit and the admin fold of the sets
   bgg-links.js       the instance-wide BGG link table's write and server-side
                      read (#1638): every BGG parse's category/mechanic/designer
                      ids are recorded best-effort, so a name can link to its
@@ -209,6 +233,11 @@ lib/
                      games that could reach a podium from the provider — never
                      from the user-typed title — and caches the payload for
                      the route
+  public-stats-more.js
+                     Discover's past-winners lists (issue #1732): buckets every
+                     completed week's and month's finished plays on the Berlin
+                     calendar and names each period's most played game(s),
+                     under the live cards' own floors — recomputed, never stored
   public-stats-ranking.js
                      how those lists are numbered (issue #1648): equal shown
                      values share a place (1, 1, 3), everything tied with the
@@ -220,6 +249,9 @@ lib/
                      bounded once for both writers — the single add (flat
                      multipart fields) and the bulk import (a map beside
                      `covers`) — so they cannot accept different things (#742)
+  redact-copies.js   which Chronik lines and friend-feed rows copy a game title
+                     or member name, so an operator redaction blanks them too —
+                     shared by both repo backends (#1825)
   recommend.js       "das könnte euch auch gefallen" (issue #682): the taste
                      profile built from a round's own shelf and sessions, and
                      the deterministic weighted score that ranks the corpus
@@ -240,10 +272,10 @@ lib/
   draw.js            the session draw's game pool + shuffle: the one named
                      "is this game active" predicate both of the sessions
                      route's guards go through (issue #486)
-  draw-boost.js      the opt-in draw boost (issue #1777): which seated member
-                     is strictly behind on favourites reaching the table
-                     (taste-share.js), and the weighted draw that gives their
-                     favourites 2x the chance — the plain shuffle when off
+  draw-boost.js      the draw half of „Wer zu kurz kommt, ist dran" (issues
+                     #1777, #1830): each seated, boosted member's favourites
+                     weigh 100 + their boost (vote-boost.js) in a weighted
+                     draw — the plain shuffle when off or when nothing changes
   game-owners.js     which members of a round own a game: the owner-id
                      validation and the per-seat memory of the last selection,
                      shared by the add-game and BGG-import write paths
@@ -343,6 +375,10 @@ lib/
                      invitations, friend requests — issue #618): a per-type
                      allowlist, the two per-account opt-outs, a one-per-hour
                      per-recipient throttle and coalescing
+  chat-inbox.js      unread chat threads as in-app inbox items (issue #1784):
+                     one collapsed item per account and thread, its count
+                     recomputed from the read marker on every post, read and
+                     delete; never mailed, never the message text
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
   account-design.js  which design an account wears (resolved against the
@@ -483,12 +519,20 @@ lib/
                                              lib/app.js; the sub-routers compose
                                              in index.js, because they share the
                                              prefix and seven mounts would run
-                                             authLimiter seven times — issue #996)
+                                             every app-level middleware seven
+                                             times — issue #996)
       index.js       the gate, the two-factor login (password, then passkey —
                      #1670), passkey enrollment, logout/me, and the mounts
       shared.js      the schemas and the paging shape more than one needs
       status.js      instance status + the recent warn/error ring buffer
       corpus.js      the licensed BGG corpus ingest (issue #681)
+      game-scoring.js „Spieleinstellungen" (#1786): the queue of scored BGG
+                     games, confirm/dismiss/revoke a scoring direction for
+                     every round, CSV/copy export — counts only
+      game-categories.js „Wertungskategorien" (#1787): the category sets rounds
+                     typed per BGG game, confirm (spelling correctable) /
+                     dismiss / revoke a base set for every round, CSV/copy —
+                     names and counts, never a round or person
       storage.js     object-storage usage + the orphan estimate (issue #941),
                      behind a button because it lists the whole bucket; reports
                      only, never deletes
@@ -508,6 +552,8 @@ lib/
                                              user picked, in one write — #1758)
     session-import.js …/sessions/import     (a play history from BG Stats, Myludo or BGG,
                                              written as finished sessions — #1665)
+    session-photo.js …/sessions/:sid/photo  (one photo per played session: PUT to set
+                                             or replace, DELETE to remove — #1774)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
                                              a share via …/:rid/shares/:userId)
@@ -539,14 +585,21 @@ lib/
                                              friends leaderboard; global per account)
     bgg-links.js     /api/bgg-links         (category/mechanic/designer names ->
                                              BGG ids (#1638); instance-wide, POST)
+    game-twins.js    /api/game-twins        (the same BGG game in the caller's
+                                             other writable rounds (#1843); read
+                                             only, outside /api/rounds/:rid)
     invite-links.js  …/invite-links         (the owner's round invite links (#1515):
                                              mint/replace, list, revoke by slot)
     marker.js        …/marker               (PATCH the round's colour marker,
                                              0-7 — issue #1187)
-    draw-boost.js    …/draw-boost           (PATCH the round's opt-in draw boost
-                                             on/off — issue #1777)
+    draw-boost.js    …/draw-boost           (PATCH the round's „Wer zu kurz
+                                             kommt" setting on/off — #1777, #1830)
+    challenge.js     …/challenge            (POST to start the group challenge,
+                                             DELETE to end or archive it — #1779)
     round-messages.js …/messages            (the round chat: page, post, edit, delete,
-                                             mark read — accounts mode only, issue #1781)
+                                             mark read — accounts mode only, issue #1781;
+                                             mounted again at …/sessions/:sid/messages
+                                             for session comments, issue #1782)
     tags.js          …/tags                 (create a custom tag [deduped], rename it or
                                              set its icon, reorder, delete one)
     saved-filters.js …/filters              (save the setup under a name, rename,
@@ -607,6 +660,9 @@ public/
       kontakt.js     kontakt.html's own script (the bilingual contact form)
       admin.js       admin.html's own script, so no privileged code ships in
                      the SPA
+      admin-scoring.js the panel's „Spieleinstellungen" card (#1786), started
+                     by admin.js's `admin:panel` event
+      admin-categories.js the „Wertungskategorien" card (#1787), the same way
       face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
                      <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
@@ -675,13 +731,12 @@ public/
     recap.js         the round's taste record behind the Pokale tab's Rückblick:
                      best/worst rated, the most divisive game and each member's
                      favourite, all derived from session votes (issue #484)
-    taste-share.js   whose favourites reach the table: per member, the games
-                     they rate at the top face and how often one was played
-                     with them seated — the Rückblick list, the member page's
-                     line, and the input #1777's draw boost reuses (issue #1776)
-    draw-boost-setting.js  the draw boost's Einstellungen toggle and the
-                     lobby's one line naming whose favourites got the extra
-                     chance (issue #1777)
+    vote-boost.js    the rating-based boost (issue #1830): who recently played
+                     games they did not enjoy and by how much, their favourites,
+                     and each session's ballot weights — shared by the result
+                     screen, the table split and the server draw
+    draw-boost-setting.js  the „Wer zu kurz kommt" Einstellungen toggle and the
+                     hint naming who has more say tonight (issues #1777, #1830)
     period-recap.js  the same idea for ONE calendar month or year, beside the
                      all-time Rückblick: which periods have content, and what
                      was played, rated and shelved in one of them (issue #800)
@@ -849,6 +904,8 @@ public/
     purchase-price.js a game's purchase price: the currencies and ceiling the
                      route also validates with, the cost per session and the
                      tie-aware „Bester Kauf" (issue #1773)
+    game-pitch.js    a game's one-sentence pitch line: the length cap and the
+                     check the editor and POST/PATCH …/games share (issue #1837)
     news.js          the „Was ist neu" entry list + its newest revision — a code
                      constant that ships with the release it describes, read by
                      the /neu screen and by lib/routes/account.js (issue #741)
@@ -862,6 +919,9 @@ public/
                      the stored long edge, output format — offered by the two
                      paste sites and validated by lib/upload.js + lib/cover.js
                      (issue #867)
+    photo-policy.js  what a session photo may be — byte cap, stored long edge,
+                     output format — offered by the result screen and validated
+                     by lib/upload.js + lib/session-photo.js (issue #1774)
     member-avatar.js the ONE decision of photo-vs-initials, used by every avatar
                      render site, plus the per-page id→picture cache and the
                      broken-image fallback (issue #841)
@@ -872,11 +932,17 @@ public/
                      session's guests), how they group into playing parties
                      (issue #575) and how a guest name is labelled; also holds
                      the guest cap lib/routes/sessions.js enforces (issue #458)
+    session-ratings.js  every rating a session holds — votes and „Wie war's?"
+                     verdicts — as one stream, which every TASTE figure reads
+                     through (issue #1838); ballot figures keep reading votes
     vote-score.js    what a SET of votes is worth: the Spielwirbel-Score, a
                      per-tile value curve applied to each vote before
                      averaging, so a game one person does not want to play
                      stops outranking a game everybody is fine with. Required
                      by lib/recommend.js and lib/session-split.js (issue #893)
+    taste-vector.js  the taste-vector math — affinity-weighted frequency, L2
+                     normalisation and the profile-rescaled cosine — shared by
+                     lib/recommend.js and the vote card's taste hint (#1839)
     rating-faces.js  the mood face each rung of the 1-5 scale wears, so the two
                      vote cards and the session result distribution name a
                      rating with the same glyph; also the scale's own bounds,
@@ -1065,6 +1131,12 @@ public/
     game-editor-price.js  the game page's purchase-price chip and editor, and
                      the „Ins Regal" offer to take a wish's current price
                      over (#1773)
+    game-editor-pitch.js  the game page's pitch line and its editor (#1837);
+                     the vote cards draw the same line via `votePitchHtml`
+                     (vote-card-composed.js)
+    game-twins.js    after a title, player-range, playing-time or pitch edit,
+                     offers the same change in the caller's other rounds holding
+                     that BGG game (#1843)
     views-round-detail.js game detail, plus the wish-list price block it
                           renders
     vendor/fflate.min.js  fflate's UMD build, vendored the same way (byte-
@@ -1081,7 +1153,9 @@ public/
                           (#1581), plus the tag manager it links to (#956)
     views-round-actions.js  the two sheets that screen opens: move games, invite
     views-round-chat.js   the hub's Chat tab: the round's message thread, paged,
-                          lightly polled, with edit/delete/report (#1781)
+                          lightly polled, with edit/delete/report (#1781); the
+                          same thread on a session's result + the Chronik
+                          comment count (#1782)
     views-round-lookup.js the add-game lookup sheet, incl. its guest-game mode
                           (#1681)
     views-game-link.js    the other lookup sheet: link an existing game to a
@@ -1115,6 +1189,9 @@ public/
                      whose is most different (mean difference of per-game
                      average ratings, ≥ 5 shared games) — die Tischkarte's
                      taste line (issue #1778)
+    vote-hint.js     the vote card's taste hint: whether a game the voter has
+                     never rated or played resembles the games they like, and
+                     which two of them to name (issue #1839)
     achievements.js  the Abzeichen catalogue (41 entries: member, round,
                      account) and their states, tiers and earning dates,
                      replayed on demand from the finished sessions — nothing
@@ -1124,6 +1201,14 @@ public/
                      `.badge` markup every design skins, Pokale › Abzeichen,
                      the result moment, the Chronik rows, the hub line, the
                      Tischkarte row and the tap-open card
+    challenges.js    the group challenge (issue #1779): its four presets and
+                     the progress, completion and expiry derived from the
+                     sessions — only the goal is stored. Also required by
+                     lib/routes/challenge.js, so the route agrees whether one
+                     is still running
+    views-challenges.js  the challenge's Start card, Pokale › Challenge (start,
+                     end, the short history), its line in the result moment
+                     and its Chronik row
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and
                      the two game boxes; name/colour editing; the
@@ -1151,12 +1236,20 @@ public/
     views-session.js session setup, the rating cards, finale, results
     views-session-setup-pool.js the setup's pot: the live pool preview (tile
                      panel and strip), the tag section, the „ohne Spiele" chips
+    result-phase.js  the result's phase — deciding, table, picking, played or
+                     solo — and the designs that draw its column right (#1846)
     views-session-result-tafel.js the results' tally and Tafel rows (#1056)
     views-session-result-band.js the results' table band, headline and finish
+    views-session-verdict.js  the played result's party list (#1846) with
+                     „Wie war's?" (issue #1838): who has answered, the faces
     views-session-result-actions.js the results' row actions, cancel/delete
                      and footers (all four split out in #1543)
+    session-photo-view.js the evening's photo on the results (#1774): add,
+                     replace, remove, and the consent hint
     result-tafel-composed.js Der Tisch's result: the column-header Tafel of compact
                      rows with pills, the crowned people, the foot (#1275)
+    result-compose.js the result's one composition for every design (#1846):
+                     head, the evening's column and the ranking, by phase
     views-session-tables.js the multi-table builder and, once confirmed, the split
                      summary linking to the evening's tables (issue #796)
     views-session-live.js the voting lobby every session opens (#655): who has voted, vote for

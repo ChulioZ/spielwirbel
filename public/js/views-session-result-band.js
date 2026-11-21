@@ -64,11 +64,23 @@ function resultUpdateTitle(rs) {
                   „Ändern". The record needs the outcome once, as a picture.
 
    `resultUpdateChosen()` calls this on every phase change, so nothing here holds
-   state of its own beyond `pickerOpen`. */
+   state of its own beyond `pickerOpen`. Every pass also refills the party list
+   and re-places the screen for its phase (#1846, result-compose.js), so the
+   two cannot lag the band by one render. */
 function resultRenderBand(rs) {
+  resultRenderBandOnly(rs);
+  resultRenderParties(rs, rs.partySlot);
+  resultPlace(rs);
+}
+
+function resultRenderBandOnly(rs) {
   const { round, session, games, rows, parties, people, tischLook, peopleEl, rowRefs, badgeMoment, tisch, tischSlot, tischBar } = rs;
   resultUpdateTitle(rs);
+  // The photo block's add button follows the played phase (#1774).
+  if (rs.photoRefresh) rs.photoRefresh();
   fillBadgeMoment(badgeMoment, round, session);
+  // The group challenge (#1779) rides in the same moment, after the marks.
+  fillChallengeMoment(badgeMoment, round, session);
   // Consumed at the top so every exit, including the early return below,
   // clears it — a stale intent must not fire on a later, unrelated render.
   const wantedChip = rs.pickerRefocus;
@@ -256,25 +268,17 @@ function resultRenderBand(rs) {
     });
     main.appendChild(endChips);
 
-    const done = h(`<button class="btn btn--ghost">${esc(t('result.done'))}</button>`);
+    // The picker's one action, so the filled primary in every design (#1846).
+    const done = h(`<button class="btn btn--primary tisch__done">${esc(t('result.done'))}</button>`);
     done.addEventListener('click', () => { rs.pickerOpen = false; resultRenderBand(rs); });
     actions.appendChild(done);
   } else {
-    /* The record, as a picture. One seat per winner — a team win is already a
-       flat list of its people, so nothing here knows teams exist — and an
-       ENDING renders its own line instead, because the two are exclusive. */
+    /* The record, as a picture: the stamp and the game. The winners are no
+       longer seats here (#1846) — the party list under the foot crowns them,
+       beside their points and „Wie war's?", and the h1 names them. An ENDING
+       still renders its own line, because no party carries it. */
     const winners = rs.winnerIds.map((wid) => people.find((pp) => pp.id === wid)).filter(Boolean);
-    if (winners.length) {
-      const seats = h('<div class="tisch__seats"></div>');
-      winners.forEach((pp) => {
-        seats.appendChild(h(`<span class="seat">
-             <span class="avatar${pp.guest ? ' avatar--guest' : ''}"${pp.guest ? '' : ` style="background:${memberColor(round, pp.id)}"`}>${avatarFace(initials(pp.name), { userId: pp.userId })}</span>
-             <span class="seat__name">${esc(personLabel(pp))}</span>
-           </span>`));
-      });
-      seats.appendChild(h(`<span class="tisch__won">${esc(tn(winners.length, 'result.wonSeatsOne', 'result.wonSeats'))}</span>`));
-      main.appendChild(seats);
-    } else {
+    if (!winners.length) {
       const meta = ENDING_LABELS[rs.ending];
       main.appendChild(h(`<div class="tisch__outcome">${meta
         ? iconText(meta.icon, t(meta.line))
@@ -346,6 +350,8 @@ function resultRenderBand(rs) {
 
   tisch.appendChild(box);
   tisch.appendChild(main);
+  // „Wie war's?" (#1838) moved out of the band into the party list (#1846),
+  // which resultRenderBand fills right after this.
   // After both are attached: focus() on a detached node does nothing.
   if (restoreChip) restoreChip.focus();
 }
@@ -380,7 +386,11 @@ async function resultSaveWinners(rs, ids, nextEnding) {
     // The timer's reading is stamped by the server on the transition (#1770).
     syncPlayClock(session, saved);
     toast(t('result.toast.saved'));
-    resultRenderBand(rs);
+    // The transition INTO played changes every ranking row too: none may keep
+    // its „Spielen" or the chosen row its „auf dem Tisch" chip (#1846, defect
+    // 9 — they stayed until a reload). resultUpdateChosen re-renders the rows
+    // and then the band; a winner tap on a finished session needs the band only.
+    if (rs.freshStamp) resultUpdateChosen(rs); else resultRenderBand(rs);
   } catch (e) {
     // Nothing was re-rendered, so the tapped chip still holds focus; a
     // leftover intent would otherwise fire on some later, unrelated render.

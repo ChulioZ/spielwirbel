@@ -110,8 +110,9 @@ test('the result lists the points best first and marks a beaten best', async () 
   const s2 = finished('s2', '2026-03-08T19:00:00.000Z', { m1: 48, m2: 50, m3: 30 });
   const round = roundFixture([s1, s2]);
   await results(round, s2);
-  const lines = [...dom.app.querySelectorAll('.result-points__line')].map((li) => [
-    li.querySelector('.result-points__name').textContent,
+  // In the party list since #1846: one row per party, ordered by points.
+  const lines = [...dom.app.querySelectorAll('.result-party')].map((li) => [
+    li.querySelector('.result-party__name').textContent.trim(),
     li.querySelector('.result-points__value').textContent,
     !!li.querySelector('.result-points__record'),
   ]);
@@ -124,7 +125,7 @@ test('a running session offers no points and shows none', async () => {
   const round = roundFixture([s]);
   await results(round, s);
   assert.equal(pointsButton(), undefined);
-  assert.equal(dom.app.querySelector('.result-points'), null);
+  assert.equal(dom.app.querySelector('.result-points__value'), null);
 });
 
 test('the game page shows the record, the stamp’s best line, and switches the direction', async () => {
@@ -146,6 +147,27 @@ test('the game page shows the record, the stamp’s best line, and switches the 
   box.dispatchEvent(new dom.window.Event('change'));
   const patch = await waitFor(() => sent.find((c) => c.method === 'PATCH'), { label: 'the game PATCH' });
   assert.deepEqual(patch.body, { lowScoreWins: true });
+});
+
+// #1786: the operator confirmed the direction for every round. The read overlay
+// hands the page `scoringLocked` plus the confirmed value — the switch shows it,
+// disabled, says why, and a change event sends nothing.
+test('a locked game shows the fixed direction, disabled, and never PATCHes', async () => {
+  const s1 = finished('s1', '2026-03-01T19:00:00.000Z', { m1: 40, m2: 55 });
+  const round = roundFixture([s1], { lowScoreWins: true, scoringLocked: true });
+  const sent = recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));
+  dom.set('fetchRoundFresh', async () => round);
+  await dom.call('showGameDetail', round.id, 'g1');
+  const box = dom.app.querySelector('.gd-record__dir input');
+  assert.equal(box.checked, true, 'the confirmed value');
+  assert.equal(box.disabled, true);
+  assert.match(dom.app.querySelector('.gd-record__locked').textContent, /Für alle Runden festgelegt/);
+  // Lower score wins: Anna's 40 is the record, not Ben's 55.
+  assert.match(dom.app.querySelector('.gd-record__line').textContent, /Rekord: 40 · Anna/);
+  box.checked = false;
+  box.dispatchEvent(new dom.window.Event('change'));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(sent.find((c) => c.method === 'PATCH'), undefined);
 });
 
 test('a game nobody has scored shows no record and no switch', async () => {
@@ -198,9 +220,11 @@ test('a stored automa reopens in the sheet, removing it sends null, and the resu
   });
   const round = roundFixture([session]);
   await results(round, session);
-  const lines = [...dom.app.querySelectorAll('.result-points__line')].map((li) => li.textContent.replace(/\s+/g, ' ').trim());
-  assert.deepEqual(lines, ['Anna 70', 'Automa (schwer) 82'], 'the automa closes the list, outside the ranking');
-  assert.ok(dom.app.querySelector('.result-points__line--automa'));
+  const lines = [...dom.app.querySelectorAll('.result-party')].map((li) => [
+    li.querySelector('.result-party__name').textContent.trim(), li.querySelector('.result-points__value').textContent]);
+  assert.deepEqual(lines, [['Anna', '70'], ['Automa (schwer)', '82']], 'the automa closes the list, outside the ranking');
+  assert.ok(dom.app.querySelector('.result-party--automa'));
+  assert.equal(dom.app.querySelector('.result-party--automa .verdict__seat'), null, 'the automa rates nothing');
   assert.match(pointsButton().textContent, /Punkte bearbeiten/);
 
   pointsButton().click();
@@ -215,13 +239,13 @@ test('a stored automa reopens in the sheet, removing it sends null, and the resu
   assert.deepEqual(put.body, { scores: { m1: 70 }, automa: null });
 });
 
-test('an automa alone still shows the points block, and „Punkte bearbeiten"', async () => {
+test('an automa without points still closes the party list, and „Punkte bearbeiten"', async () => {
   const session = finished('s1', '2026-03-10T19:00:00.000Z', null, { memberIds: ['m1'], automa: { name: 'Bot' } });
   const round = roundFixture([session]);
   await results(round, session);
-  const lines = [...dom.app.querySelectorAll('.result-points__line')];
-  assert.equal(lines.length, 1);
-  assert.equal(lines[0].querySelector('.result-points__value'), null, 'an automa without points shows no number');
+  const automa = dom.app.querySelectorAll('.result-party--automa');
+  assert.equal(automa.length, 1);
+  assert.equal(automa[0].querySelector('.result-points__value'), null, 'an automa without points shows no number');
   assert.match(pointsButton().textContent, /Punkte bearbeiten/);
 });
 

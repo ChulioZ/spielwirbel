@@ -730,7 +730,16 @@ folds into the profile's account-wide Bestleistungen, what the member page lists
 and what the two record Abzeichen count (injected into `achievements.js` like its
 other siblings) — so a page, a profile and a badge cannot disagree about which
 records a member holds. A hand-written server copy would let the profile name a
-best the member page does not.
+best the member page does not. **#1780 added scoring categories to the same
+file**: `SCORE_CATEGORY_MAX`/`SCORE_CATEGORY_NAME_MAX` and `mergeScoreCategories`
+are what the editor offers and what `PATCH …/games/:gid` stores (via
+`lib/routes/games.js`), and `parseScoreParts`/`consistentScoreParts` are what the
+grid sends and what `PUT …/scores` accepts — a breakdown must add up to its
+total on both sides, so a server copy of the sum rule would 400 a sheet the
+client let through. **#1787's `lib/game-categories.js` reads the same file**: the
+locked-edit check bounds an operator base by `SCORE_CATEGORY_MAX`/`_NAME_MAX`,
+and its overlay builds the effective sheet from `scoreCategoryList`, so a base
+the editor could not have offered can never be confirmed.
 
 **The twenty-ninth is `public/js/simple-mode.js`** (#1646): the „Einfacher
 Modus" feature ids (`SIMPLE_MODE_FEATURES`, grouped as Konto renders them), the
@@ -821,22 +830,26 @@ repo contract the only witness. `roundGameDuration` (the Spielepass median),
 `sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
 (Pokale's „Längste Session") are client-only.
 
-**The thirty-seventh is `public/js/taste-share.js`** (#1776, required by #1777):
-`tasteShare`, whose favourites reached the table how often, plus its two bars
-`TASTE_SHARE_FROM_SESSIONS`/`TASTE_SHARE_MIN_FAVOURITES`. The Pokale Rückblick and
-the member page state it; `lib/draw-boost.js` acts on it, weighting the draw
-towards the member strictly behind. One file because the lobby announces whose
-favourites got the extra chance, and a server copy that counted evenings or
-favourites differently would name a member the Rückblick shows as level — a
-claim the group can check against a screen and find false. Called with its
-siblings injected as `deps` (Node has no shared scope), so a forgotten argument
-throws instead of computing something else.
+**The thirty-seventh is `public/js/vote-boost.js`** (#1830, replacing #1776's
+`taste-share.js`): who recently played games they did not enjoy and by how much
+(`memberBoosts`, `BOOST_STEP`), each member's favourites (`favouritesByMember`),
+and a session's ballot weights (`sessionVoteWeights`). `lib/draw-boost.js` weights
+the draw by it and `lib/session-split.js` the table proposals; the result screen,
+the builder and the hint read the same functions. One file because the hint names
+who has more say tonight and the result weighs exactly those ballots — a server
+fold that ordered sessions, read the fallback rating or treated a split table
+differently would boost someone the result screen does not, or split tables on
+weights the builder then scores differently, with nothing red. Called with its
+siblings injected as `deps` (`BOOST_DEPS` in `lib/draw-boost.js`, the one copy
+the server passes), so a forgotten argument throws under Node rather than
+computing something else.
 
-**The thirty-eighth is `public/js/rating-faces.js`** (#1537, required by #1777):
-`ratingRung`/`RATING_MAX`, the one rounding of a person's average to a face. It
-decides what a FAVOURITE is (the top face) for the draw boost exactly as for every
-screen that shows faces; a server rounding of its own would boost games the
-member's own page does not show as favourites.
+**The thirty-eighth is `public/js/rating-faces.js`** (#1537, required by #1777
+and #1830): `ratingRung`/`RATING_MAX`, the one rounding of a person's average to
+a face. It decides what a FAVOURITE is (the top face) for the draw exactly as for
+every screen that shows faces, and it is the rounding of the boost's fallback
+rating (a member's earlier mean of the game they played); a server rounding of its
+own would boost a member the result screen does not.
 
 **The thirty-ninth is `public/js/purchase-price.js`** (#1773):
 `PURCHASE_PRICE_CURRENCIES` and `PURCHASE_PRICE_MAX_CENTS`, which the game
@@ -867,6 +880,60 @@ one) and `longLoans` are client-only readers that live beside them.
 the same normalisation, so a composer that counted the raw `\r\n` input could
 accept a message the route then refuses. `chatSegments` (the link splitter) and
 `chatUnread` live beside them and are client-only.
+
+**The forty-second is `public/js/challenges.js`** (#1779): the group challenge's
+presets and bounds (`CHALLENGE_KINDS`, `CHALLENGE_N_MIN`/`MAX`, the deadline
+horizon) with `challengeStartError`, which the start sheet offers and
+`lib/routes/challenge.js` validates — the palette shape — plus the derivation
+itself, which the route needs because the one thing it refuses (a second
+challenge while one is RUNNING) is a derived state. A server copy that counted
+plays differently would refuse a start the Pokale section offers, or allow one
+while the screen still shows a challenge running. The route injects
+`isActiveGame` (`opts.isActive`), since a public/js file cannot require its
+sibling.
+
+**The forty-third is `public/js/photo-policy.js`** (#1774): what a session photo
+may be — the upload byte cap, the stored long edge, the output format and the
+decoded-pixel ceiling. The direct sibling of `cover-policy.js` and
+`avatar-policy.js`, and the plain value half: the result screen *offers* the cap
+(the pre-flight size check and the toast that states it in `{mb}`), and
+`lib/upload.js`'s photo multer instance and `lib/session-photo.js` *validate*
+against it. Its cap is deliberately twice the cover's — a phone camera photo, not
+a paste — so it must never be "tidied" into `cover-policy.js`: the two numbers
+are separate decisions that happen to share a shape.
+
+**The forty-fourth is `public/js/game-pitch.js`** (#1837): a game's pitch line —
+`GAME_PITCH_MAX` and `gamePitchFrom`, which the game page's editor and the
+add-game sheet check with and `POST`/`PATCH …/games` validate with. The plain
+offer/validate shape, with one property worth naming: the length is counted in
+CHARACTERS (code points), so the inputs carry no `maxlength`, which counts UTF-16
+units — an emoji-heavy line would be cut short in the browser and accepted by
+the route, the quiet direction of the palette bug. The counter states the cap
+instead.
+
+**The forty-fifth is `public/js/taste-vector.js`** (#1839): the taste-vector
+math — `accumulate`, `normalize`, `prefixSums`, `attainable`, `cosine` and
+`clamp01` — moved out of `lib/recommend.js` so the vote card's taste hint
+(`vote-hint.js`) measures "similar" with the recommender's own arithmetic. Logic,
+and nothing validates it across the boundary: a drifted copy would let the hint
+call a game a match the recommender scores as a stranger, with nothing red. The
+hint reads it through injected `deps` under Node, since a public/js file cannot
+require a sibling. The measurements in its comments are the recommender's and
+still bind both callers.
+
+**The forty-sixth is `public/js/session-ratings.js`** (#1838): every rating a
+session holds — a pre-play VOTE or a post-play „Wie war's?" VERDICT — as one
+stream (`sessionRatings`, `personRatings`, `verdictOf`, `hasAnyRating`). Logic,
+and the failure it exists to prevent is the silent one: a taste figure looping
+over `session.votes` on its own simply leaves verdicts out, with nothing red.
+The server's taste readers (`lib/recommend.js`, `lib/user-stats.js`,
+`lib/user-plays.js`, `lib/draw-boost.js`) and the member delete guard
+(`lib/routes/members.js`) require it, the client's read it off the shared scope
+or take it injected, and `test/votes-read-sites.test.js` pins every remaining
+direct `.votes` reader as ballot-only or storage. The SHELF score is the one
+taste site that takes verdicts differently — as each seat's share of a play's
+value (`playEvidence` in vote-score.js, the thirteenth) — so the Regal, the
+Chronik and Discover (`lib/repo/lift-play-value.js`) share that too.
 
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears

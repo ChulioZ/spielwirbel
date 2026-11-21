@@ -55,6 +55,9 @@ const CLIENT_ERROR_KINDS = [
   // Building or saving a round's data export (#1702) — a zip assembled in the
   // browser, so nothing reaches the server if it fails.
   'round_export',
+  // The game page's "also change it in your other rounds" sheet (#1843) —
+  // building it is client-only, after a save that already succeeded.
+  'game_twins',
 ];
 
 // Truncation is applied on BOTH sides: here so the request stays small, and at

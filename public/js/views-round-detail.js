@@ -263,7 +263,15 @@ async function showGameDetail(rid, gameId) {
     try {
       await api('PATCH', `/api/rounds/${rid}/games/${gameId}`, body);
       toast(t('detail.saved'));
-      showGameDetail(rid, gameId);
+      const shown = showGameDetail(rid, gameId);
+      // #1843: offer the same change in the caller's other rounds holding this
+      // BGG game — after the save, and after the re-render has settled, so the
+      // sheet never opens under a page that is still being rebuilt. Not awaited
+      // here: the edit is done either way. `game` is this render's copy, i.e.
+      // the PRE-edit values the pre-tick rule compares against.
+      if (!imageBlob && !removeImage) {
+        Promise.resolve(shown).catch(() => {}).then(() => offerTwinEdit(rid, game, fields));
+      }
     } catch (e) {
       // The server's answer when the pre-flight above was bypassed; every other
       // code still surfaces as-is.
@@ -295,6 +303,7 @@ async function showGameDetail(rid, gameId) {
   const editImage = (anchor) => openImagePopover(editorCtx, anchor);
   const editExpansions = (anchor) => openExpansionEditor(editorCtx, anchor);
   const editPrice = (anchor) => openPurchasePricePopover(editorCtx, anchor);
+  const editPitch = (anchor) => openPitchPopover(editorCtx, anchor);
   // A wish's live current price, once the price section has one (#1773) —
   // „Ins Regal" offers to take it over as the purchase price.
   let wishLivePrice = null;
@@ -484,6 +493,12 @@ async function showGameDetail(rid, gameId) {
     line.append(h1, scoreBig);
   }
 
+  // The round's pitch line (#1837), under the title and above the chips — the
+  // same sentence the vote card shows, editable in place. With none, the way
+  // in is an empty chip in the row below, like every other editor here.
+  const pitchLine = gamePitchLine(game, editPitch);
+  if (pitchLine) chips.before(pitchLine);
+
   // The chips move OUT of the <h1> (#1039). They were appended into the heading
   // so they could sit beside the title's last line; the row is now its own flex
   // line, which also takes four interactive controls out of a heading's
@@ -553,6 +568,10 @@ async function showGameDetail(rid, gameId) {
     } else if (!sparse) {
       chips.append(editableTag('tag--custom tag--empty tag--price', esc(t('purchasePrice.set')), editPrice));
     }
+  }
+
+  if (!pitchLine && !sparse) {
+    chips.append(editableTag('tag--custom tag--empty', esc(t('pitch.set')), editPitch));
   }
 
   // What the round owns for this game (#653), as a chip instead of the 110px
@@ -1094,6 +1113,13 @@ async function showGameDetail(rid, gameId) {
     menuItems.push(isLentOut(game)
       ? { icon: 'ti-arrow-back-up', label: t('loan.menuReturn'), kind: 'undoable', run: () => returnLoan(editorCtx) }
       : { icon: 'ti-share', label: t('loan.menuLend'), kind: 'undoable', run: () => openLoanEditor(editorCtx, back) });
+  }
+  // Scoring categories (#1780): a game on the shelf, the one a session draws
+  // and scores — not a wish, nor an archived box (which would grow a „…" its
+  // page has never had for a setting nobody can use there).
+  if (isActiveGame(game)) {
+    menuItems.push({ icon: 'ti-list-numbers', label: t('points.categories.menu'), kind: 'edit',
+      run: () => showScoreCategoriesEditor(game, (list) => updateGame({ scoreCategories: list })) });
   }
   if (game.source) {
     const provider = providerLabel(game.source.provider);

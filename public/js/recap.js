@@ -45,28 +45,24 @@ const recapMean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
 // Votes are read straight off the vote map rather than through `s.gameIds`,
 // so a rating always counts exactly once; ids of deleted games are dropped,
 // since a stat naming a game that is no longer on the shelf has nothing to show.
-function collectRatings(round, peopleOf) {
+//
+// `ratingsOf` is session-ratings.js's `sessionRatings`, so a „Wie war's?"
+// verdict counts like a vote (#1838) — both are a rating of the game.
+function collectRatings(round, peopleOf, ratingsOf) {
   const known = new Set(round.games.map((g) => g.id));
   const games = new Map();
   let total = 0;
   round.sessions.forEach((session) => {
-    const votes = session.votes || {};
-    peopleOf(round, session).forEach((person) => {
-      const own = votes[person.id] || {};
-      Object.keys(own).forEach((gid) => {
-        if (!known.has(gid)) return;
-        const vote = own[gid];
-        if (!vote || !Number.isFinite(vote.rating)) return;
-        const rating = vote.rating;
-        let entry = games.get(gid);
-        if (!entry) games.set(gid, (entry = { all: [], byMember: new Map() }));
-        entry.all.push(rating);
-        total += 1;
-        if (person.guest) return;
-        const mine = entry.byMember.get(person.id) || [];
-        mine.push(rating);
-        entry.byMember.set(person.id, mine);
-      });
+    ratingsOf(session, peopleOf(round, session)).forEach(({ person, gameId: gid, rating }) => {
+      if (!known.has(gid)) return;
+      let entry = games.get(gid);
+      if (!entry) games.set(gid, (entry = { all: [], byMember: new Map() }));
+      entry.all.push(rating);
+      total += 1;
+      if (person.guest) return;
+      const mine = entry.byMember.get(person.id) || [];
+      mine.push(rating);
+      entry.byMember.set(person.id, mine);
     });
   });
   return { games, total };
@@ -203,8 +199,8 @@ function memberFavourites(round, index) {
 }
 
 // The whole recap for one round. `peopleOf` is sessionPeople(round, session).
-function roundRecap(round, peopleOf, shelfScoreOf) {
-  const index = collectRatings(round, peopleOf);
+function roundRecap(round, peopleOf, shelfScoreOf, ratingsOf) {
+  const index = collectRatings(round, peopleOf, ratingsOf);
   const { best, worst } = bestAndWorst(round, index, shelfScoreOf);
   return {
     totals: {

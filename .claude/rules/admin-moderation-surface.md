@@ -8,9 +8,9 @@ paths:
 ---
 # The operator moderation surface (#268/#273/#274/#275) — traps
 
-**Since #996 it is `lib/routes/admin/`, not one file.** Eight sub-routers
-(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`, and
-`passkeys` since #1670) plus
+**Since #996 it is `lib/routes/admin/`, not one file.** Its sub-routers
+(`status`, `corpus`, `storage`, `moderation`, `users`, `log`, `notices`,
+`passkeys` since #1670, `game-scoring` since #1786 and `game-categories` since #1787) plus
 `shared.js` (the schemas and paging shape more than one needs) and `index.js`,
 which owns the login pair, the `ADMIN_PASSWORD` gate and the mounts.
 
@@ -19,9 +19,10 @@ Two things about that shape are load-bearing:
 - **The composition is in `index.js`, NOT in `lib/app.js`** — unlike the five
   `/api/account` sub-routers #996 argued from. Those have distinct path
   prefixes; these do not (`/status`, `/users`, `/log` all sit directly under
-  `/api/admin`), so seven mounts on one prefix would run `authLimiter` seven
-  times per request and silently divide `AUTH_RATE_LIMIT_MAX` by seven — the
-  exact trap `lib/routes/passkeys.js` carries a comment about.
+  `/api/admin`), so seven mounts on one prefix would run every app-level
+  middleware seven times per request. (It was first argued for the auth
+  limiter, divided by seven; since #1836 that limiter rides the four credential
+  routes per route and the authenticated panel does not spend it.)
 - **The gate is applied once, before the mounts.** A sub-router re-applying
   `requireAdmin` would be harmless today and would become the place someone
   reads the gate from, at which point removing it from `index.js` looks safe.
@@ -116,9 +117,26 @@ returns the previous value.
   keeps its seats and tags, so a moderation action never quietly changes what a
   group's quick-start chip draws. `roundContent` lists them as `filters`.
 
+- A **loan** (#1822) is keyed by its GAME id and redacts every copy of the
+  borrower's name at once — the game's current loan **and** every
+  `game_lent`/`game_returned` Chronik line for that box, which carry their own
+  `to` and outlive the loan. `roundContent.loans` lists a returned box too, from
+  those lines. The loan itself stays, so a lent box stays out of the draw.
+- A **scoring category** (#1822) is redacted by name; its id survives so a
+  session's stored `scoreParts` still resolve. Tombstones are listed and redactable.
+- A **game title or member name** (#1825) also blanks its COPIES: the Chronik
+  lines that quote it and, for a title, the friend-feed rows of every account
+  that can act on the round (owner tenant + grantees). Which copy matches is
+  `lib/redact-copies.js`, shared by both backends: by `gameId` where a line has
+  one, by the old text where it has none (`game_deleted`, `member_*`, every feed
+  row) — so a same-named twin in that round goes too, accepted for a takedown.
+  The Postgres activity write is RLS-scoped, so it runs in the tenant `tx`, never
+  `atx()`; the plain-role probe pins it.
+
 There are **no rating comments** (votes are numeric), so user-authored text is
 exactly: round name, game title, member name, tag name, expansion title,
-saved-filter name, feedback message. **Adding another means adding a `REDACT_KINDS` entry, both
+saved-filter name, loan borrower, scoring-category name, feedback message (chat
+messages have their own removal route, #1781). **Adding another means adding a `REDACT_KINDS` entry, both
 backends' `redactText`, the `roundContent` list and one line in the panel's flat
 row builder** — a new free-text field with no takedown path is a DSA answer the
 operator cannot give. Feedback is global/un-scoped → it redacts by id alone, no

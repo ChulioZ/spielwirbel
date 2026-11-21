@@ -48,16 +48,21 @@ const STATUS = (over = {}) => ({
     rounds: { total: 11 },
     content: { games: 90, activeGames: 70, members: 25, sessions: 33, sessionsFinished: 20 },
     adoption: {
-      roundsWithRetired: 3, roundsWithCompleted: 1, roundsWithWish: 5, roundsWithAnyShelf: 7,
-      roundsWithTags: 6, roundsWithSavedFilters: 4, roundsWithGuestGame: 3,
-      gamesLinked: 55, gamesWithOwnCover: 12, gamesWithProviderCover: 40,
-      gamesWithOwners: 9, gamesWithExpansions: 4,
-      sessionsWithGuests: 8, sessionsWithTeams: 2, sessionsWithVoteLink: 5,
+      roundsWithRetired: 3, roundsWithCompleted: 1, roundsWithWish: 5, roundsWithGuestGame: 3,
+      /* #1823. Each share over `roundsTotal` (10) differs from one over
+         `rounds.total` (11), and „aktiv" (2 of 5) reads 20 % if it divided by
+         the card instead of the line above it. */
+      roundsWithInviteLink: 4, roundsWithChat: 6, roundsWithChallenge: 5, roundsWithActiveChallenge: 2,
+      roundsWithDrawBoost: 7,
+      /* #1803. Chosen so a line dividing by `content.games` (90) instead of
+         `gamesTotal` (80) renders a different share for every one of them. */
+      gamesWithPurchasePrice: 20, gamesLent: 8, gamesWithScoreCategories: 16, gamesWithPlaytimeOverride: 12,
+      sessionsWithComment: 8, sessionsWithVerdicts: 5,
       sessionsImported: 8, sessionsImportedBgStats: 4, sessionsImportedBgg: 2, sessionsImportedMyludo: 2,
       // #1675: the automa is NOT a subset of points (it may be stored alone),
       // so 4 > 3 here and a renderer dividing by „mit Punkten" would read 133 %.
       sessionsWithPoints: 3, sessionsWithAutoma: 4,
-      accountsWithPasskey: 11, accountsWithBggUsername: 6,
+      accountsWithPasskey: 11, accountsWithPriceWatch: 6,
       /* The card's own denominators (#1174), DELIBERATELY DIFFERENT from the
          instance-wide twins above — `accounts.total` is 42 against 40 here,
          `rounds.total` 11 against 10, `content.games` 90 against 80 and
@@ -65,15 +70,15 @@ const STATUS = (over = {}) => ({
          instance-wide figure would still produce a plausible „n / total", so
          only a fixture where the two disagree can tell them apart. */
       accountsTotal: 40, roundsTotal: 10, gamesTotal: 80, sessionsTotal: 30,
-      accountsWithAvatar: 7, accountsWithoutRound: 13, accountsWithBgStats: 4, accountsPlayedQuiz: 6,
-      // The Konten twins (#1480), below their instance-wide 30 / 3 on purpose.
-      accountsVerified: 28, accountsDisabled: 2,
+      accountsWithoutRound: 13, accountsWithBgStats: 4, accountsPlayedQuiz: 6,
+      // The Konten twin (#1480), below its instance-wide 30 on purpose.
+      accountsVerified: 28,
       // „Einfacher Modus" (#1646): five accounts hide something, one hides it
       // all; trophies is hidden by four of them, every other feature by two.
       accountsSimpleModeAll: 1, accountsSimpleModeAny: 5,
       accountsSimpleModeHidden: Object.fromEntries(SIMPLE_MODE_FEATURES.map((f) => [f, f === 'trophies' ? 4 : 2])),
       funnel: {
-        started: 28, rated: 18, closed: 22, chosen: 20, played: 12, result: 9, cancelled: 3,
+        started: 28, rated: 18, chosen: 20, played: 12, result: 9, cancelled: 3, photo: 3,
       },
       // Sums to roundsTotal, which the tile's own test asserts.
       roundsByFinished: { none: 5, one: 3, many: 2 },
@@ -81,17 +86,17 @@ const STATUS = (over = {}) => ({
       // reading its neighbour's key cannot pass.
       lastWeek: {
         registrations: 4, activeAccounts: 11, sessionsStarted: 9, sessionsPlayed: 7, sessionsCancelled: 1,
-        sessionsImported: 14, roundsShared: 2, friendships: 3,
+        sessionsImported: 14, roundsShared: 2, friendships: 3, messages: 19,
       },
     },
     designAdoption: { byDesign: { ...DESIGNS } },
     social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
     demo: { live: 1, max: 5 },
     mail: { sent: 2, limit: 200 },
-    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7 },
+    peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7, photosPerTenant: 5 },
     ...over,
   },
-  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20, messagesPerTenant: 20000 },
+  quotas: { enforced: true, roundsPerTenant: 10, gamesPerRound: 200, tagsPerRound: 20, messagesPerTenant: 20000, photosPerTenant: 500 },
   runtime: { node: 'v22.0.0' },
 });
 
@@ -282,6 +287,7 @@ test('Kontingente keeps its graded pill and moves its three ceilings onto lines'
     ['Spiele/Runde', '12 / 200'],
     ['Tags/Runde', '4 / 20'],
     ['Chat-Nachrichten/Konto', '7 / 20000'],
+    ['Session-Fotos/Konto', '5 / 500'],
   ]);
 });
 
@@ -310,6 +316,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Importierte Sessions', '14', '', 0],
         ['Geteilte Runden', '2', '', 0],
         ['Neue Freundschaften', '3', '', 0],
+        ['Chat-Nachrichten', '19', '', 0],
       ],
     },
     {
@@ -317,12 +324,9 @@ test('every card renders exactly: parent first, then count + share of its parent
       total: '40',
       lines: [
         ['bestätigt', '28', '70 %', 0],
-        ['unbestätigt', '12', '30 %', 0],
-        ['gesperrt', '2', '5 %', 0],
-        ['BGG-Konto', '6', '15 %', 0],
         ['Passkey', '11', '28 %', 0],
-        ['Konto-Bild', '7', '18 %', 0],
         ['BG-Stats-Weitergabe', '4', '10 %', 0],
+        ['mit Preisalarm', '6', '15 %', 0],
         ['Einfacher Modus', '5', '13 %', 0],
         ['komplett', '1', '20 %', 1],
         // One line per feature, in the shared list's order (#1646).
@@ -342,13 +346,16 @@ test('every card renders exactly: parent first, then count + share of its parent
       total: '10',
       lines: [
         ['geteilt', '2', '20 %', 0],
-        ['eigene Tags', '6', '60 %', 0],
-        ['gespeicherte Filter', '4', '40 %', 0],
+        ['mit gültigem Einladungslink', '4', '40 %', 0],
+        ['mit Chat-Nachricht', '6', '60 %', 0],
+        ['Gruppen-Challenge genutzt', '5', '50 %', 0],
+        ['aktiv', '2', '40 %', 1],
+        ['Ziehungs-Bonus an', '7', '70 %', 0],
         ['mit Gastspiel', '3', '30 %', 0],
-        ['Regal genutzt', '7', '70 %', 0],
-        ['Aussortiert', '3', '43 %', 1],
-        ['Durchgespielt', '1', '14 %', 1],
-        ['Wunschliste', '5', '71 %', 1],
+        // Top level since #1823, so plain shares of Runden.
+        ['Aussortiert', '3', '30 %', 0],
+        ['Durchgespielt', '1', '10 %', 0],
+        ['Wunschliste', '5', '50 %', 0],
         ['gespielte Sessions', '', '', 0],
         ['zwei oder mehr', '2', '20 %', 1],
         ['genau eine', '3', '30 %', 1],
@@ -359,22 +366,18 @@ test('every card renders exactly: parent first, then count + share of its parent
       title: 'Spiele',
       total: '80',
       lines: [
-        ['verknüpft', '55', '69 %', 0],
-        ['von Hand', '25', '31 %', 0],
-        ['mit Besitzer*in', '9', '11 %', 0],
-        ['mit Erweiterungen', '4', '5 %', 0],
-        ['mit Titelbild', '52', '65 %', 0],
-        ['eigenes Bild', '12', '23 %', 1],
-        ['vom Anbieter', '40', '77 %', 1],
+        ['mit Kaufpreis', '20', '25 %', 0],
+        ['aktuell verliehen', '8', '10 %', 0],
+        ['mit Wertungskategorien', '16', '20 %', 0],
+        ['Spielzeit korrigiert', '12', '15 %', 0],
       ],
     },
     {
       title: 'Sessions',
       total: '30',
       lines: [
-        ['mit Gästen', '8', '27 %', 0],
-        ['mit Teams', '2', '7 %', 0],
-        ['mit Vote-Link', '5', '17 %', 0],
+        ['mit Kommentar', '8', '27 %', 0],
+        ['mit „Wie war\'s?"', '5', '17 %', 0],
         ['mit Punkten', '3', '10 %', 0],
         ['mit Automa', '4', '13 %', 0],
         ['importiert', '8', '27 %', 0],
@@ -383,8 +386,8 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['aus Myludo', '2', '25 %', 1],
         ['gestartet (ohne Split-Eltern)', '28', '93 %', 0],
         ['als gespielt markiert', '12', '43 %', 1],
+        ['mit Foto', '3', '25 %', 2],
         ['von ≥2 bewertet', '18', '64 %', 1],
-        ['Abstimmung beendet', '22', '79 %', 1],
         ['Spiel gewählt', '20', '71 %', 1],
         ['Ergebnis erfasst', '9', '32 %', 1],
         ['abgebrochen', '3', '11 %', 1],
@@ -399,18 +402,16 @@ test('every card renders exactly: parent first, then count + share of its parent
 });
 
 test('Konten is filtered like every other figure — the instance-wide bare count is gone', async (t) => {
-  /* #1480 retired the card's one exception: „Konten" and bestätigt /
-     unbestätigt / gesperrt now read the ADOPTION twins. The fixture has 42
-     accounts instance-wide against 40 here, 30 verified against 28 and 3
-     disabled against 2, so reading `accounts.*` renders different numbers. */
+  /* #1480 retired the card's one exception: „Konten" and bestätigt now read
+     the ADOPTION twins. The fixture has 42 accounts instance-wide against 40
+     here and 30 verified against 28, so reading `accounts.*` renders
+     different numbers. (unbestätigt / gesperrt left the card in #1823.) */
   const { doc, dom } = await panel();
   t.after(() => dom.window.close());
   const konten = cardOf(doc, 'Konten');
   assert.equal(konten.total, '40', 'the Konten total read accounts.total');
   const by = Object.fromEntries(konten.lines.map(([l, n]) => [l, n]));
   assert.equal(by['bestätigt'], '28', 'bestätigt read accounts.verified');
-  assert.equal(by['unbestätigt'], '12', 'unbestätigt was not derived from the adoption twins');
-  assert.equal(by.gesperrt, '2', 'gesperrt read accounts.disabled');
 });
 
 test('a nested line is a share of the line directly above it, not of the card', async (t) => {
@@ -421,15 +422,23 @@ test('a nested line is a share of the line directly above it, not of the card', 
      line visually but divided by the card total fails here by name. The
      „gespielte Sessions" bands sit under a label with no figure and divide by
      the card's population — a partition of Runden. */
+  // `above[d]` is the figure of the latest line at depth d, so a line at depth
+  // d + 1 is checked against it — two levels since #1774's „mit Foto" under
+  // „als gespielt markiert".
+  let nested = 0;
   for (const card of groups(doc)) {
-    let parent = Number(card.total);
+    const above = [];
     for (const [label, n, share, depth] of card.lines) {
-      if (depth === 0) { if (n !== '') parent = Number(n); else parent = Number(card.total); continue; }
+      above[depth] = n !== '' ? Number(n) : Number(card.total);
+      if (depth === 0) continue;
       if (share === '' || share === '—') continue;
+      const parent = above[depth - 1];
       assert.equal(share, `${Math.round((100 * Number(n)) / parent)} %`,
         `${card.title} › ${label}: not a share of the line above it (${parent})`);
+      if (depth === 2) nested += 1;
     }
   }
+  assert.ok(nested >= 1, 'no depth-2 line was checked — the fixture lost „mit Foto"');
 });
 
 test('no adoption figure carries a verdict pill', async (t) => {
@@ -505,7 +514,7 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
   assert.equal(/0 \/ 0/.test(text), false, 'a 0 / 0 claims a share of nothing');
   // The five population cards — the seven-day card and the rest card have no parent.
   assert.deepEqual(cardOf(doc, 'Letzte sieben Tage').lines.map(([, n, share]) => [n, share]),
-    Array(8).fill(['0', '']), 'a quiet week reads 0, never a share');
+    Array(9).fill(['0', '']), 'a quiet week reads 0, never a share');
   for (const card of cards.slice(1, 6)) {
     assert.equal(card.total, '0', `${card.title}: a zero population still reads 0`);
     for (const [label, n, share] of card.lines) {

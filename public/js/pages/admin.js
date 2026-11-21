@@ -128,6 +128,10 @@
     }
     body.appendChild(dl);
 
+    // A card's own controls (the category card's name inputs, #1787) — built by
+    // that card with textContent/value, never markup, like everything here.
+    if (spec.node) body.appendChild(spec.node);
+
     if (spec.text) {
       const block = document.createElement('p');
       block.className = 'detail__text';
@@ -286,6 +290,11 @@
     loadCorpus();
     refreshLog();
     loadPasskeys();
+    // The cards in their own files (js/pages/admin-scoring.js, #1786;
+    // js/pages/admin-categories.js, #1787) start here.
+    // They get the shared row dialog through the event rather than a global:
+    // page scripts declare none (eslint.config.js's pages block).
+    document.dispatchEvent(new CustomEvent('admin:panel', { detail: { openDetail } }));
   }
 
   // ---- admin passkeys (#1670) ----------------------------------------------
@@ -381,7 +390,7 @@
     // ceilings are inert (.claude/rules/per-tenant-quotas.md), so the peaks are
     // shown without a verdict that implies a refusal that cannot happen.
     const peakVerdict = s.quotas.enforced
-      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound', 'messagesPerTenant']
+      ? ['roundsPerTenant', 'gamesPerRound', 'tagsPerRound', 'messagesPerTenant', 'photosPerTenant']
         .map((k) => capVerdict(m.peaks[k], s.quotas[k]))
         .reduce((worst, v) => (VERDICT_RANK[v] > VERDICT_RANK[worst] ? v : worst), 'ok')
       : 'warn';
@@ -392,6 +401,7 @@
         ['Spiele/Runde', `${m.peaks.gamesPerRound} / ${s.quotas.gamesPerRound}`],
         ['Tags/Runde', `${m.peaks.tagsPerRound} / ${s.quotas.tagsPerRound}`],
         ['Chat-Nachrichten/Konto', `${m.peaks.messagesPerTenant} / ${s.quotas.messagesPerTenant}`],
+        ['Session-Fotos/Konto', `${m.peaks.photosPerTenant} / ${s.quotas.photosPerTenant}`],
       ]]);
 
     // The runtime the answering process is on (#977). Neutral pill, deliberately:
@@ -429,10 +439,10 @@
       - `of` is the line's own denominator, null for no share. A line is
         nested one level (`depth` 1, 2) exactly when it is a share of a SUBSET
         rather than of the card's population, and then `of` is the line
-        directly above it. Three places today: the Regal union, the cover union
-        and the session funnel. The „gespielte Sessions" bands are a partition
-        of Runden, so they divide by Runden — the label above them only names
-        them. */
+        directly above it (e.g. „aktiv" under the group challenge, the import
+        sources, the session funnel). The „gespielte Sessions" bands are a
+        partition of Runden, so they divide by Runden — the label above them
+        only names them. */
 
   /* Whole percent, computed HERE: the server reports facts, the panel
      interprets them (.claude/rules/admin-kennzahlen-card.md). A zero
@@ -494,6 +504,8 @@
         line('Importierte Sessions', w.sessionsImported, null),
         line('Geteilte Runden', w.roundsShared, null),
         line('Neue Freundschaften', w.friendships, null),
+        // Round-level messages and session comments together (#1823).
+        line('Chat-Nachrichten', w.messages, null),
       ],
     };
 
@@ -502,12 +514,10 @@
       total: accounts,
       lines: [
         line('bestätigt', a.accountsVerified, accounts),
-        line('unbestätigt', accounts - a.accountsVerified, accounts),
-        line('gesperrt', a.accountsDisabled, accounts),
-        line('BGG-Konto', a.accountsWithBggUsername, accounts),
         line('Passkey', a.accountsWithPasskey, accounts),
-        line('Konto-Bild', a.accountsWithAvatar, accounts),
         line('BG-Stats-Weitergabe', a.accountsWithBgStats, accounts),
+        // Price alerts (#680): accounts holding at least one watch.
+        line('mit Preisalarm', a.accountsWithPriceWatch, accounts),
         /* „Einfacher Modus" (#1646): accounts hiding at least one feature,
            then — as shares of THOSE — komplett and the EFFECTIVE hide per
            feature (an „alles aus" account counts on every line it did not
@@ -556,17 +566,24 @@
       total: rounds,
       lines: [
         line('geteilt', m.social.sharedRounds, rounds),
-        line('eigene Tags', a.roundsWithTags, rounds),
-        line('gespeicherte Filter', a.roundsWithSavedFilters, rounds),
-        // A guest brought a game along (#1681) — outside the shelf union below,
-        // since a visitor's box is not a state of the round's own collection.
+        /* Rounds holding an invite-link row (#1515). NOT "ever made one": a
+           link is deleted when it expires (7 days, lib/invite-link.js), when a
+           seat link is claimed and when it is revoked, so the rows only say
+           which rounds hold a valid link now — hence the label. */
+        line('mit gültigem Einladungslink', a.roundsWithInviteLink, rounds),
+        line('mit Chat-Nachricht', a.roundsWithChat, rounds),
+        // Used = one running OR one finished into the history (#1779); the
+        // running ones are a share of that.
+        line('Gruppen-Challenge genutzt', a.roundsWithChallenge, rounds),
+        line('aktiv', a.roundsWithActiveChallenge, a.roundsWithChallenge, 1),
+        line('Ziehungs-Bonus an', a.roundsWithDrawBoost, rounds),
+        // A guest brought a game along (#1681).
         line('mit Gastspiel', a.roundsWithGuestGame, rounds),
-        // The UNION — one round can be in two states, so the three below are
-        // shares of it and cannot be summed into it.
-        line('Regal genutzt', a.roundsWithAnyShelf, rounds),
-        line('Aussortiert', a.roundsWithRetired, a.roundsWithAnyShelf, 1),
-        line('Durchgespielt', a.roundsWithCompleted, a.roundsWithAnyShelf, 1),
-        line('Wunschliste', a.roundsWithWish, a.roundsWithAnyShelf, 1),
+        // Rounds USING each shelf state. One round can be in several, so the
+        // three cannot be summed into anything.
+        line('Aussortiert', a.roundsWithRetired, rounds),
+        line('Durchgespielt', a.roundsWithCompleted, rounds),
+        line('Wunschliste', a.roundsWithWish, rounds),
         line('gespielte Sessions', null, null),
         line('zwei oder mehr', rbf.many, rounds, 1),
         line('genau eine', rbf.one, rounds, 1),
@@ -574,18 +591,17 @@
       ],
     };
 
-    const covered = a.gamesWithOwnCover + a.gamesWithProviderCover;
+    /* Rebuilt in #1803 around features still being adopted; linking, covers,
+       owners and expansions were dropped as settled. „mit Wertungskategorien"
+       is the round's own scoring categories, never BoardGameGeek's. */
     const spiele = {
       title: 'Spiele',
       total: games,
       lines: [
-        line('verknüpft', a.gamesLinked, games),
-        line('von Hand', games - a.gamesLinked, games),
-        line('mit Besitzer*in', a.gamesWithOwners, games),
-        line('mit Erweiterungen', a.gamesWithExpansions, games),
-        line('mit Titelbild', covered, games),
-        line('eigenes Bild', a.gamesWithOwnCover, covered, 1),
-        line('vom Anbieter', a.gamesWithProviderCover, covered, 1),
+        line('mit Kaufpreis', a.gamesWithPurchasePrice, games),
+        line('aktuell verliehen', a.gamesLent, games),
+        line('mit Wertungskategorien', a.gamesWithScoreCategories, games),
+        line('Spielzeit korrigiert', a.gamesWithPlaytimeOverride, games),
       ],
     };
 
@@ -595,8 +611,8 @@
 
        THE LINES ARE NOT A PIPELINE and must not be read as one. Each is an
        independent share of „gestartet": a direct-pick session is created
-       already closed and with a game chosen while nobody ever voted, so
-       „bewertet" can be smaller than „Abstimmung beendet" with nothing wrong.
+       with a game chosen while nobody ever voted, so „bewertet" can be
+       smaller than „Spiel gewählt" with nothing wrong.
        „abgebrochen" is counted apart for the same reason — an evening nobody
        played on purpose is a resolved outcome, not a loss. */
     const f = a.funnel;
@@ -604,9 +620,9 @@
       title: 'Sessions',
       total: sessions,
       lines: [
-        line('mit Gästen', a.sessionsWithGuests, sessions),
-        line('mit Teams', a.sessionsWithTeams, sessions),
-        line('mit Vote-Link', a.sessionsWithVoteLink, sessions),
+        // Session comments (#1782) and „Wie war's?" verdicts (#1838).
+        line('mit Kommentar', a.sessionsWithComment, sessions),
+        line('mit „Wie war\'s?"', a.sessionsWithVerdicts, sessions),
         // Per-player points (#1630) and the automa (#1672). Both are shares of
         // the card, NOT nested: an automa may be stored without any points.
         line('mit Punkten', a.sessionsWithPoints, sessions),
@@ -618,8 +634,10 @@
         line('aus Myludo', a.sessionsImportedMyludo, a.sessionsImported, 1),
         line('gestartet (ohne Split-Eltern)', f.started, sessions),
         line('als gespielt markiert', f.played, f.started, 1),
+        // A share of „gespielt", one level deeper: only a played session can
+        // carry a photo (#1774).
+        line('mit Foto', f.photo, f.played, 2),
         line('von ≥2 bewertet', f.rated, f.started, 1),
-        line('Abstimmung beendet', f.closed, f.started, 1),
         line('Spiel gewählt', f.chosen, f.started, 1),
         line('Ergebnis erfasst', f.result, f.started, 1),
         line('abgebrochen', f.cancelled, f.started, 1),
@@ -1190,7 +1208,9 @@
     box.replaceChildren();
 
     const pairs = [];
-    if (out.owner) pairs.push(['Spiel', out.owner.gameTitle], ['Runde', out.owner.roundName]);
+    // A session photo (#1774) names its round and session, not a game.
+    if (out.owner && out.owner.kind === 'session') pairs.push(['Session-Foto', out.owner.sessionId], ['Runde', out.owner.roundName]);
+    else if (out.owner) pairs.push(['Spiel', out.owner.gameTitle], ['Runde', out.owner.roundName]);
     if (out.round) pairs.push(['Runde', out.round.roundName]);
     pairs.push(['Tenant', out.tenantId || '—']);
     pairs.push(['Konten', out.users.length
@@ -1302,6 +1322,11 @@
       ...(content.expansions || []).map((e) => ['Erweiterung', 'expansion', e.id, e.title]),
       // A saved session filter's name (#1328) — user-authored like the rest.
       ...(content.filters || []).map((f) => ['Gespeicherter Filter', 'filter', f.id, f.name]),
+      // A lent box's borrower (#1822), keyed by the GAME id: one row per box,
+      // every name it was lent to — redacting it blanks the loan and its
+      // Chronik lines together.
+      ...(content.loans || []).map((l) => ['Verliehen an', 'loan', l.id, l.to]),
+      ...(content.scoreCategories || []).map((c) => ['Wertungskategorie', 'scoreCategory', c.id, c.name]),
     ]) {
       const row = detailRow({
         title: label,

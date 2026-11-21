@@ -58,6 +58,34 @@ const ratingMark = (avg) => {
    into what a screen reader announces. Until #1530 Klassisch printed a digit
    instead of a word, and its markup was byte-for-byte the pre-#1268 inline
    loop; that promise ended here deliberately. */
+/* The round's pitch line under the title (#1837) — one sentence the group wrote
+   about the game, so a voter who does not know it learns what it is before
+   rating it. The SAME markup on every card (both hot-seat cards and both link
+   cards), so a design styles one element. A game without one renders nothing
+   at all: no empty paragraph, no gap. The text is the round's own and goes in
+   through esc() — never raw. */
+function votePitchHtml(game) {
+  const text = game && typeof game.pitch === 'string' ? game.pitch.trim() : '';
+  return text ? `<p class="vote__pitch">${esc(text)}</p>` : '';
+}
+
+/* The voter's own taste hint under the pitch (#1839): „Könnte dir gefallen –
+   wie Azul und Patchwork" on a game this voter has never rated or played, when
+   it resembles the games they like (vote-hint.js decides; this only draws).
+   The SAME markup on every in-app card, like the pitch, so a design styles one
+   element. `person` is whoever's seat is voting, so on a shared device the hint
+   follows the seat. A guest, a game without metadata, or no match renders
+   nothing at all. The names are the round's own titles, through esc().
+
+   Not on the shared-link card, on purpose: the ballot carries no round data to
+   derive it from, and serving it would hand a member's taste to anyone who taps
+   their name on a link nobody signs in to. */
+function voteHintHtml(round, person, game) {
+  const liked = voteTasteHint(round, person && person.id, game);
+  if (!liked) return '';
+  return `<p class="vote__hint">${esc(t('vote.tasteHint', { names: joinNames(liked.map((g) => g.title)) }))}</p>`;
+}
+
 /* Whether the worn design composes its vote card here rather than drawing
    Klassisch's. Ocean (#1213) and Die Brücke (#1240) take Der Tisch's
    composition and add their own side columns; Das Programmheft (#1374) takes
@@ -71,15 +99,20 @@ const voteCardComposed = () => designIs('tisch') || oceanWorn() || designIs('bru
 // in its own words („kein Schub" … „volle Kraft"); the middle three keep the app's.
 const voteSaidWord = (n) => (designIs('bruecke') && brueckeVoteWord(n)) || voteWord(n);
 
-function voteMoodButton(n, selected) {
+/* `label` makes a face with NO word under it, named by `label` alone — the
+   „Wie war's?" verdict (#1849), where the vote's words („unbedingt", „volle
+   Kraft") answer "do you want to play this?", not "how was it?". One markup
+   shape still, so every design's `.mood` styling reaches both. */
+function voteMoodButton(n, selected, { label } = {}) {
   // Ocean's and Die Brücke's stylesheets print only the two end words under the
   // faces; the middle three keep theirs as the tile's name.
-  const said = voteSaidWord(n);
+  const said = label || voteSaidWord(n);
+  const word = label ? '' : `<span class="mood__word">${esc(said)}</span>`;
   // aria-pressed carries the choice (#145): the selected face is otherwise
   // marked only by its fill, so nothing announced which rating was picked.
   const b = h(`<button class="mood${selected ? ' is-selected' : ''}"
            aria-pressed="${selected}" aria-label="${esc(said)}">
-           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i><span class="mood__word">${esc(said)}</span>
+           <i class="ti ${ratingFace(n)}" aria-hidden="true"></i>${word}
          </button>`);
   if (selected) {
     /* --sc, not an inline `background`: an inline background is precisely
@@ -176,7 +209,7 @@ function voteFeltMarks(gameN, gameTotal) {
   return `<span class="vote-felt__dots" aria-hidden="true">${dots.join('')}</span>`;
 }
 
-function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff }) {
+function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, game, meta, handoff, hint }) {
   const imgStyle = game.image ? `style="background-image:url('${coverUrl(game.image, COVER_HERO)}')"` : '';
   return h(`<div class="vote vote--split vote--composed">
       <div class="vote-felt">
@@ -191,6 +224,8 @@ function composedVoteCard({ person, count, roundName, gameN, gameTotal, secret, 
       <div class="vote__card">
         <div class="vote__img${isThumbCover(game.image) ? ' cover--thumb' : ''}" ${imgStyle}>${coverPlaceholder(game)}</div>
         <h1 class="vote__title" tabindex="-1">${esc(game.title)}</h1>
+        ${votePitchHtml(game)}
+        ${hint || ''}
         ${meta ? `<p class="vote__meta">${esc(meta)}</p>` : ''}
         <div class="vote__q" id="voteQ">${esc(t(designIs('bruecke') ? 'vote.questionBruecke' : 'vote.question'))}</div>
         <div class="rating" role="group" aria-labelledby="voteQ"></div>

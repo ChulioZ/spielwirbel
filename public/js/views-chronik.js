@@ -68,6 +68,8 @@ function renderChronikTab(round, activities) {
   const loadCover = createCoverLoader(); // lazy session thumbs (#198)
   // The earnings each session produced (#1388), a row apiece under its card.
   const badgeRows = badgeChronikIndex(round);
+  // The challenges each session completed (#1779), same placement.
+  const challengeRows = challengeChronikIndex(round);
 
   // The chip choice persists for the session but is scoped to one round — the
   // same guard renderRegalTab opens with. An unknown value (a filter dropped in
@@ -286,6 +288,18 @@ function renderChronikTab(round, activities) {
   if (periodSec && recapLast) app.appendChild(periodSec);
   const sessionNo = forest ? forestSessionNumbers(round) : new Map();
 
+  /* The thumbnail: the evening's photo (#1774), else the cover — one slot, so no
+     composition grows a column. Lazy; photo-policy.js says why no thumb copy. */
+  function sessionThumbSrc(s, chosen) {
+    if (s.photo) return s.photo;
+    return chosen && chosen.image ? coverUrl(chosen.image, COVER_THUMB) : null;
+  }
+  function loadSessionThumb(card, s, chosen) {
+    const src = sessionThumbSrc(s, chosen);
+    const slot = card.querySelector('.session-card__img');
+    if (src && slot) loadCover(slot, src);
+  }
+
   function buildSessionCard(s) {
     const when = fmtSessionWhen(s);
     const chosen = s.chosenGameId && round.games.find((g) => g.id === s.chosenGameId);
@@ -302,7 +316,9 @@ function renderChronikTab(round, activities) {
     // the played icon and read as a night that happened at one table.
     const outcome = sessionOutcome(s);
     const stateIcon = outcome === 'cancelled' ? 'ti-x' : outcome === 'split' ? 'ti-layout-grid' : 'ti-cards';
-    const thumbIcon = chosen
+    // A photo fills the slot alone (loadSessionThumb): no glyph under it.
+    const thumbIcon = s.photo ? ''
+      : chosen
       ? coverPlaceholder(chosen)
       : `<i class="ti ${stateIcon}" aria-hidden="true"></i>`;
 
@@ -352,7 +368,7 @@ function renderChronikTab(round, activities) {
            <div class="session-card__meta">${parts.join(' · ')}</div>
          </div>
        </a>`);
-    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    loadSessionThumb(card, s, chosen);
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
   }
@@ -386,7 +402,7 @@ function renderChronikTab(round, activities) {
          </div>
          ${faces}${pill}
        </a>`);
-    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    loadSessionThumb(card, s, chosen);
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
   }
@@ -426,7 +442,7 @@ function renderChronikTab(round, activities) {
          ${pill}
          <i class="ti ti-chevron-right session-card__chev" aria-hidden="true"></i>
        </a>`);
-    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    loadSessionThumb(card, s, chosen);
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
   }
@@ -462,7 +478,7 @@ function renderChronikTab(round, activities) {
     const drawn = s.gameIds && s.gameIds.length ? esc(tn(s.gameIds.length, 'home.chip.gamesOne', 'home.chip.games')) : '';
     const card = h(`<a class="session-card session-card--log">
          <time class="session-card__date" datetime="${esc(s.createdAt)}" title="${esc(when)}"><span class="session-card__day" aria-hidden="true">${esc(d.toLocaleString(tag, { day: 'numeric' }))}</span><span class="session-card__mon" aria-hidden="true">${esc(d.toLocaleString(tag, { month: 'short' }))}</span><span class="session-card__full">${esc(full)}</span></time>
-         <div class="session-card__title">${title}</div>
+         <div class="session-card__title">${title}${s.photo ? ` <i class="ti ti-photo session-card__photo-mark" role="img" aria-label="${esc(t('chronik.hasPhoto'))}"></i>` : ''}</div>
          <div class="session-card__who">${who || ''}${sub}</div>
          <div class="session-card__drawn">${drawn}</div>
          ${pill}
@@ -507,7 +523,7 @@ function renderChronikTab(round, activities) {
          </div>
          ${pill}
        </a>`);
-    if (chosen && chosen.image) loadCover(card.querySelector('.session-card__img'), coverUrl(chosen.image, COVER_THUMB));
+    loadSessionThumb(card, s, chosen);
     navLink(card, resultsPath(round.id, s.id), () => showResults(round, s));
     return card;
   }
@@ -646,24 +662,36 @@ function renderChronikTab(round, activities) {
     }
   }
 
+  // Every design's card, plus its comment count (#1782, views-round-chat.js).
+  const commentCards = [];
+  function badgedSessionCard(s) {
+    const card = buildSessionCard(s);
+    commentCards.push([card, s.id]);
+    sessionCommentBadge(card, rid, s.id);
+    return card;
+  }
+
   function buildItem(e) {
     const dot = e.kind === 'session' ? ' tl-dot--session'
       : chronikTier(e.type) === 'milestone' ? ' tl-dot--milestone' : '';
     const item = h(`<div class="tl-item"><span class="tl-dot${dot}"></span></div>`);
-    item.appendChild(e.kind === 'session' ? buildSessionCard(e.session) : buildActivityRow(e));
+    item.appendChild(e.kind === 'session' ? badgedSessionCard(e.session) : buildActivityRow(e));
     // The tables of a split evening, indented under the parent they came from
     // (#796). Newest-first everywhere else in this timeline, but a split's
     // tables are siblings of one moment, so they keep the split's own order.
     const kids = e.kind === 'session' ? childrenOf.get(e.session.id) : null;
     if (kids && kids.length) {
       const nest = h('<div class="tl-nest"></div>');
-      kids.forEach((child) => nest.appendChild(buildSessionCard(child)));
+      kids.forEach((child) => nest.appendChild(badgedSessionCard(child)));
       item.appendChild(nest);
     }
     if (e.kind === 'session') chronikBadgeRows(round, badgeRows.get(e.session.id)).forEach((row) => item.appendChild(row));
+    // A split evening's table can complete one, so its children are asked too.
+    if (e.kind === 'session') [e.session].concat(kids || []).forEach((s) => chronikChallengeRows(round, challengeRows.get(s.id)).forEach((row) => item.appendChild(row)));
     return item;
   }
   renderTimeline();
+  loadSessionCommentBadges(round, commentCards);
   // Deleting (or leaving) the round used to end this timeline, and it was the one
   // round action with no good home at any width: unlike the Regal's footer this
   // one was not `rail-owned`, so it stayed below the whole history on desktop too,

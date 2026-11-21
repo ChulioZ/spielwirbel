@@ -4,8 +4,10 @@ paths:
   - "lib/repo/json.js"
   - "lib/repo/postgres.js"
   - "lib/repo/migrations/20261112120000_round_messages.js"
+  - "lib/repo/migrations/20261113120000_session_messages.js"
   - "public/js/views-round-chat.js"
   - "public/js/round-chat.js"
+  - "lib/chat-inbox.js"
 ---
 # The round chat (#1781): tenant-scoped messages whose AUTHOR crosses tenants
 
@@ -35,3 +37,39 @@ round OWNER's tenant, reached by a grantee through the ordinary re-scope
 The text is user-authored and shown to other accounts: `textContent` only, links
 built from `chatSegments` (http(s) only), and never in a log line or a
 `trackEvent` — `test/round-messages.test.js` captures stdout and asserts it.
+
+## The inbox item (#1784) — `lib/chat-inbox.js`
+
+One `chat_unread` item per (account, thread key `round:<rid>`). Three traps:
+
+- **The count is recomputed, never incremented** — from
+  `countUnreadRoundMessages` (the heads' filter) and the read marker, on every
+  post, read and delete. A tally drifts the first time a delete or a read lands
+  between two posts; a recount cannot.
+- **Only a post may CREATE.** A read or a delete passes `create: false`, which
+  rewrites an existing item or removes it — otherwise lowering a count
+  resurrects an item the user dismissed. The author exclusion on the post is NOT
+  redundant with the count skipping own messages: it is what keeps the author's
+  item for *others'* unread messages from being bumped back (measured: the
+  exclusion's own spec is the only red when it goes).
+- **Recipients are read BEFORE grants are deleted** on round delete — after, the
+  grantees are no longer recipients and keep an item leading to a 404. The owner
+  holds no grant; it is found by `getUserByTenant` on the storing tenant.
+
+
+## Session comments (#1782) — the same table, router and marker
+
+A comment is a `round_messages` row with a `session_id` (FK, `ON DELETE
+CASCADE` from `sessions`). The router is mounted twice; `threadSid(req)` is the
+only fork. Three things fail silently:
+
+- **The round thread lists comments too.** The round has ONE read marker and
+  the dot leads to the Chat tab, so the Chat tab must show every message the
+  dot counts (operator decision, 2026-11-13). A session's own GET filters.
+- **A session view marks read only below the first unread message it did not
+  show** (`firstUnreadOutsideSession`). Postgres needs `IS DISTINCT FROM`:
+  `NULL <> 'sid'` is never true, so `<>` skips every round-level message —
+  measured, only the contract spec on Postgres goes red.
+- **The JSON backend has no cascade.** `dropOrphanSessionMessages` runs after
+  every session removal (deleteSession, scrubGames, moveGames). They mask each
+  other in a combined fixture, so the contract asserts after EACH step.

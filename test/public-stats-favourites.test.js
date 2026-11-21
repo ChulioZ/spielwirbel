@@ -7,6 +7,7 @@ const { app, createRound } = require('./helpers');
 
 const publicStats = require('../lib/public-stats');
 const bgg = require('../lib/providers/bgg');
+require('./support/bgg-details-via-detail')(bgg);
 const repo = require('../lib/repo');
 
 /*

@@ -50,6 +50,308 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1838, „Wie war's?" after a played session. A new capability, and it moves
+   * shelf scores people have seen (they can now go DOWN), so the entry says so
+   * (.claude/rules/keep-readme-current.md).
+   */
+  {
+    revision: '2026-11-20',
+    kind: 'new',
+    de: {
+      title: "Wie war's?",
+      body: "Nach einer gespielten Session könnt ihr auf dem Ergebnis sagen, wie es war – mit denselben Gesichtern wie beim Abstimmen, ohne Zeitlimit und später noch änderbar. Was ihr sagt, zählt fürs Regal: Statt anzunehmen, dass ein gespieltes Spiel gut ankam, zählt eure Antwort. Deshalb können sich Scores im Regal jetzt auch nach unten bewegen.",
+    },
+    en: {
+      title: "How was it?",
+      body: "After a played session you can say on the result how it was – on the same faces as the vote, with no time limit, and you can change it later. What you say counts toward the shelf: instead of assuming a game you played went well, your answer counts. That is why shelf scores can now move down as well.",
+    },
+    es: {
+      title: "¿Qué tal?",
+      body: "Después de una sesión jugada podéis decir en el resultado qué tal fue, con las mismas caras que en la votación, sin límite de tiempo y pudiendo cambiarlo después. Lo que digáis cuenta para la estantería: en lugar de suponer que un juego jugado salió bien, cuenta vuestra respuesta. Por eso las puntuaciones de la estantería ahora también pueden bajar.",
+    },
+    fr: {
+      title: "C’était comment ?",
+      body: "Après une session jouée, vous pouvez dire sur le résultat comment c’était, avec les mêmes visages que pour le vote, sans limite de temps et modifiable plus tard. Ce que vous dites compte pour l’étagère : au lieu de supposer qu’un jeu joué s’est bien passé, c’est votre réponse qui compte. C’est pourquoi les scores de l’étagère peuvent désormais aussi baisser.",
+    },
+    it: {
+      title: "Com’è andata?",
+      body: "Dopo una sessione giocata potete dire sul risultato com’è andata, con le stesse facce del voto, senza limiti di tempo e modificabile in seguito. Quello che dite conta per lo scaffale: invece di supporre che un gioco giocato sia andato bene, conta la vostra risposta. Per questo i punteggi dello scaffale ora possono anche scendere.",
+    },
+    nl: {
+      title: "Hoe was het?",
+      body: "Na een gespeelde sessie kunnen jullie bij het resultaat zeggen hoe het was – met dezelfde gezichtjes als bij het stemmen, zonder tijdslimiet en later nog aan te passen. Wat jullie zeggen telt mee voor de kast: in plaats van aan te nemen dat een gespeeld spel goed viel, telt jullie antwoord. Daarom kunnen scores in de kast nu ook dalen.",
+    },
+    pt: {
+      title: "Como foi?",
+      body: "Depois de uma sessão jogada podem dizer no resultado como foi, com as mesmas caras da votação, sem limite de tempo e podendo mudar mais tarde. O que disserem conta para a estante: em vez de supor que um jogo jogado correu bem, conta a vossa resposta. Por isso as pontuações da estante agora também podem descer.",
+    },
+    fi: {
+      title: "Millainen oli?",
+      body: "Pelatun session jälkeen voitte kertoa tuloksessa, millainen se oli – samoilla kasvoilla kuin äänestyksessä, ilman aikarajaa ja myöhemmin muutettavissa. Vastauksenne lasketaan hyllyyn: oletuksen sijaan, että pelattu peli meni hyvin, lasketaan vastauksenne. Siksi hyllyn pisteet voivat nyt myös laskea.",
+    },
+    ko: {
+      title: "어땠나요?",
+      body: "플레이한 세션이 끝나면 결과 화면에서 어땠는지 투표와 같은 얼굴로 알려 줄 수 있어요. 시간 제한이 없고 나중에 바꿀 수도 있어요. 답한 내용은 선반 점수에 반영돼요. 플레이한 게임이 좋았을 거라고 가정하는 대신 여러분의 답이 반영되기 때문에, 이제 선반 점수가 내려갈 수도 있어요.",
+    },
+  },
+  /*
+   * #1830, „Wer zu kurz kommt, ist dran" redefined. Not a new capability, but it
+   * moves result numbers people have seen and removes a Pokale list, so it earns
+   * an `improved` entry (.claude/rules/keep-readme-current.md).
+   */
+  {
+    revision: '2026-11-18',
+    kind: 'new',
+    de: {
+      title: 'Könnte dir gefallen',
+      body: 'Kennst du ein Spiel noch nicht, hilft dir die Abstimmungskarte jetzt mit einer leisen Zeile: Ähnelt es Spielen, die du in eurer Runde gern magst, nennt sie bis zu zwei davon, etwa „Könnte dir gefallen – wie Patchwork und Azul". Sie erscheint, sobald du ein paar Spiele bewertet hast, nur für dich und nie mit einer Zahl.',
+    },
+    en: {
+      title: 'You might like this',
+      body: 'When you don’t know a game yet, the vote card now helps with one quiet line: if it resembles games you like in your round, it names up to two of them, like “You might like this – like Patchwork and Azul”. It appears once you have rated a few games, only for you, and never with a number.',
+    },
+    es: {
+      title: 'Podría gustarte',
+      body: 'Si todavía no conoces un juego, la tarjeta de votación te ayuda ahora con una línea discreta: si se parece a juegos que te gustan en vuestro grupo, nombra hasta dos, por ejemplo «Podría gustarte: se parece a Patchwork y Azul». Aparece cuando ya has valorado unos cuantos juegos, solo para ti y nunca con un número.',
+    },
+    fr: {
+      title: 'Pourrait te plaire',
+      body: 'Quand tu ne connais pas encore un jeu, la carte de vote t’aide désormais d’une ligne discrète : s’il ressemble à des jeux que tu aimes dans votre groupe, elle en nomme jusqu’à deux, par exemple « Pourrait te plaire – comme Patchwork et Azul ». Elle apparaît dès que tu as noté quelques jeux, rien que pour toi et jamais avec un chiffre.',
+    },
+    it: {
+      title: 'Potrebbe piacerti',
+      body: 'Se non conosci ancora un gioco, la carta di voto ora ti aiuta con una riga discreta: se somiglia a giochi che ti piacciono nel vostro gruppo, ne nomina fino a due, per esempio «Potrebbe piacerti – come Patchwork e Azul». Compare quando hai già valutato qualche gioco, solo per te e mai con un numero.',
+    },
+    nl: {
+      title: 'Misschien iets voor jou',
+      body: 'Ken je een spel nog niet, dan helpt de stemkaart je nu met één rustige regel: lijkt het op spellen die je in jullie groep graag speelt, dan noemt hij er tot twee, bijvoorbeeld „Misschien iets voor jou – zoals Patchwork en Azul". Hij verschijnt zodra je een paar spellen hebt beoordeeld, alleen voor jou en nooit met een getal.',
+    },
+    pt: {
+      title: 'Talvez você goste',
+      body: 'Quando ainda não conhece um jogo, o cartão de votação agora ajuda com uma linha discreta: se ele se parece com jogos de que você gosta no seu grupo, nomeia até dois, por exemplo «Talvez você goste – parecido com Patchwork e Azul». Aparece depois de avaliar alguns jogos, só para você e nunca com um número.',
+    },
+    fi: {
+      title: 'Voisit pitää tästä',
+      body: 'Kun et vielä tunne peliä, äänestyskortti auttaa nyt yhdellä hillityllä rivillä: jos peli muistuttaa porukkanne pelejä, joista pidät, se mainitsee niistä enintään kaksi, esimerkiksi ”Voisit pitää tästä – kuten Patchwork ja Azul”. Rivi näkyy, kun olet arvioinut muutaman pelin, vain sinulle eikä koskaan numeroiden kanssa.',
+    },
+    ko: {
+      title: '마음에 드실 수도 있어요',
+      body: '아직 모르는 게임이라면 이제 투표 카드가 조용한 한 줄로 도와드려요. 모임에서 좋아하신 게임과 비슷하면 그중 최대 두 개를 알려 줘요. 예: „Patchwork 그리고 Azul 같은 게임이라 마음에 드실 수도 있어요". 몇 가지 게임을 평가하고 나면 나타나고, 본인에게만 보이며 숫자는 절대 표시되지 않아요.',
+    },
+  },
+  {
+    revision: '2026-11-17',
+    kind: 'new',
+    de: {
+      title: 'Ein Satz zu jedem Spiel',
+      body: 'Schreibt zu einem Spiel einen kurzen Satz in euren eigenen Worten, etwa „Würfel als Arbeiter, fies, 45 min". Er steht beim Abstimmen unter dem Titel, auch über den geteilten Link, sodass alle wissen, worum es geht, bevor sie bewerten. Ihr tragt ihn auf der Seite des Spiels ein oder gleich beim Hinzufügen.',
+    },
+    en: {
+      title: 'One sentence for every game',
+      body: 'Write a short line about a game in your own words, like “dice as workers, mean, 45 min”. It shows under the title while voting, on the shared link too, so everyone knows what a game is before rating it. Add it on the game’s page or right when you add the game.',
+    },
+    es: {
+      title: 'Una frase para cada juego',
+      body: 'Escribid una frase corta sobre un juego con vuestras propias palabras, por ejemplo «dados como trabajadores, malvado, 45 min». Aparece bajo el título al votar, también en el enlace compartido, para que todos sepan de qué va antes de valorarlo. Se añade en la página del juego o al añadirlo.',
+    },
+    fr: {
+      title: 'Une phrase pour chaque jeu',
+      body: 'Écrivez une courte phrase sur un jeu avec vos propres mots, par exemple « des dés comme ouvriers, méchant, 45 min ». Elle s’affiche sous le titre pendant le vote, y compris via le lien partagé, pour que chacun sache de quoi il s’agit avant de noter. Ajoutez-la sur la page du jeu ou dès son ajout.',
+    },
+    it: {
+      title: 'Una frase per ogni gioco',
+      body: 'Scrivete una breve frase su un gioco con parole vostre, per esempio «dadi come lavoratori, cattivo, 45 min». Compare sotto il titolo durante il voto, anche tramite il link condiviso, così tutti sanno di cosa si tratta prima di valutare. La aggiungete nella pagina del gioco o subito quando lo inserite.',
+    },
+    nl: {
+      title: 'Eén zin bij elk spel',
+      body: 'Schrijf in je eigen woorden een korte zin over een spel, bijvoorbeeld „dobbelstenen als arbeiders, gemeen, 45 min". Die staat bij het stemmen onder de titel, ook via de gedeelde link, zodat iedereen weet waar het over gaat voordat hij beoordeelt. Je vult hem in op de pagina van het spel of meteen bij het toevoegen.',
+    },
+    pt: {
+      title: 'Uma frase para cada jogo',
+      body: 'Escrevam uma frase curta sobre um jogo, com as vossas palavras, por exemplo «dados como trabalhadores, maldoso, 45 min». Aparece por baixo do título ao votar, também pelo link partilhado, para que todos saibam do que se trata antes de avaliar. Adiciona-se na página do jogo ou logo ao adicioná-lo.',
+    },
+    fi: {
+      title: 'Yksi lause jokaiselle pelille',
+      body: 'Kirjoittakaa pelistä lyhyt lause omin sanoin, esimerkiksi ”nopat työläisinä, ilkeä, 45 min”. Se näkyy äänestäessä otsikon alla, myös jaetun linkin kautta, joten kaikki tietävät, mistä on kyse, ennen kuin arvioivat. Lisäätte sen pelin sivulla tai heti peliä lisätessä.',
+    },
+    ko: {
+      title: '게임마다 한 문장',
+      body: '게임을 여러분의 말로 짧게 한 문장으로 소개해 보세요. 예: „주사위가 일꾼, 얄밉다, 45분". 투표할 때 제목 아래에 표시되고 공유 링크에서도 보이니, 모두가 평가하기 전에 어떤 게임인지 알 수 있어요. 게임 페이지에서 쓰거나 게임을 추가할 때 바로 쓸 수 있어요.',
+    },
+  },
+  {
+    revision: '2026-11-15',
+    kind: 'improved',
+    de: {
+      title: '„Wer zu kurz kommt, ist dran" neu gedacht',
+      body: 'Die Einstellung achtet jetzt darauf, wie euch die zuletzt gespielten Spiele gefallen haben. Wer Spiele erwischt hat, die keinen Spaß gemacht haben, bekommt in der nächsten Session mehr Mitsprache: Die eigene Stimme zählt mehr, und die eigenen Lieblingsspiele werden eher gezogen. Lobby und Ergebnis sagen, wer das ist. Deshalb kann ein Ergebnis anders ausfallen als der reine Durchschnitt. Die Rückblick-Liste „Wessen Favoriten auf den Tisch kommen" ist dafür weggefallen.',
+    },
+    en: {
+      title: '„Wer zu kurz kommt, ist dran" rethought',
+      body: 'The setting now looks at how you liked the games you played lately. Whoever got stuck with games they did not enjoy gets more say in the next session: their vote counts for more, and their favourites are likelier to be drawn. The lobby and the result say who that is, so a result can differ from the plain average. The Rückblick list of whose favourites reach the table has gone in exchange.',
+    },
+    es: {
+      title: '„Wer zu kurz kommt, ist dran", repensado',
+      body: 'El ajuste ahora tiene en cuenta cuánto os gustaron los últimos juegos. Quien jugó a juegos que no le gustaron tiene más voz en la siguiente sesión: su voto cuenta más y sus favoritos tienen más opciones en el sorteo. La sala y el resultado dicen quién es, así que un resultado puede diferir de la media simple. A cambio desaparece la lista del resumen de quién ve sus favoritos en la mesa.',
+    },
+    fr: {
+      title: '« Wer zu kurz kommt, ist dran » repensé',
+      body: 'Le réglage tient désormais compte de ce que vous avez pensé des derniers jeux joués. Qui est tombé sur des jeux qui ne lui ont pas plu a davantage voix au chapitre à la session suivante : son vote compte plus et ses favoris ont plus de chances d’être tirés. Le salon et le résultat disent de qui il s’agit, donc un résultat peut différer de la simple moyenne. En contrepartie, la liste du bilan sur les favoris qui arrivent sur la table disparaît.',
+    },
+    it: {
+      title: '„Wer zu kurz kommt, ist dran" ripensato',
+      body: 'L’impostazione ora guarda a quanto vi sono piaciuti gli ultimi giochi. Chi si è ritrovato con giochi che non gli sono piaciuti ha più voce in capitolo nella sessione successiva: il suo voto conta di più e i suoi preferiti hanno più probabilità di essere estratti. La sala e il risultato dicono chi è, quindi un risultato può differire dalla semplice media. In cambio sparisce l’elenco del riepilogo sui preferiti che arrivano in tavola.',
+    },
+    nl: {
+      title: '„Wer zu kurz kommt, ist dran" herzien',
+      body: 'De instelling kijkt nu naar hoe jullie de laatst gespeelde spellen vonden. Wie spellen trof die niet bevielen, krijgt in de volgende sessie meer inspraak: die stem telt zwaarder en de eigen favorieten worden eerder getrokken. De lobby en de uitslag zeggen wie dat is, dus een uitslag kan afwijken van het gewone gemiddelde. Daarvoor is de terugbliklijst over wiens favorieten op tafel komen verdwenen.',
+    },
+    pt: {
+      title: '„Wer zu kurz kommt, ist dran" repensado',
+      body: 'A definição agora tem em conta o quanto gostaram dos últimos jogos. Quem apanhou jogos de que não gostou tem mais voz na sessão seguinte: o seu voto conta mais e os seus favoritos têm mais chance de ser sorteados. A sala e o resultado dizem quem é, por isso um resultado pode diferir da média simples. Em troca, desaparece a lista do resumo sobre de quem são os favoritos que chegam à mesa.',
+    },
+    fi: {
+      title: '„Wer zu kurz kommt, ist dran" uudistettu',
+      body: 'Asetus katsoo nyt, miten viimeksi pelatut pelit maistuivat. Se, joka joutui pelaamaan pelejä, joista ei pitänyt, saa seuraavassa sessiossa enemmän sananvaltaa: hänen äänensä painaa enemmän ja hänen suosikkinsa arvotaan todennäköisemmin. Aula ja tulos kertovat, kuka se on, joten tulos voi poiketa pelkästä keskiarvosta. Vastineeksi katsauksen lista siitä, kenen suosikit päätyvät pöytään, on poistettu.',
+    },
+    ko: {
+      title: '„Wer zu kurz kommt, ist dran" 새로워졌어요',
+      body: '이제 이 설정은 최근에 플레이한 게임이 얼마나 마음에 들었는지를 봐요. 별로였던 게임을 하게 된 사람은 다음 세션에서 발언권이 더 커져요. 그 사람의 표가 더 무겁게 반영되고 최애 게임이 뽑힐 확률도 높아져요. 대기실과 결과 화면에서 누구인지 알려 주므로 결과가 단순 평균과 다를 수 있어요. 대신 돌아보기의 „누구의 최애가 테이블에 오르나요" 목록은 없어졌어요.',
+    },
+  },
+  /*
+   * #1774, session photos. A capability that did not exist: the Chronik held
+   * only numbers, never the evening itself.
+   */
+  {
+    revision: '2026-11-14',
+    kind: 'new',
+    de: {
+      title: 'Ein Foto pro Session',
+      body: 'Unter dem Ergebnis einer gespielten Session könnt ihr jetzt ein Foto speichern, etwa vom Tisch oder vom Spielbrett am Ende. In der Chronik erscheint es als Vorschaubild der Session. Sehen können es nur die, mit denen die Runde geteilt ist, und Standortdaten im Bild werden vor dem Speichern entfernt. Fragt vorher alle, die darauf zu sehen sind.',
+    },
+    en: {
+      title: 'One photo per session',
+      body: 'Under the result of a played session you can now keep a photo, say of the table or the board at the end. The Chronik shows it as the session’s thumbnail. Only the people the round is shared with can see it, and location data in the picture is removed before it is stored. Ask everyone in the picture first.',
+    },
+    es: {
+      title: 'Una foto por sesión',
+      body: 'Bajo el resultado de una sesión jugada ya podéis guardar una foto, por ejemplo de la mesa o del tablero al final. En el historial aparece como miniatura de la sesión. Solo la ven las personas con quienes se comparte el grupo, y los datos de ubicación de la imagen se eliminan antes de guardarla. Preguntad antes a todas las personas que salen en ella.',
+    },
+    fr: {
+      title: 'Une photo par session',
+      body: 'Sous le résultat d’une session jouée, vous pouvez désormais garder une photo, par exemple de la table ou du plateau à la fin. L’historique l’affiche comme vignette de la session. Seules les personnes avec qui le groupe est partagé la voient, et les données de localisation de l’image sont retirées avant l’enregistrement. Demandez d’abord à toutes les personnes visibles dessus.',
+    },
+    it: {
+      title: 'Una foto per sessione',
+      body: 'Sotto il risultato di una sessione giocata ora potete salvare una foto, ad esempio del tavolo o del tabellone alla fine. Nella cronologia compare come anteprima della sessione. La vedono solo le persone con cui è condiviso il gruppo, e i dati di posizione dell’immagine vengono rimossi prima del salvataggio. Chiedete prima a tutte le persone ritratte.',
+    },
+    nl: {
+      title: 'Eén foto per sessie',
+      body: 'Onder de uitslag van een gespeelde sessie kunnen jullie nu een foto bewaren, bijvoorbeeld van de tafel of van het bord aan het eind. De geschiedenis toont hem als miniatuur van de sessie. Alleen wie de groep met jullie deelt kan hem zien, en locatiegegevens in de foto worden vóór het opslaan verwijderd. Vraag het eerst aan iedereen die erop staat.',
+    },
+    pt: {
+      title: 'Uma foto por sessão',
+      body: 'Debaixo do resultado de uma sessão jogada já podem guardar uma foto, por exemplo da mesa ou do tabuleiro no fim. No histórico aparece como miniatura da sessão. Só a veem as pessoas com quem o grupo é partilhado, e os dados de localização da imagem são removidos antes de ser guardada. Perguntem antes a todas as pessoas que aparecem nela.',
+    },
+    fi: {
+      title: 'Yksi kuva sessiota kohti',
+      body: 'Pelatun session tuloksen alle voi nyt tallentaa kuvan, esimerkiksi pöydästä tai pelilaudasta lopussa. Historiassa se näkyy session pikkukuvana. Kuvan näkevät vain ne, joiden kanssa porukka on jaettu, ja kuvan sijaintitiedot poistetaan ennen tallennusta. Kysykää ensin kaikilta, jotka näkyvät kuvassa.',
+    },
+    ko: {
+      title: '세션마다 사진 한 장',
+      body: '플레이한 세션의 결과 아래에 이제 사진을 한 장 저장할 수 있어요. 테이블이나 마지막 게임판을 찍어 보세요. 기록에서는 세션의 미리보기 이미지로 보여요. 모임을 공유받은 사람만 볼 수 있고, 사진에 담긴 위치 정보는 저장하기 전에 지워져요. 사진에 나온 모든 사람에게 먼저 물어봐 주세요.',
+    },
+  },
+  /*
+   * #1780, scoring categories. A capability that did not exist: a game scored in
+   * categories had to be added up on paper before the total could be typed.
+   */
+  {
+    revision: '2026-11-13',
+    kind: 'new',
+    de: {
+      title: 'Punkte nach Kategorien',
+      body: 'Auf der Seite eines Spiels legt ihr unter „Wertungskategorien" seine Wertung fest, etwa Vögel, Eier und Boni. Beim Punkte-Eintragen gibt es dann ein Feld pro Kategorie und Person, die Summe rechnet die App. Jede Kategorie hat ihren eigenen Rekord, und eure Bestleistungen zeigen sie einzeln.',
+    },
+    en: {
+      title: 'Points by category',
+      body: 'On a game’s page, „Scoring categories" sets up how it is scored, say birds, eggs and bonuses. Entering points then gives one field per category and person, and the app adds them up. Every category has its own record, and your personal bests show each one.',
+    },
+    es: {
+      title: 'Puntos por categoría',
+      body: 'En la página de un juego, «Categorías de puntuación» define cómo se puntúa, por ejemplo aves, huevos y bonificaciones. Al anotar los puntos hay un campo por categoría y persona, y la app hace la suma. Cada categoría tiene su propio récord, y vuestras mejores marcas las muestran una a una.',
+    },
+    fr: {
+      title: 'Des points par catégorie',
+      body: 'Sur la page d’un jeu, « Catégories de score » définit son décompte, par exemple oiseaux, œufs et bonus. La saisie des points propose alors un champ par catégorie et par personne, et l’app fait la somme. Chaque catégorie a son propre record, et vos meilleures performances les détaillent.',
+    },
+    it: {
+      title: 'Punti per categoria',
+      body: 'Nella pagina di un gioco, «Categorie di punteggio» stabilisce come si conta, ad esempio uccelli, uova e bonus. Inserendo i punti c’è poi un campo per categoria e persona, e la somma la fa l’app. Ogni categoria ha il suo record, e i vostri migliori risultati le mostrano una per una.',
+    },
+    nl: {
+      title: 'Punten per categorie',
+      body: 'Op de pagina van een spel leggen jullie onder „Scorecategorieën" de telling vast, bijvoorbeeld vogels, eieren en bonussen. Bij het invoeren van punten krijg je dan één veld per categorie en persoon, en de app telt op. Elke categorie heeft een eigen record, en jullie persoonlijke records tonen ze apart.',
+    },
+    pt: {
+      title: 'Pontos por categoria',
+      body: 'Na página de um jogo, «Categorias de pontuação» define como se pontua, por exemplo aves, ovos e bónus. Ao registar os pontos há um campo por categoria e pessoa, e a app faz a soma. Cada categoria tem o seu próprio recorde, e os vossos melhores resultados mostram-nas uma a uma.',
+    },
+    fi: {
+      title: 'Pisteet luokittain',
+      body: 'Pelin sivulla ”Pisteluokat” määrittää, miten peli pisteytetään, esimerkiksi linnut, munat ja bonukset. Pisteitä syötettäessä saat sitten kentän jokaista luokkaa ja pelaajaa kohti, ja sovellus laskee summan. Jokaisella luokalla on oma ennätyksensä, ja omat parhaat tuloksenne näyttävät ne erikseen.',
+    },
+    ko: {
+      title: '항목별 점수',
+      body: '게임 페이지의 ‘점수 항목’에서 새, 알, 보너스처럼 점수 계산 방식을 정해 두세요. 점수를 입력할 때 항목과 사람마다 칸이 생기고, 합계는 앱이 계산해요. 항목마다 따로 기록이 있고, 개인 최고 기록에서도 항목별로 볼 수 있어요.',
+    },
+  },
+  /*
+   * #1779, group challenges. A capability that did not exist: a round could only
+   * look back at what it played, never set itself a goal to play towards.
+   */
+  {
+    revision: '2026-11-13',
+    kind: 'new',
+    de: {
+      title: 'Challenges für die ganze Runde',
+      body: 'Unter Pokale startet ihr jetzt eine Challenge mit Frist: Spiele, die noch nie auf dem Tisch waren, einmal durchs ganze Regal, eine Zahl an Sessions oder verschiedenen Spielen. Der Fortschritt steht unter Start und zählt jede Session, die ihr ab dem Start spielt.',
+    },
+    en: {
+      title: 'Challenges for the whole round',
+      body: 'Under Trophies you can now start a challenge with a deadline: games that have never been on the table, once through the whole shelf, a number of sessions or of different games. The progress shows on the Start tab and counts every session you play from the start.',
+    },
+    es: {
+      title: 'Retos para todo el grupo',
+      body: 'En Trofeos podéis empezar ahora un reto con plazo: juegos que nunca han salido a la mesa, toda la estantería una vez, un número de sesiones o de juegos distintos. El progreso aparece en Inicio y cuenta cada sesión que juguéis desde el comienzo.',
+    },
+    fr: {
+      title: 'Des défis pour tout le groupe',
+      body: 'Dans Trophées, vous pouvez désormais lancer un défi avec une échéance : des jeux jamais sortis, toute l’étagère une fois, un nombre de sessions ou de jeux différents. La progression s’affiche dans Démarrer et compte chaque session jouée depuis le lancement.',
+    },
+    it: {
+      title: 'Sfide per tutto il gruppo',
+      body: 'In Trofei ora potete avviare una sfida con scadenza: giochi mai portati in tavola, tutto lo scaffale una volta, un numero di sessioni o di giochi diversi. Il progresso compare in Avvia e conta ogni sessione giocata dall’avvio.',
+    },
+    nl: {
+      title: 'Uitdagingen voor de hele groep',
+      body: 'Onder Trofeeën starten jullie nu een uitdaging met een deadline: spellen die nog nooit op tafel lagen, de hele kast één keer, een aantal sessies of verschillende spellen. De voortgang staat bij Start en telt elke sessie die jullie vanaf de start spelen.',
+    },
+    pt: {
+      title: 'Desafios para todo o grupo',
+      body: 'Em Troféus vocês podem agora começar um desafio com prazo: jogos que nunca foram à mesa, a estante inteira uma vez, um número de sessões ou de jogos diferentes. O progresso aparece em Início e conta cada sessão jogada a partir do início.',
+    },
+    fi: {
+      title: 'Haasteita koko porukalle',
+      body: 'Palkinnot-osiossa voitte nyt aloittaa haasteen määräajalla: pelejä, jotka eivät ole koskaan olleet pöydällä, koko hylly kerran tai tietty määrä sessioita tai eri pelejä. Edistyminen näkyy Aloitus-osiossa ja laskee jokaisen session aloituksesta lähtien.',
+    },
+    ko: {
+      title: '모임 전체를 위한 챌린지',
+      body: '이제 트로피 탭에서 기한이 있는 챌린지를 시작할 수 있어요. 한 번도 안 해 본 게임, 선반 전체 한 번씩, 정해 둔 세션 수나 서로 다른 게임 수 중에서 고르세요. 진행 상황은 시작 탭에 보이고, 시작한 뒤에 하는 모든 세션이 반영돼요.',
+    },
+  },
+  /*
    * #1781, the round chat. A capability that did not exist: a round's people
    * coordinated around it somewhere else entirely.
    */

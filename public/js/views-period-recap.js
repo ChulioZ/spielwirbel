@@ -120,7 +120,9 @@ function renderPeriodRecapSection(round, activities) {
     // as the all-time one is, so „Bestbewertet" means one thing on both.
     shelfOf: shelfScore,
     eveningsOf: eveningEvidence,
-    playsOf: playCounts,
+    // What the plays are worth, „Wie war's?" verdicts included (#1838).
+    playsOf: (r) => playEvidence(r, sessionPeople),
+    ratingsOf: sessionRatings,
     minRatings: RECAP_MIN_RATINGS,
     isActive: isActiveGame,
     playTimeOf: sessionsPlayTime,

@@ -335,10 +335,11 @@ test('the vote-link page forces the face design over whatever the viewer wears',
   );
 });
 
-/* #1719: the roster at the lobby's detail width. Rows of two once two fit, with
-   „Für …" on the state line and the count dropped only where the row is too
-   narrow for it. Each claim is derived from the sheet's own numbers, so
-   retuning one without the other goes red. */
+/* #1719: the roster at the lobby's detail width. Rows of two once two fit;
+   „Für …" goes on the state line, with the count beside the boxes, only in a
+   single row the container query says is wide (#1817 made the key-on-its-own-
+   line row the default). Each claim is derived from the sheet's own numbers,
+   so retuning one without the other goes red. */
 test('from 1280px the roster flows into rows of two, and a row keeps the key inline and the name its room', () => {
   const G = ':root[data-design="tisch"][data-scheme="dark"]';
   assertRosterReflow(TISCH, {

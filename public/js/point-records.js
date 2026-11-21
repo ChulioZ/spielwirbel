@@ -76,6 +76,135 @@ function parseAutoma(v) {
   return isValidPoints(v.points) ? { name, points: v.points } : null;
 }
 
+/* ## Scoring categories (#1780)
+
+   A game may carry `scoreCategories: [{ id, name, removed? }]` — the round's own
+   score sheet („Vögel · Eier · Boni"). A session then stores, BESIDE the totals,
+   `scoreParts: { seatId: { categoryId: int } }`. Beside rather than inside:
+   `session.scores` stays `{ seatId: int }`, so every reader that predates
+   categories (records, the profile, badges, BG Stats, the export, the operator
+   counts) keeps reading the total that still decides everything, and a session
+   recorded before categories existed is simply one without parts.
+
+   Ids, not names, key the parts, so renaming a category keeps its history.
+   Removing one keeps it in the list as `removed: true` WHEN a session still holds
+   values for it — the sheet hides it, the export still names it — and drops it
+   outright when nothing does. Re-adding a removed name revives its id, and with
+   it its history.
+
+   A part only counts while the seat's parts SUM to its stored total
+   (`seatScoreParts`): the route enforces that on write, but a total edited by a
+   client that predates categories would otherwise leave stale parts behind that
+   no longer add up — read as absent, never as wrong. */
+const SCORE_CATEGORY_MAX = 12;
+const SCORE_CATEGORY_NAME_MAX = 30;
+
+// The game's stored categories (every state), malformed entries skipped.
+function scoreCategoryList(game) {
+  const list = game && Array.isArray(game.scoreCategories) ? game.scoreCategories : [];
+  return list.filter((c) => c && typeof c.id === 'string' && typeof c.name === 'string');
+}
+
+// The categories the sheet shows, in the round's order.
+function activeScoreCategories(game) {
+  return scoreCategoryList(game).filter((c) => !c.removed);
+}
+
+/* The editor's ordered list merged into the stored one, for PATCH …/games/:gid.
+   `incoming` is `[{ id?, name }]` — the active list as the user left it; an entry
+   with an id renames that category, one without is new (or revives a removed
+   category of the same name). `usedIds` are the category ids some session still
+   holds values for: a stored category missing from `incoming` survives as
+   `removed` only if it is in there. Returns `{ list }` or `{ error }`. */
+function mergeScoreCategories(stored, incoming, { mintId, usedIds }) {
+  if (!Array.isArray(incoming)) return { error: 'scoreCategories must be an array' };
+  if (incoming.length > SCORE_CATEGORY_MAX) return { error: 'Too many scoring categories' };
+  const known = new Map(scoreCategoryList({ scoreCategories: stored }).map((c) => [c.id, c]));
+  const removedByName = new Map();
+  known.forEach((c) => { if (c.removed) removedByName.set(c.name.toLocaleLowerCase(), c.id); });
+  const ids = new Set();
+  const names = new Set();
+  const list = [];
+  for (const entry of incoming) {
+    if (!entry || typeof entry !== 'object' || typeof entry.name !== 'string') return { error: 'Invalid scoring category' };
+    const name = entry.name.trim();
+    if (!name || name.length > SCORE_CATEGORY_NAME_MAX) return { error: 'Invalid scoring category name' };
+    const key = name.toLocaleLowerCase();
+    if (names.has(key)) return { error: 'Duplicate scoring category' };
+    names.add(key);
+    let cid = entry.id;
+    if (cid !== undefined && cid !== null) {
+      if (typeof cid !== 'string' || !known.has(cid)) return { error: 'Unknown scoring category' };
+    } else {
+      cid = removedByName.get(key);
+      if (!cid || ids.has(cid)) cid = mintId();
+    }
+    if (ids.has(cid)) return { error: 'Duplicate scoring category' };
+    ids.add(cid);
+    list.push({ id: cid, name });
+  }
+  known.forEach((c, cid) => {
+    if (!ids.has(cid) && usedIds && usedIds.has(cid)) list.push({ id: cid, name: c.name, removed: true });
+  });
+  return { list };
+}
+
+/* A sheet's per-category points, checked against the totals it was sent with
+   and the game's categories (any state — an old session may hold a removed
+   one's value). `{ seatId: { categoryId: int } }`; a seat with an empty object is
+   dropped. Every listed seat must carry a total equal to the sum of its parts.
+   Returns the normalized map ({} for none) or null when anything is invalid. */
+function parseScoreParts(raw, scores, game) {
+  if (raw === null || raw === undefined) return {};
+  if (typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const known = new Set(scoreCategoryList(game).map((c) => c.id));
+  const out = {};
+  for (const [seat, parts] of Object.entries(raw)) {
+    if (!parts || typeof parts !== 'object' || Array.isArray(parts)) return null;
+    const entries = Object.entries(parts);
+    if (!entries.length) continue;
+    if (!Object.prototype.hasOwnProperty.call(scores, seat) || !isValidPoints(scores[seat])) return null;
+    let sum = 0;
+    const clean = {};
+    for (const [cid, v] of entries) {
+      if (!known.has(cid) || !isValidPoints(v)) return null;
+      clean[cid] = v;
+      sum += v;
+    }
+    if (sum !== scores[seat]) return null;
+    out[seat] = clean;
+  }
+  return out;
+}
+
+// Does this seat's breakdown add up to its total? Shared by the read and the
+// keep-on-resave paths below.
+function partsMatchTotal(parts, total) {
+  if (!parts || typeof parts !== 'object' || !isValidPoints(total)) return false;
+  const values = Object.values(parts);
+  return values.length > 0 && values.every(isValidPoints) && values.reduce((a, b) => a + b, 0) === total;
+}
+
+// The stored parts that still add up to these totals — what a re-save that sent
+// no `parts` (a client predating categories) keeps.
+function consistentScoreParts(parts, scores) {
+  const out = {};
+  if (!parts || typeof parts !== 'object' || !scores) return out;
+  Object.keys(parts).forEach((seat) => {
+    if (Object.prototype.hasOwnProperty.call(scores, seat) && partsMatchTotal(parts[seat], scores[seat])) out[seat] = parts[seat];
+  });
+  return out;
+}
+
+// One seat's breakdown on one session, or null when it has none that adds up.
+function seatScoreParts(session, seatId) {
+  const all = session && session.scoreParts;
+  const scores = session && session.scores;
+  if (!all || typeof all !== 'object' || !scores || typeof scores !== 'object') return null;
+  if (!Object.prototype.hasOwnProperty.call(all, seatId)) return null;
+  return partsMatchTotal(all[seatId], scores[seatId]) ? all[seatId] : null;
+}
+
 // Is `a` strictly better than `b` for a game played in this direction?
 function pointsBeat(a, b, lowWins) {
   return lowWins ? a < b : a > b;
@@ -100,8 +229,12 @@ function pointsBeat(a, b, lowWins) {
    best. Like `newRecord`, the first scored play breaks nothing — there was no
    record to beat. A team's line can carry it (a shared result can hold the group
    record, and the operator decided it counts for every member of that team), a
-   guest's too; two parties tied on a record-breaking score both carry it. */
-function gamePointRecords(round, game, deps) {
+   guest's too; two parties tied on a record-breaking score both carry it.
+
+   With `catId` (#1780) the same derivation runs over ONE scoring category's
+   values instead of the totals — same direction, same parties, same "earlier"
+   — which is what per-category records and bests are. */
+function gamePointRecords(round, game, deps, catId) {
   const d = deps || { sessionPartyGroups, sortSessionsByDate };
   const lowWins = !!(game && game.lowScoreWins);
   const gid = game && game.id;
@@ -115,7 +248,7 @@ function gamePointRecords(round, game, deps) {
     const lines = [];
     const before = record;
     d.sessionPartyGroups(round, s).forEach((party) => {
-      const points = scores[party.id];
+      const points = catId ? (seatScoreParts(s, party.id) || {})[catId] : scores[party.id];
       if (!isValidPoints(points)) return;
       const member = !party.team && !party.people[0].guest;
       let newRecord = false;
@@ -205,6 +338,49 @@ function memberPointRecords(round, mid, deps) {
   return { bests, held, records: byDate(records), bettered: byDate(bettered) };
 }
 
+/* Per-category records for the Spielepass (#1780): one entry per ACTIVE category
+   that some play has a value for, in the round's order —
+   `[{ category, record: { points, party, session } }]`. A removed category's
+   record is not shown (its values stay in the export). */
+function gameCategoryRecords(round, game, deps) {
+  return activeScoreCategories(game)
+    .map((category) => ({ category, record: gamePointRecords(round, game, deps, category.id).record }))
+    .filter((e) => e.record);
+}
+
+/* One member's per-category bests in one round (#1780), for the member page's
+   „Bestleistungen" disclosure: `[{ game, categories: [{ category, points,
+   session }] }]`, games in round.games order, only games where the member has at
+   least one. Same "members only, never a team" rule as the total best. */
+function memberCategoryBests(round, mid, deps) {
+  const d = deps || { sessionPartyGroups, sortSessionsByDate };
+  const byGame = new Map();
+  ((round && round.sessions) || []).forEach((s) => {
+    if (!s || !s.finished || s.cancelled || !s.chosenGameId || !s.scoreParts) return;
+    if (!byGame.has(s.chosenGameId)) byGame.set(s.chosenGameId, []);
+    byGame.get(s.chosenGameId).push(s);
+  });
+  const out = [];
+  ((round && round.games) || []).forEach((game) => {
+    const sessions = byGame.get(game.id);
+    if (!sessions) return;
+    const sub = { ...round, sessions };
+    const categories = [];
+    activeScoreCategories(game).forEach((category) => {
+      const best = gamePointRecords(sub, game, d, category.id).bests.get(mid);
+      if (best) categories.push({ category, points: best.points, session: best.session });
+    });
+    if (categories.length) out.push({ game, categories });
+  });
+  return out;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { POINTS_MIN, POINTS_MAX, AUTOMA_NAME_MAX, isValidPoints, parseAutoma, pointsBeat, gamePointRecords, sessionPointLines, memberPointRecords };
+  module.exports = {
+    POINTS_MIN, POINTS_MAX, AUTOMA_NAME_MAX, isValidPoints, parseAutoma, pointsBeat,
+    gamePointRecords, sessionPointLines, memberPointRecords,
+    SCORE_CATEGORY_MAX, SCORE_CATEGORY_NAME_MAX, scoreCategoryList, activeScoreCategories,
+    mergeScoreCategories, parseScoreParts, consistentScoreParts, seatScoreParts,
+    gameCategoryRecords, memberCategoryBests,
+  };
 }

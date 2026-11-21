@@ -46,7 +46,9 @@ over dozens of mechanics against a candidate's handful, so a candidate whose
 threshold, where complexity, players and time saturated at 0.98–1.0. The rescale
 (`attainable()`) divides by the best a candidate of that size could reach against
 this profile, so the assertion measures the term's range rather than a fixture
-artefact.
+artefact. (Since #1839 `attainable`, `cosine`, `prefixSums`, `accumulate` and
+`normalize` live in `public/js/taste-vector.js`, shared with the vote card's
+taste hint; `lib/recommend.js` requires them.)
 
 Hence `tasteCorpus` beside `shelfCorpus`: eight mechanics over eight games. Two
 traps live in that fixture, both producing a **vacuously green** test, both

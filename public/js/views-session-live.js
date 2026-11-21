@@ -174,8 +174,8 @@ function showSessionLobby(round, session, handedOn, dealt) {
       <div class="live-vote__actions" id="lvActions"></div>
     </div>`);
   if (dealt && (designIs('tisch') || oceanWorn())) root.setAttribute('data-dealt', '');
-  // The draw boost (#1777), said once under the heading when it applied.
-  const boost = drawBoostNote(round, session);
+  // Who has a little more say tonight (#1830), said once under the heading.
+  const boost = voteBoostNote(round, session);
   if (boost) root.querySelector('.page-head').appendChild(boost);
 
   // One chip per participant: name, their colour, and whether their vote is in.

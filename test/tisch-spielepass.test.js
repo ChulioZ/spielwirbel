@@ -104,7 +104,7 @@ test('Klassisch: the spread is exactly #1039\'s — cover pill, stamps, „…",
   // The menu still lists the three items in fillMenu's order.
   menu.click();
   const opts = dom.document.querySelectorAll('.popover--menu .popover__opt');
-  assert.deepEqual(labelsOf(opts), ['Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
+  assert.deepEqual(labelsOf(opts), ['Wertungskategorien', 'Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
 });
 
 /* --------------------------------- Tisch: the pass -------------------------------- */
@@ -151,15 +151,15 @@ test('Tisch: the menu\'s items are an Aktionen panel in fillMenu\'s order, and �
   assert.ok(!app.querySelector('.back-row').classList.contains('back-row--split'));
 
   const btns = app.querySelectorAll('.gd-actions .gd-actions__grid > button.gd-act');
-  assert.deepEqual(labelsOf(btns), ['Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
+  assert.deepEqual(labelsOf(btns), ['Wertungskategorien', 'Durchgespielt', 'Aussortieren', 'Verliehen', 'Verknüpfung lösen']);
   // Retiring is reversible, so it sits with completion above the rule (#1360).
-  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['undoable', 'undoable', 'undoable', 'destructive']);
+  assert.deepEqual([...btns].map((b) => b.dataset.kind), ['edit', 'undoable', 'undoable', 'undoable', 'destructive']);
 
   // The raters lead, the history follows, then the panel, then the bar.
   assert.deepEqual(classOrder(app.querySelector('.pass__table')), ['gd-raters', 'gd-history', 'gd-actions', 'gd-bar']);
 
   // Each button runs the item's own confirm — the same one the menu raised.
-  btns[1].click();
+  btns[2].click(); // [0] is #1780s categories editor, which asks nothing
   await new Promise((r) => setTimeout(r, 0));
   assert.equal(confirms.length, 1);
   assert.equal(confirms[0].confirmLabel, 'Aussortieren');

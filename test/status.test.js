@@ -96,7 +96,7 @@ test('every quota ceiling is paired with the highest value anyone holds', async 
 
   const s = await instanceStatus();
   // Keyed exactly like quotas, so the panel can zip the two without a mapping.
-  assert.deepEqual(Object.keys(s.metrics.peaks).sort(), ['gamesPerRound', 'messagesPerTenant', 'roundsPerTenant', 'tagsPerRound']);
+  assert.deepEqual(Object.keys(s.metrics.peaks).sort(), ['gamesPerRound', 'messagesPerTenant', 'photosPerTenant', 'roundsPerTenant', 'tagsPerRound']);
   assert.ok(s.metrics.peaks.gamesPerRound >= 3);
   assert.ok(s.metrics.peaks.tagsPerRound >= 2);
   assert.ok(s.metrics.peaks.roundsPerTenant >= 1);
@@ -306,7 +306,7 @@ test('a name planted in a metrics KEY is caught, not just in a value', async () 
      the point is the SWEEP, not today's data. */
   const planted = {
     accounts: { total: 1 },
-    adoption: { gamesLinked: 0 },
+    adoption: { gamesLent: 0 },
     designAdoption: { byDesign: { 'GEHEIMER-DESIGNNAME': 2 } },
   };
   const serialized = JSON.stringify(planted);
@@ -345,7 +345,8 @@ test('each funnel stage counts the sessions in that state, independently', async
   await add({ votes: votesBy(1) });                           // NOT rated: one person
   // A seat that was asked and never answered is not a rater either.
   await add({ votes: { p0: { g1: { rating: 3 } }, p1: {} } });
-  await add({ done: true });                                  // + closed
+  // Closed but nothing chosen: no stage of its own since #1823 dropped „closed".
+  await add({ done: true });
   await add({ chosenGameId: 'g1' });                          // + chosen
   await add({ finished: true, winnerIds: ['m1'] });           // + played + result
   await add({ finished: true, winnerIds: [], ending: 'lost' }); // + played + result
@@ -356,7 +357,7 @@ test('each funnel stage counts the sessions in that state, independently', async
   const b = before.metrics.adoption.funnel;
   assert.equal(f.started - b.started, 10);
   assert.equal(f.rated - b.rated, 1, 'one rater, or an empty seat entry, is not „bewertet"');
-  assert.equal(f.closed - b.closed, 1);
+  assert.equal('closed' in f, false, '#1823 removed the closed stage');
   assert.equal(f.chosen - b.chosen, 1);
   assert.equal(f.played - b.played, 3);
   assert.equal(f.result - b.result, 2, 'finished with neither winners nor an ending is unrecorded');
@@ -487,9 +488,10 @@ test('„Wochenquiz diese Woche" counts accounts with an answer in THIS week\'s 
 test('an excluded tenant leaves the adoption card but not the counters', async () => {
   const tenant = `excl-${uniq()}`;
   const round = await repo.createRound(tenant, { name: 'Ausgenommen', members: ['Ann', 'Bo'] });
-  await repo.createGame(tenant, round.id, {
+  const game = await repo.createGame(tenant, round.id, {
     title: 'Eins', minPlayers: 1, maxPlayers: 4, image: '/uploads/x.webp', source: null,
   });
+  await repo.updateGame(tenant, round.id, game.id, { purchasePrice: { amount: 3999, currency: 'EUR' } });
   await repo.createSession(tenant, round.id, {
     gameIds: [], votes: votesBy(2), createdAt: iso(1), finished: true, winnerIds: ['m1'],
   });
@@ -511,9 +513,8 @@ test('an excluded tenant leaves the adoption card but not the counters', async (
   assert.equal(p.gamesTotal - a.gamesTotal, 1);
   assert.equal(p.sessionsTotal - a.sessionsTotal, 1);
   assert.equal(p.accountsTotal - a.accountsTotal, 1);
-  assert.equal(p.gamesWithOwnCover - a.gamesWithOwnCover, 1);
+  assert.equal(p.gamesWithPurchasePrice - a.gamesWithPurchasePrice, 1);
   assert.equal(p.accountsWithBgStats - a.accountsWithBgStats, 1);
-  assert.equal(p.accountsWithAvatar - a.accountsWithAvatar, 1);
   assert.equal(p.accountsPlayedQuiz - a.accountsPlayedQuiz, 1);
   assert.equal(p.funnel.started - a.funnel.started, 1);
   assert.equal(p.funnel.played - a.funnel.played, 1);

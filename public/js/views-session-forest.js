@@ -227,51 +227,6 @@ function paintForestFacts(el, { round, session, finished, game, winnerIds, peopl
   el.hidden = !parts.length;
 }
 
-/* The result, in two columns from 1280px (F4.3, departing from it on purpose
-   — #1568, as Ocean's did in #1430): the SIDE column holds the people („Wer
-   dabei war") as a ring row, the head, the foot, then the scene — the tree that
-   has grown for the played game — and the fact line; the TAFEL column holds the
-   badge moment, the ranking and everything after it. F4.3 drew the people as a
-   third column and the foot under the Tafel, which works for the few rows it
-   drew and not for eight: the ranking ran ~2× the viewport in a 500px column
-   while the two beside it stood empty, and „Noch eine Session" came only after
-   the whole list. One column below, in the same order.
-
-   The foot sits UNDER THE HEADLINE, not under the scene as Ocean's does
-   (operator decision on #1568): the tree is ~520px, so after it the foot
-   landed at y≈1150 on a 1440×900 screen, under the fold, and no shrinking of
-   the picture brought it above. DOM order is the visual order at every width
-   (WCAG 2.4.3, no `order:`): the people, the sentence, the foot, the scene,
-   the facts, then the Tafel — which moves „Noch eine Session" ahead of the
-   tree and the ranking in tab order, on a phone too, on purpose. Called once
-   at the end of showResults(), after the foot is appended; resultRenderBand() and
-   friends hold their nodes by reference, so moving them changes nothing they
-   do. */
-function composeForestResult(screen, head, peopleEl, facts) {
-  screen.classList.add('result-screen--forest');
-  const side = h('<div class="forest-result__side"></div>');
-  const list = h('<div class="forest-result__tafel"></div>');
-  const kids = [...screen.children];
-  const tafelAt = kids.findIndex((el) => el.classList.contains('tafel'));
-  const foot = kids.find((el) => el.classList.contains('result-foot'));
-  if (peopleEl) {
-    const people = h('<div class="forest-result__people"></div>');
-    people.appendChild(peopleEl);
-    side.appendChild(people);
-  }
-  kids.forEach((el, i) => {
-    if (el === foot) return;
-    // The badge moment („Neu verdient") opens the Tafel column, as under Ocean
-    // (#1430): beside the scene its marks would push the tree down.
-    if (el.classList.contains('badge-moment')) list.appendChild(el);
-    else if (el === head || (tafelAt >= 0 && i < tafelAt)) side.appendChild(el);
-    else list.appendChild(el);
-  });
-  if (foot) head.after(foot);
-  if (facts) side.appendChild(facts);
-  screen.replaceChildren(side, list);
-}
-
 /* The several tables' head (F4.4, F6.7): the kicker „Aufgeteilt auf 2 Tische"
    (`tables.split`) over the app's own headline „2 Tische, eine Session", and
    only where the results go under it — the people and table counts the other

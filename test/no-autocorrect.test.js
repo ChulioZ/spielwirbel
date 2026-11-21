@@ -29,6 +29,9 @@ const PROSE = [
   'public/js/views-round-chat.js#chatInput',
   'public/js/views-round-chat.js#chatEditInput',
   'public/admin.html#chatReason',
+  // A game's pitch line (#1837): one sentence the round writes about it.
+  'public/js/views-round-lookup.js#pitch',
+  'public/js/game-editor-pitch.js#pitchInput',
 ];
 // The contact form's honeypot: no human types into it.
 const HONEYPOT = ['public/kontakt.html#website'];

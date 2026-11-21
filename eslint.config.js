@@ -35,7 +35,7 @@ const frontendGlobals = {
   applyTabTitle: 'readonly',
   getLocale: 'readonly', setLocale: 'readonly', t: 'readonly', tn: 'readonly',
   pluralRules: 'readonly', pluralCategory: 'readonly',
-  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtLoanDay: 'readonly', fmtMoney: 'readonly',
+  fmtDateTime: 'readonly', fmtDate: 'readonly', fmtMonth: 'readonly', fmtMonthKey: 'readonly', fmtWeekKey: 'readonly', fmtLoanDay: 'readonly', fmtMoney: 'readonly',
   fmtRelativeDays: 'readonly',
   fmtAvg: 'readonly', fmtCount: 'readonly',
   // reorder-drag.js (issue #1180) — the one wrapper around vendor/sortable.min.js
@@ -63,7 +63,8 @@ const frontendGlobals = {
   // The round chat (#1781): js/round-chat.js and js/views-round-chat.js.
   CHAT_MESSAGE_MAX: 'readonly', CHAT_PAGE_SIZE: 'readonly', normalizeChatText: 'readonly',
   chatSegments: 'readonly', chatUnread: 'readonly',
-  chatAvailable: 'readonly', renderChatTab: 'readonly', hubChatDot: 'readonly', hubSections: 'readonly',
+  chatAvailable: 'readonly', renderChatTab: 'readonly', renderSessionComments: 'readonly', mountChatThread: 'readonly',
+  sessionCommentBadge: 'readonly', loadSessionCommentBadges: 'readonly', hubChatDot: 'readonly', renderChatUnreadItem: 'readonly', hubSections: 'readonly',
   // views-friends.js (#1092)
   renderPersonCard: 'readonly', renderPersonTile: 'readonly', personTileLine: 'readonly',
   renderAddTile: 'readonly', renderBand: 'readonly',
@@ -185,11 +186,15 @@ const frontendGlobals = {
   tagFilterChips: 'readonly', ownerFilterChips: 'readonly',
   // vote-score.js (issue #893) — also required by lib/recommend.js
   TILE_VALUE: 'readonly', SCORE_MIN: 'readonly',
-  tileValue: 'readonly', scoreRatings: 'readonly', scoreTally: 'readonly',
+  tileValue: 'readonly', scoreRatings: 'readonly', scoreWeightedRatings: 'readonly', scoreTally: 'readonly',
   SHRINK_M: 'readonly', PRIOR_DEFAULT: 'readonly',
   PRIOR_EVENINGS: 'readonly', PICK_VALUE: 'readonly',
   shrinkScore: 'readonly', eveningEvidence: 'readonly',
   shelfScore: 'readonly', playCounts: 'readonly',
+  playValue: 'readonly', playEvidence: 'readonly', // #1838
+  // session-ratings.js (issue #1838): votes and „Wie war's?" verdicts as one stream
+  RATING_KINDS: 'readonly', personRatings: 'readonly', sessionRatings: 'readonly',
+  verdictOf: 'readonly', hasAnyRating: 'readonly',
   // rating-faces.js (issues #890, #909) — frontend only, by design; it also
   // holds the vote scale's own bounds since #909 folded vote-scale.js away
   MOODS: 'readonly', ratingFace: 'readonly', ratingRung: 'readonly',
@@ -254,6 +259,9 @@ const frontendGlobals = {
   // cover-policy.js (issue #867)
   COVER_MAX_BYTES: 'readonly', COVER_MAX_MB: 'readonly', COVER_MAX_DIM: 'readonly',
   COVER_EXT: 'readonly', COVER_MAX_PIXELS: 'readonly',
+  // photo-policy.js + session-photo-view.js (issue #1774)
+  PHOTO_MAX_BYTES: 'readonly', PHOTO_MAX_MB: 'readonly',
+  renderSessionPhoto: 'readonly', sessionPhotoErrorKey: 'readonly',
   sessionTeams: 'readonly', sessionParties: 'readonly',
   TEAM_TOKEN_MEMBER: 'readonly', TEAM_TOKEN_GUEST: 'readonly',
   activePopover: 'writable', closePopover: 'readonly', openPopover: 'readonly',
@@ -378,10 +386,10 @@ const frontendGlobals = {
   RECAP_MIN_RATINGS: 'readonly', roundRecap: 'readonly', recapMean: 'readonly',
   collectRatings: 'readonly', bestAndWorst: 'readonly', mostDivisive: 'readonly',
   memberFavourites: 'readonly', retiredIds: 'readonly', isNameableGame: 'readonly',
-  // taste-share.js (#1776): whose favourites reach the table
-  TASTE_SHARE_FROM_SESSIONS: 'readonly', TASTE_SHARE_MIN_FAVOURITES: 'readonly',
-  tasteShare: 'readonly', tasteShareRows: 'readonly',
-  renderTasteShare: 'readonly', memberTasteShareLine: 'readonly',
+  // vote-boost.js (#1830): the rating-based boost for the vote and the draw
+  BOOST_STEP: 'readonly', BOOST_RESET_FROM: 'readonly', VOTE_WEIGHT_BASE: 'readonly', voteBoostDeps: 'readonly',
+  boostAfter: 'readonly', memberBoosts: 'readonly', favouritesByMember: 'readonly',
+  sessionVoteWeights: 'readonly', boostedSeatIds: 'readonly',
   // period-recap.js + recap-card.js (issue #800) — internal helpers listed for
   // the same reason.
   periodKeyOf: 'readonly', dayIndexOf: 'readonly', monthsBetween: 'readonly',
@@ -528,12 +536,18 @@ const frontendGlobals = {
   isValidPurchasePrice: 'readonly', parsePurchaseAmount: 'readonly', costPerPlay: 'readonly', bestBuy: 'readonly',
   fmtPurchaseCents: 'readonly', purchasePriceChipText: 'readonly', defaultPurchaseCurrency: 'readonly',
   openPurchasePricePopover: 'readonly', askAcquireWithPrice: 'readonly',
+  // game-pitch.js (#1837, pure, shared with the route), game-editor-pitch.js
+  // (its editor and the game page's line) and the vote cards' pitch line
+  GAME_PITCH_MAX: 'readonly', gamePitchFrom: 'readonly',
+  openPitchPopover: 'readonly', gamePitchLine: 'readonly', votePitchHtml: 'readonly',
+  // game-twins.js (#1843) — "also change it in your other rounds"
+  offerTwinEdit: 'readonly',
   // saved-filters.js (#1328) — the hub chips, the setup save control, the
   // Einstellungen list
   setSavedFilterLimits: 'readonly', savedFilterPrefill: 'readonly',
   renderSaveFilterAction: 'readonly', renderSavedFiltersSection: 'readonly',
-  // draw-boost-setting.js (#1777) — the Einstellungen toggle and the lobby line
-  renderDrawBoostSection: 'readonly', drawBoostNote: 'readonly',
+  // draw-boost-setting.js (#1777, #1830) — the Einstellungen toggle and the boost hint
+  renderDrawBoostSection: 'readonly', voteBoostNote: 'readonly',
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   // round-export.js (#1702) — the round settings' data export.
@@ -635,6 +649,10 @@ const frontendGlobals = {
   // route) and session-points.js (the sheet and the result's block).
   POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
+  // Scoring categories (#1780): point-records.js too.
+  SCORE_CATEGORY_MAX: 'readonly', SCORE_CATEGORY_NAME_MAX: 'readonly', scoreCategoryList: 'readonly', activeScoreCategories: 'readonly',
+  mergeScoreCategories: 'readonly', parseScoreParts: 'readonly', consistentScoreParts: 'readonly', seatScoreParts: 'readonly',
+  gameCategoryRecords: 'readonly', memberCategoryBests: 'readonly',
   // A session's playing time (#1770): session-duration.js (pure, shared with the
   // route and both repo backends).
   DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
@@ -644,9 +662,10 @@ const frontendGlobals = {
   fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',
   parseDurationInput: 'readonly', durationField: 'readonly', durationInvalidToast: 'readonly', showSessionDurationSheet: 'readonly',
   // views-member-points.js (#1631)
-  memberPointsPanel: 'readonly', profilePointsPanel: 'readonly',
+  memberPointsPanel: 'readonly', profilePointsPanel: 'readonly', memberCategoryBestsBlock: 'readonly',
   parsePointsInput: 'readonly', showSessionPointsSheet: 'readonly', sessionPointsLabel: 'readonly',
-  renderSessionPoints: 'readonly', sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
+  sessionSharePoints: 'readonly', playTopPointsText: 'readonly', renderGamePointRecord: 'readonly',
+  sheetScoreCategories: 'readonly', buildPointsGrid: 'readonly', gridColumnSum: 'readonly', paintGridTotals: 'readonly', showScoreCategoriesEditor: 'readonly',
   // The play-history import (#1665): the pure half and its sheet.
   IMPORT_SOURCES: 'readonly', IMPORT_BATCH_MAX: 'readonly', IMPORT_KEY_MAX: 'readonly',
   importScore: 'readonly', importDayInRange: 'readonly', importDayKeyInRange: 'readonly', localStampToIso: 'readonly', parseBgStatsExport: 'readonly',
@@ -680,7 +699,25 @@ const frontendGlobals = {
   memberStats: 'readonly', bestGameValue: 'readonly', BEST_GAME_PRIOR_PLAYS: 'readonly', bestGameSub: 'readonly',
   // taste-neighbour.js (#1778): die Tischkarte's closest / most different taste
   TASTE_MIN_SHARED: 'readonly', tasteAverages: 'readonly', tasteDistance: 'readonly', tasteNeighbours: 'readonly', memberTasteLine: 'readonly',
+  // taste-vector.js (#1839, the similarity math shared with lib/recommend.js),
+  // vote-hint.js (the vote card's taste hint) and its card line
+  clamp01: 'readonly', accumulate: 'readonly', normalize: 'readonly', prefixSums: 'readonly',
+  attainable: 'readonly', cosine: 'readonly',
+  TASTE_HINT_NEUTRAL: 'readonly', TASTE_HINT_MIN_RATED: 'readonly', TASTE_HINT_MIN_MATCH: 'readonly',
+  TASTE_HINT_WEIGHTS: 'readonly', TASTE_HINT_NAMES: 'readonly', TASTE_HINT_KEYS: 'readonly',
+  hintValues: 'readonly', hasTasteMetadata: 'readonly', voterKnowsGame: 'readonly',
+  voterTasteProfile: 'readonly', tasteMatch: 'readonly', hintNamedGames: 'readonly',
+  voteTasteHint: 'readonly', voteHintHtml: 'readonly', voteHintDeps: 'readonly',
   // achievements.js (#1387): the Abzeichen catalogue and its derivation
+  // The group challenge (#1779): challenges.js + views-challenges.js.
+  CHALLENGE_KINDS: 'readonly', CHALLENGE_COUNTED: 'readonly', CHALLENGE_N_MIN: 'readonly', CHALLENGE_N_MAX: 'readonly',
+  CHALLENGE_DEADLINE_MAX_DAYS: 'readonly', CHALLENGE_HISTORY_MAX: 'readonly', challengePlays: 'readonly',
+  challengeProgress: 'readonly', currentChallenge: 'readonly', challengeRunning: 'readonly', challengeHistory: 'readonly',
+  challengeStartError: 'readonly', challengeDeadlineInstant: 'readonly', challengeDaysLeft: 'readonly',
+  CHALLENGE_HUB_LINGER_DAYS: 'readonly', challengeGoalText: 'readonly', challengeStatusText: 'readonly', challengeBar: 'readonly',
+  challengeEndedAt: 'readonly', hubChallengeCard: 'readonly', renderChallengeSection: 'readonly', challengeRefresh: 'readonly',
+  endChallenge: 'readonly', challengeDay: 'readonly', openChallengeSheet: 'readonly', fillChallengeMoment: 'readonly',
+  challengeChronikIndex: 'readonly', chronikChallengeRows: 'readonly',
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',
   // views-badges.js (#1388) — the Klassisch rendering every design skins.
   renderBadgeSection: 'readonly', badgeRevealTarget: 'readonly', hubBadgeLine: 'readonly', badgeChronikIndex: 'readonly',
@@ -701,7 +738,12 @@ const frontendGlobals = {
   // views-session-result-tafel.js (issue #1543): the results screen's tally and Tafel rows
   resultArchivedBadge: 'readonly', tallyResultRows: 'readonly', buildResultTafel: 'readonly',
   // views-session-result-band.js (issue #1543): the table band, the headline and the finish
-  resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultSaveWinners: 'readonly',
+  resultUpdateTitle: 'readonly', resultRenderBand: 'readonly', resultRenderBandOnly: 'readonly', resultSaveWinners: 'readonly',
+  // views-session-verdict.js (issue #1838, #1846): the played result's party list with „Wie war's?"
+  resultRenderParties: 'readonly',
+  // result-phase.js + result-compose.js (issue #1846): the result's phase and its one composition
+  RESULT_PHASES: 'readonly', RESULT_ASIDE_END: 'readonly', resultPhaseOf: 'readonly',
+  composeResultScreen: 'readonly', resultPlace: 'readonly',
   // views-session-result-actions.js (issue #1543): row actions, cancel/delete and the footers
   resultIsSoloDirectPlay: 'readonly', resultRemoveGame: 'readonly', resultRenderAction: 'readonly',
   resultUpdateChosen: 'readonly', resultSetCancelled: 'readonly', resultConfirmCancel: 'readonly',
@@ -711,11 +753,10 @@ const frontendGlobals = {
   tischSetupDateLine: 'readonly',
   // views-session-ocean.js (issue #1213): Ocean's setup, vote sides and result columns
   oceanWorn: 'readonly', OCEAN_COUNT_BUBBLES: 'readonly', composeOceanSetup: 'readonly', paintOceanCount: 'readonly',
-  oceanVoteSides: 'readonly', composeOceanResult: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
+  oceanVoteSides: 'readonly', oceanBlind: 'readonly', composeOceanLobby: 'readonly',
   oceanDive: 'readonly', // #1221, O10.1
   // views-session-bruecke.js (issue #1240): Die Brücke's setup, vote sides and result panels
   composeBrueckeSetup: 'readonly', brueckeVoteSides: 'readonly', brueckeVoteWord: 'readonly', brueckeScoreReason: 'readonly',
-  composeBrueckeResult: 'readonly',
   brueckeBlind: 'readonly', composeBrueckeLobby: 'readonly', // #1241
   brueckeCountPool: 'readonly', // #1248, B10.2
   // views-session-programmheft.js (issue #1374): Das Programmheft's setup, vote card and report kicker
@@ -724,7 +765,7 @@ const frontendGlobals = {
   // views-session-forest.js (issue #1468): Forest's setup, vote sides, result columns and tables head
   forestWorn: 'readonly', FOREST_COUNT_LEAVES: 'readonly', composeForestSetup: 'readonly', forestDrawSummary: 'readonly',
   paintForestCount: 'readonly', composeForestVoteCard: 'readonly', forestVoteSides: 'readonly', forestFinaleKicker: 'readonly', forestResultKicker: 'readonly',
-  paintForestFacts: 'readonly', composeForestResult: 'readonly', composeForestTablesHead: 'readonly',
+  paintForestFacts: 'readonly', composeForestTablesHead: 'readonly',
   FOREST_DUSK_TREES: 'readonly', forestBlind: 'readonly', composeForestLobby: 'readonly', // #1469: the dusk blind and the shared vote
   programmheftBlind: 'readonly', composeProgrammheftLobby: 'readonly', // #1375
   // views-session-tables.js (issue #796)
@@ -733,7 +774,7 @@ const frontendGlobals = {
   renderTischSplit: 'readonly', renderTischTable: 'readonly', renderTischTableTafel: 'readonly', // #1270
   // result-tafel-composed.js (issue #1275): Der Tisch's result Tafel and foot
   composedTafelCols: 'readonly', composedTrow: 'readonly', composedPersonCrown: 'readonly', splitResultTitle: 'readonly',
-  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly', composeKlassischResult: 'readonly',
+  paintComposedCrowns: 'readonly', fillComposedResultFoot: 'readonly',
   // views-session-live.js
   showSessionLobby: 'readonly', stopLobbyPoll: 'readonly', mySeatIn: 'readonly',
   sessionGames: 'readonly', LOBBY_POLL_MS: 'readonly', lobbyPoll: 'writable',

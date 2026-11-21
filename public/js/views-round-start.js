@@ -463,6 +463,8 @@ function renderStartTab(round, activeGames) {
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
     // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
+    // The group challenge (#1779): null unless one is running or just ended.
+    hubChallengeCard(round),
     cols || bh || ph ? null : suggest,
     bh || ph || forest ? null : pulse,
     cols || bh || ph ? null : care,

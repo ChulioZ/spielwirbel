@@ -73,6 +73,37 @@ What the app does, in detail. For a short overview see the
   round, the sheet says so — separately for the shelf and for the archive — but
   never stops you saving it, since a second copy is sometimes exactly what you
   mean.
+- **One sentence per game** (#1837) – a round can write a short line about a
+  game in its own words („Würfel als Arbeiter, fies, 45 min"), at most 90
+  characters on one line. It shows under the title on every vote card — the
+  hot-seat wizard and the shared vote link, in every design — and on the game's
+  page, where tapping it edits it; a game without one shows an invitation chip
+  there instead, and the add-game sheet has an optional field for it. A game
+  without a line renders its vote card exactly as before. It travels with a
+  copied or moved game and is a column (`pitch`) in the round export's
+  `games.csv`. Nothing is machine-written or taken from BGG; it is the group's
+  own words, for people at the table who do not know the game.
+- **„Auch in deinen anderen Runden ändern?"** (#1843) – every game detail is
+  stored per round, so a group that keeps one game in several rounds would
+  otherwise repeat each fix by hand. After a title, player range, playing time
+  or pitch is saved on the game page, and the game is linked to BGG, the app
+  looks for the same BGG game in the user's other rounds they can edit — their
+  own and those shared with them — and offers a sheet listing each one with its
+  current value → the new one. Rounds that held the old value are ticked,
+  rounds that differ are listed unticked, and rounds already showing the new
+  value are left out. Applying saves each ticked round through its own ordinary
+  edit, so a round the user can no longer edit is refused for that round alone
+  and the toast says how many went through. Nothing appears for an unlinked
+  game or one no other round holds; skipping leaves the saved edit as it is.
+- **„Könnte dir gefallen"** (#1839) – on a game a voter has never rated or
+  played, the vote card can add one quiet line naming up to two games from the
+  round that *they* liked and that share its mechanics, categories or designer
+  („Könnte dir gefallen – wie Patchwork und Azul"). It follows whoever's seat is
+  voting, appears only once that person has rated at least five games with BGG
+  data, and never says anything negative or shows a number. It is worked out on
+  the device from the round's own ratings and stores nothing. It is not shown
+  on the shared vote link, which carries no round data and is opened without
+  signing in.
 - **Know what you are voting on** – a game linked to BoardGameGeek carries its
   community **complexity** (the 1–5 weight, shown to one decimal), its **playing
   time**, a **minimum age**, BGG's **categories** and **mechanics**, and its
@@ -337,7 +368,8 @@ What the app does, in detail. For a short overview see the
   is owner-only for the same reason moving is.
 - **Exporting a round's data** (issue #1702) – „Daten exportieren (CSV + JSON)"
   in the round's Einstellungen downloads one zip: `games.csv`, `sessions.csv`,
-  `votes.csv`, `points.csv`, `members.csv` and `tags.csv` for spreadsheets (UTF-8
+  `votes.csv`, `points.csv`, `point-categories.csv` (one row per player ×
+  scoring category, #1780), `members.csv` and `tags.csv` for spreadsheets (UTF-8
   with a BOM so Excel reads accents and Hangul, ids in every table so they
   join), plus `round.json`, the complete round as the app stores it. Everyone
   with access to the round may download it — owner, co-owner and editor alike —
@@ -505,19 +537,7 @@ What the app does, in detail. For a short overview see the
     #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
     a **Rückblick** turns the round's accumulated ratings into a readable
     record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite. From the round's sixth played
-    session it also says **whose taste the table follows** (#1776): for each
-    member with at least two favourites (games their average rating draws as
-    the top face; a retired game is nobody's), how often one of them was played
-    with that member at the table, in words („Favoriten kamen 9× auf den
-    Tisch") — no percentages, no places. The member page carries the matching
-    line („Von den Favoriten kamen 4 auf den Tisch", distinct favourites), and
-    hides it with the Abzeichen under „Einfacher Modus". An opt-in round setting
-    in Einstellungen, **„Wer zu kurz kommt, ist dran"** (#1777, off by default),
-    acts on the same numbers: when one seated member is strictly behind, their
-    favourites are twice as likely to be drawn into the vote, and the lobby
-    says so once („Heute mit Extra-Chance für die Lieblingsspiele von Ben"). The
-    vote, the scores and the winner are untouched. Pokale is the all-time record; the
+    most, and every member's own favourite. Pokale is the all-time record; the
     time-scoped view of the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that
@@ -535,6 +555,18 @@ What the app does, in detail. For a short overview see the
     twelve months, days since the last one, games never played) appear from the
     first played session in every design (#1586) — holds its monthly bars back
     and closes on a sentence saying when series come.
+
+    A **Challenge** (issue #1779) sits above the Abzeichen: the round picks one
+    of four goals with a deadline — N games never played before, every game on
+    the shelf once (a snapshot taken at the start), N sessions (a split evening
+    counts once) or N different games — and plays towards it. One runs at a time;
+    it can be ended early, and finished ones go into a short history. Only the
+    goal is stored: progress counts the played sessions dated after the start and
+    is derived on every read, so deleting a session corrects it and a deadline
+    passing needs no scheduler. While it runs (and for a week after it ends) the
+    Start tab carries its card; the result screen says when a session moved or
+    completed it, and the Chronik keeps a row under the session that completed
+    it. Hidden with the Abzeichen under „Einfacher Modus".
 
     **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
     round, then one row per member in standings order — the first win, ten
@@ -682,6 +714,22 @@ What the app does, in detail. For a short overview see the
   in the round can do, so a missing player or a flat battery never strands the
   evening. Because votes are saved as they are given rather than held until the
   end, an interrupted evening loses at most the card someone was on.
+- **„Wer zu kurz kommt, ist dran"** (#1777, redefined by #1830) – an opt-in round
+  setting in Einstellungen, off by default. With it on, whoever recently played
+  games they did not enjoy gets more say next time. Each played session adds to a
+  member's boost by how they rated the game they actually played — „passt
+  schon" +10 %, „nicht so" +25 %, „gar nicht" +50 % — and a game they rated „gut"
+  or „begeistert" resets it; boosts add up uncapped, absent members keep theirs,
+  guests and removed members are never boosted. Where someone did not rate the
+  game they played (a „Jetzt spielen" evening, a late arrival, a split table), their
+  earlier ratings of that game stand in. The boost acts in two places: their
+  ballot weighs more in that session's result and in the table-split proposals,
+  and their favourites are likelier to be drawn into the vote. The lobby and the
+  result name who has a little more say („Anna hat heute etwas mehr Mitsprache")
+  without any number. It only ever acts inside a session that started with the
+  setting on, so switching it later re-ranks no old result — and the shelf, the
+  Spielepass, Discover, the Pokale and every other statistic keep scoring the
+  plain stored votes.
 - **Voting by shared link, without an account** – any running session can be
   shared as one URL (a "share" button in the lobby, mint-on-demand) or held up
   as a **QR code** beside it, which is the faster of the two at a table: five
@@ -803,8 +851,12 @@ What the app does, in detail. For a short overview see the
   draws again, and the answer is shown, never stored. With reduced motion the
   answer appears at once; it is announced to screen readers either way. The
   „Jetzt spielen" sheet offers the same button once two seats are taken. Once
-  it is played, the table carries a stamp with the date and the winners as
-  seats, with the picker behind „Ändern". Recording the winner(s) is an
+  it is played, the table carries a stamp with the date, with the picker behind
+  „Ändern", and under it **each party is listed once** (issue #1846): its
+  faces, its name, a crown when it won, its points with the „neuer Rekord"
+  mark, and a „Wie war's?" seat per person — in place of „Wer dabei war", a
+  points block and the winners as seats, which named the same people up to four
+  times. Recording the winner(s) is an
   optional follow-up step afterwards; the picker stays open while winners are
   tapped, so a shared win is recorded in one go, and „Fertig" closes it. When nobody won, the same step records
   **how it ended instead** — „Verloren" (a cooperative game beat the table),
@@ -817,8 +869,14 @@ What the app does, in detail. For a short overview see the
   Or
   cancel the session if nothing appealed. A settled result ends on „Noch eine
   Session", „Teilen" and „Mehr" in every design — cancelling, deleting and the
-  other corrections sit behind „Mehr" — and from 1280px it lays out in two
-  columns, the chosen game and those actions beside the ranking. „Teilen" hands
+  other corrections sit behind „Mehr" (and while the winner picker is open,
+  „Noch eine Session" waits until „Fertig"). The screen is laid out **by the
+  phase of the evening** in every design (issue #1846): one column with the
+  ranking while it is still being decided, and once a game is chosen the
+  evening's column — the game on the table, its action, the foot and later the
+  party list — beside the ranking from a ~900px-wide screen, pinned while the
+  game is on the table; on a phone it simply comes first. The ranking's rows
+  take their one-line form from the ranking's own width, not the window's. „Teilen" hands
   the result to the device's share sheet as a message **and an image** in every
   design — the round, the date and the screen's own sentence, then by stage
   (issue #1726): before a game is chosen, the ranking with its ties and each
@@ -885,7 +943,19 @@ What the app does, in detail. For a short overview see the
   first score or a tie is not. The game page shows the round's **record** (score,
   who, when) above its play history, each scored stamp names that evening's
   best, and the switch **„Niedrigere Punktzahl gewinnt"** there flips bests,
-  records and the order for golf-style games. Points never decide the winner,
+  records and the order for golf-style games. For a BoardGameGeek-linked game
+  the operator can fix that direction **for every round** (#1786, the admin
+  panel's „Spieleinstellungen", which lists only counts of what rounds set);
+  the switch then shows the fixed value, disabled, as „Für alle Runden
+  festgelegt", and the round's own setting returns if the operator revokes it.
+  The same goes for the **scoring categories** (#1787, „Wertungskategorien" in
+  the admin panel, which lists the category sets rounds typed with how many
+  rounds use each — names and counts, no round or person): a confirmed set
+  stands first in every round's sheet, cannot be renamed, removed or reordered
+  there, and a round's categories of the same name keep their history under it;
+  a round may still add its own categories after it, and revoking gives every
+  round its own sheet back.
+  Points never decide the winner,
   which is still tapped as before. Bests and records are derived from the
   sessions, never stored, so deleting or re-dating a session corrects them.
   **„Automa hinzufügen"** (issue #1672) adds the bot opponent of a solo or co-op
@@ -900,6 +970,33 @@ What the app does, in detail. For a short overview see the
   team set counts for every member of it. The account profile shows the same
   across every round the account sits in (titles and scores only, no dates).
   Both are hidden while a member has no points.
+  **„Wertungskategorien"** (scoring categories, issue #1780) – the game page's
+  „…" (Der Tisch: its Aktionen panel) edits an ordered list of up to 12
+  category names (≤ 30 characters) for a game on the shelf. „Punkte eintragen"
+  then shows a grid — a row per category, a column per player or team — and
+  sums each column live; the total is still what is stored and what decides
+  bests and records, the breakdown is kept beside it. One „±" flips the field
+  last focused. Renaming a category keeps its history; removing one hides it
+  from the sheet but keeps its values (and its name in the export) while a
+  session holds any, and re-adding the same name brings them back. A seat scored
+  before the game had categories keeps its total until someone types into its
+  column. The game page lists each category's record („Vögel: 48 · Anna"), and
+  the member page's Bestleistungen gain a „Nach Kategorie" disclosure. The
+  „Niedrigere Punktzahl gewinnt" switch applies per category too. BG Stats still
+  receives totals only.
+- **Session-Foto** (#1774) – a played session can carry **one photo** — the
+  table, or the board at the end — added, replaced or removed on its results
+  screen by anyone the round is shared with. It shows under the evening's points
+  and takes the session's thumbnail in the Chronik (Die Brücke, which draws no
+  thumbnails there, marks the row instead). The photo is re-encoded on upload:
+  turned upright from the camera's orientation tag, capped at 1280px on the long
+  edge, and stripped of all metadata, GPS included. It is visible only inside the
+  round — never in the Freundeskreis, on public pages or through a shared vote
+  link — and the upload button carries a hint to ask everyone in the picture
+  first. It goes with its session, with the round, and with the session's result
+  if the played game is deleted or moved. Capped per tenant
+  (`MAX_PHOTOS_PER_TENANT`, default 500); only a first photo counts, so a
+  replacement at the cap still works.
 - **Push a play to BG Stats** – a finished session can be handed to
   [BG Stats](https://www.bgstatsapp.com/) as a play: the game, the date, who took
   part and who won, as one link the user taps on their own device (nothing is
@@ -939,7 +1036,7 @@ What the app does, in detail. For a short overview see the
   **evening**: each session that rated a game counts once with that evening's
   score, each time the group chose it counts as a pick worth the top of the scale
   (being chosen reads like „unbedingt" from the table, so another pick can never
-  lower a score), and the whole is shrunk toward a fixed neutral expectation
+  lower a score — unless the table says afterwards it was not, see „Wie war's?" below), and the whole is shrunk toward a fixed neutral expectation
   worth one evening. So a game three people rated 5,5,5 on its one evening stops
   outranking a staple the round keeps playing, a six-person evening weighs the
   same as a four-person one, and a round that runs its evenings by direct pick
@@ -949,6 +1046,20 @@ What the app does, in detail. For a short overview see the
   and every other per-session number are deliberately **not** shrunk: there `n`
   is the whole electorate rather than a sample. The game's own page shows the
   score alone, with an ⓘ explaining the principle.
+- **„Wie war's?"** – after a played session, the people who sat at that table
+  can say on the result how it was, on the vote's five faces — alone, with no word under them (the vote's
+  words answer "do you want to play this?"; each face is named in retrospect
+  for screen readers, #1849): optional, seat by seat on a shared device or on their own, with no time
+  limit and editable later. The party list shows *who* has answered, never *what*. A
+  verdict replaces its seat's share of the play's assumed pick value in the
+  shelf score — when the whole table answers, the play is worth the score of
+  their verdicts, and an unanswered seat keeps the assumption — so a game that
+  disappointed no longer earns full marks for being played. It also counts as a
+  rating everywhere a figure describes how someone likes a game (a member's
+  averages and favourites, the Pokale, the Chronik's period card, the taste
+  neighbour, recommendations, the draw boost's favourites and /entdecken), but
+  never where a figure describes a ballot (tonight's result, the tally, vote
+  weights, the vote link) (issue #1838).
 - **Colour marker** – each round carries **one colour**, picked right on
   Einstellungen and shown to everyone in the round: on the lobby
   tile, beside the round's name in the top bar, on the session screens and along
@@ -1118,7 +1229,12 @@ What the app does, in detail. For a short overview see the
   author can edit (marked „bearbeitet") and delete their own; the owner and
   co-owners can delete anyone's. An **unread dot** on the Chat tab and on the
   round's home card is per account and clears when the thread is opened; your
-  own messages never light it. Every message from someone else carries a
+  own messages never light it. New messages from someone else also put **one
+  inbox item per round** into the in-app inbox („3 neue Nachrichten in
+  »Spieleabend«", issue #1784) — updated as more arrive, moved to the top, and
+  cleared when the thread is opened; never the message text and never an e-mail.
+  It can be switched off under Konto → Benachrichtigungen (default on); a
+  dismissed item comes back only with the next new message. Every message from someone else carries a
   **report** link into the contact form, prefilled with the message id, which
   the operator looks up and removes in the admin panel („Chat-Nachricht
   entfernen", logged). Messages live as long as the round; deleting an account
@@ -1126,6 +1242,16 @@ What the app does, in detail. For a short overview see the
   (`CHAT_RATE_LIMIT_MAX`) and messages per tenant (`MAX_MESSAGES_PER_TENANT`), of
   which one account may hold `MAX_MESSAGES_PER_AUTHOR`. The owner and co-owners
   can remove all of one person's messages in the round at once.
+- **Session comments** – *accounts mode only* (issue #1782). Every session's
+  result screen — planned, running or played — carries a **Kommentare** thread
+  („wer bringt Snacks", the banter afterwards) with the round chat's rules: the
+  same people, cap, edit/delete, report link, quota and limits. Comments are part
+  of the round's conversation, so they also appear in the **Chat** tab, each with
+  a „zu: Catan, 12. Nov." line linking to its session, and they count toward the
+  round's unread dot and inbox item. Reading them on the result screen clears the
+  dot only up to the first unread message elsewhere in the round. A Chronik row
+  shows its session's comment count. Comments are deleted with their session
+  (also when a game delete or transfer leaves the session with no games).
 - **Friends (Freundeskreis)** – *accounts mode only* (issue #325). Send a friend
   request to another account by its **username**; the recipient accepts or
   declines it in the in-app inbox. Friends then see each other's activity in a
@@ -1313,6 +1439,16 @@ What the app does, in detail. For a short overview see the
   bars, each sized as a share of the leader's sessions. From 1280px the
   screen widens past the reading measure, so the cards run five across (three
   in Die Brücke and Das Programmheft) instead of leaving the margins empty.
+  On the `/entdecken` screen only, two controls go deeper (issue #1732). The
+  shelf, all-time, best-rated and three name cards get „Mehr anzeigen", which
+  opens their top ten places — the same floors, the same shared places, never
+  padded, and no button when nothing lies beyond what the card shows. The week
+  and month cards get „Frühere Sieger": every completed week's or month's most
+  played game, newest first, named by its date range or month — no session
+  count, all tied games on a tie, and a period nobody cleared the card's
+  minimum in left out. The history is recomputed from the sessions on every
+  rebuild rather than stored, so raising a floor can remove an old winner. The
+  landing page and the home tile stay at three places with neither control.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

@@ -9,8 +9,8 @@
 
 # Both stages pin an EXACT patch, not a floating `node:26-slim`: a floating tag
 # reaches production only if the builder happens to re-pull it, so a Node security
-# release may or may not arrive, silently. On this line the floor is 26.12.1
-# (2026-10-21), whose four high CVEs include CVE-2026-111497 — an out-of-bounds
+# release may or may not arrive, silently. On this line the floor is 26.13.1
+# (2026-11-10, a security release). Before it, 26.12.1 (2026-10-21), whose four high CVEs include CVE-2026-111497 — an out-of-bounds
 # write in the Brotli decoder, reachable unauthenticated here because body-parser
 # (`express.json()` in lib/app.js) inflates `Content-Encoding: br` request bodies
 # by default. The previous floor, 26.5.1 (2026-07-28), carried CVE-2026-58044
@@ -27,7 +27,7 @@
 # into dist/ with hashed, minified JS/CSS, so a production deploy serves
 # self-invalidating assets. It needs the devDependency esbuild, which stays in this
 # throwaway stage and never reaches the final image.
-FROM node:26.12.1-slim AS build
+FROM node:26.13.1-slim AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
@@ -35,7 +35,7 @@ COPY . .
 RUN npm run build
 
 # ---- runtime stage: production deps + source + built assets, nothing else ----
-FROM node:26.12.1-slim
+FROM node:26.13.1-slim
 ENV NODE_ENV=production
 # Serve data from a stable, mountable path (a volume / managed disk), not the
 # in-image working directory, so user data survives container restarts and

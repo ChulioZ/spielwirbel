@@ -220,7 +220,9 @@
    small display-face rule fails there until it is added here. Font only, so it
    belongs to the voice and is not gated. */
 :root[data-design="programmheft"] :is(
+  .verdict__title,
   .remove-person__heading,
+  .chat__title,
   .guest-offer__title,
   .topbar__home,
   .rail__name,
@@ -5195,7 +5197,7 @@
 :root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
   display: grid;
   grid-template-columns: 96px minmax(0, 1fr);
-  grid-template-areas: "img title" "img meta" "q q" "rating rating" "scale scale";
+  grid-template-areas: "img title" "img pitch" "img hint" "img meta" "q q" "rating rating" "scale scale";
   align-items: end;
   column-gap: var(--space-4);
   padding: 0;
@@ -5343,8 +5345,8 @@
   :root[data-design="programmheft"] .vote--ph .vote-felt { grid-template-areas: "back who dots" "secret secret secret"; }
   :root[data-design="programmheft"] .vote--ph:not(.vote-review) .vote__card {
     grid-template-columns: minmax(200px, 300px) minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto 1fr;
-    grid-template-areas: "img title" "img meta" "img q" "img rating" "img scale";
+    grid-template-rows: auto auto auto auto auto auto 1fr;
+    grid-template-areas: "img title" "img pitch" "img hint" "img meta" "img q" "img rating" "img scale";
     align-items: start;
     column-gap: var(--space-6);
     padding-top: var(--space-3);
@@ -5459,7 +5461,7 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__note { color: var(--ink-2); }
 :root[data-design="programmheft"] .result-screen .tisch__seats .avatar { border-radius: 0; }
 :root[data-design="programmheft"] .result-screen .winner-chip { min-height: var(--target-key); border-radius: 0; }
-:root[data-design="programmheft"] .result-screen .tisch__actions {
+:root[data-design="programmheft"] .result-screen .tisch[data-state="done"] .tisch__actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -5467,9 +5469,9 @@
   margin-top: var(--space-4);
   padding-top: var(--space-3);
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__actions { border-top: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch[data-state="done"] .tisch__actions { border-top: var(--rule-col) solid var(--ink); }
 :root[data-design="programmheft"] .result-screen .tisch__actions-label { display: block; margin-bottom: 2px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-:root[data-design="programmheft"] .result-screen .tisch__actions :is(.btn, .link-btn) {
+:root[data-design="programmheft"] .result-screen .tisch[data-state="done"] .tisch__actions :is(.btn, .link-btn) {
   min-height: var(--target-key);
   padding: 0;
   border: 0;
@@ -5482,7 +5484,7 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch__actions :is(.btn, .link-btn) { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .tisch[data-state="done"] .tisch__actions :is(.btn, .link-btn) { color: var(--ink); }
 /* The stamp: printed in vermilion, a frame and the word — no app tint. */
 :root[data-design="programmheft"] .result-screen .stamp { border-radius: 0; }
 /* The „Gespielt" stamp, printed: a vermilion double frame on paper and the
@@ -5705,7 +5707,10 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="3"]:not([data-count="0"]) .bar-track { background: var(--ramp-3); box-shadow: none; color: var(--ramp-ink-3); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="4"]:not([data-count="0"]) .bar-track { background: var(--ramp-4); box-shadow: none; color: var(--ramp-ink-4); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .result-screen .trow__bars .bar-col[data-stop="5"]:not([data-count="0"]) .bar-track { background: var(--ramp-5); box-shadow: none; color: var(--ramp-ink-5); }
-@media (min-width: 720px) {
+/* One line by the Tafel's own width (#1846; `.result-main` is the `tafel`
+   container, styles.css) — it was `@media (min-width: 720px)`, blind to the
+   evening column narrowing the Tafel beside it. */
+@container tafel (min-width: 540px) {
   :root[data-design="programmheft"] .result-screen .tafel__cols,
   :root[data-design="programmheft"] .result-screen .tafel .trow { grid-template-columns: 48px 32px minmax(0, 1fr) auto auto auto; }
   :root[data-design="programmheft"] .result-screen .tafel__col--dist { display: block; grid-column: 4; }
@@ -5716,30 +5721,8 @@
 }
 /* While the session is still choosing, a phone row's action is „Spielen" or
    the chip — it takes a line of its own so the title is never squeezed. */
-@media (max-width: 719px) {
+@container tafel (max-width: 539px) {
   :root[data-design="programmheft"] .result-screen .tafel .trow:has(.play-btn, .trow__chip) .trow__action { grid-column: 3 / -1; grid-row: 3; justify-self: start; }
-}
-
-/* Two columns from 1100 (P4.3): the head and the Tafel on the left, the slot —
-   band, corrections, foot — on the right, beside the headline. Only once a game
-   is chosen: until then `.tisch` is hidden and the single column stays (Der
-   Tisch's own guard, tisch.css). The slot spans the head's row and a flexible
-   second one, so its height lands in that 1fr row rather than opening a gap
-   under the head. Everything else keeps column one, in DOM order. */
-@media (min-width: 1100px) {
-  :root[data-design="programmheft"] .app > *:not(.rail):not(.dock).result-screen:has(.tisch:not([hidden])) { max-width: var(--w-detail); }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
-    grid-template-rows: auto 1fr;
-    column-gap: var(--space-6);
-    align-items: start;
-  }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > * { grid-column: 1; }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > .page-head { grid-row: 1; }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) > .tisch-slot { grid-column: 2; grid-row: 1 / span 2; }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) .tisch { grid-template-columns: minmax(0, 1fr); margin-top: 0; padding-top: var(--space-3); }
-  :root[data-design="programmheft"] .result-screen:has(.tisch:not([hidden])) .tisch__box { max-width: 220px; }
 }
 
 /* --- Several tables (P4.4 at 1440, P6.7 at 390) ---------------------------

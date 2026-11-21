@@ -245,6 +245,8 @@
    so a new small display-face rule fails there until it is added here. Font
    only, so it belongs to the voice and is not gated. */
 :root[data-design="forest"] :is(
+  .verdict__title,
+  .chat__title,
   .avatar,
   .guest-offer__title,
   .hub-card__title,
@@ -3040,7 +3042,7 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__card {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "img" "title" "meta" "q" "rating";
+  grid-template-areas: "img" "title" "pitch" "hint" "meta" "q" "rating";
   padding: 0;
   background: none;
 }
@@ -3261,8 +3263,8 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .vote--forest .vote__card {
     grid-area: card;
     grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
-    grid-template-rows: auto auto 1fr auto auto;
-    grid-template-areas: "img title" "img meta" "img ." "q q" "rating rating";
+    grid-template-rows: auto auto auto auto 1fr auto auto;
+    grid-template-areas: "img title" "img pitch" "img hint" "img meta" "img ." "q q" "rating rating";
     column-gap: 28px;
     padding: 0 32px 32px;
     border-radius: 0 0 var(--radius-xl) var(--radius-xl);
@@ -3359,52 +3361,6 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .stage__title { font-weight: 400; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .stage :focus-visible { outline-color: var(--ring-on-dusk); }
 
-/* --- The result (F2.4 at 390, F4.3 at 1440, F7.9 the tie; rearranged by #1568)
-   The shared result composition, arranged by composeForestResult into two
-   columns from 1280px: the SIDE column (the people as a ring row, the
-   sentence, the foot, the grown tree, the fact line) and the TAFEL column (the
-   badge moment, the ranking, then the log). One column below, in the same
-   order.
-
-   This DEPARTS FROM F4.3 ON PURPOSE, as Ocean's did from O4.4 (#1430). The
-   sheet draws people | sentence and tree | Tafel 500 with the foot under the
-   Tafel, and it was drawn with a few rows. Measured at eight (#1568,
-   1440×900): the Tafel was 500px wide and 1584px tall, the document 1972px,
-   the people column stopped at 554 and the middle at 949, and „Noch eine
-   Session" sat at y 1764, after the whole list. So the Tafel takes the wide
-   column (uncapped since #1724: a 760px cap left ~150px dead on the right,
-   and a ~900px row reads fine with the distribution and pill beside the
-   title, #1430) and the side column pins
-   beside it. The foot sits under the headline rather than under the tree, as
-   Ocean's does: after the ~520px scene it landed at y≈1150, under the fold of
-   a 900px-tall screen (operator decision on #1568). */
-@media (min-width: 1280px) {
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest {
-    display: grid;
-    grid-template-columns: minmax(400px, 460px) minmax(0, 1fr);
-    column-gap: 32px;
-    align-items: start;
-  }
-  /* The foot on ONE line in the side column: „Noch eine Session" at its own
-     width rather than a 12em basis, which pushed „Mehr" to a second line. A
-     long locale still wraps — nothing overflows. */
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__side .result-foot__again { flex: 1 1 auto; }
-}
-/* Pinned while the Tafel scrolls — but only where the whole side column fits
-   under the top bar. A sticky column taller than the viewport strands its own
-   bottom: the foot would stay cut off until the very end of the scroll. The
-   height is the column's measured one at 1440 with a played game (~945px:
-   four people, a three-line headline, the foot, the tree's 520px scene, the
-   fact line) plus the 80px offset and some slack; below it the column is
-   static, and the foot is in the first viewport anyway, under the headline.
-   `align-self: start` comes from the grid's `align-items`, without which the
-   item would stretch and have no travel. */
-@media (min-width: 1280px) and (min-height: 1080px) {
-  :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .forest-result__side {
-    position: sticky;
-    top: 80px;
-  }
-}
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .page-head--result { margin-bottom: 16px; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-result__kicker { margin-bottom: var(--kicker-gap); }
 /* The headline is the app's sentence in Young Serif up to 36px (F4.3; review
@@ -3778,11 +3734,10 @@
    distribution beside the title and a still-choosing row's „Spielen" / „Auf
    dem Tisch" inline instead of on a line of its own. The distribution stays
    shown on every row and stays LAST in the DOM (#1363) — only its grid area
-   moves, never `order`. From 720px the Tafel is ≥ ~600px wide in both
-   arrangements: the single column below 1280, and the Tafel column from 1280,
-   whose floor is ~650px at a 1280 viewport. Below it the two-line row above
-   stands. */
-@media (min-width: 720px) {
+   moves, never `order`. By the Tafel's own width since #1846 (`.result-main`
+   is the `tafel` container, styles.css), not `@media (min-width: 720px)`.
+   Below it the two-line row above stands. */
+@container tafel (min-width: 600px) {
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow,
   :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .tafel .trow:has(.play-btn, .trow__chip) {
     grid-template-columns: 22px 52px minmax(0, 1fr) auto auto auto;
@@ -3829,12 +3784,16 @@
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .result-foot[hidden] { display: none; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest .result-foot__again {
-  flex: 1 1 12em;
+  /* Its own line, „Teilen · Mehr" sharing the next (#1846): at a 12em basis
+     „Mehr" wrapped alone under the other two in the side column. */
+  flex: 1 1 100%;
   min-height: 56px;
   justify-content: center;
   font-size: var(--text-lg);
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .result-screen--forest :is(.result-foot__share, .result-foot__more) {
+  flex: 1 1 0;
+  justify-content: center;
   min-height: 56px;
   border: 1.5px solid var(--control-edge);
   border-radius: var(--radius-leaf-s);

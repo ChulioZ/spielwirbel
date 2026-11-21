@@ -47,6 +47,7 @@ function memberStats(round, mid, deps) {
     isContestSession,
     sessionPartyGroups,
     isNameableGame,
+    personRatings,
   };
   const finished = round.sessions.filter((s) => s.finished);
 
@@ -102,12 +103,10 @@ function memberStats(round, mid, deps) {
     perGame[gid] = { game, ratings: [], plays: 0, gameWins: 0 };
     return perGame[gid];
   };
+  // Votes and „Wie war's?" verdicts alike (#1838, session-ratings.js): both are
+  // this member's rating of the game.
   round.sessions.forEach((s) => {
-    const votes = s.votes[mid] || {};
-    Object.keys(votes).forEach((gid) => {
-      const v = votes[gid];
-      if (!v || !Number.isFinite(v.rating)) return;
-      const r = v.rating;
+    d.personRatings(s, mid).forEach(({ gameId: gid, rating: r }) => {
       allRatings.push(r);
       const e = entry(gid);
       if (e) e.ratings.push(r);

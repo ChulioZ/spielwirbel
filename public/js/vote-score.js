@@ -127,6 +127,36 @@ function scoreRatings(ratings) {
   return scoreTally(tiles);
 }
 
+/* Score WEIGHTED ratings (#1830): `pairs` is [{ rating, weight }], weight an
+   integer percent from vote-boost.js. The score is the weighted mean through the
+   SAME curve, Σ w·tileValue(r) / Σ w, so a boosted ballot moves a game further
+   without the scale itself changing. `count`, `low` and `vetoes` stay counts
+   of PEOPLE, unweighted — the reason line („1× gar nicht") states how many said
+   it, and a weight is not a second person.
+
+   Only a session that started with the boost on, and has someone boosted at the
+   table, ever reaches this; every other caller keeps `scoreRatings`, which is
+   what keeps the unboosted path byte for byte what it was. */
+function scoreWeightedRatings(pairs) {
+  let sum = 0;
+  let total = 0;
+  let count = 0;
+  let low = null;
+  let vetoes = 0;
+  (Array.isArray(pairs) ? pairs : []).forEach((p) => {
+    const v = p ? tileValue(p.rating) : null;
+    const w = p ? p.weight : null;
+    if (v === null || !Number.isInteger(w) || w <= 0) return;
+    sum += w * v;
+    total += w;
+    count += 1;
+    if (low === null || p.rating < low) low = p.rating;
+    if (p.rating === 1) vetoes += 1;
+  });
+  if (!count) return null;
+  return { score: sum / total, count, low, vetoes };
+}
+
 /* Score a per-tile HISTOGRAM: `tiles[k]` is how many votes landed on tile k.
 
    Same curve, same return shape and the same null-on-empty contract as
@@ -208,7 +238,9 @@ function scoreTally(tiles) {
    EXACTLY the old one: four votes were one evening's weight then too.
 
    A PICK IS WORTH THE TOP OF THE SCALE, and that is what keeps the property the
-   shelf has promised since #894 — more plays can only raise a score. No
+   shelf has promised since #894 — more UNJUDGED plays can only raise a score
+   (since #1838 a play the table said „Wie war's?" about is worth what they
+   said, which can be less; see `playValue` below). No
    evening can score above 5, so every input to the weighted mean is at most
    the pick, and adding one more can never pull the mean down. #1721 specified
    4,5 with `pick = max(4,5, own mean)` to get the same guarantee; the operator
@@ -287,7 +319,8 @@ const PRIOR_DEFAULT = 3;
 
 // What one play is worth: the group chose this game, which counts like
 // „unbedingt" from the table (operator, 2026-10-24 — #1721 proposed 4,5). It
-// MUST stay the top of the scale for plays to only ever raise a score; see the
+// MUST stay the top of the scale for unjudged plays to only ever raise a score
+// (a „Wie war's?" verdict may lower one, #1838); see the
 // header before lowering it. A game with plays and no ratings approaches 5,0
 // and never reaches it.
 const PICK_VALUE = 5;
@@ -332,13 +365,79 @@ function eveningEvidence(perEvening) {
    but no ratings — the direct-pick round, which writes `votes: {}` and can never
    collect a rating afterwards — still gets a number, which is what gives such a
    round a ranked shelf at all. */
-function shelfScore(eveningSum, ratedEvenings, plays) {
+// `playSum` is a DEFAULTED parameter on purpose: `shelfScore.length` stays 3,
+// which is what test/vote-score.test.js pins to keep a prior parameter out.
+function shelfScore(eveningSum, ratedEvenings, plays, playSum = undefined) {
   const rated = Number.isInteger(ratedEvenings) && ratedEvenings > 0 && Number.isFinite(eveningSum)
     ? ratedEvenings : 0;
   const picks = Number.isFinite(plays) && plays > 0 ? plays : 0;
   if (!rated && !picks) return null;
   const sum = rated ? eveningSum : 0;
-  return (PRIOR_DEFAULT * PRIOR_EVENINGS + sum + picks * PICK_VALUE) / (PRIOR_EVENINGS + rated + picks);
+  // `playSum` (#1838) is what the plays are worth once „Wie war's?" verdicts
+  // speak — `playEvidence` below. Absent, every play is a pick, exactly as before.
+  const picked = Number.isFinite(playSum) ? playSum : picks * PICK_VALUE;
+  return (PRIOR_DEFAULT * PRIOR_EVENINGS + sum + picked) / (PRIOR_EVENINGS + rated + picks);
+}
+
+/* ------------------------------------------------------------------ #1838 --
+   WHAT ONE PLAY IS WORTH once the table has said „Wie war's?".
+
+   A play is assumed to be a pick (`PICK_VALUE`, „unbedingt"). After the game,
+   each person who sat at the table may give a verdict on the same five faces.
+   Each verdict replaces ITS OWN SEAT'S share of that assumption; a seat that has
+   not answered keeps it (operator decision, 2026-11-20 — rule B):
+
+     value = (Σ tileValue(verdict) + (seats − answered) · PICK_VALUE) / seats
+
+   So when the whole table answers, the play is simply the Spielwirbel-Score of
+   the verdicts; when one of four answers „gar nicht", they move the play by
+   their quarter only (5 → 3), rather than deciding it alone (5 → −3). Four
+   players who voted 5,5,4,4 and played it once read 4,17 today; with one lone
+   „gar nicht" 3,50, with all four saying 2,2,3,1 2,50.
+
+   A verdict below 5 therefore LOWERS a score compared with silence. That is
+   honest rather than a defect: being chosen already counted as the top face.
+
+   `seats` is the number of PEOPLE at that table, floored at the number of
+   verdicts so a stray can never push a seat share above one. */
+function playValue(verdicts, seats) {
+  const tiles = (Array.isArray(verdicts) ? verdicts : []).map(tileValue).filter((v) => v !== null);
+  if (!tiles.length) return PICK_VALUE;
+  const n = Math.max(Number.isInteger(seats) ? seats : 0, tiles.length);
+  return (tiles.reduce((a, b) => a + b, 0) + (n - tiles.length) * PICK_VALUE) / n;
+}
+
+/* `playCounts` plus what those plays are worth: gameId -> { count, sum }. The
+   same play definition (one walk, the same guards), so the count can never
+   disagree with the sum it divides. `peopleOf(round, session)` is injected —
+   sessionPeople from session-people.js — for the reason every shared-scope file
+   here takes its siblings as arguments; it decides who sat at that table, and
+   only their verdicts count. Verdicts are read through the shared accessor's
+   storage shape, `session.verdicts[personId][gameId] = { rating }`
+   (session-ratings.js), inline because this file cannot require() a sibling. */
+function playEvidence(round, peopleOf) {
+  const out = new Map();
+  ((round && round.sessions) || []).forEach((s) => {
+    if (s.cancelled) return;
+    const gid = s.chosenGameId;
+    if (!gid) return;
+    let value = PICK_VALUE;
+    const verdicts = s.verdicts && typeof s.verdicts === 'object' ? s.verdicts : null;
+    if (verdicts && typeof peopleOf === 'function') {
+      const people = peopleOf(round, s);
+      const given = [];
+      people.forEach((p) => {
+        const v = verdicts[p.id] && verdicts[p.id][gid];
+        if (v && tileValue(v.rating) !== null) given.push(v.rating);
+      });
+      value = playValue(given, people.length);
+    }
+    const acc = out.get(gid) || { count: 0, sum: 0 };
+    acc.count += 1;
+    acc.sum += value;
+    out.set(gid, acc);
+  });
+  return out;
 }
 
 /* How often each game was actually put on the table, over the round's own
@@ -373,8 +472,8 @@ function playCounts(round) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreTally,
+    TILE_VALUE, SCORE_MIN, tileValue, scoreRatings, scoreWeightedRatings, scoreTally,
     SHRINK_M, PRIOR_DEFAULT, PRIOR_EVENINGS, PICK_VALUE,
-    shrinkScore, eveningEvidence, shelfScore, playCounts,
+    shrinkScore, eveningEvidence, shelfScore, playCounts, playValue, playEvidence,
   };
 }

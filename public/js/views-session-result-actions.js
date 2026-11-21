@@ -74,7 +74,10 @@ function resultRenderAction(rs, { gameId, game, actionEl, titleId }) {
   } else if (isChosen) {
     actionEl.appendChild(h(`<span class="trow__chip">${iconText('ti-check', t('result.onTable'))}</span>`));
   } else {
-    const btn = h(`<button class="btn play-btn" aria-describedby="${titleId}">${iconText('ti-player-play', t('result.play'))}</button>`);
+    // While deciding, the top row's „Spielen" is the screen's one filled
+    // primary (#1846) — place 1, first in the DOM; the others stay outlined.
+    const lead = !rs.chosenId && rowRefs.length && rowRefs[0].gameId === gameId;
+    const btn = h(`<button class="btn play-btn${lead ? ' btn--primary' : ''}" aria-describedby="${titleId}">${iconText('ti-player-play', t('result.play'))}</button>`);
     btn.addEventListener('click', async () => {
       try {
         const chosen = await api('POST', `/api/rounds/${round.id}/sessions/${session.id}/choice`, { gameId });
@@ -242,7 +245,9 @@ function resultRenderFoot(rs) {
   }
   const memberIds = people.filter((p) => !p.guest).map((p) => p.id);
   fillComposedResultFoot(resultFoot, {
-    again: rs.finished || rs.cancelled ? () => showStartSession(round, { memberIds }) : null,
+    // Not while the winner picker is open (#1846): „Fertig" is that moment's
+    // one action, and the next evening would out-shout it.
+    again: (rs.finished && !rs.pickerOpen) || rs.cancelled ? () => showStartSession(round, { memberIds }) : null,
     againDisabled: !round.games.some(isActiveGame),
     share: shareNow,
     more,

@@ -22,7 +22,8 @@ const { isNameableGame } = require('../public/js/recap');
 const { activeMembers } = require('../public/js/member-active');
 const { loadApp } = require('./support/dom');
 
-const deps = { isNameableGame, activeMembers };
+const { personRatings } = require('../public/js/session-ratings');
+const deps = { isNameableGame, activeMembers, personRatings };
 const RID = 'r1';
 
 const GAMES = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6'].map((id) => ({ id, title: `Spiel ${id}`, tagIds: [] }));

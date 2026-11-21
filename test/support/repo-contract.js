@@ -1829,7 +1829,7 @@ module.exports = function repoContract(repo) {
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Wanted', image: '/uploads/w.png' }));
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.wishGame(T, round.id, game.id, true);
-    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/w.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/w.png', photos: [] });
     assert.equal((await repo.getRound(T, round.id)).games.length, 0);
   });
 
@@ -1936,7 +1936,7 @@ module.exports = function repoContract(repo) {
   test('deleteGame accepts a guest game, and writes no game_deleted entry', async () => {
     const round = await freshRound();
     const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', guestGame: true, image: '/uploads/a.png' }));
-    assert.deepEqual(await repo.deleteGame(T, round.id, g.id), { image: '/uploads/a.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, g.id), { image: '/uploads/a.png', photos: [] });
     assert.equal((await repo.listActivities(T, round.id)).filter((a) => a.type === 'game_deleted').length, 0);
   });
 
@@ -1972,7 +1972,7 @@ module.exports = function repoContract(repo) {
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Done', image: '/uploads/d.png' }));
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.completeGame(T, round.id, game.id, true);
-    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/d.png' });
+    assert.deepEqual(await repo.deleteGame(T, round.id, game.id), { image: '/uploads/d.png', photos: [] });
     assert.equal((await repo.getRound(T, round.id)).games.length, 0);
   });
 
@@ -1989,7 +1989,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.deleteGame(T, round.id, game.id), 'not_archived');
     await repo.retireGame(T, round.id, game.id, true);
     const result = await repo.deleteGame(T, round.id, game.id);
-    assert.deepEqual(result, { image: '/uploads/x.png' });
+    assert.deepEqual(result, { image: '/uploads/x.png', photos: [] });
 
     const after = await repo.getRound(T, round.id);
     assert.equal(after.games.length, 1);
@@ -2221,8 +2221,8 @@ module.exports = function repoContract(repo) {
     assert.equal(after.finished, true);
     assert.deepEqual(after.winnerIds, ['m1']);
 
-    assert.equal(await repo.deleteSession(T, round.id, session.id), true);
-    assert.equal(await repo.deleteSession(T, round.id, session.id), false);
+    assert.deepEqual(await repo.deleteSession(T, round.id, session.id), { images: [] });
+    assert.equal(await repo.deleteSession(T, round.id, session.id), null);
   });
 
   // A session logged after the fact (#1616) is inserted LAST while belonging
@@ -2300,6 +2300,43 @@ module.exports = function repoContract(repo) {
     const plainDone = await repo.finishSession(T, round.id, plain.id, { finished: true, winnerIds: [], at: played });
     assert.equal(plainDone.createdAt, started);
     assert.equal(plainDone.finishedAt, played);
+  });
+
+  // „Wie war's?" (#1838): a verdict is set, replaced and cleared to ABSENCE, only
+  // ever on a played session's chosen game, and a game leaving the session takes
+  // its verdicts with it, as it takes its votes.
+  test('verdicts: set, replace, clear to absence; played game only; removal drops them', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields({ title: 'Other' }));
+    const session = await repo.createSession(T, round.id, {
+      createdAt: '2026-11-08T18:00:00.000Z', gameIds: [g.id, other.id], votes: {}, chosenGameId: null, chosenAt: null,
+      finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+    });
+    const read = async () => (await repo.getRound(T, round.id)).sessions.find((x) => x.id === session.id);
+    const [a, b] = round.members.map((m) => m.id);
+
+    await repo.setSessionChoice(T, round.id, session.id, g.id);
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 4);
+    assert.equal('verdicts' in await read(), false, 'an unfinished session takes no verdict');
+
+    await repo.finishSession(T, round.id, session.id, { finished: true, winnerIds: [] });
+    await repo.setSessionVerdict(T, round.id, session.id, a, other.id, 4);
+    assert.equal('verdicts' in await read(), false, 'nor a verdict on a game that was not played');
+
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 4);
+    await repo.setSessionVerdict(T, round.id, session.id, b, g.id, 2);
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 5);
+    assert.deepEqual((await read()).verdicts, { [a]: { [g.id]: { rating: 5 } }, [b]: { [g.id]: { rating: 2 } } });
+
+    await repo.setSessionVerdict(T, round.id, session.id, b, g.id, null);
+    assert.deepEqual((await read()).verdicts, { [a]: { [g.id]: { rating: 5 } } }, 'clearing drops the person');
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, null);
+    assert.equal('verdicts' in await read(), false, 'clearing the last one removes the key');
+
+    await repo.setSessionVerdict(T, round.id, session.id, a, g.id, 3);
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('verdicts' in await read(), false, 'a removed game takes its verdicts with it');
   });
 
   // A session's playing time (#1770). Choosing a game stamps the timer and
@@ -2397,6 +2434,44 @@ module.exports = function repoContract(repo) {
     assert.equal((await repo.getGame(T, round.id, other.id)).lowScoreWins, true);
     await repo.updateGame(T, round.id, other.id, { lowScoreWins: false });
     assert.equal('lowScoreWins' in (await repo.getGame(T, round.id, other.id)), false, 'false is absence');
+  });
+
+  // #1780: the per-category breakdown rides setSessionScores' seventh argument
+  // — undefined keeps it, an empty map clears it to absence — and leaves with
+  // the played game, on the un-play AND the shelf-delete path. A game's
+  // `scoreCategories: []` is absence too.
+  test('setSessionScores stores and clears scoreParts; the played game takes them; scoreCategories [] is absence', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields());
+    const fields = (at, extra = {}) => ({
+      createdAt: at, gameIds: [g.id, other.id], votes: {}, chosenGameId: g.id, chosenAt: at,
+      finished: true, finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true, ...extra,
+    });
+    const session = await repo.createSession(T, round.id, fields('t'));
+    const read = async (sid = session.id) => (await repo.getRound(T, round.id)).sessions.find((x) => x.id === sid);
+
+    const parts = { m1: { a: 40, b: 2 } };
+    const saved = await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, parts);
+    assert.deepEqual(saved.scoreParts, parts);
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 });
+    assert.deepEqual((await read()).scoreParts, parts, 'undefined keeps them');
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, {});
+    assert.equal('scoreParts' in (await read()), false, 'an empty map clears to absence');
+
+    await repo.setSessionScores(T, round.id, session.id, { m1: 42 }, null, undefined, parts);
+    await repo.removeSessionGame(T, round.id, session.id, g.id);
+    assert.equal('scoreParts' in (await read()), false, 'un-playing the game drops its breakdown');
+
+    const scored = await repo.createSession(T, round.id, fields('u', { scores: { m1: 42 }, scoreParts: parts }));
+    await repo.retireGame(T, round.id, g.id, true);
+    await repo.deleteGame(T, round.id, g.id);
+    assert.equal('scoreParts' in (await read(scored.id)), false, 'deleting the played game drops its breakdown');
+
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [{ id: 'a', name: 'Vögel' }] });
+    assert.deepEqual((await repo.getGame(T, round.id, other.id)).scoreCategories, [{ id: 'a', name: 'Vögel' }]);
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [] });
+    assert.equal('scoreCategories' in (await repo.getGame(T, round.id, other.id)), false, '[] is absence');
   });
 
   // #1672: the automa rides setSessionScores' sixth argument — undefined keeps
@@ -2813,6 +2888,29 @@ module.exports = function repoContract(repo) {
     assert.equal('drawBoost' in await repo.getRound(T, round.id), false);
   });
 
+  test('setChallenge: absent until set, round-trips, empties delete, tenant-scoped (#1779)', async () => {
+    const round = await freshRound();
+    assert.equal('challenge' in round, false);
+    assert.equal('challengeHistory' in round, false);
+
+    const ch = { kind: 'sessions', n: 5, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' };
+    const old = { kind: 'wholeShelf', shelfSnapshot: ['g1', 'g2'], startedAt: '2026-10-01T10:00:00.000Z', deadline: '2026-10-20T21:59:59.999Z', endedAt: '2026-10-05T10:00:00.000Z' };
+    assert.deepEqual(await repo.setChallenge(T, round.id, { challenge: ch, history: [old] }), { challenge: ch, challengeHistory: [old] });
+    const read = await repo.getRound(T, round.id);
+    assert.deepEqual(read.challenge, ch);
+    assert.deepEqual(read.challengeHistory, [old]);
+
+    // Cleared reads exactly like never set, in both backends.
+    assert.deepEqual(await repo.setChallenge(T, round.id, { challenge: null, history: [] }), { challenge: null, challengeHistory: [] });
+    const cleared = await repo.getRound(T, round.id);
+    assert.equal('challenge' in cleared, false);
+    assert.equal('challengeHistory' in cleared, false);
+
+    assert.equal(await repo.setChallenge(T, 'missing', { challenge: ch, history: [] }), null);
+    assert.equal(await repo.setChallenge(OTHER, round.id, { challenge: ch, history: [] }), null, 'another tenant cannot set it');
+    assert.equal('challenge' in await repo.getRound(T, round.id), false);
+  });
+
   test('addTag creates and dedupes; deleteTag unassigns from every game (#238)', async () => {
     const round = await freshRound();
     assert.equal('tags' in round, false); // absent until the first tag is created
@@ -3146,6 +3244,79 @@ module.exports = function repoContract(repo) {
     const read = (await repo.getRound(T, src.id)).games.find((g) => g.id === game.id);
     assert.equal('purchasePrice' in read, false);
     assert.equal(read.title, 'Brass: Birmingham');
+  });
+
+  /* ---------------------------- Pitch line (#1837) ------------------------- */
+
+  test('createGame and updateGame store a pitch, copyGames carries it, and a cleared one leaves NO key', async () => {
+    const src = await freshRound({ name: 'Pitched' });
+    const dst = await freshRound({ name: 'Pitched copy' });
+    const made = await repo.createGame(T, src.id, gameFields({ title: 'Kartographen', pitch: 'Karten zeichnen, ruhig' }));
+    assert.equal(made.pitch, 'Karten zeichnen, ruhig', 'createGame keeps a typed pitch');
+    const plain = await repo.createGame(T, src.id, gameFields({ title: 'Plain' }));
+    assert.equal('pitch' in plain, false, 'absent until written');
+
+    const set = await repo.updateGame(T, src.id, plain.id, { pitch: 'Würfel als Arbeiter' });
+    assert.equal(set.pitch, 'Würfel als Arbeiter');
+
+    const untouched = await repo.createGame(T, src.id, gameFields({ title: 'Untouched' }));
+    assert.ok(await repo.copyGames(T, src.id, dst.id, null, [made.id, untouched.id]));
+    const copied = (await repo.getRound(T, dst.id)).games;
+    assert.equal(copied.find((g) => g.title === 'Kartographen').pitch, 'Karten zeichnen, ruhig');
+    assert.equal('pitch' in copied.find((g) => g.title === 'Untouched'), false,
+      'a copy must not invent a pitch the source never had');
+
+    // Cleared alongside another field in the same patch: absent, never null.
+    await repo.updateGame(T, src.id, plain.id, { title: 'Plain again', pitch: null });
+    const read = (await repo.getRound(T, src.id)).games.find((g) => g.id === plain.id);
+    assert.equal('pitch' in read, false);
+    assert.equal(read.title, 'Plain again');
+  });
+
+  /* ----------------------- Game twins (#1843) ------------------------------ */
+
+  test('findGamesByBggId lists this tenant\'s copies of one BGG game, narrowed to a round on request', async () => {
+    // A fresh numeric id per run, so a persistent database cannot answer with an
+    // earlier run's rows.
+    const bggId = String(parseInt(crypto.randomBytes(4).toString('hex'), 16));
+    const bgg = { provider: 'bgg', externalId: bggId };
+    const a = await freshRound({ name: `Twins A ${uniq()}` });
+    const b = await freshRound({ name: `Twins B ${uniq()}` });
+    const inA = await repo.createGame(T, a.id, gameFields({ title: 'Catan', source: bgg, minPlayers: 3, maxPlayers: 4 }));
+    const inB = await repo.createGame(T, b.id, gameFields({ title: 'Die Siedler', source: bgg, minPlayers: 2, maxPlayers: 6 }));
+    await repo.updateGame(T, b.id, inB.id, { playtimeOverride: { min: 60, max: 90 }, pitch: 'Handeln, bauen' });
+    // A retired copy is still that round's copy.
+    const retired = await repo.createGame(T, b.id, gameFields({ title: 'Catan (alt)', source: bgg }));
+    await repo.retireGame(T, b.id, retired.id, true);
+    // None of these is a twin: another provider with the same id, an unlinked
+    // game of the same title, another tenant's copy.
+    await repo.createGame(T, a.id, gameFields({ title: 'Catan', source: { provider: 'other', externalId: bggId } }));
+    await repo.createGame(T, a.id, gameFields({ title: 'Catan' }));
+    const foreign = await repo.createRound(OTHER, { name: 'Foreign', members: ['X'], importFromRoundId: null });
+    await repo.createGame(OTHER, foreign.id, gameFields({ title: 'Catan', source: bgg }));
+
+    const all = await repo.findGamesByBggId(T, bggId);
+    assert.deepEqual(all.map((t) => t.gameId).sort(), [inA.id, inB.id, retired.id].sort());
+    assert.ok(all.every((t) => t.roundId === a.id || t.roundId === b.id), 'never another tenant\'s round');
+    // Ordered by round name: A before B.
+    assert.equal(all[0].roundId, a.id);
+
+    const rowA = all.find((t) => t.gameId === inA.id);
+    assert.deepEqual(rowA, {
+      roundId: a.id, roundName: a.name, gameId: inA.id, title: 'Catan',
+      minPlayers: 3, maxPlayers: 4, minPlaytime: null, maxPlaytime: null,
+    }, 'absent override and pitch are ABSENT, never null');
+    const rowB = all.find((t) => t.gameId === inB.id);
+    assert.deepEqual(rowB.playtimeOverride, { min: 60, max: 90 });
+    assert.equal(rowB.pitch, 'Handeln, bauen');
+    assert.equal(rowB.title, 'Die Siedler');
+
+    // Narrowed: only round B, which is how a granted round is read.
+    const onlyB = await repo.findGamesByBggId(T, bggId, b.id);
+    assert.deepEqual(onlyB.map((t) => t.gameId).sort(), [inB.id, retired.id].sort());
+    // A round of another tenant named as the narrowing finds nothing.
+    assert.deepEqual(await repo.findGamesByBggId(T, bggId, foreign.id), []);
+    assert.deepEqual(await repo.findGamesByBggId(T, `9${bggId}9`), [], 'an id no game carries');
   });
 
   /* -------------------------- Game owners (#971) --------------------------- */
@@ -3522,7 +3693,7 @@ module.exports = function repoContract(repo) {
     await repo.createGame(T, dst.id, gameFields({ title: 'Keeper' }));
 
     const result = await repo.moveGames(T, src.id, dst.id);
-    assert.deepEqual(result, { movedGames: 3, mergedTags: 1, createdTags: 1 });
+    assert.deepEqual(result, { movedGames: 3, mergedTags: 1, createdTags: 1, photos: [] });
 
     const after = await repo.getRound(T, src.id);
     const target = await repo.getRound(T, dst.id);
@@ -3644,7 +3815,7 @@ module.exports = function repoContract(repo) {
     // An archived game is movable like any other; the request order (C, A) is
     // deliberately not the shelf order — the move follows the SHELF.
     const result = await repo.moveGames(T, src.id, dst.id, null, [c.id, a.id, b.id]);
-    assert.deepEqual(result, { movedGames: 3, mergedTags: 0, createdTags: 2 });
+    assert.deepEqual(result, { movedGames: 3, mergedTags: 0, createdTags: 2, photos: [] });
 
     let after = await repo.getRound(T, src.id);
     let target = await repo.getRound(T, dst.id);
@@ -3664,7 +3835,7 @@ module.exports = function repoContract(repo) {
     const keep2 = await repo.createGame(T, src2.id, gameFields({ title: 'Keep2', tagIds: [idle.id] }));
 
     assert.deepEqual(await repo.moveGames(T, src2.id, dst2.id, null, [picked.id]),
-      { movedGames: 1, mergedTags: 0, createdTags: 1 });
+      { movedGames: 1, mergedTags: 0, createdTags: 1, photos: [] });
 
     after = await repo.getRound(T, src2.id);
     target = await repo.getRound(T, dst2.id);
@@ -3739,7 +3910,7 @@ module.exports = function repoContract(repo) {
     // so the tagged game trips a zero cap and the untagged one sails past it.
     assert.equal(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [one.id]), 'quota_tags');
     assert.deepEqual(await repo.moveGames(T, src.id, dst.id, { maxGames: 99, maxTags: 0 }, [two.id]),
-      { movedGames: 1, mergedTags: 0, createdTags: 0 });
+      { movedGames: 1, mergedTags: 0, createdTags: 0, photos: [] });
   });
 
   test('moveGames refuses a missing, identical or over-quota target', async () => {
@@ -3767,14 +3938,14 @@ module.exports = function repoContract(repo) {
 
     // Within the caps it goes through.
     const ok = await repo.moveGames(T, src.id, dst.id, { maxGames: 2, maxTags: 1 });
-    assert.deepEqual(ok, { movedGames: 2, mergedTags: 0, createdTags: 1 });
+    assert.deepEqual(ok, { movedGames: 2, mergedTags: 0, createdTags: 1, photos: [] });
   });
 
   test('moveGames on an empty source round is a no-op with no feed entry', async () => {
     const src = await freshRound();
     const dst = await freshRound();
     const result = await repo.moveGames(T, src.id, dst.id);
-    assert.deepEqual(result, { movedGames: 0, mergedTags: 0, createdTags: 0 });
+    assert.deepEqual(result, { movedGames: 0, mergedTags: 0, createdTags: 0, photos: [] });
     assert.deepEqual(await repo.listActivities(T, src.id), []);
     assert.deepEqual(await repo.listActivities(T, dst.id), []);
   });
@@ -4082,7 +4253,7 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.cancelSession(OTHER, round.id, session.id, true), null);
     assert.equal(await repo.removeSessionGame(OTHER, round.id, session.id, game.id), null);
     assert.equal(await repo.saveSessionResults(OTHER, round.id, session.id, {}), null);
-    assert.equal(await repo.deleteSession(OTHER, round.id, session.id), false);
+    assert.equal(await repo.deleteSession(OTHER, round.id, session.id), null);
     assert.equal(await repo.setBackground(OTHER, round.id, { type: 'none' }), null);
     assert.equal(await repo.addTag(OTHER, round.id, 'evil'), null);
     assert.equal(await repo.deleteTag(OTHER, round.id, 'any'), false);
@@ -5525,6 +5696,82 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.redactText({ kind: 'filter', roundId: round.id, id: 'nope' }, 'x'), null);
   });
 
+  // A lent box's borrower is free text about a third party (#1822). The Chronik
+  // keeps its own copy on every lend/return line, and those outlive the loan, so
+  // the takedown has to reach them too — or the name stays on screen.
+  test('roundContent lists every borrower name per box and redactText blanks loan and Chronik copies (#1822)', async () => {
+    const round = await freshRound({ members: ['Kim'] });
+    const kim = round.members.find((m) => m.name === 'Kim');
+    const lent = await repo.createGame(T, round.id, gameFields({ title: 'Azul' }));
+    const back = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    await repo.createGame(T, round.id, gameFields({ title: 'Never lent' }));
+    await repo.setGameLoan(T, round.id, lent.id, { to: 'Kim', memberId: kim.id, since: '2026-11-03' });
+    await repo.setGameLoan(T, round.id, lent.id, { to: 'Nachbarin Eva', since: '2026-11-04' });
+    await repo.setGameLoan(T, round.id, back.id, { to: 'Onkel Udo', since: '2026-11-01' });
+    await repo.setGameLoan(T, round.id, back.id, null);
+
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.loans, [
+      { id: lent.id, to: 'Kim, Nachbarin Eva' },
+      { id: back.id, to: 'Onkel Udo' },
+    ], 'a returned box is listed too, from its Chronik lines');
+
+    const done = await repo.redactText({ kind: 'loan', roundId: round.id, id: lent.id }, '[entfernt]');
+    assert.equal(done.kind, 'loan');
+    assert.equal(done.id, lent.id);
+    assert.equal(done.previous, 'Kim, Nachbarin Eva');
+    const game = (await repo.getRound(T, round.id)).games.find((g) => g.id === lent.id);
+    assert.deepEqual(game.loan, { to: '[entfernt]', since: '2026-11-04' }, 'still lent, so still out of the draw');
+
+    const gone = await repo.redactText({ kind: 'loan', roundId: round.id, id: back.id }, '[entfernt]');
+    assert.equal(gone.previous, 'Onkel Udo');
+    assert.equal('loan' in (await repo.getRound(T, round.id)).games.find((g) => g.id === back.id), false,
+      'redacting a returned box does not lend it again');
+
+    const acts = (await repo.listActivities(T, round.id)).filter((a) => /^game_(lent|returned)$/.test(a.type));
+    assert.equal(acts.length, 4);
+    assert.deepEqual([...new Set(acts.map((a) => a.to))], ['[entfernt]'], 'no Chronik line keeps a name');
+    assert.equal(acts.find((a) => a.memberId).memberId, kim.id, 'the seat link survives');
+    assert.deepEqual((await repo.roundContent(round.id)).loans.map((l) => l.to), ['[entfernt]', '[entfernt]']);
+
+    assert.equal(await repo.redactText({ kind: 'loan', roundId: round.id, id: 'nope' }, 'x'), null);
+  });
+
+  // A scoring category's name (#1780, #1822): blanked by name, its id kept, so
+  // a session's stored breakdown still resolves. Tombstones are listed too.
+  test('roundContent lists scoring category names and redactText blanks one, id kept (#1822)', async () => {
+    const round = await freshRound();
+    const g = await repo.createGame(T, round.id, gameFields());
+    const other = await repo.createGame(T, round.id, gameFields());
+    await repo.updateGame(T, round.id, g.id, {
+      scoreCategories: [{ id: 'c1', name: 'Vögel' }, { id: 'c2', name: 'Anstößig', removed: true }],
+    });
+    await repo.updateGame(T, round.id, other.id, { scoreCategories: [{ id: 'c3', name: 'Eier' }] });
+    const at = '2026-11-01T20:00:00.000Z';
+    const parts = { m1: { c1: 40, c2: 2 } };
+    const session = await repo.createSession(T, round.id, {
+      createdAt: at, gameIds: [g.id], votes: {}, chosenGameId: g.id, chosenAt: at, finished: true,
+      finishedAt: at, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      scores: { m1: 42 }, scoreParts: parts,
+    });
+
+    const content = await repo.roundContent(round.id);
+    assert.deepEqual(content.scoreCategories, [
+      { id: 'c1', name: 'Vögel' }, { id: 'c2', name: 'Anstößig' }, { id: 'c3', name: 'Eier' },
+    ]);
+
+    const done = await repo.redactText({ kind: 'scoreCategory', roundId: round.id, id: 'c2' }, '[entfernt]');
+    assert.equal(done.previous, 'Anstößig');
+    assert.equal(done.kind, 'scoreCategory');
+    const after = await repo.getRound(T, round.id);
+    assert.deepEqual(after.games.find((x) => x.id === g.id).scoreCategories,
+      [{ id: 'c1', name: 'Vögel' }, { id: 'c2', name: '[entfernt]', removed: true }]);
+    assert.deepEqual(after.games.find((x) => x.id === other.id).scoreCategories, [{ id: 'c3', name: 'Eier' }]);
+    assert.deepEqual(after.sessions.find((x) => x.id === session.id).scoreParts, parts, 'the breakdown still resolves');
+
+    assert.equal(await repo.redactText({ kind: 'scoreCategory', roundId: round.id, id: 'nope' }, 'x'), null);
+  });
+
   test('redactText blanks one text field and returns what was there', async () => {
     const round = await freshRound({ name: 'Bad round name' });
     const game = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));
@@ -5572,6 +5819,73 @@ module.exports = function repoContract(repo) {
     const elsewhere = await repo.createGame(T, other.id, gameFields({ title: 'Not yours' }));
     assert.equal(await repo.redactText({ kind: 'game', roundId: round.id, id: elsewhere.id }, '[x]'), null);
     assert.equal((await repo.getRound(T, other.id)).games[0].title, 'Not yours');
+  });
+
+  // #1825: a game title and a member name are COPIED onto Chronik lines and
+  // friend-feed rows, and a takedown that leaves those copies on screen took
+  // nothing down. Lines with an id match by id; the id-less ones (game_deleted,
+  // member_*) and every feed row match by the old text — a same-named twin in
+  // the same round is blanked too, accepted for a takedown (operator, 2026-11-14).
+  test('redactText of a game or member also blanks its Chronik and friend-feed copies (#1825)', async () => {
+    const round = await freshRound({ members: ['Kim'] });
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));
+    const keep = await repo.createGame(T, round.id, gameFields({ title: 'Good title' }));
+    await repo.retireGame(T, round.id, game.id, true);
+    await repo.retireGame(T, round.id, game.id, false);
+    await repo.setGameLoan(T, round.id, game.id, { to: 'Eva', since: '2026-11-03' });
+    await repo.retireGame(T, round.id, keep.id, true);
+    // A deleted twin: its Chronik line has no gameId, only the text.
+    const twin = await repo.createGame(T, round.id, gameFields({ title: 'Bad title' }));
+    await repo.retireGame(T, round.id, twin.id, true);
+    await repo.deleteGame(T, round.id, twin.id);
+
+    // A member who was deleted and re-added under the same name, then retired.
+    const first = await repo.createMember(T, round.id, { name: 'Bad name' });
+    await repo.deleteMember(T, round.id, first.id);
+    const member = await repo.createMember(T, round.id, { name: 'Bad name' });
+    await repo.retireMember(T, round.id, member.id, true);
+
+    // Feed rows: the owner's own account, a grantee in ANOTHER tenant, and a
+    // stranger with no access to this round whose row happens to match.
+    const mk = async (tenantId) => repo.createUser({
+      email: `${uniq()}@example.com`, username: uniq(), tenantId, createdAt: '2026-11-01T00:00:00.000Z',
+    });
+    const owner = await mk(T);
+    const grantee = await mk(`other-${uniq()}`);
+    const stranger = await mk(`other-${uniq()}`);
+    await repo.createGrant({ roundId: round.id, ownerTenantId: T, userId: grantee.id });
+    await repo.addFeedEvent(owner.id, { type: 'game_added', title: 'Bad title', coverUrl: null });
+    await repo.addFeedEvent(owner.id, { type: 'game_added', title: 'Good title', coverUrl: null });
+    await repo.addFeedEvent(grantee.id, { type: 'session_played', title: 'Bad title', coverUrl: null });
+    await repo.addFeedEvent(grantee.id, { type: 'games_imported', title: 'Bad title', coverUrl: null, count: 3 });
+    await repo.addFeedEvent(stranger.id, { type: 'game_added', title: 'Bad title', coverUrl: null });
+
+    const g = await repo.redactText({ kind: 'game', roundId: round.id, id: game.id }, '[entfernt]');
+    assert.equal(g.previous, 'Bad title', 'the log keeps the row\'s own text');
+    const m = await repo.redactText({ kind: 'member', roundId: round.id, id: member.id }, '[entfernt]');
+    assert.equal(m.previous, 'Bad name');
+
+    const acts = await repo.listActivities(T, round.id);
+    const leaks = acts.filter((a) => a.title === 'Bad title' || a.name === 'Bad name');
+    assert.deepEqual(leaks, [], 'no Chronik line keeps the old text');
+    const gameLines = acts.filter((a) => a.gameId === game.id);
+    assert.ok(gameLines.length >= 4, `the game's own lines are present (${gameLines.length})`);
+    assert.ok(gameLines.every((a) => a.title === '[entfernt]'));
+    assert.equal(gameLines.find((a) => a.type === 'game_lent').to, 'Eva', 'the borrower is a separate redaction');
+    assert.equal(acts.find((a) => a.type === 'game_deleted').title, '[entfernt]', 'the id-less twin by text');
+    assert.deepEqual(
+      acts.filter((a) => /^member_/.test(a.type) && a.name === '[entfernt]').map((a) => a.type).sort(),
+      ['member_added', 'member_added', 'member_deleted', 'member_retired'],
+    );
+    assert.ok(acts.some((a) => a.gameId === keep.id && a.title === 'Good title'), 'another game is untouched');
+
+    const feed = await repo.listFeedEvents([owner.id, grantee.id]);
+    assert.deepEqual(feed.filter((e) => e.title === 'Bad title'), [], 'no friend sees the old title');
+    assert.equal(feed.filter((e) => e.title === '[entfernt]').length, 3);
+    assert.ok(feed.some((e) => e.title === 'Good title'), 'another title is untouched');
+    assert.equal(feed.find((e) => e.type === 'games_imported').count, 3, 'only the text moves');
+    assert.equal((await repo.listFeedEvents([stranger.id]))[0].title, 'Bad title',
+      'an account with no access to the round is out of scope');
   });
 
   test('logModeration appends and listModeration returns newest first', async () => {
@@ -6168,10 +6482,6 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.roundsWithWish, mid.adoption.roundsWithWish + 1);
       assert.equal(m.adoption.roundsWithCompleted, mid.adoption.roundsWithCompleted,
         'nothing was marked completed');
-      /* The UNION, which is the tile's headline and cannot be derived from the
-         three above: this round is in two of them and must count ONCE. */
-      assert.equal(m.adoption.roundsWithAnyShelf, mid.adoption.roundsWithAnyShelf + 1,
-        'a round in two shelf states is one round using the shelf, not two');
     });
 
     /* ---- #1201: which design ACCOUNTS wear ------------------------------- */
@@ -6266,34 +6576,48 @@ module.exports = function repoContract(repo) {
     // written as "the key is present" instead of "present and non-empty" passes
     // the first half of every one of these and fails only the second.
     const ADOPTION = [
-      'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithAnyShelf',
-      'roundsWithTags', 'roundsWithSavedFilters', 'roundsWithGuestGame', 'gamesLinked', 'gamesWithOwnCover', 'gamesWithProviderCover',
-      'gamesWithOwners', 'gamesWithExpansions', 'sessionsWithGuests', 'sessionsWithTeams',
-      'sessionsWithVoteLink', 'accountsWithPasskey', 'accountsWithBggUsername',
+      'roundsWithRetired', 'roundsWithCompleted', 'roundsWithWish', 'roundsWithGuestGame',
+      // #1823
+      'roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge', 'roundsWithDrawBoost',
+      'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts', 'accountsWithPriceWatch',
+      'gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride',
+      'accountsWithPasskey',
       'sessionsImported', 'sessionsImportedBgStats',
       'sessionsWithPoints', 'sessionsWithAutoma',
     ];
+
+    // A running challenge and a finished one, in setChallenge's own shapes.
+    const CHALLENGE = { kind: 'sessions', n: 5, startedAt: '2026-11-01T10:00:00.000Z', deadline: '2026-12-31T22:59:59.999Z' };
+    const ENDED = { ...CHALLENGE, endedAt: '2026-11-05T10:00:00.000Z' };
+    const watchFields = (externalId) => ({
+      externalId, title: `Spiel ${externalId}`, thresholdCents: 3000, destination: 'DE', currency: 'EUR', editionLang: 'DE',
+    });
 
     await t.test('every adoption figure moves on a fixture that uses the feature', async () => {
       const mid = await repo.instanceMetrics();
       const tn = `ad-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Genutzt', members: ['Ann'] });
-      await repo.addTag(tn, r.id, 'Kurz', null);
-      await repo.createSavedFilter(tn, r.id, {
-        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
-      });
+      // #1823: a running challenge, the draw boost and an invite link — TWO
+      // links (fresh seat + one seat), so the round must count once.
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [ENDED] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn, memberId: r.members[0].id });
 
-      // A linked game wearing the PROVIDER's cover.
+      // An ordinary linked game that uses none of the Spiele features.
       await repo.createGame(tn, r.id, gameFields({
         title: 'Verknüpft',
         image: 'https://cf.geekdo-images.test/x.jpg',
         source: { provider: 'bgg', externalId: '13' },
       }));
-      // A hand-typed game wearing bytes THIS instance stores, owned by someone,
-      // with an expansion on the shelf.
+      // The four Spiele features (#1803), all on ONE game.
       const own = await repo.createGame(tn, r.id, gameFields({ title: 'Eigen', image: '/uploads/a.webp' }));
-      await repo.updateGame(tn, r.id, own.id, { ownerIds: [r.members[0].id] });
-      await repo.setGameExpansions(tn, r.id, own.id, [{ title: 'Erweiterung' }], null);
+      await repo.updateGame(tn, r.id, own.id, {
+        purchasePrice: { amount: 4999, currency: 'EUR' },
+        scoreCategories: [{ id: 'v', name: 'Vögel' }],
+        playtimeOverride: { min: 60, max: 90 },
+      });
+      await repo.setGameLoan(tn, r.id, own.id, { to: 'Kim', since: '2026-11-01' });
       // The three shelf states, on ONE round, so the union counts once.
       const shelved = await repo.createGame(tn, r.id, gameFields({ title: 'Regal' }));
       await repo.updateGame(tn, r.id, shelved.id, { retired: true, completed: true, wish: true });
@@ -6306,18 +6630,26 @@ module.exports = function repoContract(repo) {
         votes: {},
         createdAt: daysAgo(1),
         finished: true,
-        guests: [{ id: 'g1', name: 'Gast' }],
-        teams: [{ id: 't1', personIds: [r.members[0].id, 'g1'] }],
+        chosenGameId: own.id,
         importRef: { source: 'bgstats', id: 'p1' },
         scores: { [r.members[0].id]: 42 },
         automa: { name: 'Automa', points: 38 },
       });
-      await repo.createSessionVoteLink({ tenantId: tn, roundId: r.id, sessionId: session.id });
-
-      await repo.createUser({
-        ...userFields(), tenantId: `au-${Math.random().toString(16).slice(2)}`,
-        bggUsername: 'ada', identities: [{ type: 'passkey', credentialId: 'c1' }],
+      await repo.setSessionVerdict(tn, r.id, session.id, r.members[0].id, own.id, 4);
+      // Two round-level messages and two comments on ONE session: one round
+      // with chat, one session with a comment.
+      const say = (sessionId = null) => repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-chat', text: 'Hallo', at: daysAgo(1), sessionId,
       });
+      await say(); await say(); await say(session.id); await say(session.id);
+
+      const watcher = await repo.createUser({
+        ...userFields(), tenantId: `au-${Math.random().toString(16).slice(2)}`,
+        identities: [{ type: 'passkey', credentialId: 'c1' }],
+      });
+      // Two watches, one account.
+      await repo.createPriceWatch(watcher.id, watchFields(`1${Math.floor(Math.random() * 1e8)}`));
+      await repo.createPriceWatch(watcher.id, watchFields(`2${Math.floor(Math.random() * 1e8)}`));
 
       const m = await repo.instanceMetrics();
       for (const key of ADOPTION) {
@@ -6328,6 +6660,58 @@ module.exports = function repoContract(repo) {
       assert.equal(m.content.games, mid.content.games + 5);
       assert.equal(m.content.sessions, mid.content.sessions + 1);
       assert.equal(m.accounts.total, mid.accounts.total + 1);
+    });
+
+    await t.test('the Spiele figures count presence only — not cleared, not BGG categories, not demos (#1803)', async () => {
+      const KEYS = ['gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride'];
+      const mid = await repo.instanceMetrics();
+      const tn = `sp-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Spiele', members: ['Ann'] });
+
+      /* BoardGameGeek's `categories` on a game WITHOUT scoring categories: the
+         field mix-up this figure would make if it read the wrong key. */
+      const bgg = await repo.createGame(tn, r.id, gameFields({ title: 'BGG', source: { provider: 'bgg', externalId: '9' } }));
+      await repo.setGameProviderInfo(tn, r.id, bgg.id, {
+        weight: 2.5, minPlaytime: 30, maxPlaytime: 60, minAge: 10,
+        categories: ['Economic'], mechanics: ['Trading'], rating: 7,
+      });
+
+      // Every feature set and then CLEARED again — the clear is absence.
+      const cleared = await repo.createGame(tn, r.id, gameFields({ title: 'Zurück' }));
+      await repo.updateGame(tn, r.id, cleared.id, {
+        purchasePrice: { amount: 999, currency: 'EUR' },
+        scoreCategories: [{ id: 'a', name: 'Gold' }],
+        playtimeOverride: { min: 20, max: 30 },
+      });
+      await repo.updateGame(tn, r.id, cleared.id, { purchasePrice: null, scoreCategories: [], playtimeOverride: null });
+      await repo.setGameLoan(tn, r.id, cleared.id, { to: 'Bo', since: '2026-11-01' });
+      await repo.setGameLoan(tn, r.id, cleared.id, null);
+
+      // The positive game.
+      const used = await repo.createGame(tn, r.id, gameFields({ title: 'Genutzt' }));
+      await repo.updateGame(tn, r.id, used.id, {
+        purchasePrice: { amount: 2999, currency: 'EUR' },
+        scoreCategories: [{ id: 'b', name: 'Karten' }],
+        playtimeOverride: { min: 45, max: 60 },
+      });
+      await repo.setGameLoan(tn, r.id, used.id, { to: 'Kim', since: '2026-11-02' });
+
+      // A DEMO tenant's game using all four must not count.
+      const dt = `demo-${tn}`;
+      const dr = await repo.createRound(dt, { name: 'Demo', members: ['Ann'] });
+      const demo = await repo.createGame(dt, dr.id, gameFields({ title: 'Demo' }));
+      await repo.updateGame(dt, dr.id, demo.id, {
+        purchasePrice: { amount: 2999, currency: 'EUR' },
+        scoreCategories: [{ id: 'c', name: 'Punkte' }],
+        playtimeOverride: { min: 45, max: 60 },
+      });
+      await repo.setGameLoan(dt, dr.id, demo.id, { to: 'Kim', since: '2026-11-02' });
+
+      const m = await repo.instanceMetrics();
+      for (const key of KEYS) {
+        assert.equal(m.adoption[key] - mid.adoption[key], 1, `${key} counted ${m.adoption[key] - mid.adoption[key]}, not 1`);
+      }
+      assert.equal(m.adoption.gamesTotal - mid.adoption.gamesTotal, 3, 'the denominator holds all three real games');
     });
 
     await t.test('an imported session counts under its own source, and in the total (#1665)', async () => {
@@ -6417,13 +6801,22 @@ module.exports = function repoContract(repo) {
       const c = await repo.createUser({ ...userFields(), tenantId: `${tn}-c` });
       await repo.createFriendRequest({ requesterUserId: a.id, addresseeUserId: c.id });
 
+      // Chat (#1823): a round-level message and a session comment inside the
+      // window count together; an old one and a malformed stamp do not.
+      const started = (await repo.getRound(tn, r.id)).sessions[0];
+      const say = (at, sessionId = null) => repo.createRoundMessage(tn, r.id, { authorUserId: 'u-lw', text: 'x', at, sessionId });
+      await say(recent);
+      await say(recent, started.id);
+      await say(old);
+      await say('t');
+
       const m = await repo.instanceMetrics();
       const d = (k) => m.adoption.lastWeek[k] - mid.adoption.lastWeek[k];
       assert.deepEqual(
         Object.fromEntries(Object.keys(m.adoption.lastWeek).map((k) => [k, d(k)])),
         {
           registrations: 1, activeAccounts: 2, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
-          sessionsImported: 1, roundsShared: 1, friendships: 1,
+          sessionsImported: 1, roundsShared: 1, friendships: 1, messages: 2,
         },
       );
 
@@ -6473,6 +6866,18 @@ module.exports = function repoContract(repo) {
       // over, and the shape a round that once had a tag and lost it leaves behind.
       await repo.setGameExpansions(tn, r.id, g.id, [], null);
       await repo.updateGame(tn, r.id, g.id, { ownerIds: [] });
+      /* #1823's CLEARED shapes: a challenge set and cleared, the draw boost
+         switched on and off (Postgres then stores `false`, not NULL), and a
+         verdict given and withdrawn (the key is pruned). */
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [] });
+      await repo.setChallenge(tn, r.id, { challenge: null, history: [] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.setDrawBoost(tn, r.id, false);
+      const played = await repo.createSession(tn, r.id, {
+        gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true, chosenGameId: g.id,
+      });
+      await repo.setSessionVerdict(tn, r.id, played.id, r.members[0].id, g.id, 4);
+      await repo.setSessionVerdict(tn, r.id, played.id, r.members[0].id, g.id, null);
       await repo.createUser({
         ...userFields(), tenantId: `au0-${Math.random().toString(16).slice(2)}`,
         bggUsername: null, identities: [],
@@ -6483,6 +6888,45 @@ module.exports = function repoContract(repo) {
         assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a row that uses nothing`);
       }
       assert.equal(m.content.games, mid.content.games + 1, 'the denominator still moved');
+    });
+
+    await t.test('a DEMO round, link, message and watch move none of the #1823 figures', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `demo-ad-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Demo', members: ['Ann'] });
+      const g = await repo.createGame(tn, r.id, gameFields({ title: 'Demo' }));
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [ENDED] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
+      const session = await repo.createSession(tn, r.id, {
+        gameIds: [g.id], votes: {}, createdAt: daysAgo(1), finished: true, chosenGameId: g.id,
+      });
+      await repo.setSessionVerdict(tn, r.id, session.id, r.members[0].id, g.id, 5);
+      await repo.createRoundMessage(tn, r.id, { authorUserId: 'u-demo', text: 'Hi', at: new Date().toISOString() });
+      await repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-demo', text: 'Hi', at: new Date().toISOString(), sessionId: session.id,
+      });
+      const demoUser = await repo.createUser({ ...userFields(), tenantId: tn });
+      await repo.createPriceWatch(demoUser.id, watchFields(`3${Math.floor(Math.random() * 1e8)}`));
+
+      const m = await repo.instanceMetrics();
+      for (const key of ['roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge',
+        'roundsWithDrawBoost', 'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts',
+        'accountsWithPriceWatch', 'roundsTotal', 'sessionsTotal', 'accountsTotal']) {
+        assert.equal(m.adoption[key], mid.adoption[key], `${key} counted a demo row`);
+      }
+      assert.equal(m.adoption.lastWeek.messages, mid.adoption.lastWeek.messages, 'a demo message counted');
+    });
+
+    await t.test('a FINISHED challenge alone counts as used, not as active (#1779)', async () => {
+      const mid = await repo.instanceMetrics();
+      const tn = `ch-${Math.random().toString(16).slice(2)}`;
+      const r = await repo.createRound(tn, { name: 'Vorbei', members: ['Ann'] });
+      await repo.setChallenge(tn, r.id, { challenge: null, history: [ENDED] });
+      const m = await repo.instanceMetrics();
+      assert.equal(m.adoption.roundsWithChallenge - mid.adoption.roundsWithChallenge, 1,
+        'a round whose challenge finished no longer counted as having used one');
+      assert.equal(m.adoption.roundsWithActiveChallenge, mid.adoption.roundsWithActiveChallenge);
     });
 
     /* ------------------- the session funnel (#1174) ----------------------- */
@@ -6517,7 +6961,8 @@ module.exports = function repoContract(repo) {
       const d = (k) => m.adoption.funnel[k] - mid.adoption.funnel[k];
       assert.equal(d('started'), 7);
       assert.equal(d('rated'), 1, 'an empty seat entry counted as a rater');
-      assert.equal(d('closed'), 1);
+      // #1823 dropped „Abstimmung beendet": the stage must not come back.
+      assert.equal('closed' in m.adoption.funnel, false);
       assert.equal(d('chosen'), 1);
       assert.equal(d('played'), 4);
       assert.equal(d('result'), 2, 'winners or a KNOWN ending, nothing else');
@@ -6558,9 +7003,7 @@ module.exports = function repoContract(repo) {
       const mid = await repo.instanceMetrics();
       const settled = `st-${Math.random().toString(16).slice(2)}`;
       await repo.createRound(settled, { name: 'Hat eine', members: ['Ann'] });
-      await repo.createUser({
-        ...userFields(), tenantId: settled, bgStats: true, avatar: '/uploads/p.webp',
-      });
+      await repo.createUser({ ...userFields(), tenantId: settled, bgStats: true });
       await repo.createUser({
         ...userFields(), tenantId: `nr-${Math.random().toString(16).slice(2)}`, bgStats: false,
       });
@@ -6569,7 +7012,6 @@ module.exports = function repoContract(repo) {
       assert.equal(m.adoption.accountsTotal - mid.adoption.accountsTotal, 2);
       assert.equal(m.adoption.roundsTotal - mid.adoption.roundsTotal, 1);
       assert.equal(m.adoption.accountsWithBgStats - mid.adoption.accountsWithBgStats, 1);
-      assert.equal(m.adoption.accountsWithAvatar - mid.adoption.accountsWithAvatar, 1);
       /* By TENANT — the only link that exists between an account and a round.
          The Postgres side must read `rounds` under the admin escape here: a
          plain query returns zero rows rather than an error, which would report
@@ -6634,19 +7076,25 @@ module.exports = function repoContract(repo) {
     await t.test('ADMIN_EXCLUDE_TENANTS removes a tenant from the card only', async () => {
       const tn = `ex-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Ausgenommen', members: ['Ann'] });
-      await repo.addTag(tn, r.id, 'Kurz', null);
-      await repo.createSavedFilter(tn, r.id, {
-        name: 'Kurz', tagIds: [], excludeTagIds: [], count: 3, memberIds: [r.members[0].id],
+      await repo.setChallenge(tn, r.id, { challenge: CHALLENGE, history: [] });
+      await repo.setDrawBoost(tn, r.id, true);
+      await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
+      const eins = await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
+      await repo.updateGame(tn, r.id, eins.id, { purchasePrice: { amount: 1999, currency: 'EUR' } });
+      const sx = await repo.createSession(tn, r.id, {
+        gameIds: [eins.id], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
+        chosenGameId: eins.id, scores: { m1: 12 }, automa: { name: 'Bot' },
       });
-      await repo.createGame(tn, r.id, gameFields({ title: 'Eins', image: '/uploads/e.webp' }));
-      await repo.createSession(tn, r.id, {
-        gameIds: [], votes: {}, createdAt: daysAgo(1), finished: true, winnerIds: ['m1'],
-        scores: { m1: 12 }, automa: { name: 'Bot' },
+      await repo.setSessionVerdict(tn, r.id, sx.id, r.members[0].id, eins.id, 3);
+      await repo.createRoundMessage(tn, r.id, { authorUserId: 'u-ex', text: 'x', at: new Date().toISOString() });
+      await repo.createRoundMessage(tn, r.id, {
+        authorUserId: 'u-ex', text: 'x', at: new Date().toISOString(), sessionId: sx.id,
       });
-      await repo.createUser({
+      const exUser = await repo.createUser({
         ...userFields(), tenantId: tn, bgStats: true, design: 'klassisch',
-        designChooserSeen: '2026-09-22', emailVerified: true, disabled: true,
+        designChooserSeen: '2026-09-22', emailVerified: true,
       });
+      await repo.createPriceWatch(exUser.id, watchFields(`4${Math.floor(Math.random() * 1e8)}`));
 
       const plain = await repo.instanceMetrics();
       /* With the variable unset each Konten twin (#1480) equals its
@@ -6654,7 +7102,6 @@ module.exports = function repoContract(repo) {
          no-op, and the baseline the exclusion below must break. */
       assert.equal(plain.adoption.accountsTotal, plain.accounts.total);
       assert.equal(plain.adoption.accountsVerified, plain.accounts.verified);
-      assert.equal(plain.adoption.accountsDisabled, plain.accounts.disabled);
       process.env.ADMIN_EXCLUDE_TENANTS = tn;
       let hidden;
       try {
@@ -6664,12 +7111,15 @@ module.exports = function repoContract(repo) {
       }
 
       for (const key of ['roundsTotal', 'gamesTotal', 'sessionsTotal', 'accountsTotal',
-        'accountsVerified', 'accountsDisabled',
-        'roundsWithTags', 'roundsWithSavedFilters', 'gamesWithOwnCover', 'accountsWithBgStats',
+        'accountsVerified',
+        'roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge', 'roundsWithDrawBoost',
+        'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts', 'accountsWithPriceWatch',
+        'gamesWithPurchasePrice', 'accountsWithBgStats',
         'sessionsWithPoints', 'sessionsWithAutoma']) {
         assert.equal(plain.adoption[key] - hidden.adoption[key], 1, `${key} was not excluded`);
       }
       assert.equal(plain.adoption.funnel.played - hidden.adoption.funnel.played, 1);
+      assert.equal(plain.adoption.lastWeek.messages - hidden.adoption.lastWeek.messages, 2);
       assert.equal(plain.adoption.roundsByFinished.one - hidden.adoption.roundsByFinished.one, 1);
       assert.equal(plain.designAdoption.byDesign.klassisch - hidden.designAdoption.byDesign.klassisch, 1,
         'the design tile divides by accountsTotal on the same card and must follow it');
@@ -6709,6 +7159,130 @@ module.exports = function repoContract(repo) {
     assert.equal(refs.includes(null), false);
     assert.equal(refs.length, new Set(refs).size, 'the union must be deduplicated');
     assert.ok(user);
+  });
+
+  /* ------------------------- session photos (#1774) ------------------------ */
+  /* The photo is a key in the session's blob; everything below is about the one
+     place its object key lives going away, and about the operator surfaces that
+     must see it. A fresh random tenant per case keeps the instance-wide reads
+     (owner lookup, references, metrics) independent of every other case. */
+  const photoTenant = () => `ph-${Math.random().toString(16).slice(2)}`;
+  async function photoRound(tn, name = 'Fotos') {
+    const round = await repo.createRound(tn, { name, members: ['Ann'] });
+    const g = await repo.createGame(tn, round.id, gameFields({ title: 'Catan' }));
+    const played = await repo.createSession(tn, round.id, {
+      gameIds: [g.id], votes: {}, done: true, chosenGameId: g.id, finished: true, winnerIds: [],
+      createdAt: new Date().toISOString(),
+    });
+    return { round, g, played };
+  }
+
+  test('setSessionPhoto sets, replaces and clears — only on a played session', async () => {
+    const tn = photoTenant();
+    const { round, g, played } = await photoRound(tn);
+    const open = await repo.createSession(tn, round.id, { gameIds: [g.id], votes: {}, createdAt: new Date().toISOString() });
+
+    assert.equal(await repo.setSessionPhoto(tn, round.id, open.id, '/uploads/p0.webp'), 'not_played');
+    assert.equal(await repo.setSessionPhoto(tn, round.id, 'nope', '/uploads/p0.webp'), null);
+    assert.equal(await repo.setSessionPhoto(OTHER, round.id, played.id, '/uploads/p0.webp'), null, 'another tenant');
+
+    const first = await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/p1.webp');
+    assert.equal(first.previous, null);
+    assert.equal(first.session.photo, '/uploads/p1.webp');
+    const second = await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/p2.webp');
+    assert.equal(second.previous, '/uploads/p1.webp', 'the replaced path is handed back');
+    assert.equal((await repo.getSession(tn, round.id, played.id)).photo, '/uploads/p2.webp');
+    assert.equal(await repo.countSessionPhotos(tn), 1);
+    assert.equal(await repo.countSessionPhotos(OTHER) >= 0, true);
+
+    // Clearing is allowed in any state and leaves the key ABSENT on both backends.
+    const cleared = await repo.setSessionPhoto(tn, round.id, played.id, null);
+    assert.equal(cleared.previous, '/uploads/p2.webp');
+    assert.equal('photo' in (await repo.getSession(tn, round.id, played.id)), false);
+    assert.equal(await repo.countSessionPhotos(tn), 0);
+    assert.equal(typeof await repo.countSessionPhotos(tn), 'number');
+  });
+
+  test('deleteSession and deleteRound hand the photo path back', async () => {
+    const tn = photoTenant();
+    const a = await photoRound(tn, 'Eins');
+    await repo.setSessionPhoto(tn, a.round.id, a.played.id, '/uploads/del-s.webp');
+    assert.deepEqual(await repo.deleteSession(tn, a.round.id, a.played.id), { images: ['/uploads/del-s.webp'] });
+
+    const b = await photoRound(tn, 'Zwei');
+    await repo.setSessionPhoto(tn, b.round.id, b.played.id, '/uploads/del-r.webp');
+    assert.deepEqual(await repo.deleteRound(tn, b.round.id), { images: ['/uploads/del-r.webp'] });
+  });
+
+  test('a game delete or move hands back the photos of sessions it emptied or un-played', async () => {
+    const tn = photoTenant();
+    const { round, g, played } = await photoRound(tn);
+    // A second session holding TWO games, played on Catan: it survives the
+    // delete, but its result — and with it the photo — goes.
+    const other = await repo.createGame(tn, round.id, gameFields({ title: 'Azul' }));
+    const both = await repo.createSession(tn, round.id, {
+      gameIds: [g.id, other.id], votes: {}, done: true, chosenGameId: g.id, finished: true, winnerIds: [],
+      createdAt: new Date().toISOString(),
+    });
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/emptied.webp');
+    await repo.setSessionPhoto(tn, round.id, both.id, '/uploads/unplayed.webp');
+    await repo.retireGame(tn, round.id, g.id, true);
+
+    const res = await repo.deleteGame(tn, round.id, g.id);
+    assert.deepEqual(res.photos.slice().sort(), ['/uploads/emptied.webp', '/uploads/unplayed.webp']);
+    const kept = await repo.getSession(tn, round.id, both.id);
+    assert.equal(kept.finished, false);
+    assert.equal('photo' in kept, false, 'the un-played session lost its photo key');
+
+    // The move path scrubs the same way.
+    const m = await photoRound(tn, 'Quelle');
+    const dst = await repo.createRound(tn, { name: 'Ziel', members: ['Bo'] });
+    await repo.setSessionPhoto(tn, m.round.id, m.played.id, '/uploads/moved.webp');
+    const moved = await repo.moveGames(tn, m.round.id, dst.id, null, [m.g.id]);
+    assert.deepEqual(moved.photos, ['/uploads/moved.webp']);
+  });
+
+  test('the operator surfaces see a session photo: owner, takedown, references, summary, erasure', async () => {
+    const tn = photoTenant();
+    const { round, played } = await photoRound(tn, 'Moderiert');
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/op.webp');
+
+    const owner = await repo.findImageOwner('/uploads/op.webp');
+    assert.deepEqual(
+      { kind: owner.kind, tenantId: owner.tenantId, roundId: owner.roundId, roundName: owner.roundName, sessionId: owner.sessionId },
+      { kind: 'session', tenantId: tn, roundId: round.id, roundName: 'Moderiert', sessionId: played.id },
+    );
+    assert.ok((await repo.referencedImages()).includes('/uploads/op.webp'),
+      'an unlisted photo would be offered to the operator as a deletable orphan');
+    assert.ok((await repo.tenantSummary(tn)).images.includes('/uploads/op.webp'));
+
+    assert.equal(await repo.takedownImage('/uploads/op.webp'), 1);
+    assert.equal('photo' in (await repo.getSession(tn, round.id, played.id)), false);
+    assert.equal(await repo.findImageOwner('/uploads/op.webp'), null);
+
+    // Erasure collects a photo with the tenant's covers.
+    const tn2 = photoTenant();
+    const user = await repo.createUser({ ...userFields(), tenantId: tn2 });
+    const e = await photoRound(tn2, 'Weg');
+    await repo.setSessionPhoto(tn2, e.round.id, e.played.id, '/uploads/erased.webp');
+    const out = await repo.eraseAccount(user.id);
+    assert.ok(out.images.includes('/uploads/erased.webp'));
+  });
+
+  test('the metrics count photos of played sessions and the fullest tenant', async () => {
+    const before = await repo.instanceMetrics();
+    const tn = photoTenant();
+    const { round, played } = await photoRound(tn);
+    const again = await repo.createSession(tn, round.id, {
+      gameIds: played.gameIds, votes: {}, done: true, chosenGameId: played.chosenGameId,
+      finished: true, winnerIds: [], createdAt: new Date().toISOString(),
+    });
+    await repo.setSessionPhoto(tn, round.id, played.id, '/uploads/m1.webp');
+    await repo.setSessionPhoto(tn, round.id, again.id, '/uploads/m2.webp');
+    const after = await repo.instanceMetrics();
+    assert.equal(after.adoption.funnel.photo - before.adoption.funnel.photo, 2);
+    assert.ok(after.peaks.photosPerTenant >= 2);
+    assert.equal(typeof after.peaks.photosPerTenant, 'number');
   });
 
   test('databaseSize answers a number of bytes, or null — never a string', async () => {
@@ -7116,10 +7690,82 @@ module.exports = function repoContract(repo) {
       });
       assert.equal(typeof row.owners, 'number');
     });
+
+    await t.test('a verdict is a rating, and replaces its seat share of the lift play (#1838)', async () => {
+      const id = uniq();
+      const tenant = `pga-${uniq()}`;
+      const round = await repo.createRound(tenant, { name: 'V', members: ['Ann', 'Bo', 'Cy', 'Di'] });
+      const game = await repo.createGame(tenant, round.id, bgg(id));
+      const [m1, m2, m3, m4] = round.members.map((m) => m.id);
+      const votes = { [m1]: { [game.id]: { rating: 5 } }, [m2]: { [game.id]: { rating: 5 } },
+        [m3]: { [game.id]: { rating: 4 } }, [m4]: { [game.id]: { rating: 4 } } };
+      const s = await repo.createSession(tenant, round.id, {
+        createdAt: daysAgo(1), gameIds: [game.id], votes, chosenGameId: game.id, chosenAt: daysAgo(1),
+        finished: true, finishedAt: daysAgo(1), winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      });
+      const before = await rowFor(id);
+      assert.equal(before.plays.lift.sum, 5, 'with no verdict a play is a pick');
+      await repo.setSessionVerdict(tenant, round.id, s.id, m1, game.id, 1);
+      const row = await rowFor(id);
+      assert.equal(row.plays.lift.count, 1);
+      assert.equal(row.plays.lift.sum, 3, 'one „gar nicht" of four seats: (−3 + 3·5) / 4');
+      assert.equal(row.ratings.count, 5, 'four votes and one verdict');
+      assert.equal(row.ratings.tiles[1], 1);
+      assert.deepEqual(row.ratings.evenings, [[0, 0, 0, 0, 2, 2]], 'the evening stays the votes alone');
+    });
   });
 
   // The suite shares one store across cases, so assert on the delta, not on an
   // absolute count — other tests have already created users by now.
+  test('publicPlayHistory returns one row per finished, linked, dated play before the cutoff (#1732)', async () => {
+    /* The raw material of Discover's past winners: both backends must admit
+       exactly the plays publicGameAggregates' period counts admit, and stop at
+       the cutoff, so a past week's winner is decided by the same definition its
+       live card used. Unique ids per case; the store is shared. */
+    const id = uniq();
+    const other = uniq();
+    const tenant = `pph-${uniq()}`;
+    const round = await repo.createRound(tenant, { name: 'H', members: ['Ann'] });
+    const game = await repo.createGame(tenant, round.id, gameFields({
+      source: { provider: 'bgg', externalId: id, url: null },
+    }));
+    const typed = await repo.createGame(tenant, round.id, gameFields({ title: 'Handgetippt' }));
+    const play = (createdAt, over = {}) => repo.createSession(tenant, round.id, {
+      gameIds: [game.id], votes: {}, createdAt,
+      finished: true, finishedAt: createdAt, chosenGameId: game.id, ...over,
+    });
+    await play('2026-07-01T10:00:00.000Z');
+    await play('2026-08-02T21:59:59.000Z');
+    // At or after the cutoff: the running period, never history.
+    await play('2026-08-03T22:00:00.000Z');
+    // Not plays: unfinished, nothing chosen, no stamp at all.
+    await play('2026-07-02T10:00:00.000Z', { finished: false });
+    await play('2026-07-02T10:00:00.000Z', { chosenGameId: null });
+    await play(null);
+    // A hand-typed game has no provider link and so no row.
+    await play('2026-07-03T10:00:00.000Z', { gameIds: [typed.id], chosenGameId: typed.id });
+    // A demo tenant's play is never public material.
+    const demo = `demo-${uniq()}`;
+    const demoRound = await repo.createRound(demo, { name: 'D', members: ['Ann'] });
+    const demoGame = await repo.createGame(demo, demoRound.id, gameFields({
+      source: { provider: 'bgg', externalId: other, url: null },
+    }));
+    await repo.createSession(demo, demoRound.id, {
+      gameIds: [demoGame.id], votes: {}, createdAt: '2026-07-04T10:00:00.000Z',
+      finished: true, chosenGameId: demoGame.id,
+    });
+
+    const rows = await repo.publicPlayHistory('2026-08-03T22:00:00.000Z');
+    const mine = rows.filter((r) => r.externalId === id)
+      .sort((a, b) => (a.playedAt < b.playedAt ? -1 : 1));
+    assert.deepEqual(mine, [
+      { provider: 'bgg', externalId: id, tenant, playedAt: '2026-07-01T10:00:00.000Z' },
+      { provider: 'bgg', externalId: id, tenant, playedAt: '2026-08-02T21:59:59.000Z' },
+    ]);
+    assert.ok(!rows.some((r) => r.externalId === other), 'demo tenants are excluded');
+    assert.ok(!JSON.stringify(rows).includes('Handgetippt'));
+  });
+
   test('listUsers returns every user for the operator account list', async () => {
     const before = await repo.listUsers();
     // userFields() mints a random e-mail; don't hardcode one, or a re-run
@@ -7904,6 +8550,104 @@ module.exports = function repoContract(repo) {
     await repo.deleteRound(T, other.id);
   });
 
+  /* -------------------------- Session comments (#1782) -------------------------- */
+
+  const bareSession = (gameIds) => ({
+    createdAt: 't', gameIds, votes: {}, chosenGameId: null, chosenAt: null,
+    finished: false, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: false,
+  });
+
+  test('session comments: a session thread lists its own, the round thread lists everything', async () => {
+    const round = await freshRound();
+    const decoy = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields({ title: 'Catan' }));
+    const s1 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const s2 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    const r = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'round', at });
+    const c1 = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'snacks?', at, sessionId: s1.id });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-b', text: 'ich', at, sessionId: s1.id });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-b', text: 'anderer Abend', at, sessionId: s2.id });
+
+    assert.equal('sessionId' in r, false, 'a round-level message carries no sessionId key');
+    assert.equal(c1.sessionId, s1.id);
+    assert.deepEqual((await repo.listRoundMessages(T, round.id, { sessionId: s1.id })).messages.map((m) => m.text),
+      ['snacks?', 'ich'], 'one session\'s comments, oldest first');
+    assert.deepEqual((await repo.listRoundMessages(T, round.id)).messages.map((m) => m.text),
+      ['round', 'snacks?', 'ich', 'anderer Abend'], 'the round thread holds the whole conversation');
+    assert.equal((await repo.getRoundMessage(T, round.id, c1.id)).sessionId, s1.id);
+    assert.deepEqual(await repo.countSessionMessages(T, round.id), { [s1.id]: 2, [s2.id]: 1 });
+    assert.equal(typeof (await repo.countSessionMessages(T, round.id))[s1.id], 'number');
+
+    // A session is only reachable through its own round, and not from another tenant.
+    assert.equal(await repo.listRoundMessages(T, decoy.id, { sessionId: s1.id }), null);
+    assert.equal(await repo.createRoundMessage(T, decoy.id, { authorUserId: 'u-a', text: 'x', at, sessionId: s1.id }), null);
+    assert.equal(await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'x', at, sessionId: 'nope' }), null);
+    assert.equal(await repo.listRoundMessages(OTHER, round.id, { sessionId: s1.id }), null);
+    assert.deepEqual(await repo.countSessionMessages(OTHER, round.id), {});
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, decoy.id);
+  });
+
+  test('session comments: the first unread message OUTSIDE a session, by others only', async () => {
+    const round = await freshRound();
+    const game = await repo.createGame(T, round.id, gameFields());
+    const s1 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const s2 = await repo.createSession(T, round.id, bareSession([game.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    const post = (who, sessionId) => repo.createRoundMessage(T, round.id, { authorUserId: who, text: 'x', at, sessionId });
+    const own = await post('u-me', null);
+    const inS1 = await post('u-b', s1.id);
+    const roundLevel = await post('u-b', null);
+    const inS2 = await post('u-b', s2.id);
+
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', 0, s1.id), roundLevel.seq,
+      'a round-level message counts as outside (a NULL session id), the reader\'s own does not');
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', roundLevel.seq, s1.id), inS2.seq,
+      'another session\'s comment is outside too');
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', inS2.seq, s1.id), null);
+    assert.equal(await repo.firstUnreadOutsideSession(T, round.id, 'u-me', 0, s2.id), inS1.seq,
+      'from s2\'s side, s1\'s comment is the oldest outside');
+    assert.equal(await repo.firstUnreadOutsideSession(OTHER, round.id, 'u-me', 0, s1.id), null);
+    assert.ok(own.seq < inS1.seq);
+    await repo.deleteRound(T, round.id);
+  });
+
+  test('session comments go with their session — deleted, emptied by a game delete or a move', async () => {
+    const round = await freshRound();
+    const dst = await freshRound();
+    const keep = await repo.createGame(T, round.id, gameFields({ title: 'Keep' }));
+    const drop = await repo.createGame(T, round.id, gameFields({ title: 'Drop' }));
+    const mover = await repo.createGame(T, round.id, gameFields({ title: 'Mover' }));
+    const deleted = await repo.createSession(T, round.id, bareSession([keep.id]));
+    const byGame = await repo.createSession(T, round.id, bareSession([drop.id]));
+    const byMove = await repo.createSession(T, round.id, bareSession([mover.id]));
+    const survives = await repo.createSession(T, round.id, bareSession([keep.id, mover.id]));
+    const at = '2026-11-13T10:00:00.000Z';
+    for (const s of [deleted, byGame, byMove, survives]) {
+      await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'c', at, sessionId: s.id });
+    }
+    const roundLevel = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-a', text: 'r', at });
+
+    // Checked after EACH step: the JSON backend's sweep after a game delete
+    // would otherwise also clear a comment deleteSession had left behind, and
+    // the final count could not tell the two apart (measured on #1782).
+    const counted = async () => repo.countSessionMessages(T, round.id);
+    assert.ok(await repo.deleteSession(T, round.id, deleted.id));
+    assert.deepEqual(await counted(), { [byGame.id]: 1, [byMove.id]: 1, [survives.id]: 1 }, 'deleteSession');
+    await repo.retireGame(T, round.id, drop.id, true);
+    assert.deepEqual(await repo.deleteGame(T, round.id, drop.id), { image: null, photos: [] });
+    assert.deepEqual(await counted(), { [byMove.id]: 1, [survives.id]: 1 }, 'a game delete that empties a session');
+    assert.ok(await repo.moveGames(T, round.id, dst.id, null, [mover.id]));
+    assert.deepEqual(await counted(), { [survives.id]: 1 },
+      'a move that empties a session; the session that still exists keeps its comment');
+    const all = (await repo.listRoundMessages(T, round.id)).messages.map((m) => m.id);
+    assert.ok(all.includes(roundLevel.id), 'a round-level message is untouched');
+    assert.equal(all.length, 2);
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, dst.id);
+  });
+
   test('round chat is tenant-scoped: another tenant reads, writes and deletes nothing', async () => {
     const round = await freshRound();
     const at = '2026-11-12T10:00:00.000Z';
@@ -7959,6 +8703,64 @@ module.exports = function repoContract(repo) {
     await repo.deleteRound(T, round.id);
   });
 
+  /* --------------------------- Chat inbox items (#1784) --------------------------- */
+
+  test('chat inbox: unread counts skip the reader and the marker, per round and tenant', async () => {
+    const round = await freshRound();
+    const other = await freshRound();
+    const at = '2026-11-12T10:00:00.000Z';
+    const a = await repo.createRoundMessage(T, round.id, { authorUserId: 'u-x', text: 'a', at });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-me', text: 'mine', at });
+    await repo.createRoundMessage(T, round.id, { authorUserId: 'u-x', text: 'b', at });
+    await repo.createRoundMessage(T, other.id, { authorUserId: 'u-x', text: 'elsewhere', at });
+    const n = await repo.countUnreadRoundMessages(T, round.id, 'u-me', 0);
+    assert.equal(n, 2, 'own messages and other rounds do not count');
+    assert.equal(typeof n, 'number', 'a number on both backends (Postgres count() is a string)');
+    assert.equal(await repo.countUnreadRoundMessages(T, round.id, 'u-me', a.seq), 1, 'only past the marker');
+    assert.equal(await repo.countUnreadRoundMessages(OTHER, round.id, 'u-me', 0), 0, 'another tenant counts nothing');
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound(T, other.id);
+  });
+
+  test('chat inbox: one item per (account, thread), created on top or rewritten in place', async () => {
+    const user = await repo.createUser(userFields({ tenantId: `t-chat-${uniq()}` }));
+    assert.equal((await repo.getUserByTenant(user.tenantId)).id, user.id, 'a tenant resolves to its account');
+    assert.equal(await repo.getUserByTenant('t-nobody'), null);
+
+    const first = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 1 });
+    assert.deepEqual(first.payload, { roundId: 'r1', roundName: 'A', count: 1, thread: 'round:r1' });
+    assert.equal(first.type, 'chat_unread');
+    await repo.addInboxItem(user.id, { type: 'friend_request', payload: {} });
+    await repo.putChatInboxItem(user.id, 'round:r2', { roundId: 'r2', roundName: 'B', count: 1 });
+
+    // A post replaces the thread's item with a fresh one at the top.
+    const again = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 4 });
+    let items = await repo.listInbox(user.id);
+    assert.equal(items.filter((i) => i.type === 'chat_unread' && i.payload.thread === 'round:r1').length, 1, 'never two for one thread');
+    assert.equal(items[0].id, again.id, 'a new message moves the thread to the top');
+    assert.equal(items[0].payload.count, 4);
+
+    // Without `create`: rewrite in place, keeping read state and position.
+    await repo.markInboxRead(user.id, again.id);
+    const lowered = await repo.putChatInboxItem(user.id, 'round:r1', { roundId: 'r1', roundName: 'A', count: 2 }, { create: false });
+    assert.equal(lowered.id, again.id, 'in place');
+    assert.equal(lowered.read, true, 'read state kept');
+    items = await repo.listInbox(user.id);
+    assert.equal(items[0].payload.count, 2);
+    assert.equal(await repo.putChatInboxItem(user.id, 'round:r9', { roundId: 'r9', count: 1 }, { create: false }), null,
+      'no item and no create: nothing is written');
+    assert.equal((await repo.listInbox(user.id)).some((i) => i.payload && i.payload.thread === 'round:r9'), false);
+
+    assert.equal(await repo.removeChatInboxItem(user.id, 'round:r1'), true);
+    assert.equal(await repo.removeChatInboxItem(user.id, 'round:r1'), false, 'a second remove is a no-op');
+    items = await repo.listInbox(user.id);
+    assert.deepEqual(items.map((i) => i.type).sort(), ['chat_unread', 'friend_request'], 'only that thread\'s item went');
+    assert.equal(await repo.removeChatInboxItem('someone-else', 'round:r2'), false, 'scoped to the account');
+
+    assert.equal(await repo.putChatInboxItem('no-such-account', 'round:r1', { count: 1 }), null, 'an erased account gets nothing');
+    await repo.eraseAccount(user.id);
+  });
+
   test('erasing an account deletes its chat messages in every tenant and exports them first', async () => {
     const now = '2026-11-12T10:00:00.000Z';
     const { id: uid } = await repo.createUser({ tenantId: 't-chat-erase', createdAt: now, username: 'chaterase' });
@@ -7980,5 +8782,110 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(await repo.getRoundMessageReads(uid), {});
     assert.equal(await repo.listRoundMessages('t-chat-erase', own.id), null, 'its own round and thread are gone');
     await repo.deleteRound(T, foreign.id);
+  });
+
+  // #1786: the queue behind „Spieleinstellungen". One row per (BGG id, round)
+  // with a finished, scored session for a game linked to that id — the round's
+  // OWN switch as `low`, its distinct titles sorted. Excluded: demo tenants, an
+  // unlinked game, an unscored, unfinished or cancelled session, another
+  // provider. A round with two sessions counts once.
+  test('gameScoringRounds reports scored BGG games per round, own switch, demo and unlinked excluded', async () => {
+    const bgg = String(900000000 + crypto.randomInt(1e8));
+    const src = { provider: 'bgg', externalId: bgg, url: null };
+    const scoredSession = (gid, over = {}) => ({
+      createdAt: 't', gameIds: [gid], votes: {}, chosenGameId: gid, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      scores: { m1: 10 }, ...over,
+    });
+    const seed = async (tenant, { low = false, title = 'Golf', sessions = [{}] } = {}) => {
+      const round = await repo.createRound(tenant, { name: 'R', members: ['A'], importFromRoundId: null });
+      const g = await repo.createGame(tenant, round.id, gameFields({ title, source: src }));
+      if (low) await repo.updateGame(tenant, round.id, g.id, { lowScoreWins: true });
+      for (const over of sessions) await repo.createSession(tenant, round.id, scoredSession(g.id, over));
+      return round;
+    };
+    const made = [];
+    made.push([T, await seed(T, { low: true, sessions: [{}, {}] })]);
+    made.push([OTHER, await seed(OTHER, { title: 'Golf!' })]);
+    // Each of these must contribute nothing.
+    made.push(['demo-gs', await seed('demo-gs', { low: true })]);
+    made.push([T, await seed(T, { sessions: [{ scores: undefined }] })]);
+    made.push([T, await seed(T, { sessions: [{ finished: false, done: false }] })]);
+    made.push([T, await seed(T, { sessions: [{ cancelled: true, cancelledAt: 't' }] })]);
+    const unlinked = await repo.createRound(T, { name: 'U', members: ['A'], importFromRoundId: null });
+    const ug = await repo.createGame(T, unlinked.id, gameFields({ title: 'Golf' }));
+    await repo.createSession(T, unlinked.id, scoredSession(ug.id));
+    made.push([T, unlinked]);
+
+    const mine = (await repo.gameScoringRounds()).filter((r) => r.bggId === bgg)
+      .sort((a, b) => Number(b.low) - Number(a.low));
+    assert.deepEqual(mine, [
+      { bggId: bgg, low: true, titles: ['Golf'] },
+      { bggId: bgg, low: false, titles: ['Golf!'] },
+    ]);
+    for (const [tenant, round] of made) await repo.deleteRound(tenant, round.id);
+  });
+
+  // The global settings table: upsert replaces the whole row, get/list read it
+  // back, delete reports whether a row went.
+  test('game scoring settings round-trip: put replaces, get/list read, delete reports', async () => {
+    const bgg = String(800000000 + crypto.randomInt(1e8));
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+    await repo.putGameScoringSetting(bgg, { state: 'dismissed', dismissedAt: 'd', dismissedAtRounds: 2, title: 'X' });
+    const stored = await repo.putGameScoringSetting(bgg, { state: 'confirmed', lowScoreWins: true, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(stored, { bggId: bgg, state: 'confirmed', lowScoreWins: true, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(await repo.getGameScoringSetting(bgg), stored, 'the dismissal fields are gone, not merged');
+    assert.deepEqual((await repo.listGameScoringSettings()).find((x) => x.bggId === bgg), stored);
+    assert.equal(await repo.deleteGameScoringSetting(bgg), true);
+    assert.equal(await repo.deleteGameScoringSetting(bgg), false);
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+  });
+
+  // #1787: the rows behind „Wertungskategorien". One row per (round, BGG id)
+  // whose games with that id carry ACTIVE categories — every such game's list,
+  // in order, no session needed. Excluded: demo tenants, unlinked games, a game
+  // whose categories are all removed. No round id in the rows.
+  test('gameCategoryRounds reports each round\'s active category lists per BGG id, demo and unlinked excluded', async () => {
+    const bgg = String(700000000 + crypto.randomInt(1e8));
+    const src = { provider: 'bgg', externalId: bgg, url: null };
+    const seed = async (tenant, lists, { source = src, title = 'Wing' } = {}) => {
+      const round = await repo.createRound(tenant, { name: 'R', members: ['A'], importFromRoundId: null });
+      for (const cats of lists) {
+        const g = await repo.createGame(tenant, round.id, gameFields({ title, source }));
+        await repo.updateGame(tenant, round.id, g.id, { scoreCategories: cats });
+      }
+      return round;
+    };
+    const made = [];
+    made.push([T, await seed(T, [[{ id: 'a', name: 'Vögel' }, { id: 'x', name: 'Alt', removed: true }, { id: 'b', name: 'Eier' }],
+      [{ id: 'c', name: 'Boni' }]])]);
+    made.push([OTHER, await seed(OTHER, [[{ id: 'd', name: 'Vögel' }]], { title: 'Wingspan' })]);
+    made.push(['demo-gc', await seed('demo-gc', [[{ id: 'e', name: 'Demo' }]])]);
+    made.push([T, await seed(T, [[{ id: 'f', name: 'Frei' }]], { source: null })]);
+    made.push([T, await seed(T, [[{ id: 'g', name: 'Weg', removed: true }]])]);
+
+    const mine = (await repo.gameCategoryRounds()).filter((r) => r.bggId === bgg)
+      .sort((a, b) => b.sets.length - a.sets.length);
+    assert.deepEqual(mine, [
+      { bggId: bgg, sets: [['Vögel', 'Eier'], ['Boni']], titles: ['Wing'] },
+      { bggId: bgg, sets: [['Vögel']], titles: ['Wingspan'] },
+    ]);
+    for (const [tenant, round] of made) await repo.deleteRound(tenant, round.id);
+  });
+
+  test('game category settings round-trip: put replaces, get/list read, delete reports', async () => {
+    const bgg = String(600000000 + crypto.randomInt(1e8));
+    assert.equal(await repo.getGameCategorySetting(bgg), null);
+    await repo.putGameCategorySetting(bgg, { state: 'dismissed', dismissedAt: 'd', dismissedAtRounds: 2, dismissedAtSets: 1, title: 'X' });
+    const categories = [{ id: 'gabc', name: 'Vögel', match: ['vögel', 'vogel'] }];
+    const stored = await repo.putGameCategorySetting(bgg, { state: 'confirmed', categories, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(stored, { bggId: bgg, state: 'confirmed', categories, confirmedAt: 'c', title: 'X' });
+    assert.deepEqual(await repo.getGameCategorySetting(bgg), stored, 'the dismissal fields are gone, not merged');
+    assert.deepEqual((await repo.listGameCategorySettings()).find((x) => x.bggId === bgg), stored);
+    // Independent of the direction table: its row is untouched by this one.
+    assert.equal(await repo.getGameScoringSetting(bgg), null);
+    assert.equal(await repo.deleteGameCategorySetting(bgg), true);
+    assert.equal(await repo.deleteGameCategorySetting(bgg), false);
+    assert.equal(await repo.getGameCategorySetting(bgg), null);
   });
 };

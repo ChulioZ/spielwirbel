@@ -209,11 +209,17 @@ And one thing that did **not** work: see
 
 ## Screens deliberately NOT changed
 
-Chronik and session results are also ~900px and also scroll. Both are settled
-decisions in `.claude/rules/tiles-vs-lists.md`, because **order carries meaning**
-(a ranking read in columns puts rank 3 beside rank 2). "It is a tall single column
-on a wide screen" is not on its own a reason to split a screen; the two forms
-qualified because neither reads as a sequence.
+The Chronik is also ~900px and also scrolls. It is a settled decision in
+`.claude/rules/tiles-vs-lists.md`, because **order carries meaning** (a ranking
+read in columns puts rank 3 beside rank 2). "It is a tall single column on a wide
+screen" is not on its own a reason to split a screen; the two forms qualified
+because neither reads as a sequence.
+
+**Session results came off this list in #1846** — the ranking itself is still
+one list; what split is the screen around it, and only by PHASE: one column while
+deciding, the evening's column (band, foot, party list) beside the ranking once a
+game is chosen (`public/js/result-compose.js`,
+`.claude/rules/result-rows-query-the-tafel-container.md`).
 
 **Game detail was on this list and came off it in #1039.** Its entry said the
 defect was a sizing one, already fixed — true of the *hero*, and it stopped being

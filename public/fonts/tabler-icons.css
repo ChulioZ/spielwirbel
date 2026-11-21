@@ -32,6 +32,7 @@
 .ti-ban::before { content: "\ea2e"; }
 .ti-bell::before { content: "\ea35"; }
 .ti-tornado::before { content: "\ece2"; }
+.ti-camera-plus::before { content: "\ec3b"; }
 .ti-cards::before { content: "\f510"; }
 .ti-trophy::before { content: "\eb45"; }
 .ti-confetti::before { content: "\ee46"; }
@@ -83,6 +84,7 @@
 .ti-arrow-back-up::before { content: "\eb77"; }
 .ti-arrow-down::before { content: "\ea16"; }
 .ti-arrow-up::before { content: "\ea25"; }
+.ti-list-numbers::before { content: "\ef11"; }
 .ti-bookmark::before { content: "\ea3a"; }
 .ti-alert-triangle::before { content: "\ea06"; }
 .ti-layout-grid::before { content: "\edba"; }
@@ -155,6 +157,8 @@
 /* The feed's report control (#559). Same: cmap, not tabler.io. */
 .ti-filter::before { content: "\eaa5"; }
 .ti-flag::before { content: "\eaa6"; }
+.ti-flag-check::before { content: "\fb8c"; }
+.ti-flag-off::before { content: "\f12d"; }
 
 /* Tag icons (#255) — codepoints read from this bundle's own cmap via fontTools,
    NOT from tabler.io (they differ; see .claude/rules/tabler-icon-codepoints.md). */

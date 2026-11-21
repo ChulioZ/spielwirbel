@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v557';
+const CACHE = 'spielwirbel-shell-v573';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -134,7 +134,9 @@ const SHELL = [
   '/js/bgg-links.js',
   '/js/filter-panel.js',
   '/js/session-people.js',
+  '/js/session-ratings.js',
   '/js/vote-score.js',
+  '/js/taste-vector.js',
   '/js/rating-faces.js',
   '/js/vote-advance.js',
   '/js/wish-expansion.js',
@@ -150,8 +152,10 @@ const SHELL = [
   '/js/point-records.js',
   '/js/session-duration.js',
   '/js/purchase-price.js',
+  '/js/game-pitch.js',
   '/js/avatar-policy.js',
   '/js/cover-policy.js',
+  '/js/photo-policy.js',
   '/js/member-avatar.js',
   '/js/owner-picker.js',
   '/js/news.js',
@@ -189,7 +193,7 @@ const SHELL = [
   '/js/session-share.js',
   '/js/bgstats.js',
   '/js/recap.js',
-  '/js/taste-share.js',
+  '/js/vote-boost.js',
   '/js/period-recap.js',
   '/js/account-recap.js',
   '/js/recap-card.js',
@@ -245,6 +249,8 @@ const SHELL = [
   '/js/loan-editor.js',
   '/js/game-editor-playtime.js',
   '/js/game-editor-price.js',
+  '/js/game-editor-pitch.js',
+  '/js/game-twins.js',
   '/js/views-round-detail.js',
   '/js/vendor/fflate.min.js',
   '/js/csv-formula.js',
@@ -263,8 +269,11 @@ const SHELL = [
   '/js/direct-session.js',
   '/js/member-stats.js',
   '/js/taste-neighbour.js',
+  '/js/vote-hint.js',
   '/js/achievements.js',
+  '/js/challenges.js',
   '/js/views-badges.js',
+  '/js/views-challenges.js',
   '/js/views-member-points.js',
   '/js/views-member.js',
   '/js/member-add.js',
@@ -275,10 +284,14 @@ const SHELL = [
   '/js/vote-review.js',
   '/js/views-session.js',
   '/js/views-session-setup-pool.js',
+  '/js/result-phase.js',
   '/js/views-session-result-tafel.js',
   '/js/views-session-result-band.js',
+  '/js/views-session-verdict.js',
   '/js/views-session-result-actions.js',
+  '/js/session-photo-view.js',
   '/js/result-tafel-composed.js',
+  '/js/result-compose.js',
   '/js/views-session-tables.js',
   '/js/views-session-live.js',
   '/js/views-session-sheets.js',

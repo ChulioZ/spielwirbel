@@ -31,7 +31,9 @@ client can then spoof `X-Forwarded-For` and evade the limits. Verify it after
 setting it — see [`deploy-railway.md`](deploy-railway.md)
 ("Verifying `TRUST_PROXY`").
 
-Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min),
+Tune the limits with `RATE_LIMIT_MAX` (global, per 15 min — counted per
+**account** for a request carrying a valid access token, per IP otherwise,
+issue #1836),
 `CONTACT_RATE_LIMIT_MAX` (contact-form submissions, per 15 min, default 5),
 `REGISTER_RATE_LIMIT_MAX` (registrations, per 15 min, default 10 — see below) and
 `DEMO_RATE_LIMIT_MAX` (guest demos, per 15 min, default 5 — see below), and
@@ -43,6 +45,9 @@ address), and
 `AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
 one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
 lower ceiling than the account surface around it), and
+`IMAGE_UPLOAD_RATE_LIMIT_MAX` (cover and session-photo uploads, per **account**
+per 15 min, default 30 — the same decoding-cost argument; a JSON game edit does
+not count, issue #1836), and
 `CLIENT_ERROR_RATE_LIMIT_MAX` (browser-side fault reports, per 15 min, default
 20 — see below).
 
@@ -181,7 +186,9 @@ bounds the hub's quick-start chip row rather than abuse. The round chat's messag
 are capped per tenant (`MAX_MESSAGES_PER_TENANT`, default 20000, issue #1781); a
 grantee's message counts against the round owner's tenant, where it is stored, and
 one account may hold at most `MAX_MESSAGES_PER_AUTHOR` of them (default 5000), so a
-single invitee cannot exhaust the owner's cap alone. Per
+single invitee cannot exhaust the owner's cap alone. Session photos are capped per
+tenant too (`MAX_PHOTOS_PER_TENANT`, default 500, issue #1774) — only a first photo
+counts against it, so replacing one at the ceiling still works. Per
 **account** rather than per
 tenant: accepted friends (`MAX_FRIENDS_PER_USER`, default 500), open outgoing
 friend requests (`MAX_FRIEND_REQUESTS_PER_USER`, default 50), passkeys
@@ -216,8 +223,13 @@ the whole app behind a single shared password — an unauthenticated visitor get
 login page and the API returns `401`. Leave `AUTH_PASSWORD` unset and the app
 stays open with no access control (the default for a bare local checkout; the
 maintainer's hosted instance instead runs the account model below, with no shared
-password). Tune the login brute-force
-limit with `AUTH_RATE_LIMIT_MAX` (attempts per 15 min, default 100). The session is
+password). Tune the brute-force limit with `AUTH_RATE_LIMIT_MAX` (credential
+attempts per IP per 15 min, default 100). Since #1836 it is spent only by the
+routes that try a password or a secret token — the shared and account logins,
+refresh, the verify/reset/confirm/change links, account deletion, register and
+demo, the passkey login pair, joining by invite link, and the operator's
+password, passkey and enrollment steps. Ordinary signed-in requests, including
+every authenticated operator action, fall under `RATE_LIMIT_MAX` only. The session is
 a signed, httpOnly cookie (marked `Secure` automatically behind a TLS proxy).
 
 User accounts (issue #135): the token-first account model — register with
@@ -351,16 +363,18 @@ against each, and the Node version the answering process is running.
 **Funktionsnutzung** answers "is any of this being used". It opens on
 **Letzte sieben Tage** — registrations, active accounts (a session token issued
 in the window, so app use rather than logins), sessions started / played / cancelled
-(imports excluded) and imported, newly shared rounds and new friendships over
-the last 7 × 24 hours — then one card per
-population (issue #1480): **Konten** (verified / unverified / suspended, then
-passkey, BGG username, profile picture, BG Stats hand-off, no round yet), the
+(imports excluded) and imported, newly shared rounds, new friendships and chat
+messages over the last 7 × 24 hours — then one card per
+population (issue #1480, lines revised in #1823): **Konten** (verified, passkey,
+BG Stats hand-off, price alert, simple mode, this week's quiz, no round yet), the
 accounts that **answered the design chooser** (one line per offered design),
-**Runden** (shared, own tags, saved filters, a guest game brought along, shelf use with its three states,
-and how many sessions each round has played), **Spiele** (linked vs. by hand,
-owned, with expansions, with a cover — own or from the provider) and
-**Sessions** (guests, teams, shared vote link, and the session funnel under
-„gestartet"), plus friendships and open invitations as plain counts. Each card
+**Runden** (shared, holding a valid invite link, with a chat message, group
+challenge used — and active —, draw boost on, a guest game brought along, each
+of the three shelf states, and how many sessions each round has played),
+**Spiele** (with a purchase price, currently lent out, with scoring categories,
+with a corrected playing time) and **Sessions** (with a comment, with a „Wie
+war's?" verdict, points, automa, imports by source, and the session funnel
+under „gestartet"), plus friendships and open invitations as plain counts. Each card
 leads with its population; every line below shows the count and its whole-percent
 share of that population, or of the line it is indented under. With
 `ADMIN_EXCLUDE_TENANTS` set, every figure on the card — the account total
@@ -583,6 +597,14 @@ not accounts — most people in a round never hold one, which is the point of th
 app — and „games“ counts the active Regal only, so wishes and archived games are
 excluded.
 
+The `/entdecken` screen additionally fetches `GET /api/stats/public/more`
+(issue #1732, same `404` rule): the top ten places of the shelf, all-time,
+best-rated and name cards, and every completed week's and month's most played
+game. It is a separate cached payload so the landing page's response does not
+grow with the history, and the past winners are judged against the week and
+month cards' own floors below — read at rebuild time, so a raised floor
+applies to the history too.
+
 Two properties are worth knowing. **Game names come from BoardGameGeek, never
 from the title someone typed** — the aggregate is keyed on the provider link and
 the display name is resolved from the provider, so no user-authored byte can
@@ -628,14 +650,19 @@ rather than falling back to the default.
 
 The payload is rebuilt by the background scheduler and served from memory —
 nothing is computed per request and nothing is stored — and
-`PUBLIC_STATS_RESOLVE_MAX` (default 62 since issue #1648, 50 since #1424, 30
-since #1557, was 20) caps how many *new* provider lookups one rebuild may make —
-the podiums spend first (up to seven candidates each, for a list of three
-places that may hold up to five tied entries), the favourite
-cards (below) whatever is left. A rebuild that hits the cap publishes shorter
-lists and the next one completes them. Only games that could actually reach a podium are resolved
-(ranking happens on the raw numbers first) and successful lookups are memoized,
-so a steady state costs no upstream requests.
+`PUBLIC_STATS_RESOLVE_MAX` (default 8) caps how many provider **requests** one
+rebuild may send (issue #1832; until then it counted games, and its default had
+grown to 120). Each request asks BoardGameGeek about up to 20 games at once, so 8
+covers up to 160 games. Games are named from the memo first, then from the BGG
+corpus, and only the rest go upstream: the podiums first (up to seven candidates
+each, for a list of three places that may hold up to five tied entries), the
+favourite cards (below) next, and Discover's longer lists (the top ten and the
+past winners, below) with whatever is left. A rebuild that hits the cap publishes
+shorter lists and the next one completes them. If BGG answers `429`, the rebuild
+stops looking names up for that run, logs `public_stats_throttled` once and
+publishes what it knows. Only games that could actually reach a podium are
+resolved (ranking happens on the raw numbers first), and successful lookups are
+memoized, so a steady state sends no upstream requests.
 
 Observability: logs go to stdout as structured JSON; set `LOG_LEVEL`
 (`silent`/`error`/`warn`/`info`, default `info`) to tune verbosity, and

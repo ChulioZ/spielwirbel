@@ -228,7 +228,10 @@ test('a tie names both winners, in the accent (P7.9), and the band beside it car
   assert.match(won.textContent, /Ben/);
   assert.match(won.textContent, /Clara/);
   assert.equal(qa(dom, '.result-people__person.is-winner').length, 2);
-  assert.equal(qa(dom, '.tisch__seats .seat').length, 2);
+  // The band carries the stamp and the game; the party list crowns both
+  // winners once (#1846), instead of the band's winner seats.
+  assert.equal(qa(dom, '.tisch__seats .seat').length, 0);
+  assert.equal(qa(dom, '.result-party.is-winner').length, 2);
 });
 
 test('the Tafel heads „Platz · Spiel · Wertungen · Score", and every step prints its count', async (t) => {
@@ -243,13 +246,15 @@ test('the Tafel heads „Platz · Spiel · Wertungen · Score", and every step p
   assert.equal(cols[4].querySelector('.bar-col__n').getAttribute('aria-hidden'), 'true');
 });
 
-test('the band and its foot share one slot, so they stand together beside the Tafel', async (t) => {
+test('the band and its foot stand together in the evening column, beside the Tafel', async (t) => {
   const dom = await result(t);
-  const slot = q(dom, '.tisch-slot');
-  assert.ok(slot.querySelector('.tisch[data-state="done"]'));
-  assert.equal(slot.lastElementChild.className, 'result-foot');
-  assert.match(slot.querySelector('.result-foot__again').textContent, /Noch eine Session/);
-  assert.equal(slot.querySelector('.tisch__actions-label').textContent, 'Falls etwas anders lief');
+  const aside = q(dom, '.result-aside');
+  assert.ok(q(dom, '.result-screen').classList.contains('result-screen--aside-end'), 'drawn on the right (P4.3)');
+  assert.ok(aside.querySelector('.tisch-slot .tisch[data-state="done"]'));
+  const kids = [...aside.children].map((el) => el.classList[0]);
+  assert.equal(kids[kids.indexOf('tisch-slot') + 1], 'result-foot', 'the foot follows the band');
+  assert.match(aside.querySelector('.result-foot__again').textContent, /Noch eine Session/);
+  assert.equal(aside.querySelector('.tisch__actions-label').textContent, 'Falls etwas anders lief');
 });
 
 // ------------------------------------------------------------------ several tables

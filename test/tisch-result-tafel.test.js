@@ -94,21 +94,24 @@ const text = (el) => el.textContent.replace(/\s+/g, ' ').trim();
 const screen = (dom) => dom.app.querySelector('.result-screen');
 const rowByTitle = (dom, title) => [...dom.app.querySelectorAll('.trow')]
   .find((r) => text(r.querySelector('.trow__title')).startsWith(title));
-const kids = (el) => [...el.children].map((c) => c.className);
+const kids = (el) => (el.classList.contains('result-cols') || el.classList.contains('result-aside')
+  ? [el.className] : [...el.children].map((c) => c.className));
 
 /* ------------------------------ Klassisch ------------------------------ */
 
 test('Klassisch keeps its blocks and its row cells, and ends on the shared foot', async (t) => {
   const { dom } = await show(t, 'klassisch');
-  // Two columns since #1575 (composeKlassischResult): the head, the people, the
-  // band and the foot beside the ranking. Der Tisch's people-in-the-head does
-  // not reach this path; the foot is the one thing they share.
-  assert.deepEqual(kids(screen(dom)), ['klassisch-result__side', 'klassisch-result__tafel']);
-  const [side, list] = screen(dom).children;
+  // The one composition every design shares (#1846, result-compose.js): the
+  // head and „Wer dabei war" spanning, then the evening column and the ranking.
+  // Der Tisch's people-in-the-head does not reach this path.
+  assert.deepEqual(kids(screen(dom)), ['page-head page-head--result', 'result-people', 'result-cols']);
+  const [side, list] = screen(dom).querySelector('.result-cols').children;
   // `.badge-moment` (#1388) sits before the table, hidden while it is empty.
-  assert.deepEqual(kids(side), ['page-head page-head--result', 'result-people', 'badge-moment', 'tisch-slot', 'result-foot']);
-  assert.deepEqual(kids(list), ['tafel', 'tisch-bar']);
-  // „Teilen" left the head for the foot.
+  assert.deepEqual(kids(side), ['result-aside']);
+  assert.deepEqual([...side.children].map((c) => c.classList[0]), ['badge-moment', 'tisch-slot', 'result-foot', 'result-party-slot']);
+  // The evening's photo (#1774) under the ranking, hidden while it has none.
+  assert.deepEqual([...list.children].map((c) => c.classList[0]), ['tafel', 'tisch-bar', 'session-photo']);
+  // „Teilen" is the foot's, in the evening column once a game is played.
   const head = screen(dom).querySelector('.page-head--result');
   assert.equal(head.children.length, 1);
   assert.match(text(side.querySelector('.result-foot')), /Teilen/);
@@ -231,11 +234,11 @@ test('the crowns follow the record: reset takes them off, a new winner puts one 
 
 test('a settled session ends on „Noch eine Session" · „Teilen" · „Mehr"', async (t) => {
   const { dom } = await show(t, 'tisch');
-  // Under the box, inside its slot (#1430): on a phone the actions follow the
-  // box ahead of the ranking, and at 1280 they ride in the pinned box column.
+  // Under the box in the evening column (#1430, #1846): on a phone the actions
+  // follow the box ahead of the ranking, and beside it they ride in that column.
   const slot = screen(dom).querySelector('.tisch-slot');
-  const foot = slot.lastElementChild;
-  assert.equal(foot.className, 'result-foot', 'the foot is the last block of the box slot');
+  const foot = slot.nextElementSibling;
+  assert.equal(foot.className, 'result-foot', 'the foot follows the box slot');
   assert.ok(foot.compareDocumentPosition(screen(dom).querySelector('.tafel')) & 4, 'the foot comes before the Tafel');
   assert.equal(foot.hidden, false);
   assert.deepEqual([...foot.children].map(text), ['Noch eine Session', 'Teilen', 'Mehr']);
@@ -399,10 +402,12 @@ test('the chosen row is ringed by an outline, which the score fill cannot cover'
 // #1430: a wide Tafel spends its width on the row, not on a second line. The
 // distribution moves from under the title into a column of its own — still
 // last in the DOM (the jsdom half above pins that), only its grid cell moves.
-const { mediaBlocks, rulesOf } = require('./support/css');
-const blockRules = (query) => {
-  const hits = mediaBlocks(CSS).filter(([q]) => q.replace(/\s+/g, ' ') === query);
-  assert.ok(hits.length, `tisch.css has no @media ${query} block`);
+const { rulesOf } = require('./support/css');
+const { atBlocks } = require('./support/css');
+// By the Tafel's own width since #1846 (`.result-main` is the `tafel` container).
+const tafelRules = (query) => {
+  const hits = atBlocks(CSS, 'container').filter(([q]) => q.replace(/\s+/g, ' ') === `tafel ${query}`);
+  assert.ok(hits.length, `tisch.css has no @container tafel ${query} block`);
   return hits.flatMap(([, css]) => rulesOf(css));
 };
 const inBlock = (rules, sel) => {
@@ -410,8 +415,8 @@ const inBlock = (rules, sel) => {
   return hit ? hit[1] : null;
 };
 
-test('from 720px a row is one line: the distribution takes a column between the title and the score', () => {
-  const wide = blockRules('(min-width: 720px)');
+test('on a ≥560px Tafel a row is one line: the distribution takes a column between the title and the score', () => {
+  const wide = tafelRules('(min-width: 560px)');
   assert.match(inBlock(wide, '.result-screen .tafel'), /grid-template-columns:\s*22px 32px minmax\(0, 1fr\) auto auto auto/);
   const bars = inBlock(wide, '.result-screen .tafel .trow .trow__bars');
   assert.ok(bars, 'no wide placement for the distribution');
@@ -425,31 +430,11 @@ test('from 720px a row is one line: the distribution takes a column between the 
   assert.match(body('.result-screen .tafel .trow .trow__bars'), /grid-column:\s*3 \/ -1/);
 });
 
-test('from 1280px the box column is pinned — only where the box fits the viewport', () => {
-  const slot = '.result-screen:has(.tisch:not([hidden])) > .tisch-slot';
-  const gated = mediaBlocks(CSS).filter(([q]) => /min-width:\s*1280px/.test(q) && /min-height:\s*\d+px/.test(q));
-  assert.ok(gated.some(([, css]) => /position:\s*sticky/.test(inBlock(rulesOf(css), slot) || '')),
-    'no height-gated sticky rule for the box column');
-  // Nothing pins it without the height gate: a box taller than the viewport
-  // would strand its own bottom.
-  for (const [q, css] of mediaBlocks(CSS)) {
-    if (/min-height/.test(q)) continue;
-    assert.doesNotMatch(inBlock(rulesOf(css), slot) || '', /position:\s*sticky/, `ungated sticky in @media ${q}`);
-  }
-  assert.doesNotMatch(body(slot) || '', /position:\s*sticky/);
-});
+// The pinned evening column and the foot under the box are the shared
+// composition's since #1846 — test/result-phase-layout.test.js holds both.
 
-test('from 1280px the foot rides in the box column, under the box — the log takes column 1', () => {
-  const desk = blockRules('(min-width: 1280px)');
-  const has = '.result-screen:has(.tisch:not([hidden]))';
-  // No grid placement of its own: it is inside the slot, not a grid item.
-  assert.equal(inBlock(desk, `${has} > .result-foot`), null);
-  assert.match(inBlock(desk, `${has} .tisch-slot > .result-foot .result-foot__again`) || '', /flex:\s*1 1 100%/);
-  assert.match(inBlock(desk, `${has} > .session-log`), /grid-column:\s*1/);
-});
-
-test('from 720px „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
-  const wide = blockRules('(min-width: 720px)');
+test('on a ≥560px Tafel „Gehört …" sits beside the title; the veto pill keeps a line under both', () => {
+  const wide = tafelRules('(min-width: 560px)');
   // #1724: an inline flow, not a max-content | 1fr grid, so a long title can
   // no longer squeeze the owners into a sliver that breaks word by word.
   const main = inBlock(wide, '.result-screen .tafel .trow .trow__main') || '';

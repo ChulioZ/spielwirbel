@@ -357,6 +357,9 @@ function renderPokaleTab(round) {
       emptyStateAction(empty, { icon: bruecke ? 'ti-rocket' : 'ti-tornado', label: t(bruecke ? 'round.startSessionBruecke' : 'round.startSessionOcean'), primary: true, onClick: () => showStartSession(round) });
     }
     app.appendChild(sec);
+    // The group challenge (#1779): startable before the first session too.
+    const challenge = renderChallengeSection(round);
+    if (challenge) app.appendChild(challenge);
     // Abzeichen (#1388): the section's one empty line, no tiles.
     app.appendChild(renderBadgeSection(round));
     return;
@@ -372,7 +375,7 @@ function renderPokaleTab(round) {
   const recap = roundRecap(round, sessionPeople, (gid) => {
     const st = shelfIndex.byGame[gid];
     return st ? st.score : null;
-  });
+  }, sessionRatings);
 
   const { wins, ranked, winners, rankOf } = roundStandings(round);
 
@@ -614,6 +617,10 @@ function renderPokaleTab(round) {
   /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
      round's band then one row per member in THIS standings order — so the two
      lists on one page cannot disagree about who comes first. */
+  // The group challenge (#1779): the goal the table plays towards, above the
+  // marks it collects by playing.
+  const challenge = renderChallengeSection(round);
+  if (challenge) app.appendChild(challenge);
   app.appendChild(renderBadgeSection(round, ranked, rankOf));
   app.appendChild(renderRecapSection(round, recap));
   badgeRevealTarget(round.id);
@@ -710,9 +717,6 @@ function renderRecapSection(round, recap) {
     }
   }
 
-  const taste = renderTasteShare(round);
-  if (taste) sec.appendChild(taste);
-
   // Thin data reads as "keep going", never as an empty screen: the totals above
   // already say something real, and this says what would make it say more.
   if (!cards.children.length && !recap.favourites.length) {
@@ -721,37 +725,3 @@ function renderRecapSection(round, recap) {
   return sec;
 }
 
-/*
- * „Wessen Favoriten auf den Tisch kommen" (#1776): per member, how often one of
- * their favourites was played with them at the table (taste-share.js). Words and
- * counts only — no percentages, no places, no vote figures — and the rows run
- * most evenings first, an order the list never states as a rank.
- *
- * Hidden below the round's sixth played session (the same `youngRoundPlayed`
- * count the podium gates on), and per member below two favourites. The name
- * stands beside the sentence rather than inside it, so no locale has to form a
- * genitive of an arbitrary name (.claude/rules/interpolated-names-must-not-be-case-governed.md).
- */
-function renderTasteShare(round) {
-  if (youngRoundPlayed(round, hubDeps()) < TASTE_SHARE_FROM_SESSIONS) return null;
-  const rows = tasteShareRows(tasteShare(round));
-  if (!rows.length) return null;
-  const group = h(`<div class="recap__group">
-       <h3 class="recap__sub">${esc(t('recap.tasteShare'))}</h3>
-       <ul class="taste-share"></ul>
-     </div>`);
-  const list = group.querySelector('.taste-share');
-  rows.forEach((row) => {
-    const member = round.members.find((m) => m.id === row.memberId);
-    const text = row.evenings === 0 ? t('recap.tasteShareNone')
-      : tn(row.evenings, 'recap.tasteShareOne', 'recap.tasteShareMany');
-    const li = h(`<li class="taste-share__row">
-         <a class="avatar" style="background:${memberColor(round, member.id)}">${avatarFace(initials(member.name), { userId: member.userId })}</a>
-         <span class="taste-share__who">${esc(member.name)}</span>
-         <span class="taste-share__text">${esc(text)}</span>
-       </li>`);
-    makeMemberLink(li.querySelector('.avatar'), round.id, member.id);
-    list.appendChild(li);
-  });
-  return group;
-}
