@@ -354,7 +354,6 @@ I18N.de = {
   'recap.lead': 'Was euer Regal über euch verrät — aus allen Wertungen dieser Runde.',
   'recap.ratingsOne': '{n} Wertung',
   'recap.ratings': '{n} Wertungen',
-  'recap.archived': '{n} aussortiert',
   'recap.worstRated': 'Schlechtestbewertet',
   'recap.divisive': 'Größte Uneinigkeit',
   'recap.favourites': 'Lieblingsspiele',

@@ -116,8 +116,8 @@ test('Der Tisch: the plaques sit in the split, AFTER the stage that holds the po
   assert.deepEqual(shapeOf(split.firstElementChild), ['podium', 'muted podium__rest'],
     'the podium and its summary line belong to the stage');
   assert.ok(split.querySelectorAll('.pokale-cards > .pokale-card').length >= 1, 'no plaque rendered');
-  // Everything reachable today is still reachable: the Rückblick follows.
-  assert.ok(dom.app.querySelector('.section.recap'), 'the Rückblick section went missing');
+  // The Rückblick used to follow; since #1855 it lives at the foot of the Regal.
+  assert.equal(dom.app.querySelector('.section.recap'), null, 'the Rückblick is back on Pokale');
 });
 
 test('Der Tisch: a round with no award yet renders the stage alone in the split', (t) => {

@@ -356,7 +356,6 @@ I18N.nl = {
   'recap.lead': 'Wat jullie kast over jullie zegt — uit elke beoordeling in deze groep.',
   'recap.ratingsOne': '{n} beoordeling',
   'recap.ratings': '{n} beoordelingen',
-  'recap.archived': '{n} gearchiveerd',
   'recap.worstRated': 'Slechtst beoordeeld',
   'recap.divisive': 'Meest verdeeld',
   'recap.favourites': 'Favorieten',

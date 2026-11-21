@@ -690,7 +690,16 @@
   "      span",
   "  button.btn.btn--primary.shelf-add.shelf-add--dock [type=button]",
   "    i.ti.ti-plus [aria-hidden=true]",
-  "    span"
+  "    span",
+  "div.recap.section",
+  "  details.hub-card.regal-recap",
+  "    summary.regal-recap__summary",
+  "      i.ti.ti-history [aria-hidden=true]",
+  "      span.regal-recap__title",
+  "      span.regal-recap__lead",
+  "      i.regal-recap__go.ti.ti-chevron-down [aria-hidden=true]",
+  "    div.regal-recap__body",
+  "      p.muted.recap__thin"
  ],
  "lobby (running vote)": [
   "div.lobby-head",

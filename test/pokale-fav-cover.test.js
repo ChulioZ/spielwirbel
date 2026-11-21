@@ -1,6 +1,7 @@
 'use strict';
 
-/* The Pokale Lieblingsspiele cards anchor on their game's cover art (#695).
+/* The Rückblick's Lieblingsspiele cards anchor on their game's cover art (#695).
+ * They sat on Pokale until #1855 moved the Rückblick to the foot of the Regal.
  *
  * Rendered through the jsdom harness rather than matched over the view source
  * (`.claude/rules/testing-views-under-jsdom.md`): the claim is about what the
@@ -98,7 +99,7 @@ const favCardOf = (root, name) =>
 
 test('a favourite whose game has no cover falls back to the placeholder gradient', async (t) => {
   const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
+  await dom.call('showRound', RID, 'regal'); // the Rückblick's home since #1855
   const ben = favCardOf(dom.app, 'Ben');
   assert.ok(ben, "Ben's favourite card is missing entirely");
   assert.equal(ben.querySelector('.pokale-card__value').textContent, 'Azul');
@@ -117,7 +118,7 @@ test('a favourite whose game has no cover falls back to the placeholder gradient
 
 test("a favourite whose game has a cover loads it into the anchor", async (t) => {
   const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
+  await dom.call('showRound', RID, 'regal'); // the Rückblick's home since #1855
   const anna = favCardOf(dom.app, 'Anna');
   assert.ok(anna, "Anna's favourite card is missing entirely");
   assert.equal(anna.querySelector('.pokale-card__value').textContent, 'Ark Nova');
@@ -136,7 +137,7 @@ test("a favourite whose game has a cover loads it into the anchor", async (t) =>
 
 test('the cover anchor targets its game but stays out of the tab order', async (t) => {
   const dom = bootApp(t);
-  await dom.call('showRound', RID, 'pokale');
+  await dom.call('showRound', RID, 'regal'); // the Rückblick's home since #1855
   const anna = favCardOf(dom.app, 'Anna');
   const cover = anna.querySelector('.recap-fav__cover');
   const title = anna.querySelector('.pokale-card__value');

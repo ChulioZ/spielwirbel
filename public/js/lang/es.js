@@ -348,7 +348,6 @@ I18N.es = {
   'recap.lead': 'Lo que vuestra estantería dice de vosotros, a partir de todas las valoraciones de este grupo.',
   'recap.ratingsOne': '{n} valoración',
   'recap.ratings': '{n} valoraciones',
-  'recap.archived': '{n} archivados',
   'recap.worstRated': 'El peor valorado',
   'recap.divisive': 'El que más divide',
   'recap.favourites': 'Favoritos',

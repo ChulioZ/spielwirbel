@@ -358,7 +358,6 @@ I18N.pt = {
   'recap.lead': 'O que a sua estante diz sobre vocês — a partir de cada avaliação deste grupo.',
   'recap.ratingsOne': '{n} avaliação',
   'recap.ratings': '{n} avaliações',
-  'recap.archived': '{n} arquivados',
   'recap.worstRated': 'Pior avaliado',
   'recap.divisive': 'Mais divisivo',
   'recap.favourites': 'Favoritos',

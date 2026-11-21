@@ -10293,7 +10293,7 @@ kbd {
    covered. It showed once #979's 64px cover took ~78px off a ~232px card and the
    „Stärkstes Spiel" eyebrow wrapped to two lines. */
 
-/* ---- Rückblick: the round's taste record, under the standings (#484) ----
+/* ---- Rückblick: the round's taste record (#484), at the Regal's foot (#1855) ----
    Reuses .pokale-cards / .pokale-card wholesale, so the grid, the tile chrome
    and the >=1280px width exemption all come for free; only the totals strip and
    the per-member favourite tile need anything of their own. */
@@ -10309,6 +10309,24 @@ kbd {
   margin: 0 0 2px;
 }
 .recap__thin { margin-top: 14px; }
+/* At the foot of the Regal since #1855 (views-recap.js): one folded `.hub-card`
+   row, so every design paints it in its card material, built like the Chronik's
+   folded Rundenpuls (#1852). The summary is a 44px target and opens to the
+   cards; the lead wraps in its own cell so the chevron never drops under the
+   title on a phone. */
+.regal-recap { margin: 18px 0 0; padding-block: 4px; }
+.regal-recap__summary {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 44px; cursor: pointer; list-style: none;
+}
+.regal-recap__summary::-webkit-details-marker { display: none; }
+.regal-recap__summary > .ti-history { color: var(--brand-ink, var(--brand)); font-size: var(--text-lg); }
+.regal-recap__title { font-weight: 700; flex: none; }
+.regal-recap__lead { color: var(--ink-soft); font-size: var(--text-sm); flex: 1 1 auto; min-width: 0; }
+.regal-recap__go { flex: none; color: var(--ink-soft); transition: transform var(--dur-base) ease; }
+.regal-recap[open] .regal-recap__go { transform: rotate(180deg); }
+.regal-recap__body { padding-bottom: 10px; }
+.regal-recap__body > .pokale-cards:first-child { margin-top: 4px; }
 
 /* ---- Period recap: one month or one year, shareable as an image (#800) ----
    Lives on the CHRONIK since #851, above the timeline. It reuses .recap__lead,

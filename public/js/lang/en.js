@@ -351,7 +351,6 @@ I18N.en = {
   'recap.lead': 'What your shelf says about you — from every rating in this round.',
   'recap.ratingsOne': '{n} rating',
   'recap.ratings': '{n} ratings',
-  'recap.archived': '{n} archived',
   'recap.worstRated': 'Worst rated',
   'recap.divisive': 'Most divisive',
   'recap.favourites': 'Favourites',

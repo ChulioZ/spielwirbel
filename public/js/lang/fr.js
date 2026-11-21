@@ -358,7 +358,6 @@ I18N.fr = {
   'recap.lead': 'Ce que ton étagère dit de toi — d’après chaque note de ce groupe.',
   'recap.ratingsOne': '{n} note',
   'recap.ratings': '{n} notes',
-  'recap.archived': '{n} archivés',
   'recap.worstRated': 'Le moins bien noté',
   'recap.divisive': 'Le plus clivant',
   'recap.favourites': 'Favoris',

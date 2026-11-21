@@ -333,7 +333,6 @@ I18N.fi = {
   'recap.lead': 'Mitä hyllysi kertoo teistä — kaikkien tämän porukan arvioiden perusteella.',
   'recap.ratingsOne': '{n} arvio',
   'recap.ratings': '{n} arviota',
-  'recap.archived': '{n} arkistoitu',
   'recap.worstRated': 'Heikoiten arvioitu',
   'recap.divisive': 'Eniten mielipiteitä jakava',
   'recap.favourites': 'Suosikit',

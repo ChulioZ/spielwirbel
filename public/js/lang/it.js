@@ -357,7 +357,6 @@ I18N.it = {
   'recap.lead': 'Che cosa dice di voi il vostro scaffale — da ogni valutazione di questo gruppo.',
   'recap.ratingsOne': '{n} valutazione',
   'recap.ratings': '{n} valutazioni',
-  'recap.archived': '{n} archiviati',
   'recap.worstRated': 'Peggio valutato',
   'recap.divisive': 'Più divisivo',
   'recap.favourites': 'Preferiti',

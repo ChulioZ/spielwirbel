@@ -1,10 +1,10 @@
-/* Spielwirbel – views: the Pokale tab (member podium + fun stats) and the
-   Rückblick section appended under it (#484), plus the two stat-card builders
-   the two of them share. Rendered by showRound() (views-round.js).
+/* Spielwirbel – views: the Pokale tab (member podium + fun stats), plus the
+   two stat-card builders it shares with the Rückblick (views-recap.js, at the
+   foot of the Regal since #1855). Rendered by showRound() (views-round.js).
    Part of the frontend; all files share one global script scope. */
 
 // --- The two stat-card builders, shared by the Pokale tab and the Rückblick
-// section below it. They were closures inside renderPokaleTab until #484 gave
+// (views-recap.js since #1855). They were closures inside renderPokaleTab until #484 gave
 // them a second caller; `round` is the only thing they lost by moving out.
 // Since #851 the period recap calls both from views-chronik.js. That is a
 // cross-file call in one shared global scope, and it is safe because it happens
@@ -121,7 +121,7 @@ const recapGames = (round, ids) => ids.map((id) => round.games.find((g) => g.id 
 
 // --- Pokale tab: hall of fame — member podium and fun stats, all computed
 // on demand from sessions (single source of truth, like the rating averages).
-// The Rückblick (#484) is appended as a second section at the end.
+// The Rückblick (#484) followed it until #1855 moved it to the Regal.
 /* The round's standings — ranked on the RAW WIN COUNT, extracted from
    renderPokaleTab so the hub's Pokale PREVIEW (#1185) shows the same order, the
    same places and the same numbers as the page it previews. Two screens each
@@ -366,8 +366,9 @@ function renderPokaleTab(round) {
   }
 
   // The group's accumulated taste, derived on demand from the session votes
-  // (#484). Read here for the best-rated card and again by the Rückblick
-  // section appended at the end of this tab.
+  // (#484). Read here for the best-rated card only; the rest of it is the
+  // Rückblick, which lives at the foot of the Regal since #1855
+  // (views-recap.js), over the same shelf index.
   // The shelf index is built once here and handed to the recap, so „das
   // bestbewertete Spiel" names the game the Regal actually puts at the top —
   // one ranking of one shelf, not two (#894).
@@ -414,7 +415,10 @@ function renderPokaleTab(round) {
   const played = youngRoundPlayed(round, hubDeps());
   const young = played < YOUNG_ROUND_PODIUM_FROM;
   const youngLead = young ? pokaleYoungLead(round, winners, rankOf, wins) : null;
-  if (youngLead) sec.appendChild(youngLead.el);
+  // Into the STAGE, first (#1855): appended to the section it landed after the
+  // split, so the designs with one named the leader below the rest line and
+  // the plaques. Klassisch and Ocean have no split, where stageTo IS the section.
+  if (youngLead) stageTo.appendChild(youngLead.el);
   /* Ocean's standings are BARS, one per person (#1218, O13.2): „kein Podest,
      keine Medaillen — ein Balken je Person, so lang wie ihre Siege". Every
      active member is listed, most wins first, so the summary line below has
@@ -524,7 +528,7 @@ function renderPokaleTab(round) {
 
   // Best rated: highest overall average with a bit of data behind it; ties
   // share the tile. Computed by recap.js (#484) rather than inline, so it and
-  // the Rückblick's worst-rated card below cannot drift apart on the evidence
+  // the Rückblick's worst-rated card (views-recap.js) cannot drift apart on the evidence
   // threshold or on how ties are handled — they are one aggregation read twice.
   if (recap.best) {
     cards.appendChild(
@@ -621,107 +625,9 @@ function renderPokaleTab(round) {
   // marks it collects by playing.
   const challenge = renderChallengeSection(round);
   if (challenge) app.appendChild(challenge);
-  app.appendChild(renderBadgeSection(round, ranked, rankOf));
-  app.appendChild(renderRecapSection(round, recap));
+  /* A young round has no podium yet (#1855): its Abzeichen rows print no
+     place, or the page would say „Platz 1" right under „Ein Podium braucht
+     3 Sessions." */
+  app.appendChild(renderBadgeSection(round, ranked, young ? null : rankOf));
   badgeRevealTarget(round.id);
 }
-
-/*
- * The Rückblick (#484): what a round's accumulated ratings say about the group's
- * taste, as a second section under the standings rather than a screen of its own
- * — the record belongs beside the trophies it is made of, and a surface nobody
- * navigates to is not more legible than one nobody scrolls to.
- *
- * Everything here comes from `roundRecap` (recap.js); this function only renders.
- * It always returns a section: with thin data it shows the totals plus a
- * "keep going" line, because a round two sessions in has genuinely accumulated
- * something and must not read as a broken screen.
- */
-function renderRecapSection(round, recap) {
-  const sec = h('<div class="section recap"></div>');
-  sec.appendChild(h(`<div class="section-head"><h2>${esc(t('recap.title'))}</h2></div>`));
-  sec.appendChild(h(`<p class="muted recap__lead">${esc(t('recap.lead'))}</p>`));
-
-  const chip = (icon, text) =>
-    h(`<span class="stat-chip"><i class="ti ${icon}" aria-hidden="true"></i>${esc(text)}</span>`);
-  const totals = h('<div class="recap__totals"></div>');
-  totals.appendChild(chip('ti-confetti', tn(recap.totals.sessions, 'home.chip.sessionsOne', 'home.chip.sessions')));
-  totals.appendChild(chip('ti-cards', tn(recap.totals.games, 'home.chip.gamesOne', 'home.chip.games')));
-  totals.appendChild(chip('ti-star', tn(recap.totals.ratings, 'recap.ratingsOne', 'recap.ratings')));
-  // Only when there is an archive — "0 aussortiert" is noise on a young round.
-  if (recap.totals.archived) totals.appendChild(chip('ti-archive', t('recap.archived', { n: recap.totals.archived })));
-  sec.appendChild(totals);
-
-  // Hoisted out of the Lieblingsspiele block below (#979): the worst-rated and
-  // disagreement cards lead with a cover now too, and one observer serves the
-  // whole Rückblick.
-  const loadCover = createCoverLoader();
-  const cards = h('<div class="pokale-cards"></div>');
-
-  if (recap.worst) {
-    cards.appendChild(
-      pokaleGameCard(round, 'ti-mood-empty', t('recap.worstRated'), recapGames(round, recap.worst.gameIds), fmtAvg(displayScore(recap.worst.score)), loadCover)
-    );
-  }
-
-  // The disagreement card names two people and a game, so it is built here
-  // rather than through pokaleStatCard, which carries at most one member link.
-  if (recap.divisive) {
-    const game = round.games.find((g) => g.id === recap.divisive.gameId);
-    const nameOf = (mid) => (round.members.find((m) => m.id === mid) || {}).name || '';
-    if (game) {
-      const card = h(`<div class="pokale-card">
-           ${gameCardHead('ti-arrows-split', t('recap.divisive'), game)}
-           <a class="pokale-card__value">${esc(game.title)}</a>
-           <span class="pokale-card__sub">${esc(nameOf(recap.divisive.high.memberId))} ${ratingMark(recap.divisive.high.avg)} · ${esc(nameOf(recap.divisive.low.memberId))} ${ratingMark(recap.divisive.low.avg)}</span>
-         </div>`);
-      wireGameCardHead(card, round.id, game, loadCover);
-      makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
-      cards.appendChild(card);
-    }
-  }
-
-  if (cards.children.length) sec.appendChild(cards);
-
-  // Each member's own favourite, one card per person who has rated anything.
-  if (recap.favourites.length) {
-    const group = h(`<div class="recap__group">
-         <h3 class="recap__sub">${esc(t('recap.favourites'))}</h3>
-       </div>`);
-    const favs = h('<div class="pokale-cards"></div>');
-    recap.favourites.forEach((fav) => {
-      const member = round.members.find((m) => m.id === fav.memberId);
-      const game = round.games.find((g) => g.id === fav.gameId);
-      if (!member || !game) return;
-      const card = h(`<div class="pokale-card recap-fav">
-           <a class="recap-fav__cover">${coverPlaceholder(game)}</a>
-           <span class="recap-fav__who">
-             <a class="avatar" style="background:${memberColor(round, member.id)}">${avatarFace(initials(member.name), { userId: member.userId })}</a>
-             <span class="recap-fav__name">${esc(member.name)}</span>
-           </span>
-           <a class="pokale-card__value">${esc(game.title)}</a>
-           <span class="pokale-card__sub">${ratingMark(fav.avg)}</span>
-         </div>`);
-      if (game.image) loadCover(card.querySelector('.recap-fav__cover'), coverUrl(game.image, COVER_THUMB));
-      makeMemberLink(card.querySelector('.recap-fav__who .avatar'), round.id, member.id);
-      makeGameLink(card.querySelector('.pokale-card__value'), round.id, game.id);
-      // Redundant by the archive rows' rule (#663): it targets the same game as
-      // the title below it, so it stays mouse-clickable but leaves the tab order
-      // and the accessibility tree rather than announcing as a nameless control.
-      makeGameLink(card.querySelector('.recap-fav__cover'), round.id, game.id, { redundant: true });
-      favs.appendChild(card);
-    });
-    if (favs.children.length) {
-      group.appendChild(favs);
-      sec.appendChild(group);
-    }
-  }
-
-  // Thin data reads as "keep going", never as an empty screen: the totals above
-  // already say something real, and this says what would make it say more.
-  if (!cards.children.length && !recap.favourites.length) {
-    sec.appendChild(h(`<p class="muted recap__thin">${esc(t('recap.thin'))}</p>`));
-  }
-  return sec;
-}
-

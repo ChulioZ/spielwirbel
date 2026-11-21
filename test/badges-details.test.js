@@ -69,18 +69,34 @@ test('a member row carries its standings place, tie-aware, as the Tafel ranks it
   assert.equal(rank('m1').textContent, 'Platz 2');
   assert.equal(rank('m3').textContent, 'Platz 3', 'a member who played and lost still has a place');
 
-  // A tie shares its place, as the podium's computePlaces says.
-  const tie = await pokale(t, badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] })]), { wide: true });
+  // A tie shares its place, as the podium's computePlaces says. Four nights,
+  // so the round has a podium at all (YOUNG_ROUND_PODIUM_FROM, #1855).
+  const tie = await pokale(t, badgeRound([
+    night('s1', 1), night('s2', 2, { winnerIds: ['m2'] }),
+    night('s3', 3), night('s4', 4, { winnerIds: ['m2'] }),
+  ]), { wide: true });
   const places = [...section(tie).querySelectorAll('.badge-member__rank')].map((x) => x.textContent);
   assert.deepEqual(places, ['Platz 1', 'Platz 1']);
 });
 
 test('a member with no record has no place — the standings do not rank them', async (t) => {
   // Clara joined no decided session: she is on the list, never on the Tafel.
-  const r = badgeRound([night('s1', 1)], 3);
+  const r = badgeRound([night('s1', 1), night('s2', 2), night('s3', 3)], 3);
   const dom = await pokale(t, r, { wide: true });
   assert.ok(section(dom).querySelector('#abzeichen-m1 .badge-member__rank'));
   assert.equal(section(dom).querySelector('#abzeichen-m3 .badge-member__rank'), null);
+});
+
+test('a young round prints no place at all — there is no podium yet (#1855)', async (t) => {
+  // Two played sessions, below YOUNG_ROUND_PODIUM_FROM: the page says „Ein
+  // Podium braucht 3 Sessions", so a „Platz 1" under it would contradict it.
+  const young = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] })]);
+  const dom = await pokale(t, young, { wide: true });
+  assert.ok(section(dom).querySelector('#abzeichen-m1'), 'the member rows still render');
+  assert.equal(section(dom).querySelectorAll('.badge-member__rank').length, 0);
+  // The first played session that completes the podium brings the places back.
+  const grown = await pokale(t, badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] }), night('s3', 3)]), { wide: true });
+  assert.equal(section(grown).querySelector('#abzeichen-m1 .badge-member__rank').textContent, 'Platz 1');
 });
 
 // ------------------------------------------------------------------ the chevron

@@ -149,7 +149,8 @@ test('the recap renders NOWHERE on the Pokale tab any more', async (t) => {
   // The tab itself must still be intact, or the assertion above is passing for
   // the wrong reason (a Pokale tab that rendered nothing at all).
   assert.ok(dom.app.querySelector('.pokale-card'), 'the Pokale tab rendered no cards at all');
-  assert.ok(dom.app.querySelector('.recap__totals'), 'the all-time Rückblick must stay on Pokale');
+  // The all-time Rückblick left Pokale too, for the foot of the Regal (#1855).
+  assert.equal(dom.app.querySelector('.recap'), null, 'the all-time Rückblick is still on Pokale');
 });
 
 test('exactly one <h1> on the Chronik screen', async (t) => {

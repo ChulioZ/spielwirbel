@@ -603,6 +603,9 @@ function renderRegalTab(round, activeGames) {
      games — an empty shelf can still have a full Wunschliste. */
   app.appendChild(offShelfSegments(round, 'regal'));
   app.appendChild(gamesSec);
+  // The Rückblick, folded, at the foot of the shelf it describes (#1855, views-recap.js).
+  const recapRow = regalRecapRow(round);
+  if (recapRow) app.appendChild(recapRow);
   // "Spiele verschieben" and "Einladen" used to sit in a footer below the grid
   // too. Neither is a shelf concern — one consolidates two rounds, the other
   // shares the round — and both were findable only by scrolling past the whole
