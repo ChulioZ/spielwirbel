@@ -11,8 +11,9 @@ Die Brücke's desktop hub (#1238) placed every slot into a `grid-template-areas`
 cell. That looks like three columns and is not. A row only starts below the
 tallest item in the row above it, so a short column waits for its neighbour.
 „Zuletzt gespielt" sat ~630px under the Missionskontrolle at every width ≥1280
-(#1496). Ocean had the same coupling one row lower: its `.hub-actions` lived in a
-grid row under the centre column, sized by the taller aside (65–86px).
+(#1496). Ocean had the same coupling one row lower: its quick-actions row (gone
+since #1853) lived in a grid row under the centre column, sized by the taller
+aside (65–86px).
 `align-self: start` does not help. It shrinks the item, and the row stays put.
 
 ## The fix: column wrappers, MOVED at the breakpoint

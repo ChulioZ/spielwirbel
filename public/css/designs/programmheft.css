@@ -229,7 +229,6 @@
   .page-head h2,
   .avatar,
   .hub-card__title,
-  .hub-offshelf__title,
   .hub-care__head,
   .ticket__title,
   .ticket__names,
@@ -748,35 +747,14 @@
    box is what a phone must reach first and what a desktop reads second. */
 :root[data-design="programmheft"] .ph-hub { display: flex; flex-direction: column; gap: var(--space-5); }
 :root[data-design="programmheft"] .ph-hub__grid { display: flex; flex-direction: column; gap: var(--space-5); }
-:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more, .ph-hub__strip) {
+:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more) {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
 }
-:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more, .ph-hub__strip):empty { display: none; }
+:root[data-design="programmheft"] :is(.ph-hub__lead, .ph-hub__suggest, .ph-hub__side, .ph-hub__more):empty { display: none; }
 :root[data-design="programmheft"] .ph-hub .hub-cards { margin: 0; }
-:root[data-design="programmheft"] .ph-hub > .hub-actions { margin-top: 0; }
-/* „Weitere Listen" as ONE line of tabs (#1579), the scope strip's own
-   vocabulary (P13.7): name and count as bold text over the strip's rule, no
-   card and no chevron — four full-width rows were ~250px of the front page's
-   foot spent on navigation. Wraps on a phone; one line from 1280px, where the
-   group spans the whole strip instead of one of its columns. */
-:root[data-design="programmheft"] .ph-hub .hub-offshelf__list { flex-direction: row; flex-wrap: wrap; gap: 0 var(--space-5); }
-:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row {
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  border-bottom: var(--rule-page) solid transparent;
-  border-radius: 0;
-  background: none;
-  color: var(--ink);
-  font-size: 15px;
-  font-weight: 700;
-}
-:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row:hover { box-shadow: none; border-bottom-color: var(--hair); }
-:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row .ds-row__meta { display: none; }
-:root[data-design="programmheft"] .ph-hub .hub-offshelf .off-shelf__row[href$="/recommendations"] { color: var(--brand); }
 @media (min-width: 1280px) {
   :root[data-design="programmheft"] .ph-hub__grid {
     display: grid;
@@ -795,16 +773,6 @@
     border-left: var(--rule-col) solid var(--ink);
     padding-left: var(--space-5);
   }
-  :root[data-design="programmheft"] .ph-hub__strip {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: var(--space-5);
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__strip {
-    border-top: var(--rule-page) solid var(--ink);
-    padding-top: var(--space-5);
-  }
-  :root[data-design="programmheft"] .ph-hub__strip > .hub-offshelf { margin-top: 0; grid-column: 1 / -1; }
 }
 
 /* The head: the marker as a bar, the name as the masthead line in Anton, the
@@ -903,11 +871,8 @@
   text-decoration: none;
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-members__settings { color: var(--ink); }
-/* Below 1280 the hub's own „Einstellungen" button at the page's foot is the way
-   there, as in every design; the row carries it where the row is the page. */
-@media (max-width: 1279px) {
-  :root[data-design="programmheft"] .ph-members__settings { display: none; }
-}
+/* At every width since #1853: the hub's own „Einstellungen" button at the
+   page's foot is gone, so this is the Start tab's way there on a phone too. */
 
 /* Der Kasten: black, paper print, the kicker „Neue Session", the one action
    inverted (paper on the box), the presets under a visible label. */
@@ -1009,7 +974,7 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__open { text-decoration-color: var(--vermilion); }
 
 /* The cards of the hub read as columns of print: no card, a rule over each. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card {
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side) .hub-card {
   background: transparent;
   border: 0;
   border-top: var(--rule-strong) solid var(--ink);
@@ -1018,7 +983,7 @@
 }
 /* A printed column has only its top rule to turn, so hovering a clickable one
    (#1506) inks that rule vermilion. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card--link:hover {
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub :is(.ph-hub__suggest, .ph-hub__side) .hub-card--link:hover {
   border-top-color: var(--vermilion);
 }
 
@@ -3563,28 +3528,6 @@
 :root[data-design="programmheft"] .ph-lead__note { font-size: 13px; line-height: 1.4; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-lead__note { color: var(--ink-soft); }
 
-/* ---- The demo (P7.6): the condensed list as rows on dotted rules, and „Gefällt
-   dir das?" as a white notice with the vermilion action. */
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo { display: flex; flex-direction: column; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo { border-top: var(--rule-strong) solid var(--ink); }
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__row {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
-  gap: var(--space-3);
-  align-items: center;
-  min-height: 52px;
-  text-decoration: none;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo__row {
-  color: var(--ink);
-  border-bottom: var(--rule-col) dotted var(--hair);
-}
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__row > .ti { font-size: 22px; /* glyph, not type */ }
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__main { display: flex; flex-direction: column; min-width: 0; }
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__label { font-size: 16px; font-weight: 700; }
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__hint { font-size: 13px; }
-:root[data-design="programmheft"] .ph-hub__lead .hub-demo__value { font-size: 13px; font-weight: 700; text-align: right; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-demo__hint { color: var(--ink-soft); }
 :root[data-design="programmheft"] .ph-hub__lead .hub-card--demo-invite { padding: var(--space-4); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__lead .hub-card--demo-invite {
   background: var(--surface);
@@ -3684,7 +3627,7 @@
    have none — so on a phone every suggestion and Kümmerliste row ran 2px past
    the page and the page scrolled sideways (measured in Finnish at 390, #1377).
    The rows sit flush on the column instead; their text wraps within it. */
-:root[data-design="programmheft"] .ph-hub :is(.ph-hub__suggest, .ph-hub__side, .ph-hub__strip) .hub-card .hub-row {
+:root[data-design="programmheft"] .ph-hub :is(.ph-hub__suggest, .ph-hub__side) .hub-card .hub-row {
   margin-inline: 0;
   padding-inline: 0;
 }

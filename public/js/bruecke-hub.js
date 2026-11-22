@@ -20,34 +20,33 @@
 
 'use strict';
 
-/* The hub's frame: named slots in the PHONE order (B2.2) — members,
-   Missionskontrolle, running sessions, Zuletzt gespielt, Wie wär's mit,
-   Rundenpuls, Kümmerliste, the previews, the rest of the cards, Nicht im
-   Regal, the quiet actions. DOM order is the phone's reading and tab order, so
+/* The hub's frame: named slots in the PHONE order (B2.2) — members, the
+   Missionskontrolle (with what is running above its panel, #1853), Zuletzt
+   gespielt, Wie wär's mit, the slim rows („Zu tun", the challenge), the rest of
+   the cards. DOM order is the phone's reading and tab order, so
    the phone needs no `order` at all.
 
    From 1280 the slots move into B3.1's three column wrappers (#1496): the
-   desktop columns cut ACROSS the phone order — the Rundenpuls and the
-   Kümmerliste stand under the members at 1440 but after „Wie wär's mit" at
-   390 — so neither arrangement can serve both widths. It used to be ONE grid of
+   desktop columns cut ACROSS the phone order — the slim rows stand under the
+   members at 1440 but after „Wie wär's mit" at 390 — so neither arrangement can serve both widths. It used to be ONE grid of
    slots placed into areas, and areas share row lines: the bottom row could only
    start below the tallest column, which left ~700px of empty grid under the
    Missionskontrolle. Each wrapper now stacks on its own. reflowAt() (hub-
    reflow.js) moves the slots at the crossing, so the DOM order is the visual
    order at both widths. The members stay outside the wrappers: they sit inside
-   the hero, whose name and counts span the title row (bruecke.css). The rest
+   the hero, whose name spans the title row (bruecke.css). The rest
    of the cards close the middle column rather than spanning the page under all
    three: as a full-width band they started below the tallest column, which is
    usually the right one, and left the gap under „Zuletzt gespielt" that this
    frame exists to remove. An empty slot is `display: none`. */
-const BRUECKE_HUB_SLOTS = [
-  'crew', 'mission', 'feed', 'last', 'suggest', 'pulse', 'care',
-  'previews', 'more', 'offshelf', 'actions',
-];
+const BRUECKE_HUB_SLOTS = ['crew', 'mission', 'feed', 'last', 'suggest', 'care', 'more'];
+// Since #1853 the left column is the slim rows („Zu tun", the challenge) and the
+// right one „Wie wär's mit": the pulse, the previews, „Weitere Listen" and the
+// Einstellungen button left the Start tab.
 const BRUECKE_HUB_COLUMNS = {
-  left: ['pulse', 'care'],
+  left: ['care'],
   mid: ['mission', 'last', 'more'],
-  right: ['suggest', 'previews', 'offshelf'],
+  right: ['suggest'],
 };
 const BRUECKE_HUB_WIDE = '(min-width: 1280px)';
 
@@ -64,7 +63,7 @@ function brueckeHubFrame() {
   reflowAt(BRUECKE_HUB_WIDE, root, (wide) => {
     if (wide) {
       Object.entries(BRUECKE_HUB_COLUMNS).forEach(([col, names]) => cols[col].append(...names.map((n) => slots[n])));
-      root.append(slots.crew, slots.feed, cols.left, cols.mid, cols.right, slots.actions);
+      root.append(slots.crew, slots.feed, cols.left, cols.mid, cols.right);
     } else {
       root.append(...BRUECKE_HUB_SLOTS.map((n) => slots[n]));
       Object.values(cols).forEach((c) => c.remove());
@@ -139,9 +138,9 @@ function brueckeYoungLine(activeGames) {
 
 /* The members and the decorative line (B2.2 row, B3.1 list).
 
-   „Mission {n} · Crew {m}" leads the counts line under the name — decorative
+   „Mission {n} · Crew {m}" is the line under the name — decorative
    (B9 „Zierzeilen": never on a button, a label or the dock, never before a
-   name), so it is aria-hidden; the counts beside it are the app's own. {n} is
+   name), so it is aria-hidden. {n} is
    the NEXT session's number, as the sheet reads it (23 played → Mission 24).
 
    Each seat is captioned with its name and, where there is one, the win count
@@ -152,7 +151,8 @@ function brueckeYoungLine(activeGames) {
    the seat's link, so it completes the link's accessible name. */
 function brueckeHeroCompose(round, hero, playedCount) {
   const members = activeMembers(round);
-  hero.querySelector('.hero__chips').prepend(h(`<span class="bruecke-line" aria-hidden="true">${esc(t('hub.bruecke.mission', { n: playedCount + 1, m: members.length }))}</span>`));
+  // The line stands alone under the name since #1853 took the count chips out.
+  hero.querySelector('h1').after(h(`<div class="bruecke-hero-line"><span class="bruecke-line" aria-hidden="true">${esc(t('hub.bruecke.mission', { n: playedCount + 1, m: members.length }))}</span></div>`));
 
   const seatRow = hero.querySelector('.hero__members');
   seatRow.prepend(h(`<h2 class="bruecke-crew__title">${esc(t('hub.bruecke.crew', { n: members.length }))}</h2>`));

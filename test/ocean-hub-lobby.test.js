@@ -126,9 +126,9 @@ test('Klassisch keeps its rail: identity, the start button, the five links', asy
   const rail = dom.app.querySelector('.rail');
   assert.ok(rail.querySelector('.rail__id'), 'Klassisch lost the rail identity');
   assert.ok(rail.querySelector('.rail__cta'), 'Klassisch lost the rail start button');
-  // Its off-shelf rows went in #1500 — the Regal's scope strip reaches the lists.
-  // On the Start tab the hub's „Weitere Listen" sits at its foot (#1579).
-  assert.equal(rail.querySelectorAll(':scope > .rail__group:not(.rail__offshelf) .rail__item').length, 5,
+  // Its off-shelf rows went in #1500 and its Start-tab „Weitere Listen" in
+  // #1853 — the Regal's scope strip reaches the lists.
+  assert.equal(rail.querySelectorAll('.rail__item').length, 5,
     'the Klassisch rail is not the five links');
   assert.equal(dom.app.querySelector('.ocean-hub'), null, 'Klassisch grew the Ocean frame');
   assert.ok(dom.app.querySelector('.hero').classList.contains('rail-owned'), 'Klassisch\'s hero stopped being rail-owned');
@@ -136,13 +136,14 @@ test('Klassisch keeps its rail: identity, the start button, the five links', asy
 
 // ------------------------------------------------------------- the hub
 
-test('Ocean: the hub is three columns in phone order — crew, the shell and its blocks, the previews', async (t) => {
+test('Ocean: the hub is three columns in phone order — crew, the shell and its blocks, the aside', async (t) => {
   const dom = await screen(t, 'ocean');
   const hub = dom.app.querySelector('.ocean-hub');
   assert.ok(hub, 'no Ocean frame');
   assert.deepEqual(
     [...hub.children].map((el) => el.className.split(' ')[0]),
-    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf', 'hub-actions'],
+    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside'],
+    'the frame is the three columns alone — „Weitere Listen" and the quiet actions left in #1853',
   );
   // One <h1> at every width: the hero keeps it and is no longer rail-owned.
   const hero = hub.querySelector('.ocean-hub__crew .hero');
@@ -150,19 +151,6 @@ test('Ocean: the hub is three columns in phone order — crew, the shell and its
   assert.equal(dom.app.querySelectorAll('h1').length, 1, 'the hub should carry exactly one h1');
   assert.equal(hero.querySelector('h1').textContent.trim(), 'Freitagsrunde');
   assert.ok(hero.querySelector('.ocean-tide'), 'the round marker has no tide line');
-});
-
-test('Ocean from 1280: the quiet actions stay the frame\'s last cell, rail-owned, never moved into the centre column (#1496, #1498)', async (t) => {
-  const dom = await screen(t, 'ocean', 'start', busyRound(), { wide: true });
-  const hub = dom.app.querySelector('.ocean-hub');
-  // From 1280 the rail carries „Einstellungen" and `.hub-actions` is hidden, so
-  // nothing moves it: a wide-layout placement would only be dead code.
-  assert.equal(hub.querySelector('.ocean-hub__main .hub-actions'), null, 'the actions were moved into the centre column');
-  assert.ok(hub.lastElementChild.classList.contains('hub-actions') && hub.lastElementChild.classList.contains('rail-owned'));
-  assert.deepEqual(
-    [...hub.children].map((el) => el.className.split(' ')[0]),
-    ['ocean-hub__crew', 'ocean-hub__main', 'ocean-hub__aside', 'hub-offshelf', 'hub-actions'],
-  );
 });
 
 test('Ocean: the one action is „Abtauchen" in the shell, the presets are the app\'s own strings', async (t) => {
@@ -176,7 +164,8 @@ test('Ocean: the one action is „Abtauchen" in the shell, the presets are the a
   const presets = main.querySelector('.hub-presets');
   assert.ok(presets && !presets.classList.contains('rail-owned'), 'the presets are missing or rail-owned');
   const labels = dom.run(`['short','light','meaty','family'].map((k) => t('hub.preset.' + k))`);
-  for (const chip of presets.querySelectorAll('.hub-preset')) {
+  assert.ok(presets.firstElementChild.classList.contains('hub-preset--direct'), '„Direkt wählen" does not lead the row');
+  for (const chip of presets.querySelectorAll('.hub-preset:not(.hub-preset--direct)')) {
     assert.ok(labels.includes(chip.textContent.trim()), `„${chip.textContent.trim()}" is not an app preset string`);
   }
 });
@@ -191,51 +180,16 @@ test('Ocean: the crew captions every seat with its name, and the win count besid
   assert.equal(dom.app.querySelector('.ocean-hub .avatar--add .seat__name').textContent, 'Platz dazu');
 });
 
-test('Ocean: the Rundenpuls is its own titled block with all three lines, and the Chronik preview shows sessions', async (t) => {
-  const dom = await screen(t, 'ocean');
-  const main = dom.app.querySelector('.ocean-hub__main');
-  const pulse = [...main.querySelectorAll('.hub-card')]
-    .find((c) => c.querySelector('.hub-card__title').textContent.trim() === 'Rundenpuls');
-  assert.ok(pulse, 'no block titled „Rundenpuls" in the centre column');
-  assert.ok(pulse.querySelector('.pulse-bars'), 'the Rundenpuls lost its monthly bars');
-  assert.match(pulse.textContent, /4 Sessions in 12 Monaten · Vor 5 Tagen gespielt/);
-  assert.match(pulse.textContent, /4 von 8 Spielen waren noch nie dran/);
-
-  const aside = dom.app.querySelector('.ocean-hub__aside');
-  const chronik = [...aside.querySelectorAll('.hub-preview')]
-    .find((c) => c.querySelector('.hub-card__title').textContent.trim() === 'Chronik');
-  assert.ok(chronik, 'no Chronik preview in the preview column');
-  assert.equal(chronik.querySelector('.pulse-bars'), null, 'the Chronik preview shows the pulse bars (review round 1)');
-  assert.deepEqual([...chronik.querySelectorAll('.hub-preview__session .hub-preview__name')].map((n) => n.textContent),
-    ['Spiel 13', 'Spiel 12', 'Spiel 11'], 'the Chronik preview is not its last three sessions, newest first');
-  // Rows inside a preview are never links — its one link is at the foot.
-  assert.equal(chronik.querySelectorAll('a').length, 1);
-});
-
-test('Ocean: „Zuletzt gespielt" sits in the pair under the shell, the previews and Kümmerliste in the aside', async (t) => {
+test('Ocean: „Zuletzt gespielt" sits in the pair under the shell; the aside carries no preview (#1853)', async (t) => {
   const dom = await screen(t, 'ocean');
   const pair = dom.app.querySelector('.ocean-hub__main .ocean-pair');
   assert.ok(pair, 'no pair under the shell');
   assert.ok(pair.querySelector('.ticket'), 'the last-played card is not in the pair');
+  assert.equal(dom.app.querySelector('.hub-preview, .hub-offshelf, .pulse-bars'), null,
+    'a preview, the pulse or „Weitere Listen" is back on the hub');
+  // Whatever slim row the aside holds is one of the two the issue gave it.
   const aside = dom.app.querySelector('.ocean-hub__aside');
-  assert.deepEqual([...aside.querySelectorAll(':scope > .hub-preview .hub-card__title')].map((h) => h.textContent.trim()),
-    ['Regal', 'Pokale', 'Chronik']);
-  const bars = aside.querySelectorAll('.hub-preview__bar');
-  assert.ok(bars.length >= 2, 'the Pokale preview draws no standings bars');
-  assert.equal(bars[0].style.getPropertyValue('--share'), '100%', 'the leader\'s bar is not the full length');
-});
-
-test('Ocean: „Weitere Listen" is one heading over the three lists and „Könnte euch gefallen", at every width', async (t) => {
-  const dom = await screen(t, 'ocean');
-  const groups = dom.app.querySelectorAll('.hub-offshelf');
-  assert.equal(groups.length, 1);
-  const group = groups[0];
-  assert.ok(!group.classList.contains('rail-owned'), 'the group would vanish from 1280 up, where the Reling has no rows');
-  assert.equal(group.querySelectorAll('.hub-offshelf__title').length, 1);
-  assert.equal(group.querySelector('.hub-offshelf__title').textContent, 'Weitere Listen');
-  const rows = [...group.querySelectorAll('.off-shelf__row')].map((r) => r.textContent.trim());
-  assert.equal(rows.length, 4);
-  assert.match(rows[3], /Könnte euch gefallen/);
+  for (const el of aside.children) assert.ok(el.matches('.hub-todo, .hub-challenge'), el.className);
 });
 
 // ------------------------------------------------------------- the lobby

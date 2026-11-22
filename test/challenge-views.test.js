@@ -41,23 +41,27 @@ function boot(t, calls = [], data = round()) {
 
 const running = (extra = {}) => ({ kind: 'sessions', n: 3, startedAt: iso(-5), deadline: iso(10), ...extra });
 
-test('Start card: absent without a challenge; a running one names goal, progress and deadline', (t) => {
+test('Start row: absent without a challenge; a running one names goal, progress and deadline (#1853)', (t) => {
   const dom = boot(t);
-  assert.equal(dom.call('hubChallengeCard', round()), null);
-  const card = dom.call('hubChallengeCard', round({ challenge: running(), sessions: [played('s1', 'g1', -1)] }));
-  assert.ok(card.classList.contains('hub-card--challenge'));
-  assert.equal(card.dataset.state, 'running');
-  assert.equal(card.querySelector('.hub-row__title').textContent, '3 Sessions');
-  assert.match(card.querySelector('.hub-row__sub').textContent, /^1 von 3 · bis .+ · noch 10 Tage$/);
-  assert.equal(card.querySelector('.challenge-bar').style.getPropertyValue('--pct'), '33%');
-  assert.equal(card.querySelector('a').getAttribute('href'), `/round/${RID}/pokale`);
+  assert.equal(dom.call('hubChallengeRow', round()), null);
+  const row = dom.call('hubChallengeRow', round({ challenge: running(), sessions: [played('s1', 'g1', -1)] }));
+  // ONE slim row, and it is the link itself — not a card holding one.
+  assert.equal(row.tagName, 'A');
+  assert.ok(row.classList.contains('hub-challenge'));
+  assert.equal(row.querySelector('.hub-card'), null);
+  assert.equal(row.dataset.state, 'running');
+  assert.equal(row.querySelector('.hub-challenge__goal').textContent, '3 Sessions');
+  assert.match(row.querySelector('.hub-challenge__status').textContent, /^1 von 3 · bis .+ · noch 10 Tage$/);
+  assert.equal(row.querySelector('.challenge-bar').style.getPropertyValue('--pct'), '33%');
+  // Lands on the Pokale section where the challenge lives (renderChallengeSection's id).
+  assert.equal(row.getAttribute('href'), `/round/${RID}/pokale#challenge`);
 });
 
-test('Start card: an ended challenge lingers for a week, then leaves', (t) => {
+test('Start row: an ended challenge lingers for a week, then leaves', (t) => {
   const dom = boot(t);
-  const recent = dom.call('hubChallengeCard', round({ challenge: running({ startedAt: iso(-10), deadline: iso(-2) }) }));
+  const recent = dom.call('hubChallengeRow', round({ challenge: running({ startedAt: iso(-10), deadline: iso(-2) }) }));
   assert.equal(recent.dataset.state, 'expired');
-  assert.equal(dom.call('hubChallengeCard', round({ challenge: running({ startedAt: iso(-30), deadline: iso(-8) }) })), null);
+  assert.equal(dom.call('hubChallengeRow', round({ challenge: running({ startedAt: iso(-30), deadline: iso(-8) }) })), null);
 });
 
 test('Pokale: no challenge offers „Challenge starten"; the sheet POSTs the picked goal', async (t) => {

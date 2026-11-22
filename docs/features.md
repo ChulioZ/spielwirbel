@@ -306,10 +306,8 @@ What the app does, in detail. For a short overview see the
   filter and dismissal the list does, and carries the same actions.
   A game is active, retired, completed or wished-for, never two at once. All
   three lists — and the recommendations beside them — are reached from the
-  Regal's scope strip and from the „Weitere Listen" group on the round's Start
-  tab, at every screen size and in every design (issue #1500). The four entries,
-  and the counts beside them, are defined once and rendered by both, so they
-  cannot drift apart. Every row on those lists
+  Regal's scope strip, at every screen size and in every design (issues #1500,
+  #1853). Every row on those lists
   opens the game's own detail page, so a game keeps its full editing surface —
   title, cover, player range, tags — after it has left the shelf; the page then
   offers only the way back onto it. The distinction carries through to the Pokale tab: a
@@ -441,53 +439,38 @@ What the app does, in detail. For a short overview see the
   through the Regal's scope strip, and count as the Regal's). All
   three stay visible on
   the round's sub-screens, marking the section they belong to:
-  - **Start** – the launchpad: hero with the members, a big "start session"
-    button (with quick-start chips beside it that open the setup with the draw
+  - **Start** – one **stage**, in every design (issue #1853): the members,
+    whatever session is running — an open vote or a session voted and not yet
+    finished, ABOVE the action, since it is the evening already in progress —
+    the big "start session" button, and exactly one row of chips under it that
+    never wraps (it scrolls sideways on a phone): **„Direkt wählen"** first,
+    which picks one game to play straight away, including one the group does
+    not own, then the quick-start chips that open the setup with the draw
     already narrowed — the round's own **saved filters** once it has any,
-    otherwise automatic ones like „unter 60 Min", „leichte Kost" …), resumable in-progress
-    sessions, the last played result, and gentle retire recommendations for
-    games the group's own votes rate badly. Below those, a
-    responsive card grid derived on demand from the round's own data:
-    **Spielvorschläge** (up to three games worth playing, each with its reason —
-    never played, not out for months, well liked and long overdue), a
-    **Rundenpuls** (sessions per month over the last year, days since the last
-    one, how much of the shelf has ever reached the table), a **Kümmerliste**
-    (played sessions with **no result recorded at all** — one that records a
-    winner *or* an ending leaves the list — games with no cover, games with no
-    player count; each deep-linking to the fix), a **Regal-Steckbrief** once
-    eight or more games carry BoardGameGeek data (on the hub, one sentence naming
-    what the shelf mostly is — „Meist für 2–4 Personen · bis 60 Min. · leicht
-    bis mittel", the shortest run of bands holding two thirds of the games per
-    dimension, issue #1683; it opens a screen with how many games seat each
-    table size from solo to 6+, counting owned expansions, the gaps a draw will
-    hit — never solo, which most group shelves skip on purpose, issue #1666 —
-    „Für 6+ Personen: nur 2 Spiele", „Über 120 Min.: kein Spiel", every band —
-    players, playing time, weight — the mechanics,
-    categories and designers the round rates best, ranked by the mean
-    Spielwirbel-Score of their games (a name counts once two of its games have a
-    score; unscored games are left out; each name links to its BoardGameGeek
-    page once the instance knows its BGG id, issue #1638); every count there —
-    a band, a gap with games in it, a name's „aus N Spielen" — opens the games
-    behind it, each linking to its Spielepass in the round (issue #1668), and a „Teilen" that draws the profile as an image
-    on the device, issue #1173), a „**heute vor N Jahren**"
-    anniversary when one falls on today, and a teaser from the recommendations
-    screen. Below the derived cards, a **preview of each of the round's other
-    sections** — the shelf as a handful of covers with its count, the standings'
-    top three, and how many evenings there have been with the date of the last —
-    each opening that section. Where a design stretches its hub tiles to a
-    shared row height (Der Tisch from 1280px), the Regal, Chronik and „Wie wär's
-    mit" tiles fill that height with whole extra items — more covers, the last
-    sessions with their winners, runner-up suggestions — without making any row
-    taller (issue #1683). Under all of it, the „Weitere Listen" group
-    (Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen) and one
-    Einstellungen entry — in Klassisch and Das Programmheft one compact strip of
-    links, and in Klassisch from 1280px links with counts at the foot of the
-    Start tab's rail instead (issue #1579). Every card renders nothing at all when it has nothing
-    to say, so a young round sees none of them: the Pokale and Chronik previews
-    arrive with the round's first played session, and the shelf preview once the
-    shelf outgrows the handful of covers it shows — before that the hero's own
-    count already says everything the strip could. Only the off-shelf group is
-    always there, because a list is not less worth reaching for being empty.
+    otherwise automatic ones like „unter 60 Min", „leichte Kost" …. The round's
+    Einstellungen is a gear on its name. Below the stage only what a group
+    needs often: **„Zuletzt gespielt"**, which also says what Abzeichen the last
+    session brought („2 neue Abzeichen seit Catan"); **„Wie wär's mit"** (up to
+    three games worth playing, each with its reason — never played, not out for
+    months, well liked and long overdue); one folded **„Zu tun · n"** row that
+    opens to the Kümmerliste (played sessions with **no result recorded at
+    all** — one that records a winner *or* an ending leaves the list — boxes
+    lent out for weeks, games with no cover, games with no player count; each
+    deep-linking to the fix) and to the gentle retire recommendations for games
+    the group's own votes rate badly, each with its „Aussortieren" and the whole
+    list with its „Ausblenden"; a slim row for a running group challenge that
+    opens its Pokale section; and the rare self-gating cards — a „**heute vor N
+    Jahren**" anniversary when one falls on today, the young round's invitation,
+    the empty table of a round without games, and the one-time „Einfacher
+    Modus" offer. Nothing on the Start tab restates another screen: the
+    Rundenpuls lives in the Chronik's head, the Regal-Steckbrief's sentence
+    under the Regal's heading, the lists off the shelf and the recommendations
+    behind the Regal's scope strip, and „Abstimmung verwerfen" in the voting
+    lobby. Where a design stretches its hub tiles to a shared row height (Der
+    Tisch from 1280px), „Wie wär's mit" fills that height with whole extra
+    runner-up suggestions without making any row taller (issue #1683). Every
+    card renders nothing at all when it has nothing to say, so a young round
+    meets the stage and its one next step.
   - **Regal** (shelf) – under its heading, once the Regal-Steckbrief has
     enough to say, its one sentence („Meist für 2–4 Personen · …") as a link
     to the full Steckbrief. At the foot of the shelf, one folded **Rückblick**
@@ -559,8 +542,7 @@ What the app does, in detail. For a short overview see the
     played session, three places drawn off one or two evenings would rank people
     on noise, so the tab names the leader („Anna führt mit 2 Siegen", crowned
     and linked to their page) and says „Ein Podium braucht 3 Sessions."; the
-    hub's Pokale preview does the same, the winning-streak tile waits for the
-    same third session, and the Rundenpuls — whose facts (sessions in the last
+    winning-streak tile waits for the same third session, and the Rundenpuls — whose facts (sessions in the last
     twelve months, days since the last one, games never played) appear from the
     first played session in every design (#1586) — holds its monthly bars back
     and closes on a sentence saying when series come.
@@ -804,10 +786,10 @@ What the app does, in detail. For a short overview see the
   cleared are not restored; the group sets them again if needed.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
   launch a session for **one specific game** straight from its detail page, a
-  Pokale tile, or the Start tab's own „Jetzt spielen" button beside „Session
-  wirbeln" (issue #1682): pick who joins and skip the vote entirely, landing
-  directly on the results screen with that game chosen. The Start tab's button
-  opens a game picker — the shelf, earlier guest games, and **„Ein Spiel, das
+  Pokale tile, or the Start tab's **„Direkt wählen"** chip under „Session
+  wirbeln" (issues #1682, #1853): pick who joins and skip the vote entirely,
+  landing directly on the results screen with that game chosen. The Start tab's
+  chip opens a game picker — the shelf, earlier guest games, and **„Ein Spiel, das
   ihr nicht habt"**, which searches for any game and plays it as a **guest
   game** (marked „Gastspiel", off the shelf, reused when the same title comes
   back). It works on an empty shelf too, where the draw is still locked.

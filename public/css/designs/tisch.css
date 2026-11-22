@@ -694,28 +694,6 @@
   font-size: var(--text-3xl);
   color: var(--felt-ink);
 }
-/* The counts stop being chips and become T2.1's one kicker line: „6 Mitglieder ·
-   12 Spiele · 23 Sessions". A chip is a control's shape, and these are not
-   controls — on felt they read as two buttons that do nothing. The separator is
-   generated, so the DOM keeps two independent chips and a locale that needs a
-   different order is unaffected. --felt-ink-soft measures 4.79:1 on the light
-   stop (the ungrained worst case; the weave darkens). */
-:root[data-design="tisch"][data-scheme="dark"] .hero__chips {
-  gap: 0;
-  margin-top: 10px;
-  font-size: var(--text-sm);
-  color: var(--felt-ink-soft);
-}
-:root[data-design="tisch"][data-scheme="dark"] .hero__chips .stat-chip {
-  background: none;
-  padding: 0;
-  color: inherit;
-}
-:root[data-design="tisch"][data-scheme="dark"] .hero__chips .stat-chip + .stat-chip::before {
-  content: '·';
-  margin: 0 8px;
-}
-:root[data-design="tisch"][data-scheme="dark"] .hero__chips .ti { color: var(--gold); }
 
 /* --- The seats, as an arc on the table's edge (T2.1) ----------------------
    The one gesture on this screen that CSS cannot derive on its own: the offset
@@ -1146,16 +1124,6 @@
 }
 :root[data-design="tisch"][data-scheme="dark"] .home-resume .ticket__stub .ti { color: var(--gold-edge); }
 
-/* --- „Nicht im Regal" (#1185) ---------------------------------------------
-   One heading over the four off-shelf destinations, at every width. Set in the
-   design's uppercase kicker rather than the app's muted label, so the group
-   reads as a printed section head on the wood. */
-:root[data-design="tisch"][data-scheme="dark"] .hub-offshelf__title {
-  font-family: var(--font-display);
-  letter-spacing: .12em;
-  color: var(--ink-soft);
-}
-
 /* ===========================================================================
    #1262 / #1263 — the hub COMPOSED as T2.1, T2.2 and T3.2 draw it: captioned
    seats, the Rundenpuls as stat tiles, the three previews as one row of tiles
@@ -1308,60 +1276,8 @@
    card beside a tall one reads as one row instead of leaving a hole under it
    that the next row's card then sits below (#1496). */
 :root[data-design="tisch"] .hub-cards > .card-slot > :only-child { flex: 1 0 auto; }
-/* `.hub-cards > .card-slot.hub-previews`, not `.hub-previews`: the slot rule
-   above (#1496) is (0,4,0) and makes every slot a flex column, so a one-class
-   selector here lost and the tiles stacked full-width — and the desktop
-   `display: contents` below lost the same way, putting all three previews in
-   one grid cell. Specificity, never source order. */
-:root[data-design="tisch"] .hub-cards > .card-slot.hub-previews {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 8px;
-}
-:root[data-design="tisch"] .hub-previews .hub-preview {
-  min-height: 44px;
-  padding: 11px 10px;
-}
-:root[data-design="tisch"] .hub-previews .hub-card__title {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin: 0 0 3px;
-  font-size: var(--text-sm);
-}
-:root[data-design="tisch"] .hub-previews .hub-preview__covers,
-:root[data-design="tisch"] .hub-previews .hub-preview__rank { display: none; }
-:root[data-design="tisch"] .hub-previews .hub-preview__sub,
-:root[data-design="tisch"] .hub-previews .hub-preview__last {
-  margin: 0;
-  font-size: var(--text-xs);
-  /* Named here rather than inherited from styles.css's hub rules, which read an
-     undeclared `var(--muted)` until #1262/#1263 (test/css-vars-declared.test.js
-     now guards that). */
-  color: var(--ink-soft);
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-:root[data-design="tisch"] .hub-previews .hub-preview__open {
-  /* The tile hides its link's text; the whole tile is still the target through
-     the shared stretched link (`.hub-card--link`, styles.css, #1506). */
-  padding: 0;
-  font-size: 0;
-  color: transparent;
-}
-:root[data-design="tisch"] .hub-previews .hub-preview__open .ti { display: none; }
 :root[data-design="tisch"][data-scheme="dark"] .hub-card--link:hover { border-color: var(--gold); }
 
-/* --- „Nicht im Regal" as count tiles (T2.2, T3.2) -------------------------
-   A 2×2 grid on a phone, one row of four beside its heading at desktop (the
-   1280 block below). Count right, name left; the name wraps rather than
-   truncating („Könnte euch gefallen" is two lines at 390 in German already). */
-:root[data-design="tisch"] .hub-offshelf__tiles {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
 :root[data-design="tisch"] .offshelf-tile {
   display: flex;
   align-items: center;
@@ -1395,28 +1311,6 @@
 
 @media (min-width: 1280px) {
   :root[data-design="tisch"] .hub-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  /* The preview row dissolves into the grid: each preview becomes a cell and
-     is its desktop card again, with the tile-only rules above undone. */
-  :root[data-design="tisch"] .hub-cards > .card-slot.hub-previews { display: contents; }
-  :root[data-design="tisch"] .hub-previews .hub-preview { padding: 14px 16px; }
-  :root[data-design="tisch"] .hub-previews .hub-card__title {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 10px;
-    font-size: var(--text-md);
-  }
-  :root[data-design="tisch"] .hub-previews .hub-preview__covers { display: flex; }
-  :root[data-design="tisch"] .hub-previews .hub-preview__rank { display: flex; }
-  :root[data-design="tisch"] .hub-previews .hub-preview__sub,
-  :root[data-design="tisch"] .hub-previews .hub-preview__last { font-size: var(--text-sm); }
-  :root[data-design="tisch"] .hub-previews .hub-preview__last { margin-top: 6px; }
-  :root[data-design="tisch"] .hub-previews .hub-preview__open {
-    padding-top: 10px;
-    font-size: var(--text-sm);
-    color: var(--brand);
-  }
-  :root[data-design="tisch"] .hub-previews .hub-preview__open .ti { display: inline; }
 
   /* THE FILL (#1683). This grid stretches every tile to the tallest in its
      row, so the Regal, the Chronik and „Wie wär's mit" sat half empty. Each
@@ -1437,14 +1331,6 @@
   }
   :root[data-design="tisch"] .hub-cards .hub-row > .hub-row__cover { display: block; }
 
-  :root[data-design="tisch"] .hub-offshelf--tiles {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    column-gap: 22px;
-  }
-  :root[data-design="tisch"] .hub-offshelf--tiles .hub-offshelf__title { margin: 0; max-width: 9em; }
-  :root[data-design="tisch"] .hub-offshelf__tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 /* --- Narrow: the stage's bleed follows `.app`'s own padding ---------------
@@ -1659,12 +1545,10 @@
   :root[data-design="tisch"] .app > .hub-stage,
   :root[data-design="tisch"] .app > .ticket,
   :root[data-design="tisch"] .app > .split-group,
-  :root[data-design="tisch"] .app > .hub-cards,
-  :root[data-design="tisch"] .app > .hub-offshelf { max-width: none; }
+  :root[data-design="tisch"] .app > .hub-cards { max-width: none; }
 
   :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned { display: block; }
-  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned h1,
-  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned .hero__chips { display: none; }
+  :root[data-design="tisch"][data-scheme="dark"] .app .hero.rail-owned h1 { display: none; }
   /* The band. The same felt, rim and weave as the phone stage, declared on the
      wrapper; the hero inside it is reset to a plain row rather than painted
      twice. The grid puts the CTA beside its presets, the seats across the top. */
@@ -1697,6 +1581,10 @@
     margin: 0;
   }
   :root[data-design="tisch"][data-scheme="dark"] .hub-stage > .hub-presets { margin: 0; }
+  /* What is running spans the band above the plate (#1853): it leads the stage
+     at every width, and in the two-column grid it would otherwise take the
+     plate's cell and push the action beside it. */
+  :root[data-design="tisch"][data-scheme="dark"] .hub-stage > .hub-running { grid-column: 1 / -1; margin: 0 0 20px; }
   :root[data-design="tisch"][data-scheme="dark"] .hero__members {
     gap: 30px 22px;
     margin-top: 0;
@@ -1722,20 +1610,6 @@
   }
   :root[data-design="tisch"][data-scheme="dark"] .rail__name { font-size: var(--text-2xl); }
   :root[data-design="tisch"][data-scheme="dark"] .rail__members { display: none; }
-  :root[data-design="tisch"][data-scheme="dark"] .rail__chips {
-    gap: 0;
-    font-size: var(--text-xs);
-    color: var(--ink-soft);
-  }
-  :root[data-design="tisch"][data-scheme="dark"] .rail__chips .stat-chip {
-    background: none;
-    padding: 0;
-    color: inherit;
-  }
-  :root[data-design="tisch"][data-scheme="dark"] .rail__chips .stat-chip + .stat-chip::before {
-    content: '·';
-    margin: 0 6px;
-  }
   /* A rail row is a plate waiting to be struck: an outlined blank at rest, the
      brass plate when it is the screen you are on. --gold measures 9.16:1 on the
      page tone this ground is derived from. */
@@ -4981,8 +4855,6 @@
   }
 }
 
-
-
 /* ===========================================================================
    #1193 — ANMELDEN, KONTO and the DESIGN-WAHL, at 390 and at 1440.
 
@@ -6189,38 +6061,6 @@
   color: var(--gold-ink);
 }
 
-/* The demo round's condensed summary (T7.6, #1280): what is behind each tab as
-   one wood row per destination — icon, name, a hint, the figure at the far end
-   — above the „Gefällt dir das?" card (`.hub-card--demo-invite`, an ordinary
-   hub card whose button is `.btn`). Colours are the generic tokens, which the
-   dark block re-points. */
-:root[data-design="tisch"] .hub-demo { display: flex; flex-direction: column; gap: 8px; }
-:root[data-design="tisch"] .hub-demo__row {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  min-height: 52px;
-  padding: 10px 13px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  color: var(--ink);
-  text-decoration: none;
-}
-:root[data-design="tisch"] .hub-demo__row:hover { background: var(--control-fill); }
-:root[data-design="tisch"] .hub-demo__row > .ti { color: var(--brand-ink, var(--brand)); font-size: 19px; /* glyph, not type */ }
-:root[data-design="tisch"][data-scheme="dark"] .hub-demo__row > .ti { color: var(--gold); }
-:root[data-design="tisch"] .hub-demo__main { display: flex; flex-direction: column; min-width: 0; }
-:root[data-design="tisch"] .hub-demo__label { font-weight: 700; }
-:root[data-design="tisch"] .hub-demo__hint { color: var(--ink-soft); font-size: var(--text-xs); }
-:root[data-design="tisch"] .hub-demo__value {
-  margin-left: auto;
-  color: var(--ink-soft);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
 :root[data-design="tisch"] .hub-card--demo-invite .hub-demo__cta { margin-top: 12px; align-self: stretch; justify-content: center; }
 
 /* --- The two density cases (T7.7) ----------------------------------------
@@ -9199,10 +9039,6 @@
   background: radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold-deep) 70%);
   color: var(--on-accent);
   font-size: 14px; /* glyph, not type — sized to the pin */
-}
-:root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-row--badges { display: none; }
-@media (min-width: 1280px) {
-  :root[data-design="tisch"][data-scheme="dark"] .hub-previews .hub-row--badges { display: flex; }
 }
 
 /* --- The Chronik (T17.6) ------------------------------------------------------

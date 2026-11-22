@@ -63,8 +63,8 @@ test('Klassisch 0-game hub gets the empty table and the visible reason too', asy
   assert.equal(table.nextElementSibling, cta, 'the table sits right before the locked button');
   assert.equal(table.querySelectorAll('.empty__actions .btn').length, 2);
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in; two would stack');
-  assert.deepEqual([...dom.app.querySelectorAll('.hub-actions > *')].map((el) => el.textContent.trim()), ['Einstellungen'],
-    '„Spiel hinzufügen" lives on the table now, not twice');
+  const adds = [...dom.app.querySelectorAll('button, a')].filter((el) => !el.closest('.rail, .dock') && /Spiel hinzufügen/.test(el.textContent));
+  assert.equal(adds.length, 1, '„Spiel hinzufügen" lives on the table now, not twice');
 });
 
 test('Klassisch with games and no session: no invitation, no sentence cards, the usual label', async (t) => {
@@ -80,21 +80,17 @@ test('Klassisch with games and no session: no invitation, no sentence cards, the
 test('Der Tisch 0-game hub: the empty table sits between the seats and the plate, with both actions', async (t) => {
   const dom = await hub(t, 'tisch', round());
   const stage = dom.app.querySelector('.hub-stage');
-  const kind = (el) => {
-    if (el.classList.contains('empty--table')) return 'table';
-    return el.classList.contains('hub-play') ? 'hub-play' : el.classList[0];
-  };
-  assert.deepEqual([...stage.children].map(kind), ['hero', 'table', 'btn', 'hub-play'],
-    'hero → empty table → plate → „Jetzt spielen" (#1682) is the sheet’s reading order');
-  assert.equal(stage.querySelector('.hub-play').disabled, false, 'direct play needs no shelf, so the lock does not reach it');
+  const kind = (el) => (el.classList.contains('empty--table') ? 'table' : el.classList[0]);
+  assert.deepEqual([...stage.children].map(kind), ['hero', 'table', 'btn', 'hub-presets'],
+    'hero → empty table → plate → the one chip row (#1853) is the sheet’s reading order');
+  assert.equal(stage.querySelector('.hub-preset--direct').disabled, false, 'direct play needs no shelf, so the lock does not reach it');
   const table = stage.querySelector('.empty--table');
   assert.equal(table.querySelector('.empty__title').textContent, 'Der Topf ist noch leer');
   assert.match(table.querySelector('.empty__text').textContent, /von BGG\.$/);
   const actions = [...table.querySelectorAll('.empty__actions > button')].map((b) => b.textContent.trim());
   assert.deepEqual(actions, ['Spiel hinzufügen', 'Von BGG übernehmen']);
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in — no second empty box');
-  assert.equal([...dom.app.querySelectorAll('.hub-actions > *')].some((b) => /Spiel hinzufügen/.test(b.textContent)), false,
-    '„Spiel hinzufügen" is on the table — the quick action would be the same control twice');
+  assert.equal(dom.app.querySelector('.hub-actions'), null, 'the quick actions row is back (#1853)');
 });
 
 test('Der Tisch 0-game hub without accounts offers no BGG import and says nothing about it', async (t) => {
@@ -135,17 +131,15 @@ test('Der Tisch round with games and no session: first-session label, invitation
   assert.equal(cta.textContent.trim(), 'Erste Session wirbeln');
   assert.equal(cta.querySelector('.hub-cta__reason'), null);
 
-  assert.deepEqual(cardTitles(dom).slice(0, 3), ['3 Spiele stehen bereit', 'Wie wär’s mit', 'Rundenpuls'],
-    'the invitation leads, then the two sentence cards in the grid’s own order');
+  assert.deepEqual(cardTitles(dom), ['3 Spiele stehen bereit', 'Wie wär’s mit'],
+    'the invitation leads, then the suggestion sentence — the Rundenpuls left the Start tab (#1853)');
   const young = dom.app.querySelector('.hub-card--young');
   assert.equal(young.querySelectorAll('.hub-preview__cover').length, 3);
   assert.equal(young.querySelector('.hub-preview__covers').getAttribute('aria-hidden'), 'true');
 
   const sentences = [...dom.app.querySelectorAll('.hub-card--sentence .hub-card__facts')].map((p) => p.textContent);
-  assert.deepEqual(sentences, [
-    'Vorschläge gibt es ab 6 Spielen im Regal.',
-    'Zahlen gibt es ab der ersten Session.', // Der Tisch draws its tiles from one session (#1280)
-  ], 'each sentence must state the threshold the code actually applies');
+  assert.deepEqual(sentences, ['Vorschläge gibt es ab 6 Spielen im Regal.'],
+    'the sentence must state the threshold the code actually applies');
   assert.equal(dom.app.querySelector('.pulse-tiles, .pulse-bars'), null, 'a young round drew a zero');
 });
 

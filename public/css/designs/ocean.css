@@ -321,7 +321,7 @@
      global heading rule — so at 12-16px they would be Comfortaa too. O1 sets a
      list title in Figtree 700 („Listeneintrag"); the screen issues may lift a
      block title to 17px Comfortaa where O1 draws one. */
-  .hub-card__title, .hub-offshelf__title, .hub-care__head, .ticket__names, .nr-seat__name,
+  .hub-card__title, .hub-care__head, .ticket__names, .nr-seat__name,
   .session-card__title, .popover__head, .split-group__head, .editor--expansions .exp-own__head,
   .podium__col--multi .podium__name, .podium--single .podium__col--multi .podium__name,
   .recap-fav__name, .setup-panel__title, .pool-tile__name, .result-people__name,
@@ -708,8 +708,6 @@
   :root[data-design="ocean"] .ocean-hub__crew { grid-column: 1; grid-row: 1; }
   :root[data-design="ocean"] .ocean-hub__main { grid-column: 1; grid-row: 2; }
   :root[data-design="ocean"] .ocean-hub__aside { grid-column: 2; grid-row: 1 / span 3; }
-  :root[data-design="ocean"] .ocean-hub > .hub-offshelf { grid-column: 1; grid-row: 3; }
-  :root[data-design="ocean"] .ocean-hub > .hub-actions { grid-column: 1; grid-row: 4; }
 }
 @media (min-width: 1280px) {
   /* The hub spreads over the pane like O3.2; the reading cap is for prose.
@@ -723,7 +721,6 @@
   :root[data-design="ocean"] .ocean-hub__crew { grid-column: 1; grid-row: 1; }
   :root[data-design="ocean"] .ocean-hub__main { grid-column: 2; grid-row: 1 / span 2; gap: 22px; }
   :root[data-design="ocean"] .ocean-hub__aside { grid-column: 3; grid-row: 1 / span 2; }
-  :root[data-design="ocean"] .ocean-hub > .hub-offshelf { grid-column: 1; grid-row: 2; }
   /* No cell for the actions here: from 1280 the rail carries „Einstellungen"
      and `.hub-actions` is hidden with the rest of the rail-owned set (#1498). */
 }
@@ -745,16 +742,6 @@
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-tide {
   background-image: radial-gradient(circle at 50% 100%, var(--marker, var(--brand)) 4px, transparent 5px);
 }
-:root[data-design="ocean"] .ocean-hub .hero__chips { gap: 0; margin-top: 6px; }
-:root[data-design="ocean"] .ocean-hub .hero__chips .stat-chip {
-  padding: 0;
-  background: none;
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-:root[data-design="ocean"] .ocean-hub .hero__chips .ti { display: none; }
-:root[data-design="ocean"] .ocean-hub .hero__chips .stat-chip + .stat-chip::before { content: '·'; margin: 0 6px; }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hero__chips .stat-chip { color: var(--ink-soft); }
 
 :root[data-design="ocean"] .ocean-hub .hero__members {
   gap: 30px 12px;
@@ -933,10 +920,7 @@
 /* The presets (O2.1/O3.2): the chips under the shell, centred on it. Generic
    `.hub-presets`, so whatever chips hubPresetChips hands over — the three
    quick-starts today, saved filters tomorrow (#1328) — sit here the same way. */
-:root[data-design="ocean"] .ocean-hub .hub-presets { justify-content: center; margin: 0; gap: 8px; }
-/* „Jetzt spielen" (#1682) sits centred under the shell and its presets, which
-   centre too; the base rule's flex-start would leave it alone at the edge. */
-:root[data-design="ocean"] .hub-play { align-self: center; }
+:root[data-design="ocean"] .ocean-hub .hub-presets { justify-content: safe center; margin: 0; gap: 8px; max-width: 100%; }
 
 /* ---- The blocks under the shell: tickets, „Zuletzt gespielt" beside „Wie
    wär's mit", the Rundenpuls and the rest of the cards, one surface each. */
@@ -953,7 +937,6 @@
 }
 :root[data-design="ocean"] .ocean-hub .hub-cards:empty { display: none; }
 :root[data-design="ocean"] .ocean-hub .hub-cards > .card-slot { padding-bottom: 0; }
-:root[data-design="ocean"] .ocean-hub .hub-actions { margin-top: 0; }
 :root[data-design="ocean"] .ocean-hub :is(.hub-card, .ticket) { border-radius: var(--radius-xl); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub :is(.hub-card, .ticket) {
   background: var(--surface);
@@ -966,7 +949,7 @@
 /* A block title is O1's 17px Comfortaa — the display face at a size it is
    allowed — so these are lifted back out of the component layer's Figtree
    reset. */
-:root[data-design="ocean"] .ocean-hub :is(.hub-card__title, .hub-offshelf__title) {
+:root[data-design="ocean"] .ocean-hub :is(.hub-card__title) {
   font-family: var(--font-display);
   font-size: var(--text-lg);
 }
@@ -1017,33 +1000,7 @@
    rows carry a bar in the member's colour — a fill, never text — and the
    Chronik lists its last sessions. */
 :root[data-design="ocean"] .ocean-hub .hub-preview__cover { width: 48px; aspect-ratio: 4 / 3; border-radius: var(--radius-sm); }
-:root[data-design="ocean"] .hub-preview__bar {
-  flex: 1;
-  height: 10px;
-  min-width: 24px;
-  border-radius: var(--radius-pill);
-}
-:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__bar {
-  background: linear-gradient(to right, var(--tone) var(--share), var(--sunken-soft) var(--share));
-}
-:root[data-design="ocean"] .hub-preview__rank .hub-preview__name { flex: 0 1 auto; max-width: 35%; }
-:root[data-design="ocean"] .hub-preview__session {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 5px 0;
-  font-size: var(--text-sm);
-}
-:root[data-design="ocean"] .hub-preview__session .hub-preview__cover { width: 38px; flex: none; }
-:root[data-design="ocean"] .hub-preview__session .hub-preview__name { font-weight: 700; }
-:root[data-design="ocean"] .hub-preview__when { flex: none; margin-left: auto; font-size: var(--text-xs); font-weight: 600; }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__session { border-top: 1px solid var(--line-soft); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .hub-preview__when { color: var(--ink-soft); }
 
-/* ---- „Nicht im Regal": ONE heading over the three lists and „Könnte euch
-   gefallen", as a quiet list under a hairline rather than four cards. */
-:root[data-design="ocean"] .ocean-hub > .hub-offshelf { margin: 0; padding-top: 18px; }
-:root[data-design="ocean"] .ocean-hub .hub-offshelf__list { gap: 2px; }
 :root[data-design="ocean"] .ocean-hub .off-shelf__row {
   min-height: var(--target-control);
   padding: 4px 8px;
@@ -1051,8 +1008,6 @@
   background: none;
   font-weight: 700;
 }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub > .hub-offshelf { border-top: 1px solid var(--line); }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .hub-offshelf__title { color: var(--brand); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row { color: var(--ink); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row .ds-row__main .ti { color: var(--ink-soft); }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-hub .off-shelf__row:hover { background: var(--sunken-soft); }

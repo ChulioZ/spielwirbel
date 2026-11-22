@@ -4,8 +4,8 @@
    of the in-flow tab strip: identity, the one big CTA, the four sections and
    one entry for the round's Einstellungen screen. (It carried a „Nicht im
    Regal" group too until #1500 — the four lists are reached through the
-   Regal's scope strip now, in every design. Since #1579 the Start tab alone
-   adds the hub's „Weitere Listen" at the foot; see railOffShelfGroup.)
+   Regal's scope strip now, in every design. The Start tab's „Weitere Listen"
+   foot group (#1579) went with the hub's in #1853, for the same reason.)
 
    WHY IT IS A RAIL. The strip lives inside `.app`, so the column's width and the
    strip's position are coupled: giving grid screens a wider column moved the
@@ -81,7 +81,6 @@ function railItem({ icon, label, path, onNav, current, inside }) {
 function buildRoundRail(round, activeTab, sub) {
   const rid = round.id;
   const activeGames = round.games.filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame);
-  const playedCount = round.sessions.filter((s) => s.finished).length;
   // A sub-screen with its own entry claims the current marker, so the section
   // list stays unhighlighted rather than lighting up two rows at once.
   const ownEntry = sub && RAIL_OWN_ENTRY.includes(sub) ? sub : null;
@@ -123,11 +122,9 @@ function buildRoundRail(round, activeTab, sub) {
        <div class="rail__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
-       <div class="rail__chips">
-         <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span>
-         <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
-       </div>
      </div>`);
+  // No count chips since #1853: „9 Spiele" and „2 Sessions" are the Regal's and
+  // the Chronik's own figures, one click below.
   // Rename (#562). The hero this mirrors is hidden at rail widths, so without the
   // affordance here it would exist only below 1280px — the same reason the "+"
   // seat below is repeated.
@@ -160,31 +157,20 @@ function buildRoundRail(round, activeTab, sub) {
   }
   if (!lean) rail.appendChild(cta);
 
-  // The quick-start chips belong to that button (#923), so they follow it up
-  // here. The Start tab renders its own copy and marks it `rail-owned`, which
-  // is the same "render both, let the viewport decide" split the hero and the
-  // CTA itself already use — without it the chips stay behind in the pane at
-  // rail widths and read as a stray label above the tickets, modifying a button
-  // that is no longer next to them.
-  //
-  // Called rather than duplicated: `hubPresetChips` lives in hub-cards.js
-  // (views-round-start.js until #1189 split it), which loads after this file —
-  // safe because this runs at render time, never at load time
-  // (.claude/rules/frontend-script-load-order.md).
-  if (!lean && activeGames.length) {
-    const presets = hubPresetChips(round, activeGames);
-    if (presets) rail.appendChild(presets);
-  }
-  // „Jetzt spielen" (#1682) follows the CTA and its presets here too — the
-  // Start tab's copy is `rail-owned`. Defined in direct-session.js, which loads
-  // later: fine, this runs at render time.
-  if (!lean) rail.appendChild(directPlayButton(round, 'rail__play'));
+  // The ONE chip row belongs to that button (#923, #1853): „Direkt wählen"
+  // first, then the presets. The Start tab renders its own copy and marks it
+  // `rail-owned` — the "render both, let the viewport decide" split the hero and
+  // the CTA use. Called rather than duplicated: `hubPresetChips` lives in
+  // hub-cards.js, which loads after this file — safe because this runs at
+  // render time (.claude/rules/frontend-script-load-order.md).
+  if (!lean) rail.appendChild(hubPresetChips(round, activeGames));
 
   /* Forest's Wegweiser counts the Regal and the Chronik beside their names
-     (F1.7, F3.2) — the two figures the hero carries in every other design, so
-     nothing new is derived. aria-hidden: the link is named by its section, and
-     the hub's previews say the same figures in words. */
-  const counts = designIs('forest') ? { regal: activeGames.length, chronik: playedCount } : {};
+     (F1.7, F3.2) — the Regal's and the Chronik's own figures, so nothing new
+     is derived. aria-hidden: the link is named by its section, and each
+     section states its count in words. */
+  const counts = designIs('forest')
+    ? { regal: activeGames.length, chronik: round.sessions.filter((s) => s.finished).length } : {};
 
   // --- The sections (hubSections, views-round.js — shared with the dock).
   const nav = h(`<nav class="rail__group" aria-label="${esc(t('a11y.hubTabs'))}"></nav>`);
@@ -225,33 +211,5 @@ function buildRoundRail(round, activeTab, sub) {
   }));
   rail.appendChild(settings);
 
-  if (!lean && activeTab === 'start' && !sub) rail.appendChild(railOffShelfGroup(round));
-
   return rail;
-}
-
-/* „Weitere Listen" in Klassisch's rail (#1579) — on the START tab only. The
-   hub's own group spent four full-width rows under the cards; from 1280px it
-   is `rail-owned` (hubOffShelfGroup) and these links stand in for it, the way
-   Ocean's and Forest's hubs carry the four in their own left column.
-
-   Not on the other tabs, deliberately: #1500 took the four off the persistent
-   rail, and the Regal's scope strip is their way in from everywhere else
-   (operator decision 2026-10-20). Last in the rail, so a tab change only adds
-   or drops this group and moves nothing above it.
-
-   Same rows and counts as the hub group by construction — offShelfEntries().
-   The count is its own figure, so the link is named by the full label
-   („Aussortiert (2)"), as Der Tisch's count tiles are. */
-function railOffShelfGroup(round) {
-  const group = h(`<nav class="rail__group rail__offshelf" aria-labelledby="railOffShelfLabel">
-       <div class="rail__label" id="railOffShelfLabel">${esc(t('offShelf.title'))}</div>
-     </nav>`);
-  offShelfEntries(round).forEach(({ icon, label, name, count, sub, go }) => {
-    const el = h(`<a class="rail__item" aria-label="${esc(label)}">
-         <i class="ti ${icon}" aria-hidden="true"></i><span>${esc(name)}</span>${count === null ? '' : `<span class="rail__count" aria-hidden="true">${count}</span>`}
-       </a>`);
-    group.appendChild(navLink(el, roundPath(round.id, sub), go));
-  });
-  return group;
 }

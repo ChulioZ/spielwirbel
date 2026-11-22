@@ -62,26 +62,32 @@ function challengeEndedAt(cur) {
 
 /* ------------------------------- Start card ------------------------------- */
 
-function hubChallengeCard(round, now = Date.now()) {
+/* One slim row on the Start tab (#1853, was a card): the goal, the status and
+   the bar, opening the Pokale section where the challenge lives. Null unless
+   one is running or ended within CHALLENGE_HUB_LINGER_DAYS. */
+function hubChallengeRow(round, now = Date.now()) {
   if (simpleHidden('trophies')) return null;
   const cur = currentChallenge(round, now);
   if (!cur) return null;
   const ended = challengeEndedAt(cur);
   if (ended !== null && now - ended > CHALLENGE_HUB_LINGER_DAYS * 24 * 60 * 60 * 1000) return null;
-  const card = hubCard(cur.state === 'completed' ? 'ti-flag-check' : 'ti-flag', t('challenge.title'));
-  card.classList.add('hub-card--link', 'hub-card--challenge');
-  card.dataset.state = cur.state;
-  const row = h(`<a class="hub-row hub-card__go">
-       <span class="hub-row__main">
-         <span class="hub-row__title">${esc(challengeGoalText(cur))}</span>
-         <span class="hub-row__sub">${esc(challengeStatusText(cur, now))}</span>
+  const row = h(`<a class="hub-challenge" data-state="${esc(cur.state)}">
+       <i class="ti ${cur.state === 'completed' ? 'ti-flag-check' : 'ti-flag'} hub-challenge__icon" aria-hidden="true"></i>
+       <span class="hub-challenge__main">
+         <span class="hub-challenge__goal">${esc(challengeGoalText(cur))}</span>
+         <span class="hub-challenge__status">${esc(challengeStatusText(cur, now))}</span>
          ${challengeBar(cur)}
        </span>
-       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
+       <i class="ti ti-chevron-right hub-challenge__go" aria-hidden="true"></i>
      </a>`);
-  navLink(row, roundPath(round.id, 'pokale'), () => showRound(round.id, 'pokale'));
-  card.querySelector('.hub-card__body').appendChild(row);
-  return card;
+  // The section's own id (renderChallengeSection), so the row lands ON the
+  // challenge rather than at the top of the tab.
+  navLink(row, `${roundPath(round.id, 'pokale')}#challenge`, async () => {
+    await showRound(round.id, 'pokale');
+    const sec = document.getElementById('challenge');
+    if (sec) sec.scrollIntoView({ block: 'start' });
+  });
+  return row;
 }
 
 /* ------------------------------ Pokale section ---------------------------- */

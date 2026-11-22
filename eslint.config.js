@@ -558,12 +558,12 @@ const frontendGlobals = {
   HUB_TABS: 'readonly', HUB_TAB_OF: 'readonly', hubTabOwning: 'readonly',
   // round-rail.js
   RAIL_OWN_ENTRY: 'readonly', RAIL_SETTINGS_SUB: 'readonly', railItem: 'readonly',
-  buildRoundRail: 'readonly', railIsLean: 'readonly', railOffShelfGroup: 'readonly',
+  buildRoundRail: 'readonly', railIsLean: 'readonly',
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   // views-round-start.js (#923) — the Start tab and its card grid
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
-  hubPresetChips: 'readonly', hubPulseCard: 'readonly', hubCareCard: 'readonly',
-  hubAnniversaryCard: 'readonly', renderRecoTeaser: 'readonly',
+  hubPresetChips: 'readonly', hubTodoRow: 'readonly', hubTodoRecs: 'readonly', hubChallengeRow: 'readonly', hubSettingsGear: 'readonly', hubRunningTickets: 'readonly', hubLastTicket: 'readonly', HUB_YOUNG_COVERS: 'readonly', hubPulseCard: 'readonly',
+  hubAnniversaryCard: 'readonly',
   editableRoundName: 'readonly', saveRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
   roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
@@ -577,7 +577,7 @@ const frontendGlobals = {
   phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
   phRoundCard: 'readonly', phResumeNotice: 'readonly', phLobbyKicker: 'readonly',
   // #1377 — its empty and young states
-  phLocked: 'readonly', phYoungSide: 'readonly', phStripPreviews: 'readonly', phYoungLead: 'readonly',
+  phLocked: 'readonly', phYoungSide: 'readonly', phYoungLead: 'readonly',
   phFirstRun: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
   brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
@@ -586,7 +586,7 @@ const frontendGlobals = {
   forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestMarkerLine: 'readonly',
   forestHeroCompose: 'readonly', forestLead: 'readonly', forestRoundCard: 'readonly', forestResumeNotice: 'readonly',
   // #1471 — its empty and young states
-  forestYoung: 'readonly', forestLocked: 'readonly', forestAsidePreviews: 'readonly', forestLockedPulse: 'readonly',
+  forestYoung: 'readonly',
   forestFirstRun: 'readonly',
   // bruecke-shelf.js (#1239) — Die Brücke's Regal cards and Spielepass figures
   brueckeTitleLong: 'readonly', brueckeCard: 'readonly',
@@ -595,19 +595,13 @@ const frontendGlobals = {
   forestPassFacts: 'readonly', forestBggBadge: 'readonly',
   brueckePassStats: 'readonly', brueckePassDist: 'readonly',
   // #1280 — Der Tisch's young-round features (views-home.js, hub-cards.js, views-pokale.js)
-  lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly', hubDemoSummary: 'readonly',
+  lobbyInviteSlip: 'readonly', lobbyNextStep: 'readonly',
   hubDemoInvite: 'readonly', pokaleYoungLead: 'readonly',
   // off-shelf.js (#1185) — the four off-shelf destinations, one definition
   offShelfEntries: 'readonly', offShelfSegments: 'readonly',
   // hub-previews.js (#1185) — the hub's three sub-page previews + „Weitere Listen"
-  HUB_PREVIEW_COVERS: 'readonly', HUB_PREVIEW_RANKS: 'readonly',
-  hubShelfWorthPreviewing: 'readonly',
-  hubPreviewCard: 'readonly', hubRegalPreview: 'readonly',
-  HUB_FILL_COVERS: 'readonly', HUB_FILL_SESSIONS: 'readonly', hubCoverTile: 'readonly', hubSessionRow: 'readonly',
   fitHubFill: 'readonly', hubFill: 'readonly', hubFillObserve: 'readonly', HUB_FILL_SLACK: 'readonly',
   HUB_FILL_SUGGESTIONS: 'readonly', hubSuggestRow: 'readonly',
-  hubPokalePreview: 'readonly', hubChronikPreview: 'readonly',
-  hubOffShelfGroup: 'readonly',
   createRegalBulk: 'readonly', openBulkPicker: 'readonly',
   renderRegalTab: 'readonly', renderChronikTab: 'readonly', renderPokaleTab: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly', isShelfChange: 'readonly',
@@ -623,8 +617,7 @@ const frontendGlobals = {
   // views-shelf-profile.js (#1173) — the Regal-Steckbrief's card, screen and share
   shelfProfileDeps: 'readonly', SHELF_DIM_TITLES: 'readonly', shelfSeatName: 'readonly',
   shelfBandLabel: 'readonly', shelfGapText: 'readonly', shelfDims: 'readonly',
-  shelfBars: 'readonly', shelfGapList: 'readonly',
-  hubShelfProfileCard: 'readonly', chronikPulseLine: 'readonly', regalProfileLine: 'readonly', shelfHeadlineClause: 'readonly', shelfHeadlineText: 'readonly',
+  shelfBars: 'readonly', shelfGapList: 'readonly', chronikPulseLine: 'readonly', regalProfileLine: 'readonly', shelfHeadlineClause: 'readonly', shelfHeadlineText: 'readonly',
   SHELF_TIME_MAX: 'readonly', SHELF_TIME_ORDER: 'readonly', shelfPanel: 'readonly',
   shelfTopPanel: 'readonly', shelfShareModel: 'readonly', shareShelfProfile: 'readonly',
   showShelfProfile: 'readonly',
@@ -634,7 +627,6 @@ const frontendGlobals = {
   renderPriceSection: 'readonly', renderPriceNoOffers: 'readonly', priceAge: 'readonly',
   startDirectSession: 'readonly',
   showDirectPlayPicker: 'readonly',
-  directPlayButton: 'readonly',
   // A session's day when it is not today (#1616): played-on.js (pure, shared
   // with the server) and session-date.js (the field and the two sheets).
   PLAYED_ON_MIN: 'readonly', localDayKey: 'readonly', isPastDay: 'readonly', playedOnInstant: 'readonly',
@@ -715,7 +707,7 @@ const frontendGlobals = {
   challengeProgress: 'readonly', currentChallenge: 'readonly', challengeRunning: 'readonly', challengeHistory: 'readonly',
   challengeStartError: 'readonly', challengeDeadlineInstant: 'readonly', challengeDaysLeft: 'readonly',
   CHALLENGE_HUB_LINGER_DAYS: 'readonly', challengeGoalText: 'readonly', challengeStatusText: 'readonly', challengeBar: 'readonly',
-  challengeEndedAt: 'readonly', hubChallengeCard: 'readonly', renderChallengeSection: 'readonly', challengeRefresh: 'readonly',
+  challengeEndedAt: 'readonly', renderChallengeSection: 'readonly', challengeRefresh: 'readonly',
   endChallenge: 'readonly', challengeDay: 'readonly', openChallengeSheet: 'readonly', fillChallengeMoment: 'readonly',
   challengeChronikIndex: 'readonly', chronikChallengeRows: 'readonly',
   BADGE_CATALOGUE: 'readonly', roundBadges: 'readonly', newSince: 'readonly', accountBadges: 'readonly',

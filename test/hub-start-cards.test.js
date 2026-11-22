@@ -63,8 +63,9 @@ const youngRound = () => ({
   tags: [],
 });
 
-// The teaser fetches on every render; a spec that does not care still has to
-// answer it, or the harness's loud default fetch rejects into the console.
+// The Start tab fetches nothing since #1853 took the recommendations teaser
+// off it; answering anyway keeps a regression a red assertion below rather than
+// a rejected fetch in the console.
 const noRecos = () => async () => ({ recommendations: [] });
 
 // ---------------------------------------------------------------- the grid
@@ -78,17 +79,15 @@ test('a young round meets the screen it always met — no empty cards, no empty 
   dom.call('renderStartTab', r, r.games);
   assert.equal(dom.app.querySelectorAll('.hub-card').length, 0, 'a round with nothing to say rendered a card anyway');
   assert.equal(dom.app.querySelectorAll('.hub-card__title').length, 0, 'a heading was rendered over nothing');
-  // The grid element itself is present — the teaser needs somewhere connected
-  // to land — and `.hub-cards:empty` is what keeps it from costing anything.
-  assert.ok(dom.app.querySelector('.hub-cards'), 'the grid must exist for the lazy teaser to reach');
-  assert.equal(dom.app.querySelector('.hub-cards').children.length, 0);
+  // No teaser arrives later any more (#1853), so an empty grid is not appended.
+  assert.equal(dom.app.querySelector('.hub-cards'), null, 'an empty grid was appended');
   assert.equal(dom.app.querySelectorAll('.hub-cards .card-slot').length, 0,
     'an empty grid grew a slot — `:empty` cannot collapse it and the young round pays the margin');
   // And #869's stand-in is still doing its job, which the grid must not steal.
   assert.ok(dom.app.querySelector('.empty--rail-gap'), 'the young round lost its rail stand-in');
 });
 
-test('an established round gets suggestion, pulse and care cards, in the phone order', (t) => {
+test('an established round gets the suggestion card and one „Zu tun" row — no pulse, no previews (#1853)', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
   dom.set('api', noRecos());
@@ -96,19 +95,14 @@ test('an established round gets suggestion, pulse and care cards, in the phone o
   const r = busyRound();
   dom.call('renderStartTab', r, r.games);
   const titles = [...dom.app.querySelectorAll('.hub-card__title')].map((el) => el.textContent.trim());
-  // The three DERIVED cards, then the three sub-page previews (#1185). Asserted
-  // as the exact set in the exact order, not as a subset: this is the spec that
-  // notices a card rendering when it has nothing to say, so a `.includes` here
-  // would give up the only completeness check the grid has.
-  assert.equal(titles.length, 6, 'expected exactly the three derivable cards and the three previews');
-  assert.deepEqual(
-    titles,
-    [
-      dom.run("t('hub.suggest.title')"), dom.run("t('hub.pulse.title')"), dom.run("t('hub.care.title')"),
-      dom.run("t('hub.tab.regal')"), dom.run("t('hub.tab.pokale')"), dom.run("t('hub.tab.chronik')"),
-    ],
-    'DOM order is the phone order: action-first, then "what is over there"',
-  );
+  // Asserted as the exact set, not as a subset: this is the spec that notices
+  // a card rendering when it has nothing to say.
+  assert.deepEqual(titles, [dom.run("t('hub.suggest.title')")],
+    'only „Wie wär\'s mit" is a card on the Start tab now');
+  // The Kümmerliste's one loose end (game 15 has no cover) is in the folded row.
+  const todo = dom.app.querySelector('.hub-todo');
+  assert.ok(todo, 'the loose end lost its row');
+  assert.equal(todo.querySelector('.hub-todo__label').textContent, dom.run("t('hub.todo.label', { n: 1 })"));
   // With content in the pane, the stand-in for the rail gap must be gone.
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the stand-in rendered beside real content');
 });
@@ -173,8 +167,8 @@ test('the banner and the suggestion card never name the same game', (t) => {
   r.sessions = [...r.sessions, ...badNights];
   dom.call('renderStartTab', r, r.games);
 
-  const banner = dom.app.querySelector('.rec-banner');
-  assert.ok(banner, 'the fixture no longer trips the retirement banner — the exclusion is untested without it');
+  const banner = dom.app.querySelector('.hub-todo__recs');
+  assert.ok(banner, 'the fixture no longer trips the retirement recommendations — the exclusion is untested without it');
   const nagged = [...banner.querySelectorAll('.recommend-item__title')].map((el) => el.textContent);
   assert.ok(nagged.includes('Spiel 17'), 'the banner is not nagging about the game this asserts is excluded');
 
@@ -197,9 +191,9 @@ test('the banner\'s retire asks a neutral question with the archive icon', async
       votes: { 1: { 10: { rating: 5 }, 17: { rating: a } }, 2: { 10: { rating: 5 }, 17: { rating: b } } },
     }))];
   dom.call('renderStartTab', r, r.games);
-  const banner = dom.app.querySelector('.rec-banner');
-  assert.ok(banner, 'the fixture no longer trips the retirement banner');
-  assert.equal(banner.querySelector('.rec-banner__text .ti-trash'), null, 'the banner still wears the bin');
+  const banner = dom.app.querySelector('.hub-todo__recs');
+  assert.ok(banner, 'the fixture no longer trips the retirement recommendations');
+  assert.equal(dom.app.querySelector('.hub-todo .ti-trash'), null, 'the row still wears the bin');
 
   const asked = [];
   dom.set('confirmDialog', async (o) => { asked.push(o); return false; });
@@ -219,7 +213,9 @@ test('no quick-start chip is offered for a shelf that cannot express one', (t) =
 
   const r = busyRound(); // no BGG metadata on any game
   dom.call('renderStartTab', r, r.games);
-  assert.equal(dom.app.querySelector('.hub-presets'), null, 'a chip was offered that could narrow nothing');
+  // The row stays — „Direkt wählen" leads it at every shelf size (#1853).
+  assert.equal(dom.app.querySelectorAll('.hub-preset:not(.hub-preset--direct)').length, 0,
+    'a chip was offered that could narrow nothing');
 });
 
 test('a quick-start chip opens the setup screen with its filter already applied', (t) => {
@@ -238,7 +234,7 @@ test('a quick-start chip opens the setup screen with its filter already applied'
   dom.set('showStartSession', (round, prefill) => seen.push(prefill));
   dom.call('renderStartTab', r, r.games);
 
-  const chips = dom.app.querySelectorAll('.hub-preset');
+  const chips = dom.app.querySelectorAll('.hub-preset:not(.hub-preset--direct)');
   assert.equal(chips.length, 1, 'exactly the playtime chip this shelf can express');
   chips[0].click();
   assert.equal(seen.length, 1);
@@ -301,75 +297,33 @@ test('showStartSession lets a prefill win over the round\'s remembered preset', 
   assert.equal(dom.document.querySelector('#count').value, '5', 'the prefill discarded the remembered draw count');
 });
 
-// ------------------------------------------------------------------- teaser
+// ------------------------------------------------------- no teaser (#1853)
 
-test('the recommendations teaser arrives after the paint, and only when it has something', async (t) => {
+test('the Start tab asks the server for nothing — the recommendations teaser is gone', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
-
+  const urls = [];
+  dom.set('api', async (method, url) => { urls.push(url); return { recommendations: [] }; });
   const r = busyRound();
-  let resolve;
-  dom.set('api', () => new Promise((r2) => { resolve = r2; }));
   dom.call('renderStartTab', r, r.games);
-  const before = dom.app.querySelectorAll('.hub-card').length;
-
-  resolve({ recommendations: [{ externalId: '1', title: 'Ark Nova', reasons: [{ term: 'quality', rating: 8.5 }] }] });
-  await new Promise((done) => setTimeout(done, 0));
-  assert.equal(dom.app.querySelectorAll('.hub-card').length, before + 1, 'the teaser never landed');
-  assert.ok([...dom.app.querySelectorAll('.hub-row__title')].some((el) => el.textContent === 'Ark Nova'));
-});
-
-test('the teaser degrades to nothing on an empty list and on an error', async (t) => {
-  const dom = loadApp();
-  t.after(() => dom.close());
-
-  const r = busyRound();
-  dom.set('api', noRecos());
-  dom.call('renderStartTab', r, r.games);
-  await new Promise((done) => setTimeout(done, 0));
-  const quiet = dom.app.querySelectorAll('.hub-card').length;
-
-  dom.app.innerHTML = '';
-  dom.set('api', async () => { throw new Error('no corpus here'); });
-  dom.call('renderStartTab', r, r.games);
-  await new Promise((done) => setTimeout(done, 0));
-  assert.equal(dom.app.querySelectorAll('.hub-card').length, quiet, 'a failed teaser fetch left something on screen');
-});
-
-test('a teaser landing on a young round removes the stand-in it was rendered beside', async (t) => {
-  const dom = loadApp();
-  t.after(() => dom.close());
-
-  /* The one ordering this design cannot avoid: the stand-in is decided
-     synchronously, the teaser arrives later. It must clean up after itself, or
-     a round whose only card is the teaser shows „noch nichts hier" above it. */
-  const r = youngRound();
-  let resolve;
-  dom.set('api', () => new Promise((r2) => { resolve = r2; }));
-  dom.call('renderStartTab', r, r.games);
-  assert.ok(dom.app.querySelector('.empty--rail-gap'), 'the stand-in is missing, so this proves nothing');
-
-  resolve({ recommendations: [{ externalId: '1', title: 'Ark Nova', reasons: [] }] });
-  await new Promise((done) => setTimeout(done, 0));
-  assert.ok(dom.app.querySelector('.hub-card'), 'the teaser did not land');
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the stand-in survived beside real content');
+  assert.deepEqual(urls, [], 'the Start tab fetched after its paint');
+  // Anti-vacuous: the tab did render.
+  assert.ok(dom.app.querySelector('.hub-cta'));
 });
 
 test('every hub card sits in the slot that carries the flow spacing', async (t) => {
   /* See the sibling in home-dashboard.test.js: appending a card bare breaks no
      other assertion here — the grid still packs and still collapses when empty
      — so the wrapper is only visible if something looks for it (#946). The
-     teaser is included deliberately: it appends on a LATER tick, from a
-     different function, which is exactly the append that gets missed. */
+     demo's invitation is included deliberately: it is appended by a different
+     branch than the loop over the derived cards. */
   const dom = loadApp();
   t.after(() => dom.close());
-  dom.set('api', async () => ({
-    recommendations: [{ externalId: '1', title: 'Ark Nova', reasons: [] }],
-  }));
+  dom.set('api', noRecos());
+  dom.set('isDemoAccount', () => true);
 
   const r = busyRound();
   dom.call('renderStartTab', r, r.games);
-  await new Promise((done) => setTimeout(done, 0));
   const grid = dom.app.querySelector('.hub-cards');
   const cards = [...grid.querySelectorAll('.hub-card')];
   assert.ok(cards.length >= 2, `only ${cards.length} card(s) rendered — this asserts nothing`);

@@ -1,7 +1,8 @@
 'use strict';
 
-/* „Jetzt spielen" on the Start tab (#1682): a secondary way into a session for
- * one chosen game, including one the group does not own. Rendered through the
+/* „Direkt wählen" on the Start tab (#1682, a chip since #1853): a secondary way
+ * into a session for one chosen game, including one the group does not own. It
+ * leads the ONE chip row under „Session wirbeln", ahead of the presets. Rendered through the
  * real hub under every registered design, then the picker it opens is driven
  * through to the two hand-offs: a listed game straight into the direct-play
  * sheet, and „Ein Spiel, das ihr nicht habt" into the add-game form's guest
@@ -49,30 +50,31 @@ const pane = (dom) => [...dom.app.children].filter((el) => !el.matches('.rail, .
 const inPane = (dom, sel) => pane(dom).flatMap((el) => (el.matches(sel) ? [el] : [...el.querySelectorAll(sel)]));
 
 for (const { id } of DESIGN_REGISTRY) {
-  test(`${id}: the Start tab offers „Jetzt spielen" after the CTA, enabled on an empty shelf too`, async (t) => {
+  test(`${id}: the Start tab's one chip row leads with „Direkt wählen", after the CTA, enabled on an empty shelf too`, async (t) => {
     for (const games of [SHELF(), []]) {
       const dom = await hub(t, id, round(games));
-      const [play] = inPane(dom, '.hub-play');
-      assert.ok(play, `${id} (${games.length} games): no „Jetzt spielen" on the Start tab`);
-      assert.equal(inPane(dom, '.hub-play').length, 1, 'one copy in the pane');
-      assert.equal(play.textContent.trim(), 'Jetzt spielen');
+      const rows = inPane(dom, '.hub-presets');
+      assert.equal(rows.length, 1, `${id} (${games.length} games): exactly one chip row in the pane`);
+      const chips = [...rows[0].querySelectorAll('.hub-preset')];
+      const play = chips[0];
+      assert.ok(play && play.classList.contains('hub-preset--direct'), `${id} (${games.length} games): „Direkt wählen" is not the first chip`);
+      assert.equal(inPane(dom, '.hub-preset--direct').length, 1, 'one copy in the pane');
+      assert.equal(play.textContent.trim(), 'Direkt wählen');
       assert.equal(play.disabled, false, 'the young-round lock is the draw\'s, not direct play\'s');
-      assert.equal(play.classList.contains('btn--primary'), false, '„Session wirbeln" stays the one primary action');
+      assert.equal(inPane(dom, '.hub-play').length, 0, 'the separate „Jetzt spielen" button is back');
       const cta = inPane(dom, '.hub-cta')[0];
       if (cta) {
         assert.ok(cta.compareDocumentPosition(play) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING, 'it follows the CTA');
       }
-      const presets = inPane(dom, '.hub-presets')[0];
-      if (presets) {
-        assert.ok(presets.compareDocumentPosition(play) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING,
-          'it never sits between the CTA and the presets that modify it');
-      }
-      // Klassisch's rail carries the CTA from 1280px up, so it carries this too
-      // and the pane's copy hides with the CTA; a lean rail carries neither.
-      const railCopy = dom.app.querySelector('.rail .rail__play');
+      // Klassisch's rail carries the CTA from 1280px up, so it carries the row
+      // too (same function) and the pane's copy hides with the CTA; a lean rail
+      // carries neither.
+      const railRow = dom.app.querySelector('.rail .hub-presets');
       const lean = dom.run('railIsLean()');
-      assert.equal(!!railCopy, !lean, `${id}: the rail copy follows the rail's CTA`);
-      assert.equal(play.classList.contains('rail-owned'), !lean);
+      assert.equal(!!railRow, !lean, `${id}: the rail row follows the rail's CTA`);
+      if (railRow) assert.ok(railRow.firstElementChild.classList.contains('hub-preset--direct'), 'the rail row leads with it too');
+      assert.equal(dom.app.querySelector('.rail .rail__play'), null, 'the rail kept its own „Jetzt spielen"');
+      assert.equal(rows[0].classList.contains('rail-owned'), !lean);
     }
   });
 }
@@ -81,7 +83,7 @@ test('the picker lists the shelf and earlier guest games, and a pick opens the d
   const dom = await hub(t, 'klassisch', round(SHELF()));
   const handed = [];
   dom.set('startDirectSession', (r, g, opts) => handed.push({ id: g.id, dayKey: (opts || {}).dayKey }));
-  inPane(dom, '.hub-play')[0].click();
+  inPane(dom, '.hub-preset--direct')[0].click();
 
   const sheet = dom.document.querySelector('.sheet');
   assert.equal(sheet.querySelector('h2').textContent, 'Welches Spiel spielt ihr?');
@@ -102,7 +104,7 @@ test('„Ein Spiel, das ihr nicht habt" stays under an empty search and runs the
   dom.set('showAddGameForm', (r, opts) => forms.push(opts));
   const handed = [];
   dom.set('startDirectSession', (r, g, opts) => handed.push({ id: g.id, dayKey: (opts || {}).dayKey, known: r.games.some((x) => x.id === g.id) }));
-  inPane(dom, '.hub-play')[0].click();
+  inPane(dom, '.hub-preset--direct')[0].click();
 
   const sheet = dom.document.querySelector('.sheet');
   const search = sheet.querySelector('#playPickSearch');
@@ -126,7 +128,7 @@ test('„Ein Spiel, das ihr nicht habt" stays under an empty search and runs the
 
 test('an empty round\'s picker is the guest row alone, with no search to come up empty', async (t) => {
   const dom = await hub(t, 'klassisch', round([]));
-  inPane(dom, '.hub-play')[0].click();
+  inPane(dom, '.hub-preset--direct')[0].click();
   const sheet = dom.document.querySelector('.sheet');
   assert.equal(sheet.querySelectorAll('.play-pick li').length, 0);
   assert.equal(sheet.querySelector('#playPickSearch').closest('.field').hidden, true);

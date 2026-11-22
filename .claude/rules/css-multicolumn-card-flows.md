@@ -90,7 +90,7 @@ and the click, so both stayed too.
    neither, and is still the cheaper error. **Do not compensate for it with a
    negative margin on the container**, which remains the wrong instrument: that
    was the original finding and it stands (it cut `.hub-cards`'s 26px gap to
-   `.hub-actions` down to 14px).
+   the quick-actions row below it — gone since #1853 — down to 14px).
 
    Two consequences that are easy to miss. A renderer that removes a card must
    remove its **slot** (`slotOf` in `core.js`), or an orphaned slot keeps paying

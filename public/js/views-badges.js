@@ -38,7 +38,7 @@
    „ · ", a month (fmtMonth) and a game title — no sentence is built here.
 
    Part of the frontend; all files share one global script scope. Loaded after
-   achievements.js; every caller (views-pokale.js, hub-previews.js,
+   achievements.js; every caller (views-pokale.js, views-round-start.js,
    views-chronik.js, views-member.js, views-session.js, views-profile.js) reaches these at RENDER
    time, so the files loading before this one are fine
    (.claude/rules/frontend-script-load-order.md). */
@@ -472,10 +472,11 @@ function badgeRevealTarget(rid) {
   focusTo.focus({ preventScroll: true });
 }
 
-/* The hub's Pokale preview gets one more line: „2 neue Abzeichen seit
-   Nordlichter", or with nothing new the newest mark, „Zuletzt: Teamgeist · Lea".
-   Absent before the first finished session. A plain line, not a link — the
-   preview card's one link is its „öffnen" (hub-previews.js). */
+/* The Start tab's „Zuletzt gespielt" carries one more line (#1853, from the
+   Pokale preview that #1853 removed): „2 neue Abzeichen seit Nordlichter", or
+   with nothing new the newest mark, „Zuletzt: Teamgeist · Lea". Absent before
+   the first finished session. A plain span INSIDE the last-played link — that
+   link opens the result, so the line needs no link of its own. */
 function hubBadgeLine(round) {
   // „Einfacher Modus" (#1646): Abzeichen ride the `trophies` option everywhere.
   if (simpleHidden('trophies')) return null;
@@ -495,7 +496,9 @@ function hubBadgeLine(round) {
     if (!dated.length) return null;
     text = t('badges.hub.latest', { name: badgeName(dated[0].e), holder: dated[0].holder });
   }
-  return h(`<div class="hub-row hub-row--badges">${iconText('ti-medal', text)}</div>`);
+  // `hub-row--badges` is the line's design hook (every design's sheet styles it,
+  // #1477); `hub-last__badges` lays it out inside the last-played link (#1853).
+  return h(`<span class="hub-row--badges hub-last__badges">${iconText('ti-medal', text)}</span>`);
 }
 
 /* The Chronik's rows: every earning, keyed by the session that produced it —

@@ -501,6 +501,30 @@ function showSessionLobby(round, session, handedOn, dealt) {
   const forest = forestWorn();
   if (forest) composeForestLobby(root, people, voted, hereBtns, games.length);
 
+  /* „Abstimmung verwerfen" (#1853, moved here from the Start tab's ticket): a
+     quiet secondary action right after „Abstimmung beenden" (and after the
+     waiting line under it, which explains that button), wherever the design
+     composers above placed it — so no design's re-ordering can separate them. Guarded on `session.discard` even though every grantee
+     role clears that floor today: the route decides on a capability, so the
+     control asks the same question (.claude/rules/round-roles-are-a-chokepoint.md). */
+  if (roundCan(round, 'session.discard')) {
+    const discard = h(`<div class="live-vote__discard"><button type="button" class="link-btn">${esc(t('round.draftDiscard'))}</button></div>`);
+    discard.querySelector('button').addEventListener('click', async () => {
+      if (!await confirmDialog({
+        body: t('round.draftDiscardConfirm'), confirmLabel: t('round.draftDiscard'),
+      })) return;
+      try {
+        stopLobbyPoll();
+        await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
+        toast(t('round.toast.draftDiscarded'));
+        await fetchRoundFresh(round.id);
+        showRound(round.id, 'start');
+      } catch (e) { toast(e.message, { tone: 'error' }); }
+    });
+    const next = close.nextElementSibling;
+    (next && next.classList.contains('live-vote__waiting') ? next : close).after(discard);
+  }
+
   // Taking someone out (#1538) — appended AFTER the design composers above, so
   // no design's re-ordering of these nodes can drop it, and at the foot of the
   // ROSTER it edits: not a sixth child of `.live-vote`, whose five Der Tisch's

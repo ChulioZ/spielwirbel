@@ -5,9 +5,8 @@
 
    Neither derives anything of its own. The pulse IS hubPulseCard (hub-cards.js)
    — its body, moved into a folded <details> — and the profile line IS the Start
-   card's sentence (shelfHeadlineText over shelfProfile), so the figures here can
-   never disagree with the card the Start tab still shows until #1853 lands
-   (test/round-head-lines.test.js renders both and compares).
+   card's sentence (shelfHeadlineText over shelfProfile). The Start tab's
+   copies of both left in #1853.
 
    Both are `.hub-card`-framed or token-painted, so every design draws them in
    the material it already gives its cards (#1422: a design owns how a fact is
@@ -22,8 +21,7 @@
    tiles, the never-played link into the Regal and the series note. Null under
    „Einfacher Modus" and whenever the round played nothing in twelve months:
    the Chronik of a young round has nothing to summarise, so there is no locked
-   or sentence variant here (Forest's forestLockedPulse, Der Tisch's and Die
-   Brücke's young sentence stay Start-tab only). */
+   or sentence variant (the Start tab's went with its pulse card in #1853). */
 function chronikPulseLine(round) {
   const active = round.games.filter(isActiveGame);
   const pulse = roundPulse(round, active, { minSessions: 1 }, hubDeps());

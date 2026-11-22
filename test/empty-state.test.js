@@ -8,7 +8,8 @@
    box), the Chronik used a bare `<div class="muted">`, and the Start tab
    rendered NOTHING at all from 1280px up — its hero and its big CTA are both
    `.rail-owned`, so the rail hides them and, with no session tickets to take
-   their place, the pane was left holding only `.hub-actions`.
+   their place, the pane was left holding only its quick-actions row (gone
+   since #1853).
 
    What is pinned here:
 

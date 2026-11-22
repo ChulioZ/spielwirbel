@@ -281,57 +281,6 @@ function forestYoung(round, activeGames) {
   return null;
 }
 
-/* A LOCKED block in the right column (F7.3, F7.4): the preview's title, the
-   state in ink and the sentence in soft ink. With `tab` the title is the link
-   to that sub-page — a preview is navigation, so an empty one still leads
-   there (hub-previews.js's header). Without it the block is a plain notice. */
-function forestLocked(round, { title, state = '', text, tab = null }) {
-  const block = h(`<section class="hub-card forest-locked">
-       <h2 class="forest-locked__title">${tab ? '<a></a>' : esc(title)}</h2>
-       ${state ? `<p class="forest-locked__state">${esc(state)}</p>` : ''}
-       <p class="forest-locked__text">${esc(text)}</p>
-     </section>`);
-  if (tab) {
-    const link = block.querySelector('.forest-locked__title a');
-    link.textContent = title;
-    navLink(link, roundPath(round.id, tab), () => showRound(round.id, tab));
-  }
-  return block;
-}
-
-/* The right column's previews on a young round (F7.3, F7.4): each preview that
-   has nothing to show yet stands as a locked block in its place instead of
-   vanishing. The Regal only while the shelf is empty; Pokale and Chronik only
-   before the first played session, in the words their own empty screens use. */
-function forestAsidePreviews(round, activeGames, { regal, pokale, chronik }) {
-  const played = round.sessions.some((s) => s.finished);
-  return [
-    regal || (!activeGames.length && !simpleHidden('stats') ? forestLocked(round, {
-      title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
-    }) : null),
-    pokale || (!played && !simpleHidden('trophies') ? forestLocked(round, {
-      title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
-    }) : null),
-    chronik || (!played && !simpleHidden('stats') ? forestLocked(round, {
-      title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
-    }) : null),
-  ].filter(Boolean);
-}
-
-/* The Rundenpuls of a round with games and no played session (F7.4), which
-   hubPulseCard leaves out: a locked block saying when the numbers come. The
-   threshold is the pulse's own floor — the first played session in every
-   design since #1586, so the sheet's „ab der ersten Session" holds here too;
-   only the bars wait for YOUNG_ROUND_SERIES_FROM. */
-function forestLockedPulse(round, activeGames) {
-  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
-  if (!activeGames.length || !roundIsYoung(round)) return null;
-  return forestLocked(round, {
-    title: t('hub.pulse.title'),
-    text: tn(1, 'hub.young.pulseOne', 'hub.young.pulse'),
-  });
-}
-
 /* The empty lobby (F7.1): a row of trees over the greeting, the app's first-run
    sentence in place of „Welche Runde spielt heute?", and ONE action — the same
    link as Klassisch's `.lobby-cta`, as the design's primary button. `head` is

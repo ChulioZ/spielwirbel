@@ -123,28 +123,26 @@ test('a Brücke round with games keeps „Bereit" and no empty-table actions', a
 
 // --- the young round (B7.3) -------------------------------------------------
 
-test('a young Brücke round says under the ignition what is waiting, and when numbers come', async (t) => {
+test('a young Brücke round says under the ignition what is waiting, and when suggestions come', async (t) => {
   const dom = boot(t, 'bruecke', roundWith());
   await dom.call('showRound', RID, 'start');
   const line = dom.app.querySelector('.bruecke-mission__ignition + .bruecke-young');
   assert.ok(line, 'the young line does not sit directly under the ignition');
   assert.equal(text(line.querySelector('.bruecke-young__ready')), dom.run("tn(2, 'hub.young.readyOne', 'hub.young.ready')"));
   assert.equal(text(line.querySelector('.bruecke-young__none')), dom.run("t('round.startEmptyTitle')"));
-  // „Wie wär's mit" and the Rundenpuls say WHEN — never a „0", never an empty axis.
+  // „Wie wär's mit" says WHEN — never a „0". The Rundenpuls left the Start tab
+  // in #1853 (it lives in the Chronik head, which a young round leaves empty).
   const suggest = dom.app.querySelector('.bruecke-hub__suggest .hub-card--sentence');
   assert.ok(suggest, 'the suggestion slot says nothing on a young Brücke round');
   assert.equal(text(suggest.querySelector('.hub-card__facts')),
     dom.run("tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest')"));
-  const pulse = dom.app.querySelector('.bruecke-hub__pulse .hub-card--sentence');
-  assert.ok(pulse, 'the Rundenpuls says nothing on a young Brücke round');
-  assert.equal(text(pulse.querySelector('.hub-card__facts')),
-    dom.run("tn(1, 'hub.young.pulseOne', 'hub.young.pulse')"), 'numbers come with the first session (#1586)');
+  assert.equal(dom.app.querySelector('.bruecke-hub__pulse'), null, 'the pulse slot is back');
 });
 
-test('the freshly founded Brücke round says when the Rundenpuls fills, too', async (t) => {
+test('the freshly founded Brücke round has the empty panel, not the young line', async (t) => {
   const dom = boot(t, 'bruecke', roundWith({ games: [] }));
   await dom.call('showRound', RID, 'start');
-  assert.ok(dom.app.querySelector('.bruecke-hub__pulse .hub-card--sentence'), 'B7.1 draws the Rundenpuls on a fresh round');
+  assert.ok(dom.app.querySelector('.bruecke-mission'), 'no Missionskontrolle on a fresh round');
   assert.equal(dom.app.querySelector('.bruecke-young'), null, 'a 0-game round has the empty panel, not the young line');
 });
 

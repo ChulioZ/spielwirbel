@@ -108,6 +108,8 @@ test('Die Brücke: the dock carries exactly four entries', async (t) => {
 
 // ------------------------------------------------------------- the hub
 
+const slotNames = (el) => [...el.children].map((s) => s.className.replace('bruecke-hub__', ''));
+
 test('Die Brücke: the hub is one frame of slots in the phone order', async (t) => {
   const dom = await screen(t, 'bruecke');
   const frame = dom.app.querySelector('.bruecke-hub');
@@ -115,30 +117,30 @@ test('Die Brücke: the hub is one frame of slots in the phone order', async (t) 
   const filled = [...frame.children]
     .filter((s) => s.children.length)
     .map((s) => s.className.replace('bruecke-hub__', ''));
-  // members, Missionskontrolle, Zuletzt gespielt, Wie wär's mit, Rundenpuls,
-  // Kümmerliste, the previews, the rest, Nicht im Regal, the quiet actions.
-  assert.deepEqual(filled.filter((n) => n !== 'feed' && n !== 'care' && n !== 'suggest'),
-    ['crew', 'mission', 'last', 'pulse', 'previews', 'more', 'offshelf', 'actions']);
+  // members, Missionskontrolle, Zuletzt gespielt, Wie wär's mit, the slim
+  // rows, the rest — the pulse, the previews, „Weitere Listen" and the quiet
+  // actions left the Start tab in #1853.
+  assert.deepEqual(slotNames(frame), ['crew', 'mission', 'feed', 'last', 'suggest', 'care', 'more']);
+  assert.deepEqual(filled.filter((n) => n !== 'feed' && n !== 'care' && n !== 'suggest' && n !== 'more'),
+    ['crew', 'mission', 'last']);
   assert.ok(frame.querySelector('.bruecke-hub__crew > .hero'), 'the hero is not in the crew slot');
-  assert.deepEqual([...frame.querySelectorAll('.bruecke-hub__previews > .hub-preview .hub-card__title')].map((h) => h.textContent.trim()),
-    ['Regal', 'Pokale', 'Chronik']);
+  assert.equal(frame.querySelector('.hub-preview, .hub-offshelf, .hub-actions'), null);
 });
 
 /* #1496: from 1280 the slots stand in B3.1's three column wrappers, so each
    column stacks on its own — as one grid of slots, „Zuletzt gespielt" waited
    for the tallest column and left ~700px of empty grid under the panel. */
 const WIDE_COLUMNS = {
-  left: ['pulse', 'care'],
+  left: ['care'],
   mid: ['mission', 'last', 'more'],
-  right: ['suggest', 'previews', 'offshelf'],
+  right: ['suggest'],
 };
-const slotNames = (el) => [...el.children].map((s) => s.className.replace('bruecke-hub__', ''));
 
 test('Die Brücke from 1280: the slots stand in three column wrappers, DOM order = visual order (#1496)', async (t) => {
   const dom = await screen(t, 'bruecke', 'start', busyRound(), { wide: true });
   const frame = dom.app.querySelector('.bruecke-hub');
   assert.deepEqual(slotNames(frame),
-    ['crew', 'feed', 'col bruecke-hub__col--left', 'col bruecke-hub__col--mid', 'col bruecke-hub__col--right', 'actions']);
+    ['crew', 'feed', 'col bruecke-hub__col--left', 'col bruecke-hub__col--mid', 'col bruecke-hub__col--right']);
   for (const [col, names] of Object.entries(WIDE_COLUMNS)) {
     assert.deepEqual(slotNames(frame.querySelector(`.bruecke-hub__col--${col}`)), names, `the ${col} column`);
   }
@@ -151,7 +153,7 @@ test('Die Brücke from 1280: the slots stand in three column wrappers, DOM order
 test('Die Brücke: crossing 1280 moves the slots back to the phone order and out again (#1496)', async (t) => {
   const dom = await screen(t, 'bruecke', 'start', busyRound(), { wide: true });
   const frame = dom.app.querySelector('.bruecke-hub');
-  const phone = ['crew', 'mission', 'feed', 'last', 'suggest', 'pulse', 'care', 'previews', 'more', 'offshelf', 'actions'];
+  const phone = ['crew', 'mission', 'feed', 'last', 'suggest', 'care', 'more'];
   dom.run('window.__mq.forEach((fn) => fn({ matches: false }))');
   assert.deepEqual(slotNames(frame), phone, 'narrowing did not restore the phone order');
   assert.equal(frame.querySelector('.bruecke-hub__col'), null, 'a column wrapper survived the narrow arrangement');
@@ -189,24 +191,13 @@ test('Die Brücke: the members carry their name and wins; „Crew" only in the d
   }
   assert.equal(dom.app.querySelector('.bruecke-crew__title').textContent, 'Mitglieder · 3');
   assert.equal(dom.app.querySelector('.avatar--add .seat__name').textContent, 'Platz dazu');
-  const line = dom.app.querySelector('.hero__chips .bruecke-line');
+  const line = dom.app.querySelector('.bruecke-hero-line .bruecke-line');
+  assert.equal(dom.app.querySelector('.hero__chips, .stat-chip'), null, 'the count chips are back (#1853)');
   assert.equal(line.getAttribute('aria-hidden'), 'true');
   assert.equal(line.textContent, 'Mission 5 · Crew 3');
   // „Crew" appears in that line and nowhere else on the screen.
   const crews = dom.app.textContent.match(/Crew/g) || [];
   assert.equal(crews.length, 1);
-});
-
-test('Die Brücke: the Rundenpuls is its own block, three lines, „noch nie dran"', async (t) => {
-  const dom = await screen(t, 'bruecke');
-  const pulse = dom.app.querySelector('.bruecke-hub__pulse > .hub-card');
-  assert.ok(pulse, 'the Rundenpuls is not in its slot');
-  assert.equal(pulse.querySelector('.hub-card__title').textContent.trim(), 'Rundenpuls');
-  const facts = [...pulse.querySelectorAll('.hub-card__fact')].map((f) => f.textContent.trim());
-  assert.equal(facts.length, 2, 'the facts are one joined line');
-  assert.match(facts[0], /Vor 5 Tagen gespielt/);
-  assert.match(facts[1], /4 Sessions/);
-  assert.match(pulse.textContent, /4 von 8 Spielen waren noch nie dran/);
 });
 
 test('Die Brücke: the top bar carries the decorative status as data, never as text', async (t) => {
@@ -216,7 +207,7 @@ test('Die Brücke: the top bar carries the decorative status as data, never as t
   assert.doesNotMatch(bar.textContent, /Orbit/);
 });
 
-test('Klassisch hub is untouched: no frame, its rail identity, its start label, joined pulse facts', async (t) => {
+test('Klassisch hub has no Brücke frame: its rail identity, its start label', async (t) => {
   const dom = await screen(t, null);
   assert.equal(dom.app.querySelector('.bruecke-hub'), null);
   assert.equal(dom.app.querySelector('.bruecke-mission'), null);
@@ -224,8 +215,6 @@ test('Klassisch hub is untouched: no frame, its rail identity, its start label, 
   assert.ok(dom.app.querySelector('.rail .rail__id'), 'Klassisch lost its rail identity');
   assert.equal(dom.app.querySelector('.hub-cta').textContent.trim(), 'Session wirbeln');
   assert.equal(dom.document.querySelector('.topbar').hasAttribute('data-status'), false);
-  const pulse = [...dom.app.querySelectorAll('.hub-card')].find((c) => /Rundenpuls/.test(c.textContent));
-  assert.equal(pulse.querySelectorAll('.hub-card__fact').length, 0);
 });
 
 // ------------------------------------------------------------- the lobby

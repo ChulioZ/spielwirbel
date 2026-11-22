@@ -482,7 +482,6 @@
   --stage-bg: color-mix(in oklab, var(--brand) 9%, var(--stage-anchor));
 }
 
-
 * { box-sizing: border-box; }
 
 body {
@@ -1091,7 +1090,6 @@ h1, h2, h3 { font-family: var(--font-display); }
      declarations already override the UA's heading font-size/weight. */
   .rail__name { font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700; line-height: 1.2; margin: 0; }
   .rail__members { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-  .rail__chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   /* No font-size/padding here on purpose (#615): both are `.btn`'s job. This
      rule is (0,1,0) and so is `.btn`, which declares them and sits ~650 lines
      later, so anything named in both silently resolves to `.btn`'s value — the
@@ -1101,8 +1099,7 @@ h1, h2, h3 { font-family: var(--font-display); }
      action should read a step above the 16px section links beside it).
      Anything that must beat `.btn` needs a compounded `.btn.rail__cta` — see
      `.claude/rules/state-rules-clobber-component-values.md`. */
-  .rail__cta { width: 100%; }   /* its glyph gap is the shared --icon-gap (#1640) */
-  .rail__play { width: 100%; }  /* „Jetzt spielen" (#1682), the CTA's quiet sibling */
+  .rail__cta { width: 100%; }
   .rail__group { display: flex; flex-direction: column; gap: 2px; }
   .rail__label {
     font-size: var(--text-xs);
@@ -1137,15 +1134,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   .rail__item span { min-width: 0; }
   .rail__item:not(.is-active):hover { background: var(--brand-tint-soft); color: var(--ink); }
   .rail__item.is-active { background: var(--brand); color: var(--on-accent); }
-  /* „Weitere Listen" on the Start tab (#1579, railOffShelfGroup): the count
-     sits at the row's end, like a list's figure, not beside the name. Scoped to
-     the group — Forest's Wegweiser draws its own `.rail__count` as a pill. */
-  .rail__offshelf .rail__count {
-    margin-left: auto;
-    font-size: var(--text-sm);
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-soft);
-  }
 }
 
 /* The dock is `position: fixed` (below the strip breakpoint), and .app's own
@@ -1344,7 +1332,15 @@ h1, h2, h3 { font-family: var(--font-display); }
   border-color: var(--placeholder);
 }
 .avatar--add:hover { color: var(--brand-ink, var(--brand)); border-color: var(--brand); }
-.hero__chips { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+/* Einstellungen as a gear on the round's name (#1853). Inline in the <h1>, so
+   it follows the name wherever a design sets it; body type, never the display
+   face, and a 32px target. */
+.hero__settings {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; margin-left: 6px; vertical-align: middle;
+  border-radius: 50%; color: var(--ink-soft); font-family: var(--font); font-size: var(--text-lg);
+}
+.hero__settings:hover { color: var(--brand-ink, var(--brand)); background: var(--sunken); }
 
 /* The one big accent action of the Start tab.
 
@@ -1414,12 +1410,6 @@ h1, h2, h3 { font-family: var(--font-display); }
   color: var(--ink-soft);
   box-shadow: inset 0 2px 5px color-mix(in oklab, var(--shade) 14%, transparent);
 }
-
-/* Quieter secondary tasks under the launchpad content — one „Einstellungen"
-   link since #1498. It is NOT stretched on a phone the way a two-button row was:
-   a lone full-width button at the end of the page reads as the screen's primary
-   action, and this one is the quietest entry on it. */
-.hub-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 26px; }
 
 /* ---- The Start tab's card flow (#923, #942) ----
 
@@ -1624,26 +1614,6 @@ a.hub-row:hover { background: var(--sunken-soft); }
 
 /* ---- The three sub-page previews (#1185, hub-previews.js) ---------------- */
 
-/* A preview is a hub-card with one link at its foot, so it inherits the card
-   frame and adds only the strip, the rows and that link. `margin-top: auto`
-   pins the link to the bottom edge however tall the body turns out, which is
-   what keeps three previews of different content reading as one set in the
-   column flow. */
-.hub-preview { display: flex; flex-direction: column; }
-.hub-preview__sub { font-size: var(--text-sm); color: var(--ink-soft); }
-.hub-preview__open {
-  margin-top: auto;
-  padding-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--brand-ink, var(--brand));
-}
-.hub-preview__open .ti { font-size: var(--text-md); }
-.hub-preview__open:hover { text-decoration: underline; }
-
 /* The Regal strip. `flex-wrap` rather than a grid: the count is capped at six
    and a tile is a fixed 40px, so wrapping is the whole layout and needs no
    track definition. `position: relative` is NOT optional — a cover placeholder
@@ -1686,28 +1656,6 @@ a.hub-row:hover { background: var(--sunken-soft); }
    reaches the edge itself and pads the rows back in. */
 .hub-fill--rows { flex-direction: column; margin-inline: -16px; padding-inline: 16px; }
 .hub-fill--rows > .hub-row:first-child { border-top: 1px solid var(--line); }
-.hub-fill .hub-preview__session {
-  display: grid;
-  grid-template-columns: 32px auto minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 1px;
-  align-items: center;
-  padding: 7px 0;
-  border-top: 1px solid var(--line);
-  font-size: var(--text-sm);
-}
-.hub-fill .hub-preview__session .hub-preview__cover { grid-row: 1 / span 2; width: 32px; }
-.hub-fill .hub-preview__session .hub-preview__name {
-  grid-column: 2 / -1;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.hub-fill .hub-preview__when,
-.hub-fill .hub-preview__who { grid-row: 2; font-size: var(--text-xs); color: var(--ink-soft); }
-.hub-fill .hub-preview__who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hub-fill .hub-preview__who .ti { color: var(--brand-ink, var(--brand)); }
 /* The suggestion rows' cover thumb, shown with the fill (#1683) — on the base
    rows too, so the card reads as one list. `position: relative` hosts the
    no-cover placeholder, which is absolutely positioned. */
@@ -1724,71 +1672,11 @@ a.hub-row:hover { background: var(--sunken-soft); }
 }
 .hub-row > .hub-row__cover { display: none; }
 
-/* A standings row. Not a `.ds-row`: that component promises a click
-   (.claude/rules/ds-row-is-a-click-target.md) and these rows are inert — the
-   card's one link is at its foot. */
-.hub-preview__rank {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  font-size: var(--text-sm);
-}
-.hub-preview__place {
-  flex: none;
-  width: 18px;
-  font-weight: 700;
-  color: var(--ink-soft);
-  text-align: right;
-}
-.hub-preview__avatar { width: 24px; height: 24px; font-size: var(--text-xs); flex: none; }
-/* The name is the only part that may shrink, so a long one ellipsises instead of
-   pushing the score out of the card. `min-width: 0` is what lets it
-   (.claude/rules/percent-sizes-under-a-shrink-to-fit-flex-item.md). */
-.hub-preview__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.hub-preview__score { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; }
-.hub-preview__last { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 6px; }
-
 /* ---- „Weitere Listen" on the hub (#1185, retitled #1500) ---------------- */
 
-/* The heading IS the group, so the four rows carry no count of their own beyond
-   the one in each label — the V1 Tisch sheet's mistake was a fifth „Nicht im
-   Regal" row inside the group of that name. */
-.hub-offshelf { margin-top: 26px; }
-.hub-offshelf__title {
-  margin: 0 0 10px;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-/* Klassisch draws the four as ONE wrapping strip of pills (#1579), not four
-   full-width rows — ~250px of the hub's foot spent on navigation. From 1280px
-   the group is `rail-owned` and the rail carries the links (round-rail.js), so
-   this is the phone and tablet shape. Same rows as every design, so the chevron
-   goes: a pill is the target, and a row-end arrow has no row end here. */
-:root[data-design="klassisch"] .hub-offshelf__list { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-:root[data-design="klassisch"] .hub-offshelf .off-shelf__row {
-  min-height: 44px;
-  padding: 8px 14px;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: 600;
-}
-:root[data-design="klassisch"] .hub-offshelf .off-shelf__row .ds-row__meta { display: none; }
 /* A phone: with their icons the four pills measured 182–236px at 390px — one
    per line, i.e. the stack again. Without them they pair up, the scope strip's
    own phone treatment (#1578). */
-@media (max-width: 639px) {
-  :root[data-design="klassisch"] .hub-offshelf .off-shelf__row .ti { display: none; }
-}
 
 .hub-care__head {
   font-size: var(--text-sm);
@@ -1836,8 +1724,6 @@ a.hub-row:hover { background: var(--sunken-soft); }
    games is a gap: its count takes the accent, and the gap list under it says
    so in words — the colour is never the only carrier. */
 .shelf-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
-/* The Start tile's one sentence (#1683). A <p>, so the UA's 1em margins go. */
-.shelf-card__headline { margin: 0 0 6px; text-wrap: pretty; }
 .shelf-bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .shelf-bar {
   display: grid;
@@ -1899,17 +1785,30 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .stats-games__body.shelf-games__body { flex: 1; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; }
 .shelf-games__body .score-pill { position: static; flex: none; }
 
-/* The quick-start chips (#923), directly under the big CTA they modify — in the
-   pane below 1280px and in the rail above it, following that button either way. */
-.hub-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.rail .hub-presets { margin: -6px 0 4px; }
-/* „Jetzt spielen" (#1682): the secondary way into a session, after the CTA and
-   its presets. Content-width on purpose — the CTA above is the full-width
-   primary, and a second full-width button would read as its equal. */
-/* `align-self` keeps it content-width where the launch area is a flex column
-   (Ocean, Forest, the Programmheft's box), which would otherwise stretch it to
-   the column and make it the CTA's equal. */
-.hub-play { margin: 12px 0 18px; align-self: flex-start; }
+/* The ONE chip row (#923, #1853), directly under the big CTA it modifies — in
+   the pane below 1280px and in the rail above it, following that button either
+   way. „Direkt wählen" leads it. It NEVER WRAPS: a second line of chips reads
+   as a second row of controls, which is what #1853 removed. Where it is wider
+   than its column it scrolls sideways — on a phone, and in the 240px rail.
+   `display` stays at (0,1,0) so `.app .rail-owned` still hides the pane copy
+   from 1280px (the reason the .hub-cta block below gives). A design that centres
+   the row must say `safe center`, or the start of an overflowing row is cut off
+   where no scroll can reach it. */
+.hub-presets {
+  /* 15px + the 3px focus-ring padding = the 18px the separate „Jetzt spielen"
+     button used to keep below the stage (#1682) — its job now */
+  display: flex; gap: 8px; flex-wrap: nowrap; margin-top: 10px; margin-bottom: 15px;
+  /* never wider than its column, even under a centring parent that would
+     size it to its content (Die Brücke's panel, measured +38px at 390) */
+  max-width: calc(100% + 6px); min-width: 0;
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  /* room for the chips' focus ring inside the scroll box */
+  padding: 3px; margin-left: -3px; margin-right: -3px;
+}
+.hub-presets::-webkit-scrollbar { display: none; }
+.hub-presets > .chip { flex: none; }
+.rail .hub-presets { margin: -6px -3px 4px; }
+.hub-preset--direct .ti { margin-right: 4px; }
 /* A SAVED filter's chip (#1328) carries a user-authored name of up to 40
    characters, where the built-ins are two short words. Capped and ellipsised
    on ONE line rather than wrapped: a wrapped chip is a taller chip, and in the
@@ -1944,7 +1843,7 @@ a.hub-row:hover { background: var(--sunken-soft); }
    when there is an abandoned draw — so the running and last-played tickets
    abutted at exactly 0px, doubling their 1px borders into a seam and colliding
    their 18px corners. Measured bottom 342 / top 342 at 1440, 646 / 646 at 390. */
-.ticket + .ticket, .ticket__discard + .ticket { margin-top: 14px; }
+.ticket + .ticket { margin-top: 14px; }
 .ticket__main {
   display: flex;
   align-items: center;
@@ -2034,10 +1933,16 @@ a.hub-row:hover { background: var(--sunken-soft); }
 .ticket--live { border-color: var(--brand); box-shadow: inset 3px 0 0 0 var(--brand); }
 .ticket--live .ticket__label { color: var(--brand-ink, var(--brand-strong)); }
 .ticket--live .ticket__stub .ti { color: var(--brand-ink, var(--brand)); }
-/* Discard action for an abandoned draw (#329). It belongs to the ticket above
-   it, so it hugs that one and keeps the breathing room on the side facing the
-   next ticket — centred between two of them it reads as a separator instead. */
-.ticket__discard { margin: 6px 0 18px; }
+/* What is running, ABOVE the one action (#1853): its own block, so the CTA
+   below it keeps one gap whatever the block holds. */
+.hub-running { margin-bottom: 18px; }
+.hub-running > .split-group:last-child { margin-bottom: 0; }
+/* The last session's new Abzeichen, inside the „Zuletzt gespielt" link (#1853). */
+.hub-last__badges { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: var(--text-sm); color: var(--ink-soft); white-space: normal; }
+.hub-last__badges .ti { color: var(--brand-ink, var(--brand)); }
+/* „Abstimmung verwerfen" in the lobby (#1853): quiet, directly under
+   „Abstimmung beenden". */
+.live-vote__discard { display: flex; justify-content: center; margin-top: 10px; }
 
 /* ---- Hub tabs (Start / Regal / Chronik / Pokale): one element, presented per
    device (#331). The default below is the phone form — a floating dock pinned
@@ -6011,7 +5916,6 @@ a.k-tile:focus-visible,
 .popover__head:not(.popover__head--editor) { word-break: break-all; }
 .popover__head strong { display: block; color: var(--ink); font-weight: 600; }
 
-
 /* ---- Session game (voting) ---- */
 .vote {
   background: var(--surface);
@@ -6438,7 +6342,6 @@ a.k-tile:focus-visible,
   .vote .rating { padding: 6px 12px 2px; gap: 6px; }
   .vote .rating-scale { padding-top: 0; padding-inline: 14px; }
 }
-
 
 /* ---- Ergebnisse ---- */
 /* ---- Die Tafel (#1056): the ranked rows, and the celebration on them ----
@@ -7102,44 +7005,48 @@ a.k-tile:focus-visible,
 }
 .tl-nest { margin-top: 8px; }
 
-/* Retirement suggestions: a slim, dismissible banner. */
-.rec-banner {
-  margin-top: 20px;
-  background: color-mix(in oklab, var(--warn) 9%, var(--surface));
-  border: 1px solid color-mix(in oklab, var(--warn) 30%, var(--surface));
-  border-left: 5px solid var(--warn);
+/* „Zu tun · n" (#1853): the Kümmerliste and the retirement recommendations as
+   ONE folded row, collapsed by default. The bar is a real <button> carrying
+   aria-expanded; the body is toggled with `hidden` and declares no `display`,
+   so the attribute keeps working (.claude/rules/hidden-attribute-vs-display-rule.md). */
+.hub-todo {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  padding: 10px 14px;
 }
-.rec-banner__bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  cursor: pointer;
+.hub-todo__bar {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 12px 14px; min-height: 48px;
+  border: 0; background: none; color: var(--ink);
+  font: inherit; font-weight: 700; text-align: left; cursor: pointer;
+  border-radius: inherit;
 }
-.rec-banner__text { font-weight: 700; font-size: var(--text-md); color: var(--warn); }
-.rec-banner__actions { display: flex; align-items: center; gap: 8px; flex: none; }
-.rec-banner__caret {
-  color: var(--ink-soft);
-  font-size: var(--text-lg);
-  line-height: 1;
-  transition: transform var(--dur-slow) var(--ease-out);
+.hub-todo__bar > .ti:first-child { color: var(--ink-soft); }
+.hub-todo__label { flex: 1; min-width: 0; }
+.hub-todo__caret { color: var(--ink-soft); transition: transform var(--dur-slow) var(--ease-out); }
+.hub-todo.is-open .hub-todo__caret { transform: rotate(180deg); }
+.hub-todo__body { padding: 0 14px 14px; }
+.hub-todo__recs { margin-top: 12px; }
+.hub-todo__recs:first-child { margin-top: 0; }
+.hub-todo__sub { font-size: var(--text-sm); margin: 0 0 10px; }
+.hub-todo__dismiss { margin-top: 10px; }
+
+/* The challenge as one slim row (#1853): goal, status and bar, opening the
+   Pokale section where the challenge lives. */
+.hub-challenge {
+  display: flex; align-items: center; gap: 12px; margin-top: 14px;
+  padding: 10px 14px; min-height: 48px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  color: var(--ink);
 }
-.rec-banner.is-open .rec-banner__caret { transform: rotate(180deg); }
-.rec-banner__dismiss {
-  border: none;
-  background: transparent;
-  color: var(--ink-soft);
-  cursor: pointer;
-  font-size: var(--text-sm);
-  line-height: 1;
-  padding: 4px 7px;
-  border-radius: var(--radius-sm);
-}
-.rec-banner__dismiss:hover { background: color-mix(in oklab, var(--shade) 6%, transparent); color: var(--ink); }
-.rec-banner__body { margin-top: 12px; }
-.rec-banner__sub { font-size: var(--text-sm); margin: 0 0 12px; }
+.hub-challenge:hover { box-shadow: var(--shadow-2); }
+.hub-challenge__icon { font-size: var(--text-xl); color: var(--brand-ink, var(--brand)); flex: none; }
+.hub-challenge__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hub-challenge__goal { font-weight: 700; }
+.hub-challenge__status { font-size: var(--text-sm); color: var(--ink-soft); }
+.hub-challenge__go { color: var(--ink-soft); flex: none; }
+
 .recommend-list { display: flex; flex-direction: column; gap: 8px; }
 .recommend-item {
   display: flex;
@@ -9462,7 +9369,6 @@ a.k-tile:focus-visible,
 }
 .ds-row__meta .score-pill { position: static; }
 
-
 /* ---- Toast ---- */
 /* Visually hidden, still in the accessibility tree — the #srLive region that
    announce() writes into (#1168). Not `display: none` and not `hidden`: either
@@ -9684,7 +9590,6 @@ kbd {
   font: inherit;
   color: inherit;
 }
-
 
 /* Current price of a wished-for game (issue #679). The amount is the one number
    the section exists for, so it leads; everything under it qualifies that number

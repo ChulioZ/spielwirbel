@@ -250,7 +250,6 @@
   .avatar,
   .guest-offer__title,
   .hub-card__title,
-  .hub-offshelf__title,
   .hub-care__head,
   .ticket__names,
   .dock__item,
@@ -875,9 +874,6 @@
 }
 :root[data-design="forest"] .forest-hub__main { gap: 22px; }
 :root[data-design="forest"] .forest-hub__aside:empty { display: none; }
-/* The head carries the round's Einstellungen at every width, so the hub's foot
-   button with the same link is retired under Forest — one link, one place. */
-:root[data-design="forest"] .app .forest-hub > .hub-actions { display: none; }
 @media (min-width: 860px) {
   :root[data-design="forest"] .forest-hub {
     display: grid;
@@ -890,7 +886,6 @@
   :root[data-design="forest"] .forest-hub__crew { grid-column: 1; grid-row: 1; }
   :root[data-design="forest"] .forest-hub__main { grid-column: 1; grid-row: 2; }
   :root[data-design="forest"] .forest-hub__aside { grid-column: 2; grid-row: 1 / span 3; }
-  :root[data-design="forest"] .forest-hub > .hub-offshelf { grid-column: 1; grid-row: 3; }
 }
 @media (min-width: 1280px) {
   :root[data-design="forest"] .forest-hub {
@@ -900,7 +895,6 @@
   :root[data-design="forest"] .forest-hub__crew { grid-column: 1; grid-row: 1; }
   :root[data-design="forest"] .forest-hub__main { grid-column: 2; grid-row: 1 / span 2; }
   :root[data-design="forest"] .forest-hub__aside { grid-column: 3; grid-row: 1 / span 2; gap: 14px; }
-  :root[data-design="forest"] .forest-hub > .hub-offshelf { grid-column: 1; grid-row: 2; }
 }
 
 /* ---- The head (F3.2 left, F2.1 top): the ribbon marker beside the name, the
@@ -963,20 +957,16 @@
     white-space: nowrap;
   }
 }
-/* The two counts live in the Wegweiser and in the previews instead. */
-:root[data-design="forest"] .forest-hub .hero__chips { display: none; }
 
 :root[data-design="forest"] .forest-members { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-:root[data-design="forest"] :is(.forest-members__label, .forest-quick__label),
-:root[data-design="forest"] .forest-hub .hub-offshelf .hub-offshelf__title {
+:root[data-design="forest"] :is(.forest-members__label, .forest-quick__label) {
   margin: 0;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-members__label, .forest-quick__label),
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-offshelf .hub-offshelf__title { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-members__label, .forest-quick__label) { color: var(--brand); }
 /* The seats: a row with the caption under each ring on a phone (F2.1), a list
    with the caption beside it from 1280 (F3.2). forest-hub.js moves the colour
    and the initials into `.seat__ring`, so the link only lays out the ring and
@@ -1049,21 +1039,6 @@
 /* „Nicht im Regal" under the people (F3.2): its label in the kicker style, the
    rows as plain links on a hairline above. Below 1280 it is the page's last
    block, where it keeps the app's rows. */
-@media (min-width: 1280px) {
-  :root[data-design="forest"] .forest-hub > .hub-offshelf { margin-top: 0; padding-top: var(--space-4); }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub > .hub-offshelf { border-top: 1px solid var(--line); }
-  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-list { gap: 2px; background: none; border: 0; box-shadow: none; }
-  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-row {
-    min-height: 36px;
-    padding: 0;
-    border: 0;
-    border-radius: 0;
-    font-size: 15px;
-    font-weight: 800;
-  }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-offshelf .ds-row { background: none; box-shadow: none; }
-  :root[data-design="forest"] .forest-hub .hub-offshelf .ds-row__meta { display: none; }
-}
 
 /* ---- The stump (F1 „Baumstumpf", F2.1, F3.2): bark, rings and the one action
    as its green heart, with the quick-start row centred under it. The rings are
@@ -1119,11 +1094,13 @@
   :root[data-design="forest"] .forest-hub .btn.hub-cta.forest-stump__core { width: 152px; height: 152px; font-size: 19px; }
   :root[data-design="forest"] .forest-hub .forest-stump__core .ti { font-size: 36px; }
 }
-/* The quick-start row: „Schnellstart" in the kicker style, then up to three
-   chips, centred and wrapping as one line of text would — so a Finnish label
-   moves to the next line whole rather than being cut (F1.4). */
+/* The quick-start row: „Schnellstart" in the kicker style, then „Direkt
+   wählen" and up to three chips, centred. ONE line since #1853 (styles.css):
+   a label too long for the column scrolls the row sideways rather than being
+   cut (F1.4), which is why the centring is `safe`. */
 :root[data-design="forest"] .forest-hub .hub-presets {
-  justify-content: center;
+  justify-content: safe center;
+  max-width: 100%;
   align-items: center;
   gap: 8px;
   margin: -6px 0 0;
@@ -1159,12 +1136,6 @@
   line-height: var(--leading-title);
 }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-card__title .ti { color: var(--ink-soft); font-size: 17px; }
-/* The previews' title is the section's own name; their icon would only repeat
-   the Wegweiser's (F3.2 draws none). */
-:root[data-design="forest"] .forest-hub .hub-preview .hub-card__title .ti { display: none; }
-:root[data-design="forest"] .forest-hub .hub-preview__sub { font-size: 14px; font-weight: 700; }
-:root[data-design="forest"] .forest-hub .hub-preview__open { align-self: flex-end; font-size: 14px; font-weight: 800; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__open { color: var(--brand); }
 
 /* The last session: kicker and date, the cover beside the game in the display
    face, who won in the gold ink with the crown, the score, „Ergebnis ansehen". */
@@ -1233,67 +1204,6 @@
 /* Uneven spines in the light trough: every other cover a little taller. */
 :root[data-design="forest"] .forest-hub .hub-preview__cover:nth-child(3n + 2) { height: 52px; width: 36px; }
 :root[data-design="forest"] .forest-hub .hub-preview__cover:nth-child(3n) { height: 38px; width: 48px; }
-
-/* Pokale as a grove (F3.2, E7): a tree per person — the ring on top, a crown of
-   leaves, a trunk whose height is the person's share of the wins
-   (`--share`, hub-previews.js) — and the count under it. The place and the name
-   stay in the DOM for a screen reader; the ring and the trunk say it here. */
-:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-card__body {
-  flex-flow: row wrap;
-  justify-content: space-around;
-  align-items: flex-end;
-  gap: 8px;
-}
-:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) :is(.hub-preview__sub, .hub-preview__last, .hub-row--badges) { flex: 0 0 100%; order: 1; }
-:root[data-design="forest"] .forest-hub .hub-preview__rank {
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  padding: 0;
-}
-:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-preview__place,
-:root[data-design="forest"] .forest-hub .hub-preview:has(.hub-preview__bar) .hub-preview__name {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-:root[data-design="forest"] .forest-hub .hub-preview__rank .hub-preview__avatar {
-  position: relative;
-  z-index: 1;
-  width: 30px;
-  height: 30px;
-  font-size: 12px;
-}
-:root[data-design="forest"] .forest-hub .hub-preview__bar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 56px;
-  margin-top: -8px;
-}
-:root[data-design="forest"] .forest-hub .hub-preview__bar::before {
-  content: '';
-  width: 36px;
-  height: 28px;
-  border-radius: 50% 50% 45% 45%;
-}
-:root[data-design="forest"] .forest-hub .hub-preview__bar::after {
-  content: '';
-  /* `--share` is a percentage (hub-previews.js). A HEIGHT percentage would
-     resolve against the column's indefinite height and come out as nothing; a
-     PADDING percentage resolves against the bar's definite 56px width, so the
-     trunk grows from 8px to ~53px with the wins. */
-  width: 6px;
-  height: 0;
-  padding-top: calc(8px + var(--share, 0%) * 0.8);
-  margin-top: -3px;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__bar::before { background: var(--leaf-2); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .hub-preview__bar::after { background: var(--bark); }
-:root[data-design="forest"] .forest-hub .hub-preview__rank .hub-preview__score { margin-top: 3px; font-size: 13px; font-weight: 800; }
 
 /* The Rundenpuls: Laubgrün bars, the facts in soft ink. */
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub .pulse-bar__fill { background: var(--brand); }
@@ -1609,32 +1519,9 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__title { color: var(--ink); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__text { color: var(--ink-soft); }
 
-/* ---- A locked preview (F7.3, F7.4): the card of its neighbours, the title in
-   the display face (a link in ink when it leads to the sub-page), the state in
-   ink, the sentence in soft ink. */
-:root[data-design="forest"] .app .forest-hub .forest-locked .forest-locked__title {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 400;
-  line-height: var(--leading-title);
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-:root[data-design="forest"] .forest-locked__title a { text-decoration: none; }
-:root[data-design="forest"] .forest-locked__title a:hover { text-decoration: underline; }
-:root[data-design="forest"] .forest-locked p { margin: 0; overflow-wrap: break-word; }
-:root[data-design="forest"] .forest-locked__state { font-size: 14px; font-weight: 800; }
-:root[data-design="forest"] .forest-locked__text { margin-top: 2px; font-size: 14px; line-height: var(--leading-text); }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-locked__title, .forest-locked__title a, .forest-locked__state) { color: var(--ink); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-locked__text { color: var(--ink-soft); }
 /* On a phone the locked Pokale and Chronik share a row, like the live pair
    (#1466's rule matches the live ones by their link, which these title links
    also carry — so here they are matched by the block itself). */
-@media (max-width: 859px) {
-  :root[data-design="forest"] .forest-hub__aside > .forest-locked:has(a[href$="/pokale"]),
-  :root[data-design="forest"] .forest-hub__aside > .forest-locked:has(a[href$="/pokale"]) + .forest-locked:has(a[href$="/chronik"]) { grid-column: auto; }
-}
 
 /* ---- The demo round (F7.6): „Gefällt dir das?" as a band over the hub — the
    dusk with the light print, the sparkle in the firefly, „Eigene Runde
@@ -1692,41 +1579,6 @@
   :root[data-design="forest"] .app > .hub-card--demo-invite { grid-template-columns: auto minmax(0, 1fr); row-gap: 4px; }
   :root[data-design="forest"] .app > .hub-card--demo-invite .hub-demo__cta { grid-column: 1 / -1; grid-row: 3; margin-top: 10px; justify-self: stretch; }
 }
-
-:root[data-design="forest"] .forest-hub__main .hub-demo {
-  display: flex;
-  flex-direction: column;
-  padding: 14px 18px 6px;
-  border-radius: var(--radius-lg);
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo { background: var(--surface); box-shadow: var(--shadow-1); }
-/* The list's name is its aria-label; printed as the kicker with an empty
-   alternative text, so a screen reader meets it once. */
-:root[data-design="forest"] .forest-hub__main .hub-demo::before {
-  content: attr(aria-label) / "";
-  padding-bottom: 10px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo::before { color: var(--brand); border-bottom: 1px solid var(--line); }
-:root[data-design="forest"] .forest-hub__main .hub-demo__row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: var(--target-key);
-  padding: 6px 0;
-  text-decoration: none;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row { color: var(--ink); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row + .hub-demo__row { border-top: 1px solid var(--line); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-hub__main .hub-demo__row > .ti { color: var(--ink-soft); }
-:root[data-design="forest"] .forest-hub__main .hub-demo__main { display: flex; flex-flow: row wrap; column-gap: 10px; min-width: 0; flex: 1; }
-:root[data-design="forest"] .forest-hub__main .hub-demo__label { font-size: 16px; font-weight: 800; }
-:root[data-design="forest"] .forest-hub__main .hub-demo__hint { font-size: 15px; }
-:root[data-design="forest"] .forest-hub__main .hub-demo__value { font-size: 14px; font-weight: 800; text-align: right; }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.forest-hub__main .hub-demo__hint, .forest-hub__main .hub-demo__value) { color: var(--ink-soft); }
 
 /* ---- The empty lobby (F7.1): one clearing in the middle of the page — five
    trees, the greeting, the first-run sentence and the one action. */
@@ -7663,6 +7515,3 @@
   :root[data-design="forest"]:not([data-scheme="dark"]) .sheet.add-search > .add-search__ways { background: var(--surface); box-shadow: var(--shadow-1); }
 }
 
-/* „Jetzt spielen" (#1682) sits centred under the stump and its presets, which
-   centre too; the base rule's flex-start would leave it alone at the edge. */
-:root[data-design="forest"] .hub-play { align-self: center; }

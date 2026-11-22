@@ -43,7 +43,7 @@ const chronik = (dom, round) => { dom.app.innerHTML = ''; dom.call('renderChroni
 const regal = (dom, round) => { dom.app.innerHTML = ''; dom.call('renderRegalTab', round, active(round)); return dom.app; };
 
 for (const { id } of DESIGN_REGISTRY) {
-  test(`${id}: the Chronik head carries the pulse, folded, with the Start card's figures`, (t) => {
+  test(`${id}: the Chronik head carries the pulse, folded, with the card's figures`, (t) => {
     const { dom, round } = boot(t, id);
     const app = chronik(dom, round);
     const pulse = app.querySelector('details.chronik-pulse');
@@ -59,7 +59,7 @@ for (const { id } of DESIGN_REGISTRY) {
     const summary = pulse.querySelector('summary').textContent.replace(/\s+/g, ' ').trim();
     assert.match(summary, /^Rundenpuls /);
     assert.match(summary, /2 Sessions in 12 Monaten/);
-    // The same figures the Start tab's card states, from the same function.
+    // The same figures the pulse card states, from the same function.
     const card = dom.call('hubPulseCard', round, active(round));
     const facts = card.querySelector('.hub-card__facts:not(.hub-card__threshold)');
     if (facts) {
@@ -72,14 +72,14 @@ for (const { id } of DESIGN_REGISTRY) {
     } else {
       // Der Tisch states the figures as tiles; the folded body carries the same tiles.
       const n = (root) => [...root.querySelectorAll('.pulse-tile__n')].map((el) => el.textContent);
-      assert.deepEqual(n(pulse), n(card), 'the tiles disagree with the Start card');
+      assert.deepEqual(n(pulse), n(card), 'the tiles disagree with the pulse card');
     }
     assert.equal(pulse.querySelectorAll('.hub-card__facts:not(.hub-card__threshold)').length, 0,
       'the body repeats the fact sentence the summary already states');
     // Two sessions: under the series threshold, so the note says when series
     // come — wherever the card says it (Das Programmheft says it in its lead).
     assert.equal(!!pulse.querySelector('.hub-card__threshold'), !!card.querySelector('.hub-card__threshold'),
-      'the series note differs from the Start card');
+      'the series note differs from the pulse card');
   });
 
   test(`${id}: a round with no played session shows no pulse in the Chronik`, (t) => {
@@ -95,9 +95,9 @@ for (const { id } of DESIGN_REGISTRY) {
     assert.equal(line.previousElementSibling, app.querySelector('.section-head h1').closest('.section-head'),
       'the profile line does not follow the Regal heading');
     assert.match(line.getAttribute('href'), /\/round\/r1\/shelf-profile$/);
-    const card = dom.call('hubShelfProfileCard', round, active(round), {});
-    const sentence = card.querySelector('.shelf-card__headline').textContent;
-    assert.ok(line.textContent.includes(sentence), `the line does not say the Start card's „${sentence}"`);
+    // The fixture's dominant ranges, known in advance (2–4, 30–60 min, 2.5).
+    const sentence = 'Meist für 2–4 Personen · 31–60 Min. · mittel';
+    assert.ok(line.textContent.includes(sentence), `the line does not say „${sentence}": ${line.textContent}`);
   });
 
   test(`${id}: below the Steckbrief's threshold the Regal carries no profile line`, (t) => {

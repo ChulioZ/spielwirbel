@@ -1,8 +1,9 @@
 'use strict';
 
-/* The six hub cards with exactly one destination are clickable anywhere on the
-   card (#1506): the Regal, Pokale and Chronik previews, the recommendations
-   teaser, the Regal-Steckbrief and „Heute vor einem Jahr".
+/* A hub card with exactly one destination is clickable anywhere on the card
+   (#1506). Since #1853 took the three previews, the recommendations teaser and
+   the Regal-Steckbrief card off the Start tab, „Heute vor einem Jahr" is the one
+   left — the pattern stays pinned on it, so the next such card inherits it.
 
    The shape is a STRETCHED LINK, not a wrapping <a>: each card keeps its one
    visible, named link, marked `.hub-card__go`, and the card carries
@@ -56,26 +57,16 @@ const fullRound = () => ({
 async function hub(t, design) {
   const dom = loadApp(design ? { design } : {});
   t.after(() => dom.close());
-  dom.set('api', async () => ({
-    recommendations: [{ externalId: '1', title: 'Ark Nova', reasons: [{ term: 'quality', rating: 8.5 }] }],
-  }));
+  dom.set('api', async () => ({ recommendations: [] }));
   const r = fullRound();
   dom.call('renderStartTab', r, r.games);
-  await new Promise((done) => setTimeout(done, 0)); // the teaser lands after paint
   return dom;
 }
 
-const EXPECTED = [
-  '/round/3/regal',
-  '/round/3/pokale',
-  '/round/3/chronik',
-  '/round/3/recommendations',
-  '/round/3/shelf-profile',
-  '/round/3/session/900',
-];
+const EXPECTED = ['/round/3/session/900'];
 
 for (const design of [null, 'tisch', 'ocean', 'bruecke', 'programmheft']) {
-  test(`${design || 'klassisch'}: the six single-destination cards carry one stretched link each`, async (t) => {
+  test(`${design || 'klassisch'}: the single-destination card carries one stretched link`, async (t) => {
     const dom = await hub(t, design);
     const cards = [...dom.app.querySelectorAll('.hub-card--link')];
     const hrefs = cards.map((card) => {

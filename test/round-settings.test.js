@@ -229,12 +229,12 @@ test('the settings entry stays a live link on the screens it owns', () => {
 });
 
 test('the Start tab points at the settings screen instead of separate links', () => {
-  assert.match(START, /roundPath\(rid, 'settings'\)/, 'the Start tab has no Einstellungen entry');
+  // The gear on the round's name since #1853 (hubSettingsGear).
+  assert.match(START, /roundPath\(round\.id, 'settings'\)/, 'the Start tab has no Einstellungen entry');
   // The ones it replaced must not linger beside it — that was the crowding the
   // issue set out to remove, and it is what a partial revert would leave behind.
-  const actions = START.slice(START.indexOf("h('<div class=\"hub-actions\">"));
-  assert.doesNotMatch(actions, /roundPath\(rid, 'tags'\)/, 'the Start tab still links Tags directly');
-  assert.doesNotMatch(actions, /roundPath\(rid, 'design'\)/, 'the Start tab still links Design directly');
+  assert.doesNotMatch(START, /roundPath\([^)]*'tags'\)/, 'the Start tab still links Tags directly');
+  assert.doesNotMatch(START, /roundPath\([^)]*'design'\)/, 'the Start tab still links Design directly');
 });
 
 /* `views-session.js:854` used to read "like deleting a round" and put the

@@ -34,17 +34,19 @@ function boot(t, { me = { id: 'u1', username: 'ada', simpleMode: OFF, simpleMode
 const render = ({ dom, round }) => { dom.app.innerHTML = ''; dom.call('renderStartTab', round, round.games); };
 const card = (dom) => dom.app.querySelector('.simple-prompt');
 
-test('an account that has not answered sees it on a played round, below the CTA and above the cards', (t) => {
+test('an account that has not answered sees it on a played round, below the CTA and above the rest', (t) => {
   const ctx = boot(t);
   render(ctx);
   const c = card(ctx.dom);
   assert.ok(c, 'the prompt renders');
   assert.ok(c.classList.contains('hub-card'), 'in the shared card frame every design styles');
   const cta = ctx.dom.app.querySelector('.hub-cta');
-  const grid = ctx.dom.app.querySelector('.hub-cards');
+  // „Zuletzt gespielt" is the first block of what the mode would hide.
+  const last = ctx.dom.app.querySelector('a.ticket:not(.ticket--live)');
+  assert.ok(last, 'the played fixture lost its last-played ticket');
   const FOLLOWS = ctx.dom.window.Node.DOCUMENT_POSITION_FOLLOWING;
   assert.ok(cta.compareDocumentPosition(c) & FOLLOWS, 'after the one action');
-  assert.ok(c.compareDocumentPosition(grid) & FOLLOWS, 'before the card grid');
+  assert.ok(c.compareDocumentPosition(last) & FOLLOWS, 'before „Zuletzt gespielt" and the cards');
   // Keyboard-reachable, every control a real button or link with a name.
   const controls = [...c.querySelectorAll('button, a')];
   assert.equal(controls.length, 4, 'keep, simple, close and the Konto link');

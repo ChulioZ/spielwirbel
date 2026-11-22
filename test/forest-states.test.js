@@ -125,20 +125,13 @@ test('Forest F7.3: a round without games — the stump shows its rings, the empt
   assert.equal(text(table.querySelector('.empty__title')), 'Der Stumpf ist noch leer');
   assert.deepEqual(primaries(dom).map(text), ['Spiel hinzufügen'], 'not exactly one primary action');
 
-  // The right column: Regal, Pokale and Chronik stand locked, in that order,
-  // each in its own screen's words, each still leading to its sub-page.
-  const locked = [...dom.app.querySelectorAll('.forest-hub__aside > .forest-locked')];
-  assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__title'))), ['Regal', 'Pokale', 'Chronik']);
-  assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__state'))), ['0 Spiele', 'Noch keine Pokale', 'Noch nichts passiert']);
-  assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__text'))), [
-    'ab dem ersten Spiel', 'Die erste Session entscheidet, wer sie holt.', 'Eure erste Session schreibt den ersten Eintrag.',
-  ]);
-  locked.forEach((b) => assert.match(b.querySelector('a').getAttribute('href'), /\/round\/r1\/(regal|pokale|chronik)$/));
-  // No locked pulse on an empty shelf: the sheet draws none, and the table says it.
-  assert.equal(locked.length, 3);
+  // The right column's locked previews left with the previews themselves
+  // (#1853): the empty table is the one next step, and the dock reaches every
+  // section.
+  assert.equal(dom.app.querySelector('.forest-locked, .hub-preview'), null, 'a locked preview is back');
 });
 
-test('Forest F7.4: games but no session — „Erste Session wirbeln", what is waiting, and the locked pulse', async (t) => {
+test('Forest F7.4: games but no session — „Erste Session wirbeln" and what is waiting', async (t) => {
   const dom = await hub(t, 'forest', readyRound());
   const cta = dom.app.querySelector('.forest-stump > .hub-cta');
   assert.match(text(cta), /^Erste Session wirbeln$/);
@@ -149,36 +142,27 @@ test('Forest F7.4: games but no session — „Erste Session wirbeln", what is w
   assert.match(text(young.querySelector('.forest-young__text')), /^Noch keine Session/);
   assert.equal(young.querySelector('a, button'), null, 'the young line is a notice, not a second action');
 
-  const aside = [...dom.app.querySelectorAll('.forest-hub__aside > *')];
-  const locked = aside.filter((el) => el.classList.contains('forest-locked'));
-  assert.deepEqual(locked.map((b) => text(b.querySelector('.forest-locked__title'))), ['Pokale', 'Chronik', 'Rundenpuls'],
-    'the Regal preview must be the real one once the shelf holds games');
-  // The pulse's own floor — the first session in every design since #1586.
-  assert.equal(text(locked[2].querySelector('.forest-locked__text')), 'Zahlen gibt es ab der ersten Session.');
-  assert.ok(aside[0].querySelector('a[href$="/regal"]'), 'the Regal preview no longer leads the column');
+  // No locked previews or pulse since #1853 — the Start tab shows neither.
+  assert.equal(dom.app.querySelector('.forest-locked, .hub-preview'), null, 'a locked block is back');
 });
 
-test('Forest F7.5: after the first session — the stump says „Session wirbeln", the Rundenpuls says when series come', async (t) => {
+test('Forest F7.5: after the first session — the stump says „Session wirbeln", and nothing under it', async (t) => {
   const dom = await hub(t, 'forest', firstRound());
   assert.match(text(dom.app.querySelector('.forest-stump > .hub-cta')), /^Session wirbeln$/);
-  /* The series sentence lives in the Rundenpuls card it explains, not under the
-     stump a column away (#1586 merge interview, 2026-10-07). */
+  /* The series sentence lives in the Rundenpuls card it explains (#1586 merge
+     interview, 2026-10-07) — in the Chronik head since #1852/#1853. */
   assert.equal(dom.app.querySelector('.forest-young'), null, 'the series line still stands under the stump');
-  assert.match(text(dom.app.querySelector('.hub-card__threshold')), /^Serien zeigen wir ab 3 Sessions/);
   assert.ok(dom.app.querySelector('.forest-pair .forest-last'), '„Zuletzt gespielt" is gone');
   assert.equal(dom.app.querySelector('.forest-locked'), null, 'a locked block survived the first session');
 });
 
-test('Forest F7.6: the demo — the invitation as a band over the hub, the condensed list, the previews kept', async (t) => {
+test('Forest F7.6: the demo — the invitation as a band over the hub, no condensed list (#1853)', async (t) => {
   const dom = await hub(t, 'forest', firstRound(), { demo: true });
   const invite = dom.app.querySelector(':scope > .hub-card--demo-invite');
   const frame = dom.app.querySelector(':scope > .forest-hub');
   assert.ok(invite && invite.nextElementSibling === frame, 'the invitation is not the band over the hub');
   assert.equal(dom.app.querySelectorAll('.hub-card--demo-invite').length, 1, 'the invitation rendered twice');
-  const list = dom.app.querySelector('.forest-hub__main nav.hub-demo');
-  assert.ok(list && precedes(dom, dom.app.querySelector('.forest-stump'), list), 'no condensed list under the stump');
-  assert.deepEqual([...list.querySelectorAll('.hub-demo__label')].map((l) => l.textContent), ['Regal', 'Chronik', 'Pokale']);
-  assert.ok(dom.app.querySelector('.forest-hub__aside a[href$="/pokale"]'), 'the previews left the right column');
+  assert.equal(dom.app.querySelector('nav.hub-demo, .hub-preview'), null, 'the condensed list or a preview is back');
 });
 
 test('Forest F7.1: the empty lobby — the trees, the greeting, one sentence and one action', async (t) => {
