@@ -34,6 +34,7 @@ const { rulesOf } = require('./support/css');
 const { token } = require('./support/theme');
 const { DESIGN_REGISTRY } = require('../public/js/designs');
 const { loadApp } = require('./support/dom');
+const { collectionTiles, wideAt } = require('./support/badge-fixture');
 
 const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'tisch.css'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '');
@@ -141,13 +142,14 @@ test('the name and the line sit BESIDE the pin, never on the brass', () => {
 
 // ------------------------------------------------------------ placements
 
-test('Pokale: the round is a FELT band, the members wooden rows (T17.2, T17.3)', () => {
-  const band = body('.badge-band--round');
+test('Pokale: the round is a FELT row, the members wooden rows (T17.2, T17.3; one line each since #1856)', () => {
+  const band = body('.badge-member--round');
   assert.match(band, /var\(--felt\)/);
   assert.match(band, /var\(--felt-deep\)/);
   assert.equal(decl(band, 'color'), 'var(--felt-ink)', 'text on felt is paper ink (review finding A1)');
-  assert.equal(decl(body('.badge-band--round .badge__line'), 'color'), 'var(--felt-ink-soft)');
+  assert.equal(decl(body('.badge-member--round :is(.badge-member__summary, .badge-member__more, .badge-member__go)'), 'color'), 'var(--felt-ink-soft)');
   assert.equal(decl(body('.badge-member'), 'background'), 'var(--surface)');
+  assert.equal(decl(body('.badge-member__pin'), '--pin'), '30px', 'the row only sizes the shared pin');
   assert.match(body('.badge-section > .section-head'), /border-top:\s*3px solid var\(--gold-edge\)/);
 });
 
@@ -235,15 +237,21 @@ test('the member colour reaches the avatar and never a pin (T17.10)', (t) => {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   dom.run('applyDesign("tisch")');
+  wideAt(dom, false);
   dom.set('api', async (method, url) => (/\/activities$/.test(url) ? [] : round));
   dom.call('renderPokaleTab', round);
-  const pins = [...dom.app.querySelectorAll('.badge-section .badge')];
+  // The rows' pins are decorative emblems; the tiles live in the collections.
+  const rowPins = [...dom.app.querySelectorAll('.badge-member__pin')];
+  assert.ok(rowPins.length >= 3, `only ${rowPins.length} row pins rendered`);
+  assert.deepEqual(rowPins.flatMap((p) => [p, ...p.querySelectorAll('*')]).map((el) => el.getAttribute('style')).filter(Boolean), [],
+    'a row pin carries an inline style');
+  const pins = collectionTiles(dom);
   assert.ok(pins.length >= 10, `only ${pins.length} pins rendered`);
   const styled = pins.flatMap((b) => [b, ...b.querySelectorAll('*')])
     .map((el) => el.getAttribute('style'))
     .filter((s) => s && !/^--pct:\d+$/.test(s.trim()));
   assert.deepEqual(styled, [], 'a pin carries an inline style other than its ring share');
-  const avatars = [...dom.app.querySelectorAll('.badge-member__avatar')];
+  const avatars = [...dom.app.querySelectorAll('.badge-section .badge-member__avatar')];
   assert.equal(avatars.length, 2);
   assert.ok(avatars.every((a) => /background/.test(a.getAttribute('style') || '')), 'the avatar lost the member colour');
 });

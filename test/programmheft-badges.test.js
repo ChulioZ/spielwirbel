@@ -24,7 +24,7 @@ const path = require('node:path');
 
 const { rulesOf } = require('./support/css');
 const { loadApp } = require('./support/dom');
-const { night, badgeRound, stubApi } = require('./support/badge-fixture');
+const { night, badgeRound, stubApi, wideAt, collectionTiles } = require('./support/badge-fixture');
 
 const SHEET = fs.readFileSync(path.join(__dirname, '..', 'public', 'css', 'designs', 'programmheft.css'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, '');
@@ -114,15 +114,18 @@ test('the tier is a seal band printing the numeral from data-tier', () => {
   assert.equal(decl(band, 'background'), 'var(--page-bg)');
 });
 
-test('Pokale: the rubric is Anton over a 4px rule, the members are COLUMNS from 1024px', () => {
+test('Pokale: the rubric is Anton over a 4px rule; the holders are ROWS between 2px rules (#1856)', () => {
   const h2 = body('.badge-section > .section-head h2');
   assert.equal(decl(h2, 'font-family'), 'var(--font-display)');
   assert.equal(decl(h2, 'text-transform'), 'uppercase');
   assert.match(body('.badge-section > .section-head'), /border-bottom:\s*var\(--rule-page\) solid var\(--ink\)/);
-  const wide = RULES.filter(([sel, b]) => members(sel).includes(norm(`${GATE} .badge-members`)) && /grid-template-columns:\s*repeat\(auto-fit/.test(b));
-  assert.equal(wide.length, 1, 'the member columns are not an auto-fit grid');
-  // Dense (seven and more): six columns, never more.
-  assert.match(body('.badge-members:has(> .badge-member > .badge-member__more)'), /grid-template-columns:\s*repeat\(6, minmax\(0, 1fr\)\)/);
+  // The sheet's person-columns rubric became rows: no column grid survives.
+  const cols = RULES.filter(([sel, b]) => members(sel).some((m) => m.includes('.badge-members')) && /grid-template-columns/.test(b));
+  assert.deepEqual(cols.map(([sel]) => norm(sel)), [], 'the holders are laid out as columns');
+  assert.match(body('.badge-member'), /border-top:\s*var\(--rule-col\) solid var\(--ink\)/);
+  assert.equal(decl(body('.badge-member__name'), 'font-family'), 'var(--font-display)');
+  // The round's row is the rubric's black box.
+  assert.equal(decl(body('.badge-member--round'), 'background'), 'var(--box)');
 });
 
 test('vermilion appears only as the Sonderausgabe band, and every word on it is Anton from 26px', () => {
@@ -258,11 +261,13 @@ test('a reached tier rides on the mark as data-tier; a secret never shows one', 
   t.after(() => dom.close());
   stubApi(dom, r);
   dom.run('applyDesign("programmheft")');
+  wideAt(dom, false);
   dom.call('renderPokaleTab', r);
-  const mark = (key) => dom.app.querySelector(`.badge-band--round .badge[data-key="${key}"] .badge__mark`);
+  const round = collectionTiles(dom, 'round');
+  const mark = (key) => round.find((b) => b.dataset.key === key).querySelector('.badge__mark');
   assert.equal(mark('sessions').dataset.tier, '10');
   assert.equal(mark('founded').hasAttribute('data-tier'), false, 'a one-step entry has no tier');
-  const secrets = [...dom.app.querySelectorAll('.badge[data-state="secret"] .badge__mark')];
+  const secrets = collectionTiles(dom).filter((b) => b.dataset.state === 'secret').map((b) => b.querySelector('.badge__mark'));
   assert.ok(secrets.length >= 1);
   assert.ok(secrets.every((s) => !s.hasAttribute('data-tier')), 'a secret leaks its tier');
 });

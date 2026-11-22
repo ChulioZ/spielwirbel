@@ -56,16 +56,27 @@ test('a tier row names its tier, under the session that reached it', (t) => {
   assert.ok(texts.includes('Kartographen · Sessions 10'), texts.join(' | '));
 });
 
-test('a Chronik row’s plain click lands on that holder’s row in Pokale', async (t) => {
+test('a Chronik row’s plain click lands on that holder’s row in Pokale, its collection open (#1856)', async (t) => {
   const r = badgeRound([night('s1', 1, { winnerIds: ['m2'] })]);
   const dom = boot(t, r);
   dom.call('renderChronikTab', r, []);
   const link = badgeRowsOf(itemOf(dom, 's1')).map((x) => x.querySelector('a')).find((a) => a.textContent === 'Ben · Erster Sieg');
   assert.ok(link, 'Ben’s first win has its row');
   link.click();
-  const row = await waitFor(() => dom.document.getElementById('abzeichen-m2'), { label: 'Pokale rendered' });
-  assert.equal(row.open, true);
-  assert.equal(dom.document.activeElement, row.querySelector('summary'));
+  await waitFor(() => dom.document.getElementById('abzeichen-m2'), { label: 'Pokale rendered' });
+  const sheet = await waitFor(() => dom.document.querySelector('.sheet-backdrop .badge-collection'), { label: 'the collection opened' });
+  assert.equal(sheet.closest('.sheet').getAttribute('aria-label'), 'Abzeichen von Ben');
+});
+
+test('a ROUND mark’s Chronik row opens the round’s collection (#1856)', async (t) => {
+  const r = badgeRound([night('s1', 1)]);
+  const dom = boot(t, r);
+  dom.call('renderChronikTab', r, []);
+  const link = badgeRowsOf(itemOf(dom, 's1')).map((x) => x.querySelector('a')).find((a) => a.textContent === 'Kartographen · Gegründet');
+  assert.ok(link, 'the round’s founding has its row');
+  link.click();
+  const sheet = await waitFor(() => dom.document.querySelector('.sheet-backdrop .badge-collection'), { label: 'the collection opened' });
+  assert.equal(sheet.closest('.sheet').getAttribute('aria-label'), 'Abzeichen von Kartographen');
 });
 
 // ---------------------------------------------------------------------- hub
@@ -95,7 +106,7 @@ test('with nothing new, the hub line names the newest mark instead', (t) => {
 
 // --------------------------------------------------------------- Tischkarte
 
-test('die Tischkarte shows earned marks only, and a tap goes to that member in Pokale', async (t) => {
+test('die Tischkarte shows earned marks only, and a tap opens that member’s collection in Pokale', async (t) => {
   const r = badgeRound([night('s1', 1)]);
   const dom = boot(t, r);
   await dom.call('showMember', RID, 'm1');
@@ -108,9 +119,9 @@ test('die Tischkarte shows earned marks only, and a tap goes to that member in P
   assert.doesNotMatch(dom.app.textContent, /Siegwertung/, 'the withdrawn measure must not come back with the row');
 
   tiles[0].click();
-  const target = await waitFor(() => dom.document.getElementById('abzeichen-m1'), { label: 'Pokale rendered' });
-  assert.equal(dom.document.activeElement, target.querySelector('summary'));
-  assert.equal(dom.document.querySelector('.sheet-backdrop, .popover'), null, 'the Tischkarte tap navigates, it opens no card');
+  await waitFor(() => dom.document.getElementById('abzeichen-m1'), { label: 'Pokale rendered' });
+  const sheet = await waitFor(() => dom.document.querySelector('.sheet-backdrop .badge-collection'), { label: 'the collection opened' });
+  assert.equal(sheet.closest('.sheet').getAttribute('aria-label'), 'Abzeichen von Anna', 'the tap navigates to Anna’s collection, not a card on the Tischkarte');
 });
 
 test('a member with nothing earned gets no badge row at all', async (t) => {

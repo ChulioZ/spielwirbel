@@ -1113,7 +1113,7 @@ public/
                           the Chronik's shareable month/year recap section, and
                           the share delivery its card (and the account recap's
                           and the Regal-Steckbrief's) goes out through (#1345)
-    views-pokale.js       Pokale tab: podium + fun stats
+    views-pokale.js       Pokale tab: podium + the records list
     views-recap.js        the Rückblick, one folded row at the foot of the Regal
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer
@@ -1201,16 +1201,18 @@ public/
                      stored. Also required by lib/user-stats.js for the
                      account tier (issue #1387)
     views-badges.js  the Abzeichen in Klassisch (issue #1388): the shared
-                     `.badge` markup every design skins, Pokale › Abzeichen,
-                     the result moment, the Chronik rows, the hub line, the
+                     `.badge` markup every design skins, Pokale › Abzeichen
+                     (one row per holder, and the collection behind it), the
+                     result moment, the Chronik rows, the hub line, the
                      Tischkarte row and the tap-open card
     challenges.js    the group challenge (issue #1779): its four presets and
                      the progress, completion and expiry derived from the
                      sessions — only the goal is stored. Also required by
                      lib/routes/challenge.js, so the route agrees whether one
                      is still running
-    views-challenges.js  the challenge's Start card, Pokale › Challenge (start,
-                     end, the short history), its line in the result moment
+    views-challenges.js  the challenge's Start card, Pokale › Challenge (one
+                     row, and the sheet with start, end and the history), its
+                     line in the result moment
                      and its Chronik row
     views-member.js  member detail page (die Tischkarte: the Siegquote ring,
                      the initials watermark, the figure strip and

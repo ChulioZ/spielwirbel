@@ -523,14 +523,17 @@ What the app does, in detail. For a short overview see the
     nothing is published anywhere.
   - **Pokale** (trophies) – a winners' podium (three pedestals, `[2 | 1 | 3]`
     with the crown in the middle; members tied on a place stand side by side on
-    one step, and nobody is capped off it) plus stat
-    tiles: most played, best rated, current winning streak, the „Längste
+    one step, and nobody is capped off it) plus one **Rekorde** list (issue
+    #1856): most played, best rated, current winning streak, the „Längste
     Session" (the round's longest timed session, once one has a duration,
-    #1772), and the "Staubfänger" — the game gathering dust the longest. Below the standings,
-    a **Rückblick** turns the round's accumulated ratings into a readable
-    record: totals, the worst-rated game, the one the group disagrees about
-    most, and every member's own favourite. Pokale is the all-time record; the
-    time-scoped view of the same idea is the Chronik's period recap above.
+    #1772) and the „Bester Kauf", each a row that names its game (with its
+    cover) or its holder and the value, only when it exists. Nothing on Pokale
+    starts a game — that is the Start tab's job. Each section of the tab
+    answers one question, and they all share one content width. The round's
+    **Rückblick** — totals, the worst-rated game, the one the group disagrees
+    about most, and every member's own favourite — sits at the foot of the
+    Regal (#1855). Pokale is the all-time record; the time-scoped view of the
+    same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that
     count and nothing else. The podium is simply the top three places, so a
@@ -547,7 +550,12 @@ What the app does, in detail. For a short overview see the
     first played session in every design (#1586) — holds its monthly bars back
     and closes on a sentence saying when series come.
 
-    A **Challenge** (issue #1779) sits above the Abzeichen: the round picks one
+    A **Challenge** (issue #1779) sits above the Abzeichen, as ONE row (issue
+    #1856): a running challenge shows its goal, a bar and „4 von 10 · noch 40
+    Tage", an ended one its outcome, and with none the row reads „Challenge
+    starten" (or is absent for someone who cannot change the round). The row
+    opens a sheet with the status, ending or archiving it, the start form and
+    the history. The round picks one
     of four goals with a deadline — N games never played before, every game on
     the shelf once (a snapshot taken at the start), N sessions (a split evening
     counts once) or N different games — and plays towards it. One runs at a time;
@@ -559,8 +567,14 @@ What the app does, in detail. For a short overview see the
     completed it, and the Chronik keeps a row under the session that completed
     it. Hidden with the Abzeichen under „Einfacher Modus".
 
-    **Abzeichen** (badges, issue #1388) sit below the standings: a band for the
-    round, then one row per member in standings order — the first win, ten
+    **Abzeichen** (badges, issue #1388) sit below the standings as one row per
+    holder (issue #1856): the round first, then the members in standings order,
+    each with its avatar, „9 verdient · 5 unterwegs", its earned marks as small
+    pins („+N" when they overflow the line) and a chevron. There is no legend
+    and no place — the standings above say who is where. The whole row opens
+    that holder's **collection** (a sheet on a phone, a popover on a wide
+    screen), grouped into Verdient, Unterwegs and Offen. The marks are the
+    first win, ten
     sessions, a game that keeps coming back, a full year of monthly play, and
     ten secret ones that show only a padlock until earned (41 entries since
     issue #1464, 43 since issue #1631 added the two record ladders: **Rekordhalter**
@@ -569,28 +583,24 @@ What the app does, in detail. For a short overview see the
     3 · 10 · 25, every „Neuer Rekord" of their own). Where order or a time window matters, the tables of one split
     session count as one evening. A mark that can no longer be earned is not
     shown at all — Gründungsmitglied for anyone who missed the round's first
-    evening. Each is a button that opens a card (a popover
-    on a wide screen, a sheet on a phone) with every tier and when it was
-    reached. Nothing is stored: they are derived from the sessions on every
+    evening. In the collection each is a button that opens its card in
+    place — every tier and when it was reached — with a way back to the
+    collection. Nothing is stored: they are derived from the sessions on every
     render, so deleting a session removes what it earned — and a tier added to
     a ladder later (issue #1463) appears already dated at the session that first
-    satisfied it. Earned and in-progress marks lead as full tiles; locked and
-    secret ones follow as a strip of bare marks whose condition lives in the
-    card (issue #1541). From seven members a
-    row shows only earned marks, the rest behind „N offen"; before the first
-    finished session the section is one line. A legend in the section head
-    keys the three drawn states (verdient, unterwegs, offen), and each member
-    row names its standings place („Platz N", tie-aware, only for members the
-    standings rank) — issue #1386; Der Tisch shows both from the editor split
-    up, Ocean the legend only. The same marks appear as up to
-    two entries on the result screen of the session that earned them („+N
-    weitere" beyond that), as one row per earning under that session in the
-    Chronik, as one line in the hub's Pokale preview, and as the earned-only
-    row on die Tischkarte, which ends on a chevron link to that member's row
-    in Pokale › Abzeichen (on Ocean from the editor split up only). Ocean draws each mark as a pearl in a Muschel
+    satisfied it. Earned and in-progress marks are full tiles; locked and
+    secret ones are a strip of bare marks whose condition lives in the card
+    (issue #1541). Before the first finished session the section is one line.
+    The same marks appear as up to two entries on the result screen of the
+    session that earned them („+N weitere" beyond that, which opens the
+    section), as one row per earning under that session in the Chronik (which
+    opens that holder's collection), as one line in the Start tab's „Zuletzt
+    gespielt", and as the earned-only row on die Tischkarte, which ends on a
+    chevron link to that member's collection in Pokale › Abzeichen (on Ocean
+    from the editor split up only). Ocean draws each mark as a pearl in a Muschel
     (issue #1391): a full pearl when earned, a smaller one inside a ring while
     under way, an empty shell with a dashed rim while open, and a closed shell
-    for a secret — with each person's pearls threaded on a string. Die Brücke
+    for a secret — with each holder's pearls threaded on a string along their row. Die Brücke
     draws it as a service plate with bevelled corners (issue #1392): full cyan
     when earned, a cyan outline with the running count filling it while under
     way, a grey outline while open and a hatched one for a secret, with one
@@ -785,8 +795,8 @@ What the app does, in detail. For a short overview see the
   that session's result again. Winners, teams and points that the removal
   cleared are not restored; the group sets them again if needed.
 - **Jetzt spielen** (play now) – when the group already knows what they want,
-  launch a session for **one specific game** straight from its detail page, a
-  Pokale tile, or the Start tab's **„Direkt wählen"** chip under „Session
+  launch a session for **one specific game** straight from its detail page or
+  the Start tab's **„Direkt wählen"** chip under „Session
   wirbeln" (issues #1682, #1853): pick who joins and skip the vote entirely,
   landing directly on the results screen with that game chosen. The Start tab's
   chip opens a game picker — the shelf, earlier guest games, and **„Ein Spiel, das

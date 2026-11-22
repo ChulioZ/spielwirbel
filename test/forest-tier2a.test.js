@@ -290,7 +290,7 @@ test('Forest folds a run of shelf changes like the other designs, and keeps the 
 
 // --- the Pokale --------------------------------------------------------------
 
-test('Forest: „Pokale" titles the page, „Ruhmeshalle" heads the grove, the table beside it, the plaques under both', async (t) => {
+test('Forest: „Pokale" titles the page, „Ruhmeshalle" heads the grove, the table beside it, the records under both', async (t) => {
   const dom = boot(t, 'forest');
   await dom.call('showRound', RID, 'pokale');
   assert.equal(text(dom.app.querySelector('.section-head h1')), 'Pokale');
@@ -300,11 +300,12 @@ test('Forest: „Pokale" titles the page, „Ruhmeshalle" heads the grove, the t
   const side = split.querySelector(':scope > .pokale-split__side');
   assert.equal(text(stage.querySelector('.forest-grove h2.forest-grove__title')), 'Ruhmeshalle');
   assert.ok(side.querySelector('.pokale-table'), 'the table is not in the side column');
-  const cards = split.querySelector(':scope > .pokale-cards');
-  assert.ok(cards, 'the plaques do not sit under both columns');
+  const cards = split.querySelector(':scope > .pokale-records');
+  assert.ok(cards, 'the records do not sit under both columns');
   assert.ok(side.compareDocumentPosition(cards) & 4);
   assert.equal(dom.app.querySelector('.podium, .podium__rest'), null, 'the grove replaces the podium and the summary line');
-  // No rubric over the plaques (review U6).
+  // Still no „Auszeichnungen" rubric (review U6); the list's own „Rekorde"
+  // heading is every design's (#1856).
   assert.ok(![...dom.app.querySelectorAll('h1, h2, h3')].some((el) => /Auszeichnungen/.test(text(el))));
 });
 

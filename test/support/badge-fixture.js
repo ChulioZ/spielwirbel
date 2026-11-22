@@ -55,4 +55,20 @@ const wideAt = (dom, wide) => dom.run(
   `window.matchMedia = (q) => ({ matches: ${wide} && /min-width/.test(q), addEventListener() {}, removeEventListener() {} });`
 );
 
-module.exports = { RID, night, badgeRound, stubApi, wideAt };
+/* Pokale draws one ROW per holder since #1856; the tiles live in each
+   holder's collection. Open every holder's in turn and hand back their tiles
+   — the overlay each click opens replaces the previous one, and a detached
+   tile is still a node to assert on. `mid` limits it to one holder. */
+function collectionTiles(dom, mid) {
+  const rows = [...dom.app.querySelectorAll('.badge-section .badge-member')]
+    .filter((row) => !mid || row.dataset.mid === mid);
+  const tiles = [];
+  for (const row of rows) {
+    row.click();
+    const host = [...dom.document.querySelectorAll('.badge-collection')].pop();
+    if (host) tiles.push(...host.querySelectorAll('.badge'));
+  }
+  return tiles;
+}
+
+module.exports = { RID, night, badgeRound, stubApi, wideAt, collectionTiles };

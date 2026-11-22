@@ -137,21 +137,21 @@ test('a refused amount toasts and sends nothing; a new price defaults to the rou
 });
 
 const cardByLabel = (root, label) =>
-  [...root.querySelectorAll('.pokale-card')].find((c) => (c.querySelector('.pokale-card__label') || {}).textContent === label);
+  [...root.querySelectorAll('.pokale-record')].find((c) => (c.querySelector('.pokale-record__label') || {}).textContent === label);
 
 test('Pokale names the best buy once a game qualifies, and not before', async (t_) => {
   const { dom } = bootApp(t_);
   await dom.call('showRound', RID, 'pokale');
   const card = cardByLabel(dom.app, dom.run("t('pokale.bestBuy')"));
   assert.ok(card, 'Brass is priced and was played three times');
-  assert.deepEqual([...card.querySelectorAll('.pokale-game__title')].map((a) => a.textContent), ['Brass']);
-  assert.equal(norm(card.querySelector('.pokale-card__sub').textContent), '13,33 € pro Session');
+  assert.deepEqual([...card.querySelectorAll('.pokale-record__name')].map((a) => a.textContent), ['Brass']);
+  assert.equal(norm(card.querySelector('.pokale-record__value').textContent), '13,33 € pro Session');
 
   const round = roundFixture();
   round.sessions = round.sessions.slice(1); // two plays: under the floor
   const again = bootApp(t_, round);
   await again.dom.call('showRound', RID, 'pokale');
-  assert.ok(again.dom.app.querySelector('.pokale-card'), 'the tab rendered its other cards');
+  assert.ok(again.dom.app.querySelector('.pokale-record'), 'the tab rendered its other records');
   assert.equal(cardByLabel(again.dom.app, again.dom.run("t('pokale.bestBuy')")), undefined);
 });
 

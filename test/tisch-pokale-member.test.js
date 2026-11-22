@@ -99,7 +99,7 @@ test('Klassisch: the Pokale section keeps its single column — no split wrapper
   const dom = boot(t, 'klassisch', pokaleRound());
   dom.call('renderPokaleTab', pokaleRound());
   const sec = dom.app.querySelector('.section');
-  assert.deepEqual(shapeOf(sec), ['section-head', 'podium', 'muted podium__rest', 'pokale-cards'],
+  assert.deepEqual(shapeOf(sec), ['section-head', 'podium', 'muted podium__rest', 'pokale-records'],
     'the Klassisch Pokale section changed shape');
   assert.equal(dom.app.querySelector('.pokale-split'), null, 'a Tisch wrapper leaked into Klassisch');
 });
@@ -111,11 +111,11 @@ test('Der Tisch: the plaques sit in the split, AFTER the stage that holds the po
   assert.deepEqual(shapeOf(sec), ['section-head', 'pokale-split'],
     'the stage and the plaques are not wrapped in one split');
   const split = sec.querySelector('.pokale-split');
-  assert.deepEqual(shapeOf(split), ['pokale-split__stage', 'pokale-cards'],
+  assert.deepEqual(shapeOf(split), ['pokale-split__stage', 'pokale-records'],
     'the plaques must follow the stage — DOM order is the reading order');
   assert.deepEqual(shapeOf(split.firstElementChild), ['podium', 'muted podium__rest'],
     'the podium and its summary line belong to the stage');
-  assert.ok(split.querySelectorAll('.pokale-cards > .pokale-card').length >= 1, 'no plaque rendered');
+  assert.ok(split.querySelectorAll('.pokale-records .pokale-record').length >= 1, 'no record rendered');
   // The Rückblick used to follow; since #1855 it lives at the foot of the Regal.
   assert.equal(dom.app.querySelector('.section.recap'), null, 'the Rückblick is back on Pokale');
 });
@@ -241,13 +241,13 @@ test('Der Tisch: no owned box and no finished session — neither piece renders'
 
 // --- The stylesheet ---------------------------------------------------------
 
-test('tisch.css sets the plaque column beside the stage only from 1280px, and reorders nothing', () => {
+test('tisch.css sets the records column beside the stage only from 1280px, and reorders nothing', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/tisch.css'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '');
   const block = css.match(/@media \(min-width: 1280px\) \{\s*:root\[data-design="tisch"\]\[data-scheme="dark"\] \.pokale-split \{[\s\S]*?\n\}/);
   assert.ok(block, 'no 1280px block lays out .pokale-split');
   assert.match(block[0], /\.pokale-split \{[^}]*display: flex/);
-  assert.match(block[0], /\.pokale-split > \.pokale-cards \{[^}]*flex: 0 0 340px/);
+  assert.match(block[0], /\.pokale-split > \.pokale-records \{[^}]*flex: 0 0 340px/);
   // DOM order = visual order (WCAG 2.4.3): nothing in the split may reorder.
   const splitRules = [...css.matchAll(/([^{}]*\.pokale-split[^{}]*)\{([^{}]*)\}/g)];
   assert.ok(splitRules.length >= 3, 'the split rules were not found');

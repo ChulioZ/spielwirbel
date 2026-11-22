@@ -269,7 +269,7 @@ test('the standings need NO ⓘ — a win count explains itself', async (t) => {
 
 test('a run of solo nights is not a winning streak', async (t) => {
   const dom = await pokale(t, roundWith([...group, ...solos]));
-  const labels = [...dom.app.querySelectorAll('.pokale-card__label')].map((e) => e.textContent);
+  const labels = [...dom.app.querySelectorAll('.pokale-record__label')].map((e) => e.textContent);
   assert.ok(!labels.includes(dom.run("t('pokale.streak')")), 'five solo nights are not a five-night streak');
 });
 
@@ -278,7 +278,7 @@ test('the solo filter did not disturb the real streak, or the guest one', async 
   // them — the streak must survive the filter rather than be swallowed by it.
   const sessions = [...solos, night(['anna'], MEMBERS), night(['anna'], MEMBERS), night(['anna'], MEMBERS)];
   const dom = await pokale(t, roundWith(sessions));
-  const labels = [...dom.app.querySelectorAll('.pokale-card__label')].map((e) => e.textContent);
+  const labels = [...dom.app.querySelectorAll('.pokale-record__label')].map((e) => e.textContent);
   assert.ok(labels.includes(dom.run("t('pokale.streak')")), 'three group wins in a row is a streak');
 
   // #458: a night a guest won still ends a member's streak rather than extending it.
@@ -287,7 +287,7 @@ test('the solo filter did not disturb the real streak, or the guest one', async 
     t,
     roundWith([...sessions, night([g.id], [...MEMBERS], { guests: [g] })])
   );
-  const still = [...withGuest.app.querySelectorAll('.pokale-card__label')].map((e) => e.textContent);
+  const still = [...withGuest.app.querySelectorAll('.pokale-record__label')].map((e) => e.textContent);
   assert.ok(still.includes(withGuest.run("t('pokale.streak')")), 'a guest win is skipped, not counted');
 });
 
@@ -354,10 +354,10 @@ test('a „Kein Sieger" night between two wins does not break a streak; „Verlo
   // card, so asserting `includes(streak)` would be green for every case here.
   const streakOf = async (middle) => {
     const dom = await pokale(t, roundWith(run(middle)));
-    const card = [...dom.app.querySelectorAll('.pokale-card')].find(
-      (c) => c.querySelector('.pokale-card__label').textContent === dom.run("t('pokale.streak')")
+    const card = [...dom.app.querySelectorAll('.pokale-record')].find(
+      (c) => c.querySelector('.pokale-record__label').textContent === dom.run("t('pokale.streak')")
     );
-    return card ? card.querySelector('.pokale-card__sub').textContent : null;
+    return card ? card.querySelector('.pokale-record__value').textContent : null;
   };
   assert.equal(await streakOf({ ending: 'noWinner' }), '3 Siege in Folge', 'not a contest — skipped');
   assert.equal(await streakOf({ ending: 'ongoing' }), '3 Siege in Folge', 'nor is a campaign chapter');

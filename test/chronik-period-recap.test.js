@@ -148,7 +148,7 @@ test('the recap renders NOWHERE on the Pokale tab any more', async (t) => {
   assert.equal(precap(dom), null, 'the period recap is still on Pokale — the move did not happen');
   // The tab itself must still be intact, or the assertion above is passing for
   // the wrong reason (a Pokale tab that rendered nothing at all).
-  assert.ok(dom.app.querySelector('.pokale-card'), 'the Pokale tab rendered no cards at all');
+  assert.ok(dom.app.querySelector('.pokale-record'), 'the Pokale tab rendered no records at all');
   // The all-time Rückblick left Pokale too, for the foot of the Regal (#1855).
   assert.equal(dom.app.querySelector('.recap'), null, 'the all-time Rückblick is still on Pokale');
 });
@@ -222,13 +222,13 @@ test('the per-period and all-time Bestbewertet cards print the SAME number, in t
   const periodValue = periodCard.querySelector('.pokale-card__sub').textContent;
 
   await dom.call('showRound', RID, 'pokale');
-  const allTime = [...dom.app.querySelectorAll('.pokale-card')].find(
-    (c) => (c.querySelector('.pokale-card__label') || {}).textContent === dom.run("t('pokale.bestRated')")
+  const allTime = [...dom.app.querySelectorAll('.pokale-record')].find(
+    (c) => (c.querySelector('.pokale-record__label') || {}).textContent === dom.run("t('pokale.bestRated')")
   );
-  assert.ok(allTime, 'the all-time best-rated card is missing');
-  assert.deepEqual(namedGames(allTime), ['Catan']);
+  assert.ok(allTime, 'the all-time best-rated record is missing');
+  assert.deepEqual([...allTime.querySelectorAll('.pokale-record__name')].map((a) => a.textContent), ['Catan']);
 
-  assert.equal(periodValue, allTime.querySelector('.pokale-card__sub').textContent);
+  assert.equal(periodValue, allTime.querySelector('.pokale-record__value').textContent);
   /* Named as well as compared, so a change breaking BOTH cards the same way
      cannot satisfy this by making them equally wrong. All five candidate values
      are distinct here, which is what keeps the guard discriminating: 3,4 is the

@@ -172,9 +172,9 @@ before assuming you have them all:
 (the one site that is **not** a copy — it passes the shared `isActiveGame`
 straight to `filter`; its pool preview, `setupPoolPreview` in
 `views-session-setup-pool.js` since #1543, uses `fitsPlayerCount` too, #634),
-`views-pokale.js` (the Pokale "best rated" list, the stats scope, and the
-per-row "Jetzt spielen" launcher at the `pokaleGameCard` level — it lived in
-`views-round-tabs.js` until #528 split that file),
+`views-pokale.js` (the Pokale "best rated" record and the stats scope — the
+per-row „Jetzt spielen" launcher and the Staubfänger card it filtered for went
+with #1856),
 `round-rail.js` `activeGames` (the desktop rail's counts),
 `views-member.js`'s „Spiele von Anna" section (#973 — a retired or completed
 game is off the shelf and a wish is nobody's, so none of the three answers
@@ -259,9 +259,10 @@ is still on the shelf", which is the tell that the two are different
 functions.
 
 Also deliberately **not** in the set, though they are one line away:
-`bestAndWorst` (Bestbewertet/Schlechtbewertet) and the Staubfänger keep the
-active-only filter — they answer "what should we reach for", which only a game
-still on the shelf can. **The period recap's `bestRated` (`public/js/period-recap.js`,
+`bestAndWorst` (Bestbewertet/Schlechtbewertet) keeps the active-only filter —
+it answers "what should we reach for", which only a game still on the shelf
+can. (The Staubfänger card, a third filter site here, was removed in #1856: it
+was a game suggestion re-rolled at random among ties, not a record.) **The period recap's `bestRated` (`public/js/period-recap.js`,
 #800) joins them**, and it is the case that shows the split is about the CARD and
 not about the window it covers: that section's Meistgespielt counts retired games
 while its Bestbewertet, four lines away over the very same sessions, does not.

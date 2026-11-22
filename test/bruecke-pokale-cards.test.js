@@ -1,11 +1,11 @@
 'use strict';
 
-/* Die Brücke's Pokale right column (#1422, B3.4/B6.2): the SAME four trophy
- * cards every design shows — Meistgespielt, Bestbewertet, Siegesserie,
- * Staubfänger, in that order, covers and „Jetzt spielen" launchers intact —
- * styled as the sheet's plates. A design owns its layout, not its content
- * (operator decision in the #1489 review, 2026-10-02), so the three plates the
- * sheet draws were dropped: two were statistics no other design shows.
+/* Die Brücke's Pokale right column (#1422, B3.4/B6.2; one records list since
+ * #1856): the SAME records every design shows — Meistgespielt, Bestbewertet,
+ * Siegesserie, in that order, covers intact — styled as the sheet's plates. A
+ * design owns its layout, not its content (operator decision in the #1489
+ * review, 2026-10-02). No Staubfänger and no „Jetzt spielen" anywhere since
+ * #1856, in any design.
  *
  * Pinned through the jsdom harness under Brücke AND Klassisch, plus the
  * stylesheet section that does the restyling.
@@ -84,35 +84,34 @@ function boot(t, design, round = roundWith(SESSIONS)) {
 }
 
 const text = (el) => (el ? el.textContent.replace(/\s+/g, ' ').trim() : '');
-const CARDS = ['Meistgespielt', 'Bestbewertet', 'Siegesserie', 'Staubfänger'];
-const labels = (col) => [...col.querySelectorAll(':scope > .pokale-card > .pokale-card__label')].map(text);
+const RECORDS = ['Meistgespielt', 'Bestbewertet', 'Siegesserie'];
+const labels = (list) => [...list.querySelectorAll(':scope > .pokale-record > .pokale-record__body > .pokale-record__label')].map(text);
 
-test('under Brücke the right column holds exactly the four cards, in the standard order', async (t) => {
+test('under Brücke the right column holds the one records list, in the standard order (#1856)', async (t) => {
   const dom = boot(t, 'bruecke');
   await dom.call('showRound', RID, 'pokale');
-  const col = dom.app.querySelector('.pokale-split > .pokale-cards');
-  assert.ok(col, 'the cards are not the split’s right column');
-  assert.ok(col.classList.contains('pokale-cards--plates'), 'the column is not in the plate style');
-  assert.equal(col.children.length, 4, 'the column holds something besides the four cards');
-  assert.deepEqual(labels(col), CARDS);
+  const records = dom.app.querySelector('.pokale-split > .pokale-records');
+  assert.ok(records, 'the records are not the split’s right column');
+  const list = records.querySelector('.pokale-records__list');
+  assert.equal(list.tagName, 'OL');
+  assert.deepEqual(labels(list), RECORDS);
   // Content is the design-independent one: no plate markup of its own.
-  assert.equal(dom.app.querySelector('.pokale-card--plate'), null, 'a plate was rendered');
-  assert.equal(dom.app.querySelectorAll('.pokale-cards--plates').length, 1);
-  // Covers and the launcher are the cards' own, unchanged.
-  const [most] = col.children;
-  assert.ok(most.classList.contains('pokale-card--cover'), 'Meistgespielt lost its cover');
-  assert.match(most.querySelector('.pokale-card__thumb').style.backgroundImage, /catan\.jpg/);
-  assert.match(most.querySelector('.pokale-game__title').getAttribute('href'), /g1/);
-  assert.ok(most.querySelector('.pokale-game__play'), 'Meistgespielt lost its „Jetzt spielen" launcher');
+  assert.equal(dom.app.querySelector('.pokale-card--plate, .pokale-cards--plates, .pokale-cards'), null, 'a card grid was rendered on Pokale');
+  // The cover is the record's own; the title links the game.
+  const [most] = list.children;
+  assert.match(most.querySelector('.pokale-record__thumb').style.backgroundImage, /catan\.jpg/);
+  assert.match(most.querySelector('.pokale-record__name').getAttribute('href'), /g1/);
 });
 
-test('Klassisch keeps the four trophy cards, in order, with no plate style', async (t) => {
+test('Klassisch shows the same records list under the standings, and nothing launches a game', async (t) => {
   const dom = boot(t, 'klassisch');
   await dom.call('showRound', RID, 'pokale');
-  assert.equal(dom.app.querySelector('.pokale-card--plate, .pokale-cards--plates'), null);
-  const col = dom.app.querySelector('.pokale-cards');
-  assert.equal(col.className, 'pokale-cards');
-  assert.deepEqual(labels(col), CARDS);
+  assert.equal(dom.app.querySelector('.pokale-split'), null);
+  const list = dom.app.querySelector('.pokale-page > .pokale-records .pokale-records__list');
+  assert.ok(list, 'the records list is not in the page section');
+  assert.deepEqual(labels(list), RECORDS);
+  assert.equal(dom.app.querySelector('.pokale-game__play'), null, 'a „Jetzt spielen" launcher survives on Pokale');
+  assert.doesNotMatch(dom.app.textContent, /Staubfänger/, 'the Staubfänger survives');
 });
 
 // --- the stylesheet --------------------------------------------------------
@@ -130,20 +129,17 @@ function section1422() {
   return { SHEET, section: after.slice(0, after.indexOf('/*§*/')) };
 }
 
-test('the #1422 section dresses the cards as plates: no icon, display capitals at one size', () => {
+test('the #1422 section dresses the records as plates: no icon, the holder in display capitals', () => {
   const { rulesOf } = require('./support/css');
   const { section } = section1422();
   const flat = rulesOf(section);
-  const ruleFor = (needle) => flat.filter(([sel]) => sel.includes(needle)).map(([, b]) => b).join(';');
-  assert.match(ruleFor('.pokale-card__icon'), /display:\s*none/, 'the cards keep their icon');
-  const value = flat.find(([sel]) => sel.includes('.pokale-cards--plates .pokale-card__value') && sel.includes('.pokale-cards--plates .pokale-game__title'));
-  assert.ok(value, 'no rule styles both the stat value and the game title');
-  // --display-s, not the old plates' --display-m: beside a cover and the
-  // launcher, 26px broke „Carcassonne" mid-word in the 340px column.
-  assert.match(value[1], /font-size:\s*var\(--display-s\)/, 'the value is not at the card display size');
-  assert.match(value[1], /text-transform:\s*uppercase/);
-  // The plates are gone — so are their rules.
-  assert.ok(!section.includes('pokale-card--plate'), 'a rule still styles the removed plates');
+  const ruleFor = (needle) => flat.filter(([sel]) => sel.trim().endsWith(needle)).map(([, b]) => b).join(';');
+  assert.match(ruleFor('.pokale-record__label .ti'), /display:\s*none/, 'the rows keep their icon');
+  const who = ruleFor('.pokale-record__who');
+  assert.match(who, /font-size:\s*var\(--display-s\)/, 'the holder is not at the plate display size');
+  assert.match(who, /text-transform:\s*uppercase/);
+  // The cards' plate skin went with the cards.
+  assert.ok(!/pokale-cards--plates|pokale-card--plate/.test(section), 'a rule still styles the removed plates');
 });
 
 test('every #1422 rule is scoped to Brücke, and every one reading a colour token is dark-gated', () => {

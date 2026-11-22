@@ -321,6 +321,9 @@
   .marker-card__name,
   .badge__name,
   .badge-moment__title,
+  .pokale-records__title,
+  .badge-collection__title,
+  .challenge-history__title,
   .badge-card__name,
   .stats-card__row-title,
   .stats-games__title
@@ -1907,8 +1910,8 @@
   :root[data-design="forest"] .app:has(> .section > .timeline):has(> .precap) > .precap { grid-column: 2; align-self: start; margin-top: 0; }
 }
 
-/* ---- The Pokale (F13.3/F13.4): the grove left, the table right, the four
-   plaques under both — stacked in that order on a phone. */
+/* ---- The Pokale (F13.3/F13.4): the grove left, the table right, the
+   records under both — stacked in that order on a phone. */
 :root[data-design="forest"] .app > .section:has(.pokale-split) { max-width: none; }
 :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) { display: flex; flex-direction: column; gap: var(--space-4); }
 :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > * { min-width: 0; }
@@ -1919,7 +1922,7 @@
     align-items: start;
     gap: var(--space-5) 28px;
   }
-  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > .pokale-cards { grid-column: 1 / -1; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > .pokale-records { grid-column: 1 / -1; }
 }
 
 /* The grove: a glade card with a meadow along its foot, one tree per person.
@@ -2020,9 +2023,12 @@
   :root[data-design="forest"] .pokale-table :is(.pokale-table__sessions, .pokale-table__rate) { display: none; }
 }
 
-/* The four plaques (F13.3/F13.4). No rubric over them (review U6). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-cards .pokale-card { border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-cards .pokale-card__label { color: var(--brand); }
+/* The records (F13.3/F13.4, one list since #1856): a stump card, the label in
+   moss green, the rows split by bark hairlines. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-records__list { border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record + .pokale-record { border-top-color: var(--bark-light); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record__label { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record__thumb { border-radius: 50%; }
 
 /* ---- The member page (F13.5/F13.6): the Tischkarte, and from 1100px a
    column beside it with the boxes, „Zuletzt dabei" and the two game tiles. */
@@ -5671,69 +5677,10 @@
   line-height: var(--leading-text);
   color: var(--ink-soft);
 }
-/* The key, as the forms it decodes — a lit jar, a filling jar, a dashed one.
-   On a phone the sheet prints only the count (F17.3). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend { display: none; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__mark { width: 12px; height: 14px; border-radius: 3px 3px 4px 4px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--dusk); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="progress"] .badge-legend__mark {
-  border: 1.5px solid var(--control-edge);
-  background: linear-gradient(to top, var(--moss) 55%, var(--surface) 0);
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-legend__item[data-state="locked"] .badge-legend__mark { border: 1.5px dashed var(--control-edge); background: none; }
-
-/* The round: a card holding the BRANCH — every leaf draws its own stretch of
-   bark through its middle, half a gap past either side, so each grid row is
-   one unbroken branch however many leaves it wraps to. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round {
-  margin: 0 0 var(--space-3);
-  padding: 14px 14px 12px;
-  border: 0;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__head {
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-items: baseline;
-  gap: 2px 10px;
-  margin: 0 0 8px;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__name {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 400;
-  line-height: var(--leading-title);
-  overflow-wrap: break-word;
-  color: var(--ink);
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__count { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) {
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
-  gap: 10px 8px;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge { --fj: 44px; isolation: isolate; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: calc(4px + var(--fj) / 2 - 2px);
-  left: -4px;
-  right: -4px;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--bark-light);
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 12px; }
-/* The phone's branch prints the names (F17.3) — but a leaf on its way keeps
-   its count: the moss level is decoration, the number carries it. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge:not([data-state="progress"]) .badge__line { display: none; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__line { font-size: 12px; }
-
-/* The people: one card per member — on a phone a disclosure whose open row is
-   a shelf of jars four across (F17.3). */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members { display: flex; flex-direction: column; gap: var(--space-3); }
+/* The holder rows (#1856): one stump card per holder, the earned marks as
+   small lit jars beside the name — and for the ROUND as leaves on a branch,
+   the bark running behind them as the band's did. */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members { gap: var(--space-3); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member {
   padding: 0 14px;
   border: 0;
@@ -5741,132 +5688,30 @@
   background: var(--surface);
   box-shadow: var(--shadow-1);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  column-gap: 10px;
-  align-items: center;
-  min-height: 56px;
-  padding: 6px 0;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head:focus-visible {
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member:hover { background: var(--moss-hover); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member:focus-visible {
   outline: var(--ring-width) solid var(--brand-ring);
   outline-offset: var(--ring-offset);
-  border-radius: var(--radius-md);
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__summary { grid-column: 2 / 4; grid-row: 2; align-self: start; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1; align-self: end; }
-/* The person ring of the sheets: the member colour as the ring round a light
-   core, as the result's „Wer dabei war" draws it. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__avatar {
-  box-sizing: border-box;
-  width: 36px;
-  height: 36px;
-  border: 4px solid transparent;
-  box-shadow: inset 0 0 0 999px var(--surface);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
-}
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head { min-height: 56px; padding: 6px 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-member__avatar, .badge-member__roundmark) { width: 36px; height: 36px; font-size: 12px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__roundmark { background: var(--moss); color: var(--ink); }
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__name { font-size: 16px; font-weight: 800; color: var(--ink); }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-member__summary, .badge-member__rank) { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head::after {
-  grid-column: 4;
-  grid-row: 1 / 3;
-  margin: 0;
-  content: "\ea61";
-  font-family: "tabler-icons";
-  font-size: 20px;
-  color: var(--ink);
+:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-member__summary, .badge-member__more) { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__go { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__pin { --fj: 24px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member--round .badge-member__pins {
+  background: linear-gradient(var(--bark-light), var(--bark-light)) center / 100% 4px no-repeat;
 }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
-/* The shelf: a bark board the jars stand on. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px 6px;
-  margin: 0;
-  padding: 10px 0 14px;
-  border-top: 6px solid var(--bark-light);
-  border-radius: 3px;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge { --fj: 40px; gap: 4px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge__name { font-size: 12px; line-height: 1.15; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member .badge__line {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  font-size: 12px;
-  line-height: 1.15;
-}
-/* „N offen" (F17.8): a moss leaf pill, the rest of the shelf behind it. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__more {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--target-foot);
-  margin: 0 0 12px;
-  padding: 0 12px;
-  border-radius: var(--radius-leaf-s);
-  background: var(--moss);
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 800;
-  text-decoration: none;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__more:hover { background: var(--moss-hover); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid--rest:not([hidden]) { border-top: 0; padding-top: 0; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-member--round .badge-member__pins:not(:has(.badge-member__pin)) { background: none; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-collection__title { font-size: 13px; font-weight: 800; color: var(--brand); }
 
-@media (min-width: 1024px) {
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: 30px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section__summary { font-size: 15px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-legend {
-    display: flex;
-    flex: none;
-    gap: 16px;
-    margin-left: auto;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ink-soft);
-  }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round { padding: 22px 26px 18px; border-radius: var(--radius-xl); }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__name { font-size: 22px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band__count { font-size: 14px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 14px 8px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge { --fj: 64px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 14px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid > .badge[data-state] .badge__line {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
-  /* The people as two columns of open shelves, in standings order (F17.2). */
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:not(:has(> .badge-member > .badge-member__more)) {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-  }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member { padding: 16px 18px 4px; border-radius: 20px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head { min-height: 0; padding: 0 0 10px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__head::after { display: none; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__avatar { width: 40px; height: 40px; border-width: 5px; font-size: 13px; }
+@media (min-width: 860px) {
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member { padding: 4px 18px; border-radius: 20px; }
+  :root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-member__avatar, .badge-member__roundmark) { width: 40px; height: 40px; font-size: 13px; }
   :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__name { font-size: 17px; }
-  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  :root[data-design="forest"]:not([data-scheme="dark"]) .badge-member__pin { --fj: 28px; }
 }
-
-/* From seven people (F17.8): every row a single shelf of small lit jars — the
-   earned ones only, the rest behind „N offen". K17's fold button is the tell
-   for a dense round; the names stay in every aria-label. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not([hidden]):not(.badge-grid--rest) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 6px;
-}
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) .badge { --fj: 28px; padding: 2px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) .badge__mark::before { content: ""; }
-:root[data-design="forest"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) :is(.badge__name, .badge__dots, .badge__line, .badge__new) { display: none; }
 
 /* --- The tap-open card (F17.1 right): the jar, the name in Young Serif, the
    tiers as leaf chips, the way to the next as a moss bar. ------------------ */
@@ -5939,12 +5784,11 @@
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; font-size: 14px; }
 :root[data-design="forest"]:not([data-scheme="dark"]) .badge-grid--compact :is(.badge__dots, .badge__new) { display: none; }
 
-/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
-   full tiles as bare marks — no name, no condition (the card has it). Scoped
-   through the band and the row so it outranks their column rules. */
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --fj: 32px; min-width: 24px; padding: 2px; }
-:root[data-design="forest"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
+/* The collection's strip of closed marks (#1541, #1856): locked and secret
+   entries as bare jars — no name, no condition (the card has it). */
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip .badge { --fj: 32px; min-width: 24px; padding: 2px; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
 
 /* --- The Spielerkarte's account jars (F17.7): jars WITHOUT a fill level —
    the way to the next tier is the line under each (F17.10 (3)). Five since

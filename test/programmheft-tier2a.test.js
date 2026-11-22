@@ -327,8 +327,8 @@ test('Programmheft: „Pokale" titles the page, „Ruhmeshalle" heads the podium
   assert.equal(text(stage.querySelector('h2.pokale-split__kicker')), 'Ruhmeshalle');
   assert.ok(stage.querySelector('.podium'), 'the podium left the stage');
   assert.ok(side.querySelector('.pokale-table'), 'the table is not in the side column');
-  assert.ok(side.querySelector('.pokale-cards'), 'the plaques are not under the table');
-  assert.ok(side.querySelector('.pokale-table').compareDocumentPosition(side.querySelector('.pokale-cards')) & 4);
+  assert.ok(side.querySelector('.pokale-records'), 'the records are not under the table');
+  assert.ok(side.querySelector('.pokale-table').compareDocumentPosition(side.querySelector('.pokale-records')) & 4);
   assert.equal(dom.app.querySelector('.podium__rest'), null, 'the table names everyone, so no summary line');
 });
 
