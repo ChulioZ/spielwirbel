@@ -115,9 +115,8 @@ test('Klassisch: the hub and the lobby still render the DOM they rendered before
     const dom = await render(t);
     const got = domSignature(dom.app);
     assert.ok(got.length > 10, `${name}: only ${got.length} elements — did the render fail?`);
-    // Forest's counts are on the SECTION links; Klassisch's Start-tab
-    // „Weitere Listen" (#1579) carries counts of its own.
-    assert.equal(dom.app.querySelector('[class*="forest-"], .round-card--forest, .rail__group:not(.rail__offshelf) .rail__count, .seat__ring'), null,
+    // Forest's counts are on the SECTION links; Klassisch's rail has none.
+    assert.equal(dom.app.querySelector('[class*="forest-"], .round-card--forest, .rail__count, .seat__ring'), null,
       `${name}: a Forest element leaked into Klassisch`);
     assert.deepEqual(got, want[name], `${name}: Klassisch's DOM changed`);
   }
@@ -173,7 +172,9 @@ test('Forest hub: the F3.2 checklist, block by block, in reading order', async (
   assert.ok(presets && !presets.classList.contains('rail-owned'));
   assert.equal(presets.firstElementChild.className, 'forest-quick__label');
   assert.equal(presets.firstElementChild.getAttribute('aria-hidden'), 'true', 'the group is named already');
-  assert.ok(presets.querySelectorAll('.hub-preset').length <= 3, 'more than three presets');
+  // „Direkt wählen" leads the chips themselves (#1853), then at most three presets.
+  assert.ok(presets.querySelector('.forest-quick__label + .hub-preset--direct'), '„Direkt wählen" does not lead the chips');
+  assert.ok(presets.querySelectorAll('.hub-preset:not(.hub-preset--direct)').length <= 3, 'more than three presets');
 
   // Zuletzt gespielt — ONE link to the last result — beside „Wie wär's mit".
   const last = main.querySelector('.forest-pair > a.forest-last');
@@ -186,25 +187,19 @@ test('Forest hub: the F3.2 checklist, block by block, in reading order', async (
   assert.equal(dom.app.querySelector('.ticket'), null, 'the Klassisch ticket rendered beside the card');
   assert.ok(precedes(dom, main.querySelector('.forest-stump'), last), 'the stump must come first');
 
-  // Rechts: the previews, then the Rundenpuls and the Kümmerliste.
+  // Rechts: only the slim rows since #1853 — the previews, the grove and the
+  // Rundenpuls left the Start tab, and the Kümmerliste is the „Zu tun" row.
   const aside = col('aside');
-  const hrefs = [...aside.querySelectorAll('.hub-card__go')].map((a) => a.getAttribute('href'));
-  assert.deepEqual(hrefs.slice(0, 3), ['/round/r1/regal', '/round/r1/pokale', '/round/r1/chronik']);
-  assert.ok(aside.querySelector('.pulse-bars'), 'the Rundenpuls left the right column');
-  assert.equal(dom.app.querySelector('.hub-cards .pulse-bars'), null, 'the Rundenpuls rendered twice');
-  // A card handed to two hosts lands in the second and leaves an empty slot in
-  // the first — the grid would keep a gap where the pulse used to be.
+  for (const el of aside.children) assert.ok(el.matches('.hub-todo, .hub-challenge'), el.className);
+  assert.equal(dom.app.querySelector('.hub-preview, .pulse-bars, .hub-offshelf, .hub-actions'), null,
+    'a preview, the pulse, „Weitere Listen" or the quiet actions is back');
   assert.equal(dom.app.querySelector('.hub-cards > .card-slot:empty'), null, 'an empty slot in the card grid');
-
-  // Nicht im Regal reachable; the quiet actions stay in the DOM.
-  const off = root.querySelector(':scope > .hub-offshelf');
-  assert.equal(off.querySelectorAll('.off-shelf__row').length, 4, 'an off-shelf destination is unreachable');
-  const order = [col('crew'), col('main'), col('aside'), off, root.querySelector(':scope > .hub-actions')];
+  const order = [col('crew'), col('main'), col('aside')];
   for (let i = 1; i < order.length; i++) assert.ok(precedes(dom, order[i - 1], order[i]), `block ${i} is out of order`);
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null);
 });
 
-test('Forest hub: a session without a winner says how it ended, and the grove names its leader', async (t) => {
+test('Forest hub: a session without a winner says how it ended, and one with winners names them', async (t) => {
   const dom = await hub(t, 'forest');
   const result = dom.app.querySelector('.forest-last__result');
   assert.ok(!result.classList.contains('forest-last__result--won'));
@@ -214,9 +209,6 @@ test('Forest hub: a session without a winner says how it ended, and the grove na
   const dom2 = await hub(t, 'forest', 'start', round);
   const won = dom2.app.querySelector('.forest-last__result--won');
   assert.equal(won.textContent, 'Ben und Cem haben gewonnen');
-  const pokale = dom.app.querySelector('.hub-card__go[href$="/pokale"]').closest('.hub-preview');
-  assert.equal(pokale.querySelector('.hub-preview__sub').textContent, 'Anna führt');
-  assert.ok(pokale.querySelectorAll('.hub-preview__bar').length >= 1, 'the grove has no trees');
 });
 
 // Since #1471 (F7.3) the empty stump shows only its rings and the empty table

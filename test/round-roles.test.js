@@ -583,32 +583,44 @@ const liveVoteRound = () => ({
   tags: [],
 });
 
-/** The Start tab's control labels, for a caller `roundCan` answers `allowed` for. */
-function startTabLabels(t, { stubDeny } = {}) {
+/** Control labels on a screen, for a caller `roundCan` answers for (#1853 moved
+    the discard from the Start tab's ticket into the voting lobby). */
+function screenLabels(t, { screen, role = 'editor', stubDeny } = {}) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   if (stubDeny) dom.set('roundCan', () => false);
+  dom.set('api', async () => ({}));
   const round = liveVoteRound();
-  dom.call('renderStartTab', round, round.games);
+  if (role === 'owner') { delete round.shared; delete round.role; } else round.role = role;
+  if (screen === 'lobby') dom.call('showSessionLobby', round, round.sessions[0]);
+  else dom.call('renderStartTab', round, round.games);
   return [...dom.app.querySelectorAll('button, a')]
     .map((el) => (el.textContent || '').replace(/\s+/g, ' ').trim())
     .filter(Boolean);
 }
 
-test('the Start screen offers the discard to an editor, whom the route now allows', (t) => {
-  const found = startTabLabels(t);
-  assert.ok(found.includes('Abstimmung verwerfen'),
-    `an editor is not offered the discard they are entitled to: ${found}`);
-  // Anti-vacuous: the ticket itself must still render, or "the label is present"
-  // would be asserted against a screen that draws no live vote at all.
-  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket is gone: ${found}`);
-});
+for (const role of ['owner', 'coowner', 'editor']) {
+  test(`the lobby offers the discard to ${role === 'owner' ? 'the owner' : 'a ' + role}, whom the route allows`, (t) => {
+    const found = screenLabels(t, { screen: 'lobby', role });
+    assert.ok(found.includes('Abstimmung verwerfen'),
+      `a ${role} is not offered the discard they are entitled to: ${found}`);
+    // Anti-vacuous: the lobby itself must render, or "the label is present"
+    // would be asserted against a screen that draws nothing at all.
+    assert.ok(found.some((l) => l.includes('Abstimmung beenden')), `the lobby did not render: ${found}`);
+  });
+}
 
 test('the discard is HIDDEN from a caller the capability refuses, rather than 403ing them', (t) => {
-  const found = startTabLabels(t, { stubDeny: true });
+  const found = screenLabels(t, { screen: 'lobby', stubDeny: true });
   assert.ok(!found.includes('Abstimmung verwerfen'),
     `the discard is rendered unguarded — a refused caller gets a button that 403s: ${found}`);
-  // The ticket is NOT gated, only its discard: hiding the vote itself would take
-  // the round's co-players out of the session they are supposed to be voting in.
-  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket was gated too: ${found}`);
+  assert.ok(found.some((l) => l.includes('Abstimmung beenden')), `the lobby did not render: ${found}`);
+});
+
+test('the Start tab offers the discard to nobody — the live ticket leads to the lobby instead (#1853)', (t) => {
+  const found = screenLabels(t, { screen: 'start', role: 'owner' });
+  assert.ok(!found.includes('Abstimmung verwerfen'), `the Start tab still offers the discard: ${found}`);
+  // The ticket is NOT gated: hiding the vote itself would take the round's
+  // co-players out of the session they are supposed to be voting in.
+  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket is gone: ${found}`);
 });

@@ -2,9 +2,9 @@
 
 /* Der Tisch COMPOSES the round hub (#1262 desktop, #1263 phone) — T2.1, T2.2
  * and T3.2 as the sheets draw them: the seats captioned with a name, a win
- * count and a crown; hero, CTA and presets gathered on one band; the Rundenpuls
- * as stat tiles; the three previews as one tile row; „Nicht im Regal" as count
- * tiles; and a rail reduced to identity plus five links.
+ * count and a crown; hero, CTA and the one chip row gathered on one band; and a
+ * rail reduced to identity plus five links. (The Rundenpuls tiles, the preview
+ * row and the „Nicht im Regal" tiles left the Start tab in #1853.)
  *
  * Every one of those is a markup branch on designIs('tisch'), so the spec runs
  * the real showRound twice — once under Klassisch, asserting the structure it
@@ -19,7 +19,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp } = require('./support/dom');
-const { rulesOf, outranks } = require('./support/css');
+const { rulesOf } = require('./support/css');
 
 const DAY = 86400000;
 const ago = (days) => new Date(Date.now() - days * DAY).toISOString();
@@ -73,11 +73,11 @@ const pane = (dom) => [...dom.app.children].filter((el) => !el.matches('.rail, .
 
 // ------------------------------------------------------------- Klassisch
 
-test('Klassisch keeps its hub exactly: no band, rail-owned CTA and presets, bars, one slot per preview', async (t) => {
+test('Klassisch keeps its hub shape: no band, rail-owned CTA and its one chip row, no preview, no list group (#1853)', async (t) => {
   const dom = await hub(t, null);
   const kids = pane(dom);
   assert.equal(dom.app.querySelector('.hub-stage'), null, 'Klassisch grew the Tisch band');
-  // The hero, the CTA and the presets are direct children of #app, in that
+  // The hero, the CTA and the chip row are direct children of #app, in that
   // order, and the two controls are rail-owned — the rail carries their copies.
   const hero = kids.find((el) => el.matches('.hero'));
   const cta = kids.find((el) => el.matches('.hub-cta'));
@@ -90,31 +90,15 @@ test('Klassisch keeps its hub exactly: no band, rail-owned CTA and presets, bars
   assert.equal(dom.app.querySelectorAll('.seat__cap, .seat__wins, .seat__crown').length, 0,
     'Klassisch seats grew captions');
   assert.equal(dom.app.querySelector('.hero__members .avatar').title, 'Anna');
-
-  assert.ok(dom.app.querySelector('.pulse-bars'), 'the Klassisch Rundenpuls lost its bars');
-  assert.equal(dom.app.querySelector('.pulse-tiles'), null);
-
-  assert.equal(dom.app.querySelector('.hub-previews'), null);
-  const previews = [...dom.app.querySelectorAll('.hub-preview')];
-  assert.equal(previews.length, 3);
-  assert.ok(previews.every((p) => p.parentElement.matches('.hub-cards > .card-slot')),
-    'each Klassisch preview must sit in its own card slot');
-  assert.ok(previews.every((p) => !p.querySelector('.hub-preview__sub') || !/führt|Platz 1/.test(p.textContent)),
-    'the Tisch Pokale lead line leaked into Klassisch');
-
-  const group = dom.app.querySelector('.hub-offshelf');
-  // Rail-owned since #1579: on the Start tab the Klassisch rail carries the four.
-  assert.equal(group.classList.contains('rail-owned'), true);
-  assert.equal(group.querySelectorAll('.ds-row.off-shelf__row').length, 4);
-  assert.equal(dom.app.querySelector('.offshelf-tile'), null);
+  assert.equal(dom.app.querySelector('.pulse-bars, .pulse-tiles, .hub-preview, .hub-offshelf'), null,
+    'a pulse, a preview or „Weitere Listen" is back on the Start tab');
 
   const rail = dom.app.querySelector('.rail');
   assert.ok(rail.querySelector('.rail__cta'), 'the Klassisch rail lost its CTA');
-  assert.ok(rail.querySelector('.hub-presets'), 'the Klassisch rail lost its presets');
-  assert.equal(rail.querySelectorAll(':scope > .rail__group:not(.rail__offshelf) .rail__item').length, 5,
-    'the Klassisch rail is four sections and Einstellungen (its off-shelf rows went in #1500)');
-  assert.equal(rail.querySelectorAll('.rail__offshelf .rail__item').length, 4,
-    'the Start tab rail carries the hub\'s „Weitere Listen" (#1579)');
+  assert.ok(rail.querySelector('.hub-presets > .hub-preset--direct:first-child'), 'the Klassisch rail lost its chip row');
+  assert.equal(rail.querySelectorAll('.rail__item').length, 5,
+    'the Klassisch rail is Start, the three sections and Einstellungen — no list group (#1853)');
+  assert.equal(rail.querySelector('.rail__chips, .rail__offshelf, .rail__play'), null);
 });
 
 // ------------------------------------------------------------- Der Tisch
@@ -125,13 +109,9 @@ test('Der Tisch gathers hero, CTA and presets on one band, in phone order, rail-
   assert.ok(stage, 'no band under Der Tisch');
   assert.ok(pane(dom).includes(stage), 'the band must be a direct child of #app, where the cap lift names it');
   const kids = [...stage.children];
-  assert.deepEqual(kids.map((el) => {
-    if (el.classList.contains('hub-play')) return 'hub-play';
-    return el.classList[0] === 'btn' ? 'hub-cta' : el.classList[0];
-  }), ['hero', 'hub-cta', 'hub-presets', 'hub-play'],
-  'the band is hero → CTA → presets → „Jetzt spielen" (#1682), the phone reading order');
-  assert.ok(!stage.querySelector('.hub-play').classList.contains('rail-owned'),
-    '„Jetzt spielen" is rail-owned — Der Tisch\'s rail carries no copy of it');
+  assert.deepEqual(kids.map((el) => (el.classList[0] === 'btn' ? 'hub-cta' : el.classList[0])),
+    ['hero', 'hub-cta', 'hub-presets'],
+    'the band is hero → CTA → the one chip row (#1853), the phone reading order');
   assert.ok(!stage.querySelector('.hub-cta').classList.contains('rail-owned'),
     'the CTA is still rail-owned — it would vanish at 1280 with no rail copy to replace it');
   assert.ok(!stage.querySelector('.hub-presets').classList.contains('rail-owned'));
@@ -152,50 +132,6 @@ test('Der Tisch captions every seat, badges the wins and crowns the leader from 
     .every((el) => el.getAttribute('aria-hidden') === 'true')));
   const add = dom.app.querySelector('.hero__members > .avatar--add');
   assert.equal(add.querySelector('.seat__cap').textContent, dom.run("t('hub.seat.add')"));
-});
-
-test('Der Tisch states the Rundenpuls as three stat tiles, the unplayed one a link into the Regal', async (t) => {
-  const dom = await hub(t, 'tisch');
-  assert.equal(dom.app.querySelector('.pulse-bars'), null, 'the Tisch Rundenpuls still draws bars');
-  // `:not(.shelf-tiles)`: the Regal-Steckbrief's Start card drew its seat bands
-  // in this markup until #1683 made it one sentence; the guard stays harmless.
-  const tiles = [...dom.app.querySelectorAll('.pulse-tiles:not(.shelf-tiles) > .pulse-tile')];
-  assert.equal(tiles.length, 3);
-  assert.deepEqual(tiles.map((el) => el.querySelector('.pulse-tile__n').textContent), ['3', '5', '5'],
-    'sessions in 12 months · days since the last · games never played');
-  assert.equal(tiles[2].tagName, 'A');
-  assert.match(tiles[2].getAttribute('href'), /\/round\/r1\/regal$/);
-});
-
-test('Der Tisch shares ONE slot between the surviving previews, and the Pokale tile names the leader', async (t) => {
-  const dom = await hub(t, 'tisch');
-  const row = dom.app.querySelector('.hub-cards > .hub-previews');
-  assert.ok(row, 'the previews are not gathered into one row');
-  assert.equal(row.querySelectorAll(':scope > .hub-preview').length, 3);
-  assert.equal(dom.app.querySelectorAll('.hub-preview').length, 3, 'a preview escaped the row');
-  assert.match(row.textContent, /Anna führt/);
-
-  // Null-or-nothing: a young shelf drops the Regal preview, and the row holds
-  // the two survivors rather than keeping a hole for it.
-  const small = busyRound();
-  small.games = small.games.slice(0, 3);
-  const dom2 = await hub(t, 'tisch', small);
-  assert.equal(dom2.app.querySelectorAll('.hub-previews > .hub-preview').length, 2);
-});
-
-test('Der Tisch offers „Weitere Listen" as four count tiles, on the hub at every width', async (t) => {
-  const dom = await hub(t, 'tisch');
-  const group = dom.app.querySelector('.hub-offshelf--tiles');
-  assert.ok(group, 'no tile group');
-  assert.ok(!group.classList.contains('rail-owned'),
-    'the tiles are rail-owned — at 1280 the Tisch rail has no off-shelf group to stand in');
-  const tiles = [...group.querySelectorAll('a.offshelf-tile')];
-  assert.equal(tiles.length, 4);
-  assert.deepEqual(tiles.map((el) => (el.querySelector('.offshelf-tile__n') || {}).textContent || null),
-    ['1', '1', '1', null], 'the three lists carry their count; the recommendations never do');
-  assert.deepEqual(tiles.map((el) => el.getAttribute('href').split('/').pop()),
-    ['wishlist', 'retired', 'completed', 'recommendations']);
-  assert.equal(tiles[0].getAttribute('aria-label'), dom.run("t('wish.link', { n: 1 })"));
 });
 
 test('Der Tisch reduces the rail to identity and the five links', async (t) => {
@@ -238,7 +174,7 @@ const DESKTOP = (() => {
 test('from 1280 the band is the felt, the cap is lifted for the hub blocks, and the grid is three wide', () => {
   const rules = rulesOf(DESKTOP.replace(/@media[^{]+\{/, ''));
   const body = (needle) => rules.filter(([s]) => s.includes(needle)).map(([, b]) => b).join('\n');
-  for (const sel of ['.hub-stage', '.hub-cards', '.hub-offshelf', '.ticket']) {
+  for (const sel of ['.hub-stage', '.hub-cards', '.ticket']) {
     assert.ok(rules.some(([s, b]) => s.includes(`.app > ${sel}`) && /max-width:\s*none/.test(b)),
       `${sel} keeps the reading-measure cap at 1280`);
   }
@@ -260,23 +196,4 @@ test('a hub card fills its slot, so a short card beside a tall one leaves no hol
   const card = rules.find(([s]) => s.trim() === ':root[data-design="tisch"] .hub-cards > .card-slot > :only-child');
   assert.ok(card, 'the card does not fill its slot');
   assert.match(card[1], /flex:\s*1\b/);
-});
-
-test('the previews row outranks the slot rule, so its tiles sit in a row and dissolve into the grid from 1280', () => {
-  /* #1496 made every slot a flex column at (0,4,0); the row's own `display:
-     grid` and the desktop `display: contents` were (0,3,0) and lost, so the
-     phone tiles stacked full-width and the desktop put all three previews in
-     one cell. Found verifying #1506; the DOM probes cannot see it, only the
-     cascade can. */
-  const slot = ':root[data-design="tisch"] .hub-cards > .card-slot';
-  const all = rulesOf(SHEET);
-  // Every rule whose SUBJECT is the row and that sets its display.
-  const subject = (sel) => sel.split(',').map((x) => x.trim()).filter((x) => /\.hub-previews$/.test(x));
-  const setters = all.filter(([sel, body]) => subject(sel).length && /(^|;)\s*display:/.test(body));
-  assert.ok(setters.length >= 2, `expected the row rule and the desktop dissolve, found ${setters.length}`);
-  for (const [sel, body] of setters) {
-    for (const one of subject(sel)) {
-      assert.ok(outranks(one, slot), `${one} { ${body.trim()} } ties or loses to ${slot}`);
-    }
-  }
 });

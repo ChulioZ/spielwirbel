@@ -1,34 +1,39 @@
 /* Spielwirbel – the round hub's Start tab (#923, split out of views-round.js).
 
-   The launchpad: identity, the one big CTA, the tickets that carry the latest
-   story — and the grid those tickets sit above. Before #923 a settled round met
-   a ticket and a button here, and above 1280px the rail had taken even those,
-   which is what `.empty--rail-gap` was invented to paper over.
+   ONE STAGE (#1853): the seats, whatever session is running, the one action
+   („Session wirbeln") and ONE row of chips under it — „Direkt wählen" first,
+   then the quick-start presets. Below the stage only what a group needs often:
+   „Zuletzt gespielt" (carrying the last session's new Abzeichen), „Wie wär's
+   mit", one folded „Zu tun · n" row and a slim challenge row. Nothing here
+   restates another screen: the Regal/Pokale/Chronik previews, „Weitere
+   Listen", the recommendations teaser, the Rundenpuls and the Regal-Steckbrief
+   all left in #1853 (the dock, the tab strip and the rail reach every one of
+   those sections at every width, and #1852 gave the pulse and the profile
+   their own homes). Don't bring a preview back: a fact twice on one screen is
+   what the 2026-11-21 deep-dive measured as half the phone height.
 
-   THE CARDS THEMSELVES LEFT IN #1189, for hub-cards.js — the seam the banner
-   in this file had marked since #923, taken when the file crossed its budget
-   (.claude/rules/token-friendly-source-files.md). What is left is the tab: what
-   it composes, in what order, and the three things that decide whether a block
-   appears at all. The card renderers, their shared frame and the preset chips
-   are next door; the three sub-page previews went to hub-previews.js in #1185.
+   WHAT IS RUNNING SITS ABOVE THE ACTION. An open vote is the evening already in
+   progress, so its ticket leads the stage and „Session wirbeln" — starting a
+   second one — follows it. „Abstimmung verwerfen" is not here at all any more:
+   it lives in the voting lobby (showSessionLobby), the screen the ticket opens.
+
+   THE CARDS THEMSELVES live in hub-cards.js — the seam the banner in this file
+   had marked since #923. What is left is the tab: what it composes, in what
+   order, and where each design wants it.
 
    THE LOAD-BEARING RULE EVERY CARD FOLLOWS: it renders NOTHING when it has
    nothing to say. A brand-new round with three games and no session must meet
    the screen it met before, not six empty boxes — so each renderer returns null
    for that case and the loop below appends only what came back.
 
-   The YOUNG round (#1269, T7.3/T7.4) does not contradict that rule. The rule is
-   about not showing six empty boxes; T7 asks instead for ONE named next step —
-   the empty table with its two actions on a 0-game round (every design since
-   the #1269 merge interview), and under Der Tisch the invitation card and a
-   sentence per card („ab wann es Zahlen gibt") once games exist but no session
-   does. Each is a single statement of what comes next, never an empty
-   container.
+   The YOUNG round (#1269, T7.3/T7.4) does not contradict that rule: the empty
+   table on a 0-game round and Der Tisch's invitation card are each a single
+   statement of what comes next, never an empty container.
 
    Part of the frontend; all files share one global script scope. Loaded right
    after views-round.js. */
 
-// --- Start tab: the launchpad — identity, the one big CTA, the latest story.
+// --- Start tab: the stage, then what is used often.
 function renderStartTab(round, activeGames) {
   const rid = round.id;
 
@@ -38,57 +43,52 @@ function renderStartTab(round, activeGames) {
 
   const playedCount = round.sessions.filter((s) => s.finished).length;
   /* Der Tisch composes the top of the hub as ONE felt band at desktop — seats,
-     the one action and its presets together (T3.2, #1262). So under that design
-     the three are gathered in a `.hub-stage` wrapper: DOM order is unchanged
-     (hero, CTA, presets — the phone order), and CSS alone decides whether the
-     band holds just the hero (below 1280) or all three (from 1280 up), so a
-     resize needs no re-render. Klassisch appends straight to `app`, exactly as
-     before. */
+     what is running, the one action and its chips together (T3.2, #1262). DOM
+     order is the phone order, and CSS alone decides whether the band holds just
+     the hero (below 1280) or all of it (from 1280 up). Klassisch appends
+     straight to `app`. */
   const tisch = designIs('tisch');
-  /* Ocean composes the hub as three columns at desktop and one at a phone
-     (O3.2, O2.1; #1211): the crew, the shell with the one action, and the
-     previews — built as real DOM columns (ocean-hub.js) so the phone order IS
-     the DOM order and CSS only decides whether they sit side by side. */
+  /* Ocean and Forest compose the hub as three columns at desktop and one at a
+     phone (O3.2, F3.2; #1211, #1466): the crew, the main column with the one
+     action, and the aside — real DOM columns, so the phone order IS the DOM
+     order. Since #1853 the aside carries the „Zu tun" and challenge rows. */
   const ocean = designIs('ocean');
-  /* Forest draws the same three columns (F3.2, F2.1; #1466) and drives them
-     through the same `cols` (forest-hub.js) — only the stump, the head and the
-     „Zuletzt gespielt" card are its own. */
   const forest = designIs('forest');
   const cols = ocean ? oceanHubFrame() : forest ? forestHubFrame() : null;
   if (cols) app.appendChild(cols.root);
   /* Die Brücke (#1238, B2.2/B3.1) lays the hub out as named slots in the phone
-     order (bruecke-hub.js), moved into three column wrappers from 1280 (#1496) —
-     `bh` is that frame, and every append below that names a slot goes there. */
+     order (bruecke-hub.js), moved into column wrappers from 1280 (#1496). */
   const bh = designIs('bruecke') ? brueckeHubFrame() : null;
   if (bh) app.appendChild(bh.root);
   /* Das Programmheft sets the hub as a printed front page (P3.2, P2.1; #1372):
-     the head, the black box with the one action, the lead story, the side
-     column and the bottom strip — real DOM cells (programmheft-hub.js), so the
-     phone order is the DOM order, the Ocean shape. */
+     the head, the black box with the one action, the lead story and the side
+     column — real DOM cells (programmheft-hub.js). */
   const ph = designIs('programmheft') ? phHubFrame() : null;
   if (ph) app.appendChild(ph.root);
   const stage = tisch ? app.appendChild(h('<div class="hub-stage"></div>'))
     : cols ? cols.crew : bh ? bh.crew : ph ? ph.head : app;
-  // Where the one action and its presets go, and where the tickets and cards
-  // follow them. Both are the plain column everywhere but Ocean, Die Brücke and
-  // the Programmheft.
+  // Where the running tickets, the one action and its chips go, and where the
+  // rest follows them.
   const launch = cols ? cols.main : bh ? bh.mission : ph ? ph.box : stage;
   const feed = cols ? cols.main : bh ? bh.feed : ph ? ph.more : app;
-  // The running sessions are the Programmheft's lead story, above the last one.
-  const tickets = ph ? ph.lead : feed;
+  // Where the „Zu tun" and challenge rows go: each design's side column.
+  const side = cols ? cols.aside : bh ? bh.care : ph ? ph.side : feed;
   const hero = h(`<div class="hero${cols || bh || ph ? '' : ' rail-owned'}">
        <h1></h1>
        <div class="hero__members">${activeMembers(round)
          .map((m) => `<a class="avatar" style="background:${memberColor(round, m.id)}" title="${esc(m.name)}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`)
          .join('')}</div>
-       <div class="hero__chips">
-         <span class="stat-chip"><i class="ti ti-cards" aria-hidden="true"></i>${esc(tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games'))}</span>
-         <span class="stat-chip"><i class="ti ti-confetti" aria-hidden="true"></i>${esc(tn(playedCount, 'home.chip.sessionsOne', 'home.chip.sessions'))}</span>
-       </div>
      </div>`);
   // The name is inline-editable (#562); the rail's copy of this heading carries
   // the same affordance for widths where CSS hides the hero.
-  hero.querySelector('h1').appendChild(editableRoundName(round));
+  const h1 = hero.querySelector('h1');
+  h1.appendChild(editableRoundName(round));
+  /* Einstellungen as a gear on the round's name (#1853) — the one way to the
+     round's settings from this tab at every width. Forest and the Programmheft
+     print their own labelled link in their head (forestHeroCompose,
+     phHeroCompose), so they get no second one. Klassisch's rail keeps its own
+     entry: that one is navigation (persistent-chrome-defines-the-main-pages). */
+  if (!forest && !ph) h1.appendChild(hubSettingsGear(round));
   stage.appendChild(hero);
   // Each hero avatar opens that member's detail page. Queried before the "+" is
   // appended, so the index-to-member mapping cannot pick it up.
@@ -96,16 +96,13 @@ function renderStartTab(round, activeGames) {
     const m = activeMembers(round)[i];
     if (m) makeMemberLink(el, rid, m.id);
   });
-  // Add a seat (#563), right where the seats are listed. A real <button>, not a
-  // focusable span: it is not inline text sharing a line, so the platform gives
-  // focus, Enter and Space for free (.claude/rules/native-button-vs-focusable-span.md).
+  // Add a seat (#563), right where the seats are listed — a real <button>
+  // (.claude/rules/native-button-vs-focusable-span.md).
   hero.querySelector('.hero__members').appendChild(addMemberBtn(round));
-  /* Retired seats (#1006), dimmed and after the "+", on the hero ONLY. They are
-     off every forward-looking list — the setup seats, teams, rankings, trophies —
-     but they have to stay REACHABLE or there is no way back: restoring one
-     happens on that member's own page, and nothing else on the screen links to
-     it. Appended after the link wiring above so the index-to-member mapping
-     cannot pick them up, and given their own link here. */
+  /* Retired seats (#1006), dimmed and after the "+", on the hero ONLY: restoring
+     one happens on that member's own page, and nothing else on the screen links
+     to it. Appended after the link wiring above so the index-to-member mapping
+     cannot pick them up. */
   (round.members || []).filter((m) => !memberIsActive(m)).forEach((m) => {
     const el = h(`<a class="avatar avatar--retired" style="background:${memberColor(round, m.id)}" title="${esc(t('member.retiredTitle', { name: m.name }))}">${avatarFace(initials(m.name), { userId: m.userId })}</a>`);
     makeMemberLink(el, rid, m.id);
@@ -113,13 +110,9 @@ function renderStartTab(round, activeGames) {
   });
 
   /* `--seat-i` / `--seat-n` are design-NEUTRAL position hints (#1189), written
-     LAST so every seat the strip ends up holding is counted: the members, the
-     „+" and the retired tail. Nothing in styles.css reads either, so Klassisch's
-     strip is the flex line it has always been — but a design that lays the seats
-     out as an ARC on the table's edge needs to know which seat this is and how
-     many there are, and the offset of one depends on the count, which CSS
-     cannot ask for. Same shape as markerStyle(): per-element data handed to CSS
-     as an inline custom property. */
+     LAST so every seat the strip ends up holding is counted: a design that lays
+     the seats out as an ARC needs to know which seat this is and how many there
+     are, which CSS cannot ask for. */
   const seatRow = hero.querySelector('.hero__members');
   seatRow.style.setProperty('--seat-n', seatRow.children.length);
   [...seatRow.children].forEach((el, i) => el.style.setProperty('--seat-i', i));
@@ -131,18 +124,22 @@ function renderStartTab(round, activeGames) {
 
   /* `rail-owned` only where the rail still carries its own copy. Der Tisch's
      rail is identity plus the five links (#1262), so there the band's CTA and
-     presets are the ONLY ones at every width — one control, one place, one tab
-     stop. */
+     chips are the ONLY ones at every width. */
   const railOwned = railIsLean() ? '' : ' rail-owned';
+
+  // --- What is running, ABOVE the action (#1853). Die Brücke's tickets sit in
+  // its mission slot ahead of the Missionskontrolle panel; the Programmheft's
+  // at the top of the black box, over its kicker.
+  const running = hubRunningTickets(round);
+  if (running) {
+    if (ph) launch.prepend(running);
+    else launch.appendChild(running);
+  }
+
   /* The young round (T7.3, T7.4; #1269). A 0-game round gets the EMPTY TABLE
      right before the locked button, with the two ways to fill it — in EVERY
-     design: Klassisch's phone hub had the same dead end (operator, #1269 merge
-     interview). Under Der Tisch a round with games and no session yet also has
-     the CTA say „Erste Session wirbeln"; the invitation card in the grid carries
-     the count. The threshold is the app's own — one active game — not the
-     sheet's „ab 2 Spielen" (operator default on #1269). */
-  // Die Brücke folds the empty table into the Missionskontrolle below (B7.1).
-  // Forest puts it UNDER the stump instead (F7.3, #1471 — forestYoung).
+     design. Die Brücke folds it into the Missionskontrolle (B7.1); Forest puts it
+     UNDER the stump (F7.3, #1471 — forestYoung). */
   if (activeGames.length === 0 && !bh && !forest) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
@@ -156,183 +153,45 @@ function renderStartTab(round, activeGames) {
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
     startBtn.disabled = true;
-    /* The reason is VISIBLE on the button (T7.3), in every design — it used to
-       be a `title`, which no touch screen shows and no screen reader reliably
-       reads. aria-hidden inside the button so the name stays „Session
-       wirbeln", and referenced by aria-describedby so it is still announced,
-       as the description (a hidden node is included when referenced). */
+    /* The reason is VISIBLE on the button (T7.3), in every design. aria-hidden
+       inside the button so the name stays „Session wirbeln", and referenced by
+       aria-describedby so it is still announced, as the description. */
     startBtn.appendChild(h(`<span class="hub-cta__reason" id="hub-cta-reason" aria-hidden="true">${esc(t('hub.young.lock'))}</span>`));
     startBtn.setAttribute('aria-describedby', 'hub-cta-reason');
   }
   if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
   else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(activeGames.length ? startBtn : null) : startBtn);
-  // Ocean's young round (#1216, O7.3): the shell stays the centre, and one
-  // line under it says what is waiting for the first session. Forest's says
-  // it for every unplayed state, the empty table included (F7.3–F7.4, #1471).
+  // Ocean's young round (#1216, O7.3): one line under the shell says what is
+  // waiting for the first session. Forest's says it for every unplayed state.
   if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
   const forestLine = forest && forestYoung(round, activeGames);
   if (forestLine) launch.appendChild(forestLine);
 
-  // Quick-start presets (#923): the same draw, already narrowed. Directly under
-  // the CTA because they modify it — and only when this shelf can actually
-  // express one, so the row is absent rather than empty.
-  if (activeGames.length) {
-    const presets = hubPresetChips(round, activeGames);
-    // `rail-owned`, exactly like the CTA above: from 1280px up the rail carries
-    // both, and a chip row left behind here would modify a button that has left
-    // the pane.
-    if (presets) {
-      if (!railIsLean()) presets.classList.add('rail-owned');
-      if (ph) launch.appendChild(phPresetsLabel());
-      if (forest) presets.prepend(forestPresetsLabel());
-      // Die Brücke: inside the Missionskontrolle panel, under the ignition.
-      (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(presets);
-    }
-  }
-  // „Jetzt spielen" (#1682): after the CTA and its presets, never between them,
-  // and `rail-owned` exactly where the CTA is — directPlayButton says why.
-  (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(directPlayButton(round, `hub-play${railOwned}`));
+  /* ONE chip row under the action (#1853): „Direkt wählen" first, then the
+     quick-start presets — hubPresetChips builds both, for the rail too. It does
+     not wrap; on a phone it scrolls sideways (styles.css). `rail-owned` exactly
+     like the CTA above: from 1280px up Klassisch's rail carries both. */
+  const chips = hubPresetChips(round, activeGames);
+  if (!railIsLean()) chips.classList.add('rail-owned');
+  if (ph && chips.querySelector('.hub-preset:not(.hub-preset--direct)')) launch.appendChild(phPresetsLabel());
+  if (forest) chips.prepend(forestPresetsLabel());
+  // Die Brücke: inside the Missionskontrolle panel, under the ignition.
+  (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(chips);
   // „Einfacher Modus" offer (#1768): below the one action, above what it hides.
   const simplePrompt = simpleModePromptCard(round);
   if (simplePrompt) feed.appendChild(simplePrompt);
 
-  // "Vote in progress" tickets: a draw whose voting was abandoned before the
-  // hot-seat wizard POSTed its results (#329). The row is created server-side at
-  // draw time, so leaving mid-vote used to strand a `done: false` session that
-  // no screen ever showed. Offered here instead — resuming re-enters the wizard
-  // with the same drawn games (no vote was ever saved, so it honestly starts
-  // over), and the discard deletes the row.
-  // The draw stays secret until everyone has rated, so this ticket deliberately
-  // shows neither cover nor title — only how many games were drawn.
-  newestSessionsFirst(round.sessions
-    .filter((s) => !s.done && !s.cancelled))
-    .forEach((session) => {
-      const n = (session.gameIds || []).length;
-      // One vocabulary since #655: every open session's votes live on the
-      // server as they are given, so none of them is an "abandoned draw" to be
-      // resumed — voting is simply still running, here or on someone's phone.
-      const ticket = h(`<button class="ticket ticket--live">
-           <span class="ticket__main">
-             <span class="ticket__img"><i class="ti ti-tornado" aria-hidden="true"></i></span>
-             <span class="ticket__info">
-               <span class="ticket__label">${esc(t('round.liveLabel'))}</span>
-               <span class="ticket__title">${esc(tn(n, 'round.draftTitleOne', 'round.draftTitle'))}</span>
-               <span class="ticket__meta">${esc(fmtSessionWhen(session))}</span>
-             </span>
-           </span>
-           <span class="ticket__stub">
-             <i class="ti ti-player-play" aria-hidden="true"></i>
-             <span class="ticket__names">${esc(t('round.liveVote'))}</span>
-           </span>
-         </button>`);
-      // The lobby is the entry point every participant uses: open the app, tap
-      // the round, tap the ticket, vote. It needs no guard against a deleted game
-      // or member — unlike the wizard it used to open, it renders whatever the
-      // session still has and offers the actions that fit.
-      ticket.addEventListener('click', () => showSessionLobby(round, session));
-      tickets.appendChild(ticket);
-
-      // Guarded even though every grantee role clears the floor today (#857):
-      // the route decides on a capability, so the control has to ask the same
-      // question, or a re-tightening tomorrow degrades to a button that 403s
-      // instead of one that is simply absent.
-      if (!roundCan(round, 'session.discard')) return;
-
-      const discard = h(`<div class="center ticket__discard"><button class="link-btn">${esc(t('round.draftDiscard'))}</button></div>`);
-      discard.querySelector('button').addEventListener('click', async () => {
-        if (!await confirmDialog({
-          body: t('round.draftDiscardConfirm'), confirmLabel: t('round.draftDiscard'),
-        })) return;
-        try {
-          await api('DELETE', `/api/rounds/${round.id}/sessions/${session.id}`);
-          toast(t('round.toast.draftDiscarded'));
-          await fetchRoundFresh(round.id);
-          showRound(round.id, 'start');
-        } catch (e) { toast(e.message, { tone: 'error' }); }
-      });
-      tickets.appendChild(discard);
-    });
-
-  // "In progress" tickets: sessions whose voting is done but that have not yet
-  // reached a final state (no winner recorded, not cancelled). Shown above the
-  // last-played ticket, newest first; tapping resumes on the results screen.
-  //
-  // A split parent (#796) is NOT in progress — it is resolved, and its tables are
-  // the sessions still open — so it is excluded by outcome rather than by a
-  // fourth boolean. Its children stay in the list and are nested under one header
-  // below, so three tickets at the same minute read as one evening's three tables
-  // rather than as three unrelated evenings.
-  const inProgress = round.sessions
-    .filter((s) => s.done && !s.finished && !s.cancelled && !isSplitParent(s));
-  const splitParents = new Map(
-    round.sessions.filter(isSplitParent).map((s) => [s.id, s])
-  );
-  const groupKey = (s) => (s.parentSessionId && splitParents.has(s.parentSessionId) ? s.parentSessionId : null);
-  const mounts = new Map(); // parent id -> the element its tables render into
-  newestSessionsFirst(inProgress)
-    .forEach((session) => {
-      const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
-      const when = fmtSessionWhen(session, session.chosenAt || session.createdAt);
-      const imgStyle = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
-      const fallback = game
-        ? coverPlaceholder(game)
-        : '<i class="ti ti-tornado" aria-hidden="true"></i>';
-      let pill = '';
-      if (game) {
-        const sst = gameStatsForSession(round, session, game.id);
-        if (sst.score !== null) pill = `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
-      }
-      const title = game ? esc(game.title) : esc(t('round.inProgressDeciding'));
-      const ticket = h(`<a class="ticket ticket--live">
-           <span class="ticket__main">
-             <span class="ticket__img"${imgStyle}>${fallback}</span>
-             <span class="ticket__info">
-               <span class="ticket__label">${esc(t('round.inProgressLabel'))}</span>
-               <span class="ticket__title">${title}</span>
-               <span class="ticket__meta">${esc(when)}${pill}</span>
-             </span>
-           </span>
-           <span class="ticket__stub">
-             <i class="ti ti-player-play" aria-hidden="true"></i>
-             <span class="ticket__names">${esc(t('round.resume'))}</span>
-           </span>
-         </a>`);
-      navLink(ticket, resultsPath(round.id, session.id), () => showResults(round, session));
-      const parentId = groupKey(session);
-      if (!parentId) {
-        tickets.appendChild(ticket);
-        return;
-      }
-      // One header per split evening, created by whichever of its tables is
-      // rendered first, so the group keeps the newest-first position it earned.
-      if (!mounts.has(parentId)) {
-        const parent = splitParents.get(parentId);
-        const group = h(`<div class="split-group">
-             <a class="split-group__head">${iconText('ti-layout-grid', t('tables.parentLabel'))}
-               <span class="split-group__link">${esc(t('tables.openParent'))}</span>
-             </a>
-             <div class="split-group__body"></div>
-           </div>`);
-        navLink(group.querySelector('.split-group__head'), resultsPath(round.id, parentId), () => showResults(round, parent));
-        tickets.appendChild(group);
-        mounts.set(parentId, group.querySelector('.split-group__body'));
-      }
-      // Prepended: the loop runs newest-first, and a split's tables share one
-      // stamp, so they arrive last table first (#1622). Prepending puts table 1
-      // back on top inside the group, the order the Chronik nests them in.
-      mounts.get(parentId).prepend(ticket);
-    });
-
-  // "Last played" ticket: the newest finished session whose chosen game still
-  // exists. Delivers the emotional payoff above the fold; tap opens that result.
-  // Ordered by `createdAt` — when the session was played — so this agrees with
-  // the Chronik; `finishedAt` changes when an old session is re-finished.
-  /* Ocean sets „Zuletzt gespielt" and „Wie wär's mit" side by side under the
-     shell (O3.2) and stacked on a phone (O2.1): one wrapper, filled here and by
-     the suggestion card below, dropped again if neither has anything to say. */
+  // --- „Zuletzt gespielt": the newest finished session whose chosen game still
+  // exists. Ordered by `createdAt` — when it was played — so this agrees with
+  // the Chronik. It carries the last session's new Abzeichen (#1853), the one
+  // fact only the Pokale preview used to say (hubBadgeLine, views-badges.js).
+  /* Ocean and Forest set „Zuletzt gespielt" and „Wie wär's mit" side by side
+     under the action (O3.2) and stacked on a phone (O2.1): one wrapper, dropped
+     again if neither has anything to say. */
   const pair = cols ? cols.main.appendChild(h(`<div class="${forest ? 'forest-pair' : 'ocean-pair'}"></div>`)) : null;
   const lastPlayed = newestSessionsFirst(round.sessions
     .filter((s) => s.finished && s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId)))[0];
+  const badges = lastPlayed ? hubBadgeLine(round) : null;
   if (lastPlayed && ph) {
     const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
     const people = sessionPeople(round, lastPlayed);
@@ -347,188 +206,73 @@ function renderStartTab(round, activeGames) {
       note: youngRoundPlayed(round, hubDeps()) < YOUNG_ROUND_SERIES_FROM
         ? tn(YOUNG_ROUND_SERIES_FROM, 'hub.young.seriesOne', 'hub.young.series') : '',
     });
+    if (badges) lead.querySelector('.ph-lead__open').before(badges);
     navLink(lead, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
     ph.lead.appendChild(lead);
   } else if (lastPlayed && forest) {
-    pair.appendChild(forestLead(round, lastPlayed));
+    const lead = forestLead(round, lastPlayed);
+    if (badges) lead.querySelector('.forest-last__text').appendChild(badges);
+    pair.appendChild(lead);
   } else if (ph && activeGames.length && roundIsYoung(round)) {
     // P7.4 (#1377): nothing played yet — the lead says what is waiting.
     ph.lead.appendChild(phYoungLead(activeGames));
   } else if (lastPlayed) {
-    const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
-    // Winners resolve against the session's own people, so a guest winner shows
-    // up here too — marked as a guest (#458).
-    const lastPeople = sessionPeople(round, lastPlayed);
-    const winnerNames = (lastPlayed.winnerIds || [])
-      .map((wid) => personLabel(lastPeople.find((p) => p.id === wid)))
-      .filter(Boolean);
-    const sst = gameStatsForSession(round, lastPlayed, game.id);
-    const when = fmtSessionWhen(lastPlayed);
-    const imgStyle = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
-    const fallback = coverPlaceholder(game);
-    const pill =
-      sst.avg !== null
-        ? `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
-        : '';
-    /* The stub's icon names what is written under it — the convention the three
-       live stubs above follow, and the one this ticket broke (#1106): the trophy
-       sat OUTSIDE the winner ternary, so a lost evening rendered it over the
-       skull „Verloren" carries. Icon and label now come from the same entry, so
-       they cannot disagree, and `endingText()` is deliberately NOT used here —
-       it returns icon and label as one unit, which is what stacked the second
-       glyph. `ENDING_LABELS` has no `won` entry by design (session-outcome.js),
-       so the winner branch and the map cannot overlap; don't re-derive the state
-       from `winnerIds`/`cancelled`. */
-    const ending = ENDING_LABELS[sessionEnding(lastPlayed)];
-    const stubIcon = winnerNames.length ? 'ti-trophy' : ending ? ending.icon : 'ti-check';
-    const stubLabel = winnerNames.length
-      ? joinNames(winnerNames)
-      : ending ? t(ending.key) : t('sessions.played');
-    const ticket = h(`<a class="ticket">
-         <span class="ticket__main">
-           <span class="ticket__img"${imgStyle}>${fallback}</span>
-           <span class="ticket__info">
-             <span class="ticket__label">${esc(t('round.lastPlayedLabel'))}</span>
-             <span class="ticket__title">${esc(game.title)}</span>
-             <span class="ticket__meta">${esc(when)}${pill}</span>
-           </span>
-         </span>
-         <span class="ticket__stub${winnerNames.length ? '' : ' ticket__stub--plain'}">
-           <i class="ti ${stubIcon}" aria-hidden="true"></i>
-           <span class="ticket__names">${esc(stubLabel)}</span>
-         </span>
-       </a>`);
-    navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
+    const ticket = hubLastTicket(round, lastPlayed);
+    if (badges) ticket.querySelector('.ticket__info').appendChild(badges);
     (ocean ? pair : bh ? bh.last : app).appendChild(ticket);
   }
 
   // The retirement recommendations are resolved BEFORE the cards, because the
-  // suggestion card has to exclude whatever this banner is about to nag about —
-  // a screen that recommends and archives the same game in one render reads as
-  // the app disagreeing with itself. The banner is appended further down, in
-  // the position it has always had.
+  // suggestion card has to exclude whatever the „Zu tun" row is about to nag
+  // about — a screen that recommends and archives the same game in one render
+  // reads as the app disagreeing with itself.
   // „Einfacher Modus" (#1646): the gentle retire nudges ride `suggestions`.
   const recs = simpleHidden('suggestions') ? []
     : retireRecommendations(activeGames, statsByGame, activeMembers(round).length * 3);
   const nagged = new Set(recs.map((r) => r.game.id));
 
-  // The card grid (#923). Built DETACHED and appended below, so the #869
-  // stand-in can ask whether anything landed in it before deciding whether the
-  // pane is empty. Every renderer returns null when it has nothing to say, and
-  // an all-null grid is never appended at all — a young round meets the screen
-  // it met before, not six empty boxes.
-  //
-  // DOM order is the phone order, action-first.
-  //
-  // Each card goes in a `.card-slot`, which carries the flow's vertical spacing
-  // (#946) — a margin on the card itself is carried across the column break by
-  // WebKit instead of being truncated.
+  // The card grid (#923). Every renderer returns null when it has nothing to
+  // say, and `.hub-cards:empty` is `display: none`. Each card goes in a
+  // `.card-slot`, which carries the flow's vertical spacing (#946).
   const grid = h('<div class="hub-cards"></div>');
-  /* Der Tisch's DEMO round (T7.6, #1280): the three previews condense into one
-     list and the „Gefällt dir das?" invitation follows it, both leading the grid
-     right under the plate — the demo's point is the invitation, so it goes
-     above the fold. isDemoAccount() is the banner's own predicate, so the two
-     can never disagree about whether this is a demo.
-
-     The invitation is generic, so it leads every design's demo grid since
-     #1318; only the condensed list is Tisch composition. Klassisch keeps its
-     three previews. */
-  const demoAccount = isDemoAccount();
-  // The Programmheft condenses them too (P7.6, #1377), in its lead column.
-  const demo = (tisch || ph) && demoAccount;
-  const demoHost = ph ? (card) => ph.lead.appendChild(card) : (card) => grid.appendChild(cardSlot(card));
-  if (demo) demoHost(hubDemoSummary(round, activeGames));
-  /* Forest (F7.6, #1471): the invitation as a band over the whole hub, the
-     condensed list under the stump — and its previews stay on the right. */
-  if (forest && demoAccount) cols.main.appendChild(hubDemoSummary(round, activeGames));
-  if (demoAccount) (forest ? (card) => cols.root.before(card) : demoHost)(hubDemoInvite());
-  // Ocean pulls two cards out of the grid: the suggestions into the pair above,
-  // the Kümmerliste into the preview column (O3.2's right column).
+  // The demo's „Gefällt dir das?" invitation (T7.6, #1280) leads every design's
+  // demo hub; Forest's is a band over the whole hub (F7.6, #1471).
+  if (isDemoAccount()) {
+    const invite = hubDemoInvite();
+    if (forest) cols.root.before(invite);
+    else if (ph) ph.lead.appendChild(invite);
+    else grid.appendChild(cardSlot(invite));
+  }
   const suggest = hubSuggestCard(round, activeGames, statsByGame, nagged);
-  const care = hubCareCard(round, activeGames);
   if (cols) {
     if (suggest) pair.appendChild(suggest);
     if (!pair.children.length) pair.remove();
   }
-  // Die Brücke gives these three a slot of their own (B3.1 places them); the
-  // Programmheft's side column (P3.2) takes the pulse and the Kümmerliste.
-  const pulse = hubPulseCard(round, activeGames);
-  if (bh) [[suggest, bh.suggest], [pulse, bh.pulse], [care, bh.care]].forEach(([card, slot]) => { if (card) slot.appendChild(card); });
-  if (ph) { // a young round's empty cards stand as locked blocks (#1377)
-    const side = phYoungSide(round, activeGames, { suggest, pulse, care });
-    if (side.suggest) ph.suggest.appendChild(side.suggest);
-    [side.pulse, side.care].forEach((card) => { if (card) ph.side.appendChild(card); });
+  if (bh && suggest) bh.suggest.appendChild(suggest);
+  if (ph) { // a young round's empty suggestion stands as a locked block (#1377)
+    const youngSuggest = phYoungSide(round, activeGames, { suggest });
+    if (youngSuggest) ph.suggest.appendChild(youngSuggest);
   }
   [
     // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
-    // Null on every other round and on Klassisch, so that list is unchanged.
     hubYoungCard(round, activeGames),
-    // The group challenge (#1779): null unless one is running or just ended.
-    hubChallengeCard(round),
     cols || bh || ph ? null : suggest,
-    bh || ph || forest ? null : pulse,
-    cols || bh || ph ? null : care,
-    // The Regal-Steckbrief (#1173, views-shelf-profile.js): what the shelf adds
-    // up to. Null below its threshold of games with provider data.
-    hubShelfProfileCard(round, activeGames, statsByGame),
     hubAnniversaryCard(round),
   ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
-  // The three sub-page previews (#1185, hub-previews.js), LAST in the grid:
-  // "what is over there" is a weaker claim on the reader than "play this
-  // tonight". Same null-or-nothing contract as the four above.
-  const previews = demo ? [] : ph ? phStripPreviews(round, activeGames, {
-    regal: hubRegalPreview(round, activeGames),
-    pokale: hubPokalePreview(round),
-    chronik: hubChronikPreview(round),
-  }) : forest ? forestAsidePreviews(round, activeGames, {
-    regal: hubRegalPreview(round, activeGames),
-    pokale: hubPokalePreview(round),
-    chronik: hubChronikPreview(round),
-  }) : [
-    hubRegalPreview(round, activeGames),
-    hubPokalePreview(round),
-    hubChronikPreview(round),
-  ].filter(Boolean);
-  if (ph) {
-    previews.forEach((card) => ph.strip.appendChild(card));
-  } else if (cols) {
-    previews.forEach((card) => cols.aside.appendChild(card));
-    // Forest's right column carries the pulse too (F3.2), above the Kümmerliste.
-    // A young one's stands locked until it has numbers (F7.4, #1471).
-    const fpulse = forest && (pulse || forestLockedPulse(round, activeGames));
-    if (fpulse) cols.aside.appendChild(fpulse);
-    if (care) cols.aside.appendChild(care);
-  } else if (bh) {
-    previews.forEach((card) => bh.previews.appendChild(card));
-  } else if (tisch && previews.length) {
-    /* Der Tisch lays the survivors out as ONE row of small tiles on a phone
-       (T2.2, #1263), so they share one slot: two survivors are two half-width
-       tiles, never three cells with a hole. From 1280 up the wrapper is
-       `display: contents` and each preview is a cell of the 3-wide grid
-       (T3.2) — same nodes, CSS picks the presentation. */
-    const row = h('<div class="card-slot hub-previews"></div>');
-    previews.forEach((card) => row.appendChild(card));
-    grid.appendChild(row);
-  } else {
-    previews.forEach((card) => grid.appendChild(cardSlot(card)));
-  }
 
-  // From 1280px up the rail owns the hero and the big CTA above, so a round with
-  // no ticket to show left the pane holding only `.hub-actions` — one visible
-  // child over 816px of bare page, on every young round (#869). This is the
-  // pane's stand-in; `.empty--rail-gap` renders it ONLY where the rail exists,
-  // because below that width the hero and CTA are right here and it would
-  // duplicate them.
-  //
-  // Asked of the DOM rather than re-deriving the three ticket predicates above,
-  // so a fourth kind of ticket is covered without anyone remembering this line.
-  // Safe because the rail renders no tickets of its own. Since #923 it asks the
-  // detached grid the same way, for the same reason: a card is content, so a
-  // pane holding one is not the bare page this stand-in exists for.
-  // The empty table (#1269) is already that stand-in, at every width.
-  // Not under Ocean: its hero and shell stay in the pane at every width.
+  // --- The two slim rows: a running (or just-ended) challenge, and „Zu tun".
+  const challenge = hubChallengeRow(round);
+  if (challenge) side.appendChild(challenge);
+  const todo = hubTodoRow(round, activeGames, recs);
+  if (todo) side.appendChild(todo);
+
+  // From 1280px up the rail owns Klassisch's hero and big CTA, so a round with
+  // nothing else to show left the pane bare (#869). This is the pane's
+  // stand-in; `.empty--rail-gap` renders it ONLY where the rail exists. Asked of
+  // the DOM, so a new kind of content is covered without anyone remembering
+  // this line. The empty table (#1269) is already that stand-in, at every width.
   if (!cols && !bh && !ph && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
-    && !app.querySelector('.empty--table')) {
+    && !app.querySelector('.empty--table, .hub-todo, .hub-challenge')) {
     const gap = emptyState({
       icon: 'ti-tornado',
       title: t('round.startEmptyTitle'),
@@ -538,126 +282,146 @@ function renderStartTab(round, activeGames) {
     app.appendChild(gap);
   }
 
-  // Retirement suggestions: a slim, dismissible banner. Enough data = at least
-  // three times as many votes as members. Collapsed by default; expand to see
-  // the list, or dismiss it for this session.
-  if (recs.length && !minimizedRecs.has(round.id)) {
-    const banner = h(`<div class="rec-banner">
-         <div class="rec-banner__bar" role="button" tabindex="0" aria-expanded="false">
-           <span class="rec-banner__text"><i class="ti ti-archive" aria-hidden="true"></i> ${esc(t('rec.title', { n: recs.length }))}</span>
-           <div class="rec-banner__actions">
-             <i class="ti ti-chevron-down rec-banner__caret" aria-hidden="true"></i>
-             <button class="rec-banner__dismiss" title="${esc(t('rec.dismiss'))}" aria-label="${esc(t('rec.dismiss'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
-           </div>
-         </div>
-         <div class="rec-banner__body" hidden>
-           <div class="muted rec-banner__sub">${esc(t('rec.sub'))}</div>
-           <div class="recommend-list"></div>
-         </div>
-       </div>`);
-    const body = banner.querySelector('.rec-banner__body');
-    const bar = banner.querySelector('.rec-banner__bar');
-    let expanded = false;
-    const toggle = () => {
-      expanded = !expanded;
-      body.hidden = !expanded;
-      banner.classList.toggle('is-open', expanded);
-      bar.setAttribute('aria-expanded', String(expanded));
-    };
-    bar.addEventListener('click', toggle);
-    bar.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        toggle();
-      }
-    });
-    banner.querySelector('.rec-banner__dismiss').addEventListener('click', (e) => {
-      e.stopPropagation();
-      minimizedRecs.add(round.id);
-      banner.remove();
-    });
-    const list = banner.querySelector('.recommend-list');
-    recs.slice(0, 5).forEach(({ game, reasons }) => {
-      const item = h(`<div class="recommend-item">
-           <div class="recommend-item__info">
-             <a class="recommend-item__title">${esc(game.title)}</a>
-             <span class="recommend-item__reason">${reasons.map(esc).join(' · ')}</span>
-           </div>
-           <button class="btn recommend-item__btn">${esc(t('rec.retire'))}</button>
-         </div>`);
-      navLink(item.querySelector('.recommend-item__title'), gamePath(round.id, game.id), () =>
-        showGameDetail(round.id, game.id)
-      );
-      item.querySelector('.recommend-item__btn').addEventListener('click', async () => {
-        if (!await confirmDialog({
-          body: t('detail.retireConfirm', { title: game.title }),
-          confirmLabel: t('detail.retire'), icon: 'ti-archive', danger: false,
-        })) return;
-        try {
-          await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
-          toast(t('games.retired', { title: game.title }), { tone: 'success' });
-          showRound(round.id);
-        } catch (e) { toast(e.message, { tone: 'error' }); }
-      });
-      list.appendChild(item);
-    });
-    if (recs.length > 5) {
-      list.appendChild(h(`<div class="muted recommend-more">${esc(tn(recs.length - 5, 'rec.moreOne', 'rec.more'))}</div>`));
-    }
-    feed.appendChild(banner);
-  }
-
-  // The grid goes below the banner and above the quiet actions, and it is
-  // appended even when EMPTY: the teaser below arrives after this function has
-  // returned and needs somewhere connected to land, and a grid that was left
-  // out because nothing else filled it would silently swallow the one card a
-  // young round is most likely to get. `.hub-cards:empty` is `display: none`,
-  // so an empty grid costs no margin and no gap — the "renders nothing when it
-  // has nothing to say" rule, kept by CSS rather than by an append condition
-  // that cannot see the future.
-  (bh ? bh.more : feed).appendChild(grid);
-
-  // Fetched AFTER this paint, never in showRound's Promise.all: the route does
-  // a full getRound plus the corpus join, so putting it on the critical path
-  // would double the round read for a card that is often empty. Deliberately
-  // not awaited — this renderer is synchronous and the tab must not wait on it.
-  renderRecoTeaser(round.id, grid);
-
-  /* „Weitere Listen" (#1185, #1500): the four off-shelf destinations under one
-     heading, at EVERY width — below the grid because they are navigation rather than
-     content, above the quick actions because they are destinations rather than
-     tasks. Unconditional, unlike every card above: a screen is not less
-     reachable for being empty, and the Wunschliste of a round that has never
-     used one is exactly where someone goes to start. */
-  // Under Ocean it is the frame's fourth cell: the crew column's foot at desktop
-  // (O3.2), the end of the page on a phone.
-  (cols ? cols.root : bh ? bh.offshelf : ph ? ph.strip : app).appendChild(hubOffShelfGroup(round));
-
-  // Quick actions: quieter secondary tasks below the fold. One "Einstellungen"
-  // entry rather than the three separate Tags/Provider/Design links this used to
-  // carry (#561): those three now live INSIDE that screen, together with the
-  // round-level actions that were stranded in the Regal and Chronik footers — so
-  // a phone reaches every one of them in two taps from here. It is a routed
-  // screen, so it is a link (#330).
-  //
-  // No „Spiel hinzufügen" here (#1498): it sat at the very end of the page in
-  // every design, where nobody found it, and every design's Regal carries a
-  // prominent add control of its own (#1427, #1278, #1239). A 0-game round keeps
-  // its add action on the empty table above. Don't bring a substitute back.
-  //
-  // The CONTAINER is `rail-owned`, not just the link: from 1280px the rail
-  // carries „Einstellungen", and an all-hidden `.hub-actions` would still cost
-  // its margin, a flex gap or a grid row in every design.
-  const actions = h('<div class="hub-actions rail-owned"></div>');
-  const settingsBtn = h(
-    `<a class="btn"><i class="ti ti-settings" aria-hidden="true"></i> ${esc(t('rail.settings'))}</a>`
-  );
-  navLink(settingsBtn, roundPath(rid, 'settings'), () => showRoundSettings(rid));
-  actions.appendChild(settingsBtn);
-  // Ocean: the frame's last cell. From 1280 the container is hidden with the
-  // rest of the rail-owned set, so it needs no wide-layout placement (#1498).
-  (bh ? bh.actions : ph ? ph.root : cols ? cols.root : app).appendChild(actions);
+  if (grid.children.length) (bh ? bh.more : feed).appendChild(grid);
   if (bh) brueckeStatus();
+}
+
+/* The Einstellungen gear on the round's name (#1853). A routed screen, so a
+   link (#330). Named by its label: the glyph alone says nothing to a screen
+   reader. */
+function hubSettingsGear(round) {
+  const a = h(`<a class="hero__settings" aria-label="${esc(t('rail.settings'))}" title="${esc(t('rail.settings'))}"><i class="ti ti-settings" aria-hidden="true"></i></a>`);
+  return navLink(a, roundPath(round.id, 'settings'), () => showRoundSettings(round.id));
+}
+
+/* The running sessions as tickets (#1853 moved them above the action): open
+   votes, then sessions whose voting is done but that have no final state yet.
+   Null when nothing is running, so the stage carries no empty wrapper. */
+function hubRunningTickets(round) {
+  const wrap = h('<div class="hub-running"></div>');
+  // Open votes. Every open session's votes live on the server as they are
+  // given (#655), so voting is simply still running, here or on someone's phone.
+  // The draw stays secret until everyone has rated, so this ticket shows
+  // neither cover nor title — only how many games were drawn.
+  newestSessionsFirst(round.sessions.filter((s) => !s.done && !s.cancelled)).forEach((session) => {
+    const n = (session.gameIds || []).length;
+    const ticket = h(`<button class="ticket ticket--live">
+         <span class="ticket__main">
+           <span class="ticket__img"><i class="ti ti-tornado" aria-hidden="true"></i></span>
+           <span class="ticket__info">
+             <span class="ticket__label">${esc(t('round.liveLabel'))}</span>
+             <span class="ticket__title">${esc(tn(n, 'round.draftTitleOne', 'round.draftTitle'))}</span>
+             <span class="ticket__meta">${esc(fmtSessionWhen(session))}</span>
+           </span>
+         </span>
+         <span class="ticket__stub">
+           <i class="ti ti-player-play" aria-hidden="true"></i>
+           <span class="ticket__names">${esc(t('round.liveVote'))}</span>
+         </span>
+       </button>`);
+    // The lobby is the entry point every participant uses — and, since #1853,
+    // where „Abstimmung verwerfen" lives.
+    ticket.addEventListener('click', () => showSessionLobby(round, session));
+    wrap.appendChild(ticket);
+  });
+
+  /* "In progress": voting done, no final state yet. A split parent (#796) is
+     resolved — its tables are the sessions still open — so it is excluded by
+     outcome, and its children are nested under one header, so three tickets at
+     the same minute read as one evening's three tables. */
+  const inProgress = round.sessions
+    .filter((s) => s.done && !s.finished && !s.cancelled && !isSplitParent(s));
+  const splitParents = new Map(round.sessions.filter(isSplitParent).map((s) => [s.id, s]));
+  const groupKey = (s) => (s.parentSessionId && splitParents.has(s.parentSessionId) ? s.parentSessionId : null);
+  const mounts = new Map(); // parent id -> the element its tables render into
+  newestSessionsFirst(inProgress).forEach((session) => {
+    const game = session.chosenGameId && round.games.find((g) => g.id === session.chosenGameId);
+    const when = fmtSessionWhen(session, session.chosenAt || session.createdAt);
+    const imgStyle = game && game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+    const fallback = game ? coverPlaceholder(game) : '<i class="ti ti-tornado" aria-hidden="true"></i>';
+    let pill = '';
+    if (game) {
+      const sst = gameStatsForSession(round, session, game.id);
+      if (sst.score !== null) pill = `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`;
+    }
+    const title = game ? esc(game.title) : esc(t('round.inProgressDeciding'));
+    const ticket = h(`<a class="ticket ticket--live">
+         <span class="ticket__main">
+           <span class="ticket__img"${imgStyle}>${fallback}</span>
+           <span class="ticket__info">
+             <span class="ticket__label">${esc(t('round.inProgressLabel'))}</span>
+             <span class="ticket__title">${title}</span>
+             <span class="ticket__meta">${esc(when)}${pill}</span>
+           </span>
+         </span>
+         <span class="ticket__stub">
+           <i class="ti ti-player-play" aria-hidden="true"></i>
+           <span class="ticket__names">${esc(t('round.resume'))}</span>
+         </span>
+       </a>`);
+    navLink(ticket, resultsPath(round.id, session.id), () => showResults(round, session));
+    const parentId = groupKey(session);
+    if (!parentId) {
+      wrap.appendChild(ticket);
+      return;
+    }
+    // One header per split evening, created by whichever of its tables is
+    // rendered first, so the group keeps the newest-first position it earned.
+    if (!mounts.has(parentId)) {
+      const parent = splitParents.get(parentId);
+      const group = h(`<div class="split-group">
+           <a class="split-group__head">${iconText('ti-layout-grid', t('tables.parentLabel'))}
+             <span class="split-group__link">${esc(t('tables.openParent'))}</span>
+           </a>
+           <div class="split-group__body"></div>
+         </div>`);
+      navLink(group.querySelector('.split-group__head'), resultsPath(round.id, parentId), () => showResults(round, parent));
+      wrap.appendChild(group);
+      mounts.set(parentId, group.querySelector('.split-group__body'));
+    }
+    // Prepended: a split's tables share one stamp and arrive last table first
+    // (#1622); prepending puts table 1 back on top, as the Chronik nests them.
+    mounts.get(parentId).prepend(ticket);
+  });
+  return wrap.children.length ? wrap : null;
+}
+
+/* The „Zuletzt gespielt" ticket of Klassisch, Der Tisch, Ocean and Die Brücke.
+   The stub's icon names what is written under it (#1106): icon and label come
+   from the same entry, so they cannot disagree. `ENDING_LABELS` has no `won`
+   entry by design (session-outcome.js). */
+function hubLastTicket(round, lastPlayed) {
+  const game = round.games.find((g) => g.id === lastPlayed.chosenGameId);
+  // Winners resolve against the session's own people, so a guest winner shows
+  // up here too — marked as a guest (#458).
+  const lastPeople = sessionPeople(round, lastPlayed);
+  const winnerNames = (lastPlayed.winnerIds || [])
+    .map((wid) => personLabel(lastPeople.find((p) => p.id === wid)))
+    .filter(Boolean);
+  const sst = gameStatsForSession(round, lastPlayed, game.id);
+  const imgStyle = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
+  const pill = sst.avg !== null
+    ? `<span class="score-pill" style="--sc:${scoreColor(sst.score)}" data-stop="${scoreStop(sst.score)}">${fmtAvg(displayScore(sst.score))}</span>`
+    : '';
+  const ending = ENDING_LABELS[sessionEnding(lastPlayed)];
+  const stubIcon = winnerNames.length ? 'ti-trophy' : ending ? ending.icon : 'ti-check';
+  const stubLabel = winnerNames.length ? joinNames(winnerNames) : ending ? t(ending.key) : t('sessions.played');
+  const ticket = h(`<a class="ticket">
+       <span class="ticket__main">
+         <span class="ticket__img"${imgStyle}>${coverPlaceholder(game)}</span>
+         <span class="ticket__info">
+           <span class="ticket__label">${esc(t('round.lastPlayedLabel'))}</span>
+           <span class="ticket__title">${esc(game.title)}</span>
+           <span class="ticket__meta">${esc(fmtSessionWhen(lastPlayed))}${pill}</span>
+         </span>
+       </span>
+       <span class="ticket__stub${winnerNames.length ? '' : ' ticket__stub--plain'}">
+         <i class="ti ${stubIcon}" aria-hidden="true"></i>
+         <span class="ticket__names">${esc(stubLabel)}</span>
+       </span>
+     </a>`);
+  navLink(ticket, resultsPath(round.id, lastPlayed.id), () => showResults(round, lastPlayed));
+  return ticket;
 }
 
 /* Der Tisch's seat captions (T2.1, T3.2; #1262/#1263): a name under each seat,

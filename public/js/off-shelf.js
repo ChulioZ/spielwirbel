@@ -1,10 +1,10 @@
 /* Spielwirbel – the four off-shelf destinations, defined ONCE (#1185).
 
    Wunschliste · Aussortiert · Durchgespielt · Könnte euch gefallen are offered
-   from two places since #1500: the scope strip heading the Regal and each of
-   the four lists (`offShelfSegments`, below), and the hub's „Weitere Listen"
-   group (hub-previews.js). They used to be offered from up to four more — a
-   toolbar sheet, a band or line under the grid, the Klassisch rail's group —
+   from ONE place since #1853: the scope strip heading the Regal and each of the
+   four lists (`offShelfSegments`, below). They used to be offered from up to
+   five more — the hub's „Weitere Listen" group (#1500–#1853), a toolbar sheet,
+   a band or line under the grid, the Klassisch rail's group —
    each building its own array with its own `round.games.filter(...)` counts
    until #1185, which is the shape
    `.claude/rules/shared-constants-across-the-stack.md` is written about.
@@ -66,9 +66,8 @@ function offShelfEntries(round, activeSub) {
    NAVIGATION, NOT A MERGED SCREEN. Each segment is a real link to its own route
    (⌘/middle-click, #330) and `aria-current="page"` marks the screen you are on.
 
-   The „Regal" segment is added HERE, not in offShelfEntries(): the hub's
-   „Weitere Listen" group reads that function too, and must not offer the Regal
-   as one of its „further lists". Its count is the shelf's own (`isActiveGame`,
+   The „Regal" segment is added HERE, not in offShelfEntries(), which lists the
+   further lists only. Its count is the shelf's own (`isActiveGame`,
    draw-pool.js — the same predicate the server's draw uses), never a new filter
    (.claude/rules/active-games-filter-sites.md).
 

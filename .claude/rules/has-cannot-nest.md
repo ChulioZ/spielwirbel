@@ -43,8 +43,8 @@ throws a `SyntaxError` on the invalid one — the stylesheet never will.
 
 ## A neighbouring one from the same slice: a % HEIGHT on data needs a definite parent
 
-The Pokale grove draws each trunk from `--share` (`hub-previews.js` writes
-`42%`). `height: calc(8px + var(--share) * 0.8)` resolved to nothing, because a
+Forest's Pokale grove drew each trunk from `--share` (the hub preview wrote
+`42%`; the preview left the Start tab in #1853, the lesson did not). `height: calc(8px + var(--share) * 0.8)` resolved to nothing, because a
 percentage height needs a definite containing-block height and the column has
 none. A **padding** percentage resolves against the containing block's WIDTH,
 which is definite, so `height: 0; padding-top: calc(8px + var(--share) * 0.8)`

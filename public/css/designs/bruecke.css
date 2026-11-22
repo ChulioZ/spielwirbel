@@ -3664,24 +3664,15 @@
 /* ---- The hub frame. One column of named slots in the DOM's own order on a
    phone (B2.2); from 1280 the slots sit in B3.1's three column wrappers
    (bruecke-hub.js moves them, #1496) — the title row, then members ·
-   Missionskontrolle · Wie wär's mit, with the Rundenpuls and the Kümmerliste
-   under the members, Zuletzt gespielt and the rest of the cards under the
-   Missionskontrolle, and the previews and Nicht im Regal under the
-   suggestions. Each column stacks on its own; an empty slot takes no room at
-   all. */
+   Missionskontrolle · Wie wär's mit, with the slim rows („Zu tun", the
+   challenge) under the members and Zuletzt gespielt and the rest of the cards
+   under the Missionskontrolle (#1853). Each column stacks on its own; an
+   empty slot takes no room at all. */
 :root[data-design="bruecke"] .bruecke-hub { display: flex; flex-direction: column; gap: 16px; }
 :root[data-design="bruecke"] :is(.bruecke-hub, .bruecke-hub__col) > * { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 :root[data-design="bruecke"] :is(.bruecke-hub, .bruecke-hub__col) > :empty { display: none; }
 :root[data-design="bruecke"] .bruecke-hub .hub-cards:empty { display: none; }
-:root[data-design="bruecke"] .bruecke-hub :is(.hub-card, .ticket, .hub-cta, .hero, .hub-actions, .hub-offshelf) { margin: 0; }
-/* Rundenpuls and Kümmerliste share a row on a phone (B2.2). */
-@media (min-width: 390px) and (max-width: 1279px) {
-  :root[data-design="bruecke"] .bruecke-hub:has(> .bruecke-hub__pulse:not(:empty)):has(> .bruecke-hub__care:not(:empty)) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  :root[data-design="bruecke"] .bruecke-hub:has(> .bruecke-hub__pulse:not(:empty)):has(> .bruecke-hub__care:not(:empty)) > :not(.bruecke-hub__pulse):not(.bruecke-hub__care) { grid-column: 1 / -1; }
-}
+:root[data-design="bruecke"] .bruecke-hub :is(.hub-card, .ticket, .hub-cta, .hero) { margin: 0; }
 
 @media (min-width: 1280px) {
   /* The hub spreads over the shell like B3.1; the reading cap is for prose.
@@ -3709,17 +3700,12 @@
   :root[data-design="bruecke"] .bruecke-hub__col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
   :root[data-design="bruecke"] :is(.bruecke-hub__crew, .bruecke-hub .hero) { display: contents; }
   :root[data-design="bruecke"] .bruecke-hub .hero h1 { grid-area: title; align-self: end; }
-  :root[data-design="bruecke"] .bruecke-hub .hero__chips { grid-area: stats; align-self: end; justify-content: flex-end; }
+  :root[data-design="bruecke"] .bruecke-hub .bruecke-hero-line { grid-area: stats; align-self: end; justify-content: flex-end; }
   :root[data-design="bruecke"] .bruecke-hub .hero__members { grid-area: crew; }
   :root[data-design="bruecke"] .bruecke-hub__feed { grid-area: feed; }
   :root[data-design="bruecke"] .bruecke-hub__col--left { grid-area: left; }
   :root[data-design="bruecke"] .bruecke-hub__col--mid { grid-area: mid; }
   :root[data-design="bruecke"] .bruecke-hub__col--right { grid-area: right; }
-  /* The quiet actions hold only „Einstellungen" since #1498, and the rail
-     carries it from here — so the slot goes, and with it the grid row: an empty
-     explicit track still costs its row-gap, which `:empty` cannot see (the slot
-     holds the hidden `.hub-actions`). */
-  :root[data-design="bruecke"] .bruecke-hub__actions { display: none; }
 }
 
 /* ---- The round's name and the counts line under it: the display face at the
@@ -3729,20 +3715,18 @@
 @media (min-width: 1280px) {
   :root[data-design="bruecke"] .bruecke-hub .hero h1 { font-size: var(--display-xl); }
 }
-:root[data-design="bruecke"] .bruecke-hub .hero__chips { gap: 0; margin-top: 6px; }
-:root[data-design="bruecke"] .bruecke-hub .hero__chips > * {
-  padding: 0;
-  background: none;
-  border-radius: 0;
+/* „Mission {n} · Crew {m}" (B9 „Zierzeilen"): the one decorative line under
+   the name, in notation type. It stood inside the count chips until #1853 took
+   them out. */
+:root[data-design="bruecke"] .bruecke-hub .bruecke-hero-line { display: flex; margin-top: 6px; }
+:root[data-design="bruecke"] .bruecke-hub .bruecke-hero-line > * {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: var(--track-notation);
   text-transform: uppercase;
 }
-:root[data-design="bruecke"] .bruecke-hub .hero__chips > * + *::before { content: "·" / ""; margin: 0 0.6em; }
-:root[data-design="bruecke"] .bruecke-hub .hero__chips .ti { display: none; }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hero__chips > * { color: var(--ink-soft); }
+:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .bruecke-hero-line > * { color: var(--ink-soft); }
 
 /* ---- The members (B2.2 row of squares with the win count under each; B3.1 a
    titled list with the name and „5 Siege"). The seat's colour is a FILL on its
@@ -3935,7 +3919,7 @@
 }
 :root[data-design="bruecke"] .bruecke-mission__fire .ti { font-size: 26px; }
 :root[data-design="bruecke"] .bruecke-mission__fire .hub-cta__reason { font-size: 11px; text-transform: none; letter-spacing: 0; }
-:root[data-design="bruecke"] .bruecke-mission .hub-presets { justify-content: center; margin: 0; }
+:root[data-design="bruecke"] .bruecke-mission .hub-presets { justify-content: safe center; margin: 0; max-width: 100%; }
 :root[data-design="bruecke"] .bruecke-mission .hub-preset {
   min-height: var(--target-min);
   padding: 8px 14px;
@@ -3987,77 +3971,6 @@
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__care .hub-card__title,
 :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__care .hub-card__title .ti { color: var(--warn); }
 :root[data-design="bruecke"][data-scheme="dark"] .hub-card__fact { color: var(--ink-2); }
-
-/* The three previews: on a phone one row of three small tiles — the title and
-   its one line — whose single link („öffnen") covers the whole tile (B2.2);
-   from 1280 the full cards stacked in the right column (B3.1). */
-@media (max-width: 1279px) {
-  :root[data-design="bruecke"] .bruecke-hub__previews {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    grid-auto-flow: column;
-    gap: 10px;
-  }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview { padding: 12px; }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title {
-    font-family: var(--font-display);
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: var(--track-display);
-    margin-bottom: 4px;
-    /* A tile is ~88px of text at 390: the glyph takes its own line so the word
-       keeps the whole width, and a long word hyphenates rather than splitting
-       mid-syllable („CHRON / IK" before). */
-    hyphens: auto;
-    overflow-wrap: break-word;
-    /* The base title is a flex ROW, so the glyph's `display: block` alone
-       leaves it beside the word; stack them. */
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0;
-  }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__title .ti { display: block; font-size: 18px; margin-bottom: 6px; }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-card__body > :not(.hub-preview__sub) { display: none; }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__sub { font-size: 12px; }
-  /* The tile hides its link's text; the whole tile is still the target through
-     the shared stretched link (`.hub-card--link`, styles.css, #1506). */
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open { font-size: 0; }
-  :root[data-design="bruecke"] .bruecke-hub__previews .hub-preview__open .ti { display: none; }
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title { color: var(--ink); }
-  :root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub__previews .hub-card__title .ti { color: var(--brand); }
-}
-
-/* „Nicht im Regal": the four entries as one run of notation links (B2.2/B3.1:
-   „Aussortiert 2 · Durchgespielt 1 · Wunschliste 4"), each at the 24px target. */
-:root[data-design="bruecke"] .bruecke-hub .hub-offshelf { padding: 14px 16px; }
-:root[data-design="bruecke"] .bruecke-hub .hub-offshelf__title {
-  margin: 0 0 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: var(--track-notation);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"] .bruecke-hub .hub-offshelf__list { display: flex; flex-wrap: wrap; gap: 2px 16px; background: none; border: 0; }
-:root[data-design="bruecke"] .bruecke-hub .hub-offshelf .ds-row {
-  min-height: var(--target-min);
-  padding: 2px 0;
-  border: 0;
-  background: none;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"] .bruecke-hub .hub-offshelf .ds-row :is(.ti, .ds-row__meta) { display: none; }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf {
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf__title { color: var(--ink-soft); }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf .ds-row { color: var(--ink); }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-hub .hub-offshelf .ds-row:hover { color: var(--brand); background: none; }
 
 /* ---- The lobby (B2.1). The greeting on the page ground — no band, „kein
    Verlauf auf einem Paneel" — the question under it, the running session as
@@ -6048,6 +5961,3 @@
   }
 }
 
-/* „Jetzt spielen" (#1682) sits centred in the Missionskontrolle under the
-   ignition and its presets; the base rule's flex-start would pull it left. */
-:root[data-design="bruecke"] .hub-play { align-self: center; }

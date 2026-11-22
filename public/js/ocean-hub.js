@@ -60,11 +60,10 @@ function oceanShell(btn) {
 }
 
 /* The crew (O2.1 row, O3.2 list): the round's name with its tide line — the
-   marker as a row of dots — the two counts as one quiet line under it, and
-   every seat captioned with its name and, where there is one, the win count.
+   marker as a row of dots — and every seat captioned with its name and, where there is one, the win count.
 
    The counts are roundStandings() (views-pokale.js), never a second tally —
-   the seat that shows „9 Siege" and the Pokale preview beside it must agree,
+   the seat that shows „9 Siege" and the Pokale must agree,
    the reason tischSeatHints gives. A zero is not printed: „0 Siege" on every
    newcomer is noise, not a record.
 
@@ -74,8 +73,6 @@ function oceanShell(btn) {
 function oceanHeroCompose(round, hero) {
   const h1 = hero.querySelector('h1');
   h1.insertAdjacentElement('afterend', h('<span class="ocean-tide" aria-hidden="true"></span>'));
-  const chips = hero.querySelector('.hero__chips');
-  hero.querySelector('.ocean-tide').insertAdjacentElement('afterend', chips);
 
   const seatRow = hero.querySelector('.hero__members');
   const { wins, rankOf } = roundStandings(round);

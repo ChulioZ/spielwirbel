@@ -176,8 +176,10 @@ test('closing and the waiting line end the „this device" column', async (t) =>
   const dom = await lobby(t, 'bruecke');
   const actions = q(dom, '.live-vote__actions');
   const kids = [...actions.children];
-  assert.ok(kids.at(-2).classList.contains('live-vote__close'));
-  assert.ok(kids.at(-1).classList.contains('live-vote__waiting'));
+  assert.ok(kids.at(-3).classList.contains('live-vote__close'));
+  assert.ok(kids.at(-2).classList.contains('live-vote__waiting'));
+  // …and the quiet „Abstimmung verwerfen" under both (#1853).
+  assert.ok(kids.at(-1).classList.contains('live-vote__discard'));
   // The „Für …" keys are on the people's rows since #1574, not a list here.
   assert.equal(actions.querySelector('.live-vote__hotseat'), null);
   assert.ok(q(dom, '.live-vote__people .live-person > .live-vote__hotseat-btn'));

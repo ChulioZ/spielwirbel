@@ -164,6 +164,7 @@ test('Programmheft hub: the P3.2 checklist, block by block, in reading order', a
   assert.ok(cta && !cta.classList.contains('rail-owned'), 'the start button left the box or is hidden from 1280 up');
   const presets = box.querySelector('.hub-presets');
   assert.ok(presets && !presets.classList.contains('rail-owned'), 'the presets left the box');
+  assert.ok(presets.firstElementChild.classList.contains('hub-preset--direct'), '„Direkt wählen" does not lead the chips');
   assert.ok(precedes(dom, box.querySelector('.ph-box__label'), presets), 'the „Schnellstart" label must precede its chips');
 
   // The lead story: ONE link to the last result — kicker, headline, „Ergebnis ansehen".
@@ -175,16 +176,14 @@ test('Programmheft hub: the P3.2 checklist, block by block, in reading order', a
   assert.match(lead.querySelector('.ph-lead__open').textContent, /Ergebnis ansehen/);
   assert.equal(dom.app.querySelector('.ticket'), null, 'the Klassisch ticket rendered beside the lead');
 
-  // The side column carries the pulse; the strip the previews and the off-shelf group.
-  assert.ok(cell('side').querySelector('.hub-card'), 'the side column is empty');
-  const strip = cell('strip');
-  assert.ok(strip.querySelector('.hub-card'), 'no preview in the strip');
-  assert.ok(strip.querySelector('.off-shelf__row'), 'the off-shelf destinations are unreachable');
-  const actions = root.querySelector(':scope > .hub-actions');
-  assert.ok(actions, 'the quiet actions left the page');
+  // The side column carries only the slim rows since #1853; the bottom strip
+  // (the previews and „Weitere Listen") and the quiet actions are gone.
+  for (const el of cell('side').children) assert.ok(el.matches('.hub-todo, .hub-challenge'), el.className);
+  assert.equal(cell('strip'), null, 'the bottom strip is back');
+  assert.equal(dom.app.querySelector('.hub-preview, .hub-offshelf, .hub-actions, .pulse-bars'), null);
 
   // Reading order is the phone order.
-  const order = [head, box, cell('lead'), cell('suggest'), cell('side'), cell('more'), strip, actions];
+  const order = [head, box, cell('lead'), cell('suggest'), cell('side'), cell('more')];
   for (let i = 1; i < order.length; i++) assert.ok(precedes(dom, order[i - 1], order[i]), `block ${i} is out of order`);
   assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the rail-gap stand-in rendered under the Programmheft');
 });

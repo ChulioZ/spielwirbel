@@ -291,10 +291,11 @@ test('the panel reproduces the actions column spacing from one shared value', as
   assert.ok(panel.querySelector('.live-vote__share-row'), 'the share row is inside it');
   assert.ok(panel.querySelector('.live-vote__close'), 'and so is the closing action');
   // Order is what `contents` preserves: sharing first, then the action that ends
-  // the evening, then the line explaining who is missing.
+  // the evening, then the line explaining who is missing, then the quiet
+  // „Abstimmung verwerfen" (#1853, moved here from the Start tab).
   assert.deepEqual(
     [...panel.children].map((el) => el.className.split(' ')[0]),
-    ['live-vote__panel-head', 'live-vote__share-row', 'btn', 'live-vote__waiting']
+    ['live-vote__panel-head', 'live-vote__share-row', 'btn', 'live-vote__waiting', 'live-vote__discard']
   );
 });
 

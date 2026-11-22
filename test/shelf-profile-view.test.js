@@ -46,48 +46,47 @@ const linkedRound = (over = {}) => ({
 });
 
 const noRecos = () => async () => ({ recommendations: [] });
-const card = (dom) => dom.app.querySelector('.hub-card--shelf');
+/* The Steckbrief's one sentence lives under the Regal heading since #1852
+   (round-head-lines.js); its Start-tab card left in #1853, which is why these
+   cases render the LINE. */
+const line = (dom, r) => {
+  const { byGame } = dom.call('roundScoreIndex', r, r.games);
+  return dom.call('regalProfileLine', r, r.games, byGame);
+};
 
-test('the Start card is absent below the threshold of games with provider data', (t) => {
+test('the profile line is absent below the threshold of games with provider data', (t) => {
   const dom = loadApp();
   t.after(() => dom.close());
   dom.set('api', noRecos());
   // Nine games with a hand-typed range and nothing else — not "linked".
   const r = linkedRound({ games: Array.from({ length: 9 }, (_, i) => ({ id: 10 + i, title: 'F' + i, minPlayers: 2, maxPlayers: 4 })) });
-  dom.call('renderStartTab', r, r.games);
-  assert.equal(card(dom), null, 'a shelf with no provider data grew a Steckbrief');
-
-  dom.app.innerHTML = '';
+  assert.equal(line(dom, r), null, 'a shelf with no provider data grew a Steckbrief');
   const thin = linkedRound({ games: Array.from({ length: 7 }, (_, i) => game(10 + i)) });
-  dom.call('renderStartTab', thin, thin.games);
-  assert.equal(card(dom), null, 'seven linked games is under the floor');
+  assert.equal(line(dom, thin), null, 'seven linked games is under the floor');
+  // Anti-vacuous: the full fixture does get one.
+  assert.ok(line(dom, linkedRound()), 'nine linked games must render the line');
 });
 
-/* The card is ONE SENTENCE and the link, in every design (#1683): the bars,
-   Der Tisch's seat tiles and the gap list moved off it and live on the screen.
-   This fixture is 2–4 players, a 30–60 minute box and a medium weight on all
-   nine games, so each dimension's dominant range is known in advance. */
+/* ONE SENTENCE and the link, in every design (#1683): the bars, Der Tisch's
+   seat tiles and the gap list live on the screen. This fixture is 2–4 players,
+   a 30–60 minute box and a medium weight on all nine games, so each
+   dimension's dominant range is known in advance. */
 for (const design of ['klassisch', 'tisch', 'ocean', 'bruecke', 'programmheft', 'forest']) {
-  test(`${design}: the card is the headline sentence and the link, nothing else`, (t) => {
+  test(`${design}: the profile line is the headline sentence and its one link`, (t) => {
     const dom = loadApp();
     t.after(() => dom.close());
     dom.set('api', noRecos());
     if (design !== 'klassisch') dom.call('applyDesign', design);
-    const r = linkedRound();
-    dom.call('renderStartTab', r, r.games);
-    const c = card(dom);
-    assert.ok(c, 'nine linked games must render the card');
-    assert.equal(c.querySelector('.hub-card__title').textContent.trim(), 'Regal-Steckbrief');
-    assert.equal(c.querySelector('.shelf-card__headline').textContent,
-      'Meist für 2–4 Personen · 31–60 Min. · mittel');
-    assert.equal(c.querySelectorAll('.shelf-bar, .pulse-tile, .shelf-gap').length, 0,
-      'the tile still draws a slice of the screen');
-    assert.equal(c.querySelector('a.hub-row').getAttribute('href'), '/round/3/shelf-profile');
-    assert.equal(c.querySelectorAll('a').length, 1, 'one link per card');
+    const l = line(dom, linkedRound());
+    assert.ok(l, 'nine linked games must render the line');
+    assert.ok(l.textContent.includes('Meist für 2–4 Personen · 31–60 Min. · mittel'), l.textContent);
+    assert.equal(l.querySelectorAll('.shelf-bar, .pulse-tile, .shelf-gap').length, 0,
+      'the line draws a slice of the screen');
+    assert.equal(l.getAttribute('href'), '/round/3/shelf-profile');
   });
 }
 
-test('the headline drops a clause whose range spans every band, and the card goes when none is left', (t) => {
+test('the headline drops a clause whose range spans every band, and the line goes when none is left', (t) => {
   const dom = loadApp({ locale: 'en' });
   t.after(() => dom.close());
   dom.set('api', noRecos());
@@ -98,16 +97,15 @@ test('the headline drops a clause whose range spans every band, and the card goe
   const times = [20, 20, 20, 20, 90, 180, 180, 180, 180];
   const r = linkedRound();
   r.games.forEach((g, i) => { g.weight = weights[i]; g.maxPlaytime = times[i]; });
-  dom.call('renderStartTab', r, r.games);
-  assert.equal(card(dom).querySelector('.shelf-card__headline').textContent, 'Mostly for 2–4 players');
+  assert.ok(line(dom, r).textContent.includes('Mostly for 2–4 players'));
+  assert.ok(!/·/.test(line(dom, r).querySelector('.regal-profile__text').textContent.split('Mostly')[1]),
+    'a clause with no dominant range survived');
 
   // Every game seats 1–6 as well, so the seat run is every band too: nothing
-  // at all to say, so no card.
-  dom.app.innerHTML = '';
+  // at all to say, so no line.
   const wide = linkedRound();
   wide.games.forEach((g, i) => { g.minPlayers = 1; g.maxPlayers = 6; g.weight = weights[i]; g.maxPlaytime = times[i]; });
-  dom.call('renderStartTab', wide, wide.games);
-  assert.equal(card(dom), null, 'a card with no sentence rendered anyway');
+  assert.equal(line(dom, wide), null, 'a line with no sentence rendered anyway');
 });
 
 test('the solo band reads as one word on the screen, never „für 1" (#1666)', async (t) => {
@@ -314,11 +312,8 @@ for (const wide of [true, false]) test(`the screen (${wide ? 'popover' : 'sheet'
   assert.deepEqual(went, [[3, 30]]);
   assert.equal(dom.document.querySelector('.stats-games__list'), null, 'the list is gone after navigating');
 
-  // The Start card stays a summary: no button anywhere on it.
-  dom.app.innerHTML = '';
-  dom.set('api', noRecos());
-  dom.call('renderStartTab', r, r.games);
-  assert.equal(card(dom).querySelectorAll('button.shelf-count').length, 0);
+  // The Regal's profile line stays a summary: no button anywhere on it.
+  assert.equal(line(dom, r).querySelectorAll('button.shelf-count').length, 0);
 });
 
 /* The count button keeps the span's own type (#1668 review). `.shelf-count`

@@ -172,8 +172,10 @@ test('the blocks read head → dusk cards → people → this device → share �
   const dom = await lobby(t);
   assert.ok(q(dom, '.live-vote').classList.contains('live-vote--forest'));
   assert.deepEqual(blocks(dom).filter((c) => c !== 'session-log'),
-    ['page-head', 'forest-lobby__cards', 'live-vote__people', 'live-vote__actions', 'live-vote__panel', 'btn']);
-  assert.ok(q(dom, '.live-vote > .live-vote__close'), 'closing is the last block, as F6.5 ends on it');
+    ['page-head', 'forest-lobby__cards', 'live-vote__people', 'live-vote__actions', 'live-vote__panel', 'btn', 'live-vote__discard']);
+  // Closing ends the page as F6.5 draws it, followed only by its quiet sibling
+  // „Abstimmung verwerfen" (#1853).
+  assert.ok(q(dom, '.live-vote > .live-vote__close + .live-vote__discard:last-child'), 'closing is the last action block');
 });
 
 test('the face-down cards are decoration: one dusk card per drawn game, no text', async (t) => {

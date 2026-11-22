@@ -70,20 +70,26 @@ test('a Chronik row’s plain click lands on that holder’s row in Pokale', asy
 
 // ---------------------------------------------------------------------- hub
 
-test('the hub’s Pokale preview says what is new since the latest session', (t) => {
+/* „Zuletzt gespielt" carries the line since #1853 took the Pokale preview off
+   the Start tab — the one fact only that preview used to say. */
+test('the hub’s „Zuletzt gespielt" says what is new since the latest session', async (t) => {
   const r = badgeRound([night('s1', 1)]);
   const dom = boot(t, r);
-  const card = dom.call('hubPokalePreview', r);
-  const line = card.querySelector('.hub-row--badges');
+  await dom.call('showRound', RID, 'start');
+  const last = [...dom.app.querySelectorAll('a.ticket')].find((a) => /Zuletzt gespielt/.test(a.textContent));
+  assert.ok(last, 'no „Zuletzt gespielt" ticket');
+  const line = last.querySelector('.hub-row--badges');
+  assert.ok(line, 'the ticket does not carry the Abzeichen line');
   // Erster Sieg, Anfängerglück, two Gründungsmitglieder and Gegründet.
   assert.equal(line.textContent.trim(), '5 neue Abzeichen seit Catan');
-  assert.notEqual(line.tagName, 'A', 'a plain line — the card keeps its one link');
+  assert.equal(line.querySelector('a, button'), null, 'a plain line — the ticket keeps its one link');
+  assert.equal(dom.app.querySelectorAll('.hub-row--badges').length, 1, 'the line is on the Start tab twice');
 });
 
 test('with nothing new, the hub line names the newest mark instead', (t) => {
   const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: [] })]);
   const dom = boot(t, r);
-  const line = dom.call('hubPokalePreview', r).querySelector('.hub-row--badges');
+  const line = dom.call('hubBadgeLine', r);
   assert.match(line.textContent.trim(), /^Zuletzt: /);
 });
 

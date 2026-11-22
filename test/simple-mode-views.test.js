@@ -38,7 +38,7 @@ test('the predicate reads the cached account, and no account hides nothing', (t)
   assert.equal(dom.call('simpleHidden', 'someLaterFeature'), true, 'a later id follows "all"');
 });
 
-test('trophies: the Pokale tab, its preview and every Abzeichen leave — and only with it hidden', (t) => {
+test('trophies: the Pokale tab, the hub\'s Abzeichen line and every Abzeichen leave — and only with it hidden', (t) => {
   for (const [mode, hidden] of [[OFF, false], [only('trophies'), true], [{ all: true, except: [] }, true],
     [{ all: true, except: ['trophies'] }, false]]) {
     const { dom, round } = boot(t, mode);
@@ -47,7 +47,7 @@ test('trophies: the Pokale tab, its preview and every Abzeichen leave — and on
     assert.equal(tabs(dom).length, hidden ? 3 : 4, 'the other three tabs stay');
     const railTabs = [...dom.app.querySelectorAll('.rail__group .rail__item')].map((a) => a.getAttribute('href'));
     assert.equal(railTabs.some((h) => h.endsWith('/pokale')), !hidden, 'the rail follows the dock');
-    assert.equal(dom.call('hubPokalePreview', round) === null, hidden, 'the hub preview');
+    assert.equal(dom.call('hubBadgeLine', round) === null, hidden, 'the Zuletzt-gespielt Abzeichen line');
     dom.app.innerHTML = '';
     dom.call('renderChronikTab', round, []);
     assert.equal(dom.app.querySelectorAll('.chronik-row--badge').length > 0, !hidden, 'the Chronik’s badge rows');
@@ -55,14 +55,11 @@ test('trophies: the Pokale tab, its preview and every Abzeichen leave — and on
   }
 });
 
-test('stats: the pulse, the anniversary card and the two section previews leave', (t) => {
+test('stats: the pulse leaves (the two section previews left the Start tab in #1853)', (t) => {
   for (const [mode, hidden] of [[OFF, false], [only('stats'), true], [only('trophies'), false]]) {
     const { dom, round } = boot(t, mode);
-    // More than HUB_PREVIEW_COVERS games, or the Regal preview has nothing to show either way.
     const active = Array.from({ length: 8 }, (_, i) => ({ id: `x${i}`, title: `Spiel ${i}`, tagIds: [] }));
     assert.equal(dom.call('hubPulseCard', round, active) === null, hidden, `pulse under ${JSON.stringify(mode)}`);
-    assert.equal(dom.call('hubRegalPreview', round, active) === null, hidden, 'the Regal preview');
-    assert.equal(dom.call('hubChronikPreview', round) === null, hidden, 'the Chronik preview');
   }
 });
 

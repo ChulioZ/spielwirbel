@@ -223,7 +223,9 @@ test('„Abstimmung beenden" ends the this-device block, after the leading key',
   const dom = await lobby(t);
   const kids = [...q(dom, '.live-vote__actions').children];
   assert.ok(kids[0].classList.contains('live-vote__mine'), 'your own seat leads');
-  assert.ok(kids.at(-1).classList.contains('live-vote__close'));
+  assert.ok(kids.at(-2).classList.contains('live-vote__close'));
+  // …followed only by its quiet sibling, „Abstimmung verwerfen" (#1853).
+  assert.ok(kids.at(-1).classList.contains('live-vote__discard'));
 });
 
 test('handed on: „Weiter zu …" leads and that person has no second key in their row', async (t) => {

@@ -355,9 +355,10 @@ it out of a `.round-footer` row below the *entire* cover grid into a „Nicht im
 Regal" sheet in the Regal's header. #1500 removed the width split altogether:
 the Regal and each list are headed by ONE scope strip (`offShelfSegments`,
 `public/js/off-shelf.js`) rendered at every width and in every design, and the
-Klassisch rail's off-shelf group went with it. `test/off-shelf-parity.test.js`
-now pins that strip against the hub's „Weitere Listen" group, the other surface
-still offering the four.
+Klassisch rail's off-shelf group went with it. #1853 then took the hub's
+„Weitere Listen" group off the Start tab too, so the strip is the ONE surface
+offering the four; `test/off-shelf-parity.test.js` pins that it carries all of
+them and that the Start tab grew no second copy.
 
 ## 10. #264 removed a recommender, and its guard had to be re-aimed rather than deleted
 

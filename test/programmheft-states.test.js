@@ -103,8 +103,6 @@ test('Klassisch: the young states render exactly the DOM they rendered before #1
 
 // ---------------------------------------------------------- Programmheft
 
-const precedes = (dom, a, b) =>
-  Boolean(a.compareDocumentPosition(b) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
 const text = (el) => el.textContent.replace(/\s+/g, ' ').trim();
 
 test('Programmheft P7.3: a round without games — the empty table leads, everything else says when', async (t) => {
@@ -117,25 +115,15 @@ test('Programmheft P7.3: a round without games — the empty table leads, everyt
   assert.equal(dom.app.querySelectorAll('.ph-hub .btn--primary:not(:disabled)').length, 1, 'more than one live primary on the page');
   assert.ok(dom.app.querySelector('.ph-hub__box .hub-cta[disabled]'), 'the locked start button left the box');
 
-  // The side column: two locked blocks, each a sentence, in the sheet's order.
-  // The threshold is the app's own (SUGGEST_MIN_SHELF), not the sheet's „3".
-  // No Kümmerliste: careList() waits for the first played session, so the
-  // sheet's „ab dem ersten Spiel" would not be true.
+  // The suggestion cell: one locked block, a sentence. The threshold is the
+  // app's own (SUGGEST_MIN_SHELF), not the sheet's „3". The locked Rundenpuls
+  // and the strip of locked previews left the Start tab in #1853.
   const side = [...dom.app.querySelectorAll('.ph-hub__suggest .ph-locked, .ph-hub__side .ph-locked')];
-  assert.deepEqual(side.map((b) => b.querySelector('.ph-locked__title').textContent),
-    ['Wie wär’s mit', 'Rundenpuls']);
+  assert.deepEqual(side.map((b) => b.querySelector('.ph-locked__title').textContent), ['Wie wär’s mit']);
   assert.deepEqual(side.map((b) => b.querySelector('.ph-locked__text').textContent), [
     `Vorschläge gibt es ab ${dom.run('SUGGEST_MIN_SHELF')} Spielen im Regal.`,
-    'Zahlen gibt es ab der ersten Session.',
   ]);
-
-  // The strip: Regal, Pokale and Chronik locked, then „Nicht im Regal".
-  const strip = dom.app.querySelector('.ph-hub__strip');
-  const previews = [...strip.querySelectorAll('.ph-locked')];
-  assert.deepEqual(previews.map((p) => text(p.querySelector('.ph-locked__title'))), ['Regal', 'Pokale', 'Chronik']);
-  assert.deepEqual(previews.map((p) => text(p.querySelector('.ph-locked__state'))), ['0 Spiele', 'Noch keine Pokale', 'Noch nichts passiert']);
-  previews.forEach((p) => assert.match(p.querySelector('a').getAttribute('href'), /\/round\/r1\/(regal|pokale|chronik)$/));
-  assert.ok(precedes(dom, previews[2], strip.querySelector('.hub-offshelf')), '„Nicht im Regal" must close the strip');
+  assert.equal(dom.app.querySelector('.ph-hub__strip, .hub-preview, .hub-offshelf'), null, 'the bottom strip is back');
 });
 
 test('Programmheft P7.4: games but no session — the lead says what is ready, the box says „Erste Session"', async (t) => {
@@ -150,10 +138,8 @@ test('Programmheft P7.4: games but no session — the lead says what is ready, t
   assert.match(text(dom.app.querySelector('.ph-hub__box .hub-cta')), /Erste Session wirbeln/);
   assert.equal(dom.app.querySelectorAll('.ph-hub .btn--primary').length, 1, 'more than one primary on the page');
 
-  const pulse = [...dom.app.querySelectorAll('.ph-hub__side .ph-locked')].map((b) => text(b));
-  assert.deepEqual(pulse, ['Rundenpuls Zahlen gibt es ab der ersten Session.']);
-  const locked = [...dom.app.querySelectorAll('.ph-hub__strip .ph-locked')].map((p) => text(p.querySelector('.ph-locked__title')));
-  assert.deepEqual(locked, ['Pokale', 'Chronik'], 'the Regal preview must be the real one once the shelf holds games');
+  // No locked pulse and no locked previews since #1853.
+  assert.equal(dom.app.querySelector('.ph-hub__side .ph-locked, .ph-hub__strip'), null);
 });
 
 test('Programmheft P7.5: after the first session — the pulse states its facts, the lead says when series come', async (t) => {
@@ -167,16 +153,12 @@ test('Programmheft P7.5: after the first session — the pulse states its facts,
   assert.doesNotMatch(text(dom.app.querySelector('.ph-hub__box .hub-cta')), /Erste/);
 });
 
-test('Programmheft P7.6: the demo condenses its previews and invites', async (t) => {
+test('Programmheft P7.6: the demo invites in the lead column, with no condensed list (#1853)', async (t) => {
   const dom = await hub(t, 'programmheft', firstRound(), { demo: true });
   const lead = dom.app.querySelector('.ph-hub__lead');
-  const list = lead.querySelector('nav.hub-demo');
-  assert.ok(list, 'no condensed demo list');
-  assert.deepEqual([...list.querySelectorAll('.hub-demo__label')].map((l) => l.textContent), ['Regal', 'Chronik', 'Pokale']);
-  const invite = lead.querySelector('.hub-card--demo-invite');
-  assert.ok(invite && precedes(dom, list, invite), 'the invitation does not follow the list');
+  assert.ok(lead.querySelector('.hub-card--demo-invite'), 'the invitation left the lead column');
   assert.equal(dom.app.querySelectorAll('.hub-card--demo-invite').length, 1, 'the invitation rendered twice');
-  assert.equal(dom.app.querySelector('.ph-hub__strip .hub-preview'), null, 'the previews render beside the condensed list');
+  assert.equal(dom.app.querySelector('nav.hub-demo, .hub-preview'), null, 'the condensed list or a preview is back');
 });
 
 test('Programmheft P7.1: the empty lobby — the black box to found a round, and the columns it will fill', async (t) => {

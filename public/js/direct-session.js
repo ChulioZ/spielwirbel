@@ -258,18 +258,3 @@ function showDirectPlayPicker(round, { title = t('directPlay.pickTitle'), hint =
   sheet.querySelector('.sheet__close').addEventListener('click', () => closeSheet());
   (games.length ? search : sheet.querySelector('.play-pick__guest')).focus();
 }
-
-/* The Start tab's „Jetzt spielen" (#1682): the SECONDARY way into a session,
-   beside „Session wirbeln" in every design, and in the Klassisch rail. Never
-   disabled — direct play needs no shelf, so the young-round lock on the draw
-   does not apply to it, and an empty round is precisely the one that can only
-   play something it does not own. `cls` places it (`hub-play`, `rail__play`).
-   The Start tab's copy comes after the CTA and the presets that modify it, so it
-   never splits the two, and is `rail-owned` wherever the CTA is: the Klassisch
-   rail carries its own copy from 1280px up, and the pane keeping this one would
-   leave a lone button where the primary action was. */
-function directPlayButton(round, cls) {
-  const btn = h(`<button type="button" class="btn ${cls}"><i class="ti ti-player-play" aria-hidden="true"></i>${esc(t('directPlay.button'))}</button>`);
-  btn.addEventListener('click', () => showDirectPlayPicker(round));
-  return btn;
-}

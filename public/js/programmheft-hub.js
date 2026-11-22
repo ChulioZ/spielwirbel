@@ -42,7 +42,6 @@ function phHubFrame() {
          <div class="ph-hub__side"></div>
        </div>
        <div class="ph-hub__more"></div>
-       <div class="ph-hub__strip"></div>
      </div>`);
   const q = (sel) => root.querySelector(sel);
   // The box's kicker is the programme's „Neue Session" — the setup screen's
@@ -56,7 +55,6 @@ function phHubFrame() {
     suggest: q('.ph-hub__suggest'),
     side: q('.ph-hub__side'),
     more: q('.ph-hub__more'),
-    strip: q('.ph-hub__strip'),
   };
 }
 
@@ -117,10 +115,9 @@ function phHeroCompose(round, hero) {
     if (retired[i]) caption(el, retired[i].name, 0, false);
   });
 
-  // The row's end: the round's Einstellungen, where P3.2 prints it. From 1280
-  // up the section line carries the same link; below that the hub's own
-  // „Einstellungen" button at the page's foot does, so programmheft.css shows
-  // this one only where the members row runs the full width.
+  // The row's end: the round's Einstellungen, where P3.2 prints it — at every
+  // width since #1853, which removed the hub's own „Einstellungen" button at
+  // the page's foot. This is the Start tab's one way in besides the section line.
   const settings = h(`<a class="ph-members__settings"><i class="ti ti-settings" aria-hidden="true"></i><span>${esc(t('rail.settings'))}</span></a>`);
   navLink(settings, roundPath(round.id, 'settings'), () => showRoundSettings(round.id));
   members.appendChild(settings);
@@ -234,9 +231,7 @@ function phLobbyKicker() {
 
 /* A LOCKED block (P7.3, P7.4): the column's title, an optional state line and
    the sentence behind a lock. With `tab`, the title is the link to that
-   sub-page — a preview is navigation, so an empty one still leads there
-   (hub-previews.js's header: a screen is not less reachable for being empty).
-   Without it the block is a plain notice. */
+   sub-page. Without it the block is a plain notice. */
 function phLocked(round, { title, state = '', text, tab = null }) {
   const block = h(`<section class="hub-card ph-locked">
        <h2 class="ph-locked__title">${tab ? '<a></a>' : esc(title)}</h2>
@@ -251,45 +246,17 @@ function phLocked(round, { title, state = '', text, tab = null }) {
   return block;
 }
 
-/* The side column of a young round (P7.3, P7.4): each of the three cards that
-   has nothing to say yet stands as a locked block instead of vanishing — but
-   only for a reason the app can state truthfully, the two Der Tisch's
-   sentence cards give (hub-cards.js). */
-function phYoungSide(round, activeGames, { suggest, pulse, care }) {
-  const young = roundIsYoung(round);
-  return {
-    // „Einfacher Modus" (#1646): a hidden card gets no locked stand-in either.
-    suggest: suggest || (young && !simpleHidden('suggestions') && activeGames.length < SUGGEST_MIN_SHELF
-      ? phLocked(round, { title: t('hub.suggest.title'), text: tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest') })
-      : null),
-    pulse: pulse || (young && !simpleHidden('stats')
-      ? phLocked(round, { title: t('hub.pulse.title'), text: tn(1, 'hub.young.pulseOne', 'hub.young.pulse') })
-      : null),
-    /* No locked Kümmerliste: P7.3 promises it „ab dem ersten Spiel", but
-       careList() stays empty until the first PLAYED session, so that sentence
-       would be the kind of promise P7 exists to stop making. */
-    care,
-  };
-}
-
-/* The bottom strip of a young round (P7.3, P7.4): the three previews in their
-   places, each locked until the thing it previews exists. The Regal only while
-   the shelf is empty — once it holds games its own preview (or nothing, under
-   HUB_PREVIEW_COVERS) is the answer. Pokale and Chronik only before the first
-   played session, in the words their own empty screens use. */
-function phStripPreviews(round, activeGames, { regal, pokale, chronik }) {
-  const played = round.sessions.some((s) => s.finished);
-  return [
-    regal || (!activeGames.length && !simpleHidden('stats') ? phLocked(round, {
-      title: t('hub.tab.regal'), state: tn(0, 'home.chip.gamesOne', 'home.chip.games'), text: t('hub.young.lock'), tab: 'regal',
-    }) : null),
-    pokale || (!played && !simpleHidden('trophies') ? phLocked(round, {
-      title: t('hub.tab.pokale'), state: t('pokale.emptyTitle'), text: t('pokale.empty'), tab: 'pokale',
-    }) : null),
-    chronik || (!played && !simpleHidden('stats') ? phLocked(round, {
-      title: t('hub.tab.chronik'), state: t('chronik.emptyTitle'), text: t('chronik.empty'), tab: 'chronik',
-    }) : null),
-  ].filter(Boolean);
+/* The suggestion cell of a young round (P7.3, P7.4): when „Wie wär's mit" has
+   nothing to say yet it stands as a locked block instead of vanishing — but
+   only for the one reason the app can state truthfully, the one Der Tisch's
+   sentence card gives (hub-cards.js). The Rundenpuls and the Kümmerliste left
+   the side column in #1853 (the pulse lives in the Chronik head since #1852, the
+   Kümmerliste in the „Zu tun" row). Returns the card to place, or null. */
+function phYoungSide(round, activeGames, { suggest }) {
+  // „Einfacher Modus" (#1646): a hidden card gets no locked stand-in either.
+  return suggest || (roundIsYoung(round) && !simpleHidden('suggestions') && activeGames.length < SUGGEST_MIN_SHELF
+    ? phLocked(round, { title: t('hub.suggest.title'), text: tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest') })
+    : null);
 }
 
 /* The lead of a round with games and no session yet (P7.4): the column keeps

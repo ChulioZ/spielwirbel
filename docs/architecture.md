@@ -790,8 +790,8 @@ public/
     off-shelf.js     the four off-shelf destinations (Aussortiert, Durchgespielt,
                      Wunschliste, Könnte euch gefallen) with their counts — one
                      definition (issue #1185) — and the scope strip that heads
-                     the Regal and each list (issue #1500); the hub's
-                     „Weitere Listen" group reads the same definition
+                     the Regal and each list (issue #1500) — the lists' one
+                     way in since #1853
     cover.js         deterministic per-title gradient for games with no cover
     cover-size.js    rewrites provider cover URLs to a frame-appropriate size
     tag-icons.js     the curated tag-icon set (mirrors lib/tag-icons.js)
@@ -1066,11 +1066,13 @@ public/
                      (Freundeskreis / Entdecken / news) — plus new round
     views-round.js        round hub SHELL: the Start/Regal/Chronik/Pokale tab
                           strip, the round fetch, the inline round-name editor
-    views-round-start.js  Start tab: hero, the one big CTA, the tickets, and
-                          what the tab composes below them (#923)
-    hub-cards.js          the Start tab's card renderers, their shared frame and
-                          the quick-start chips, split out of the above at its
-                          own #923 seam (issue #1189)
+    views-round-start.js  Start tab: the stage — hero, what is running, the one
+                          big CTA and its one chip row — and what the tab
+                          composes below it (#923, #1853)
+    hub-cards.js          the Start tab's card renderers, their shared frame,
+                          the one chip row („Direkt wählen" + presets) and the
+                          folded „Zu tun" row, split out of the above at its
+                          own #923 seam (issues #1189, #1853)
     simple-mode-prompt.js the Start tab's one-time „Einfacher Modus" offer: who
                           is owed it, and the card with its two answers (#1768)
     hub-reflow.js         moves a hub's cells between its phone order and its
@@ -1097,11 +1099,9 @@ public/
     saved-filters.js      a round's saved session filters (#1328): the chip's
                           prefill, the setup screen's „Filter speichern" sheet
                           and the Einstellungen list
-    hub-previews.js       the hub's previews of Regal, Pokale and Chronik, and
-                          its „Weitere Listen" group (issues #1185, #1500)
     views-regal.js        Regal tab: the games library (search, filters, grid)
     views-shelf-profile.js
-                          the Regal-Steckbrief: its Start card, its screen
+                          the Regal-Steckbrief: its screen
                           (/round/:rid/shelf-profile) and its share (#1173)
     round-head-lines.js   the Rundenpuls folded under the Chronik heading and
                           the Steckbrief's sentence under the Regal's (#1852)

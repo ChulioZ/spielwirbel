@@ -1,8 +1,8 @@
 'use strict';
 
-/* The Regal's scope strip (#1500) is the ONE way onto the four off-shelf lists
- * from the Regal side, at every width and in every design — so every list the
- * hub's „Weitere Listen" group offers must be in it, with the same count.
+/* The Regal's scope strip (#1500) is the ONE way onto the four off-shelf lists,
+ * at every width and in every design — since #1853 there is no second surface
+ * on the Start tab to compare it with, so the spec pins that none grew back.
  *
  * Why parity and not "the strip exists": the strip replaced up to four other
  * presentations (a toolbar sheet, a band or line under the grid, the Klassisch
@@ -93,16 +93,11 @@ test('the Regal is headed by the strip: Regal first and current, then the four l
   assert.equal(current[0].getAttribute('aria-current'), 'page');
 });
 
-test('every list the hub offers is in the strip, with the same count', async (t) => {
-  const regal = rowsOf(strip(await render(t, 'regal')));
-  const hub = rowsOf((await render(t, 'start')).app.querySelector('.hub-offshelf'));
-  // Anti-vacuous: with no rows the comparison passes trivially.
-  assert.equal(hub.length, 4, `the hub group rendered ${hub.length} links — check the fixture`);
-  const byHref = new Map(regal.map((r) => [r.href, r.text]));
-  const drifted = hub.filter((r) => byHref.get(r.href) !== r.text);
-  assert.deepEqual(drifted.map((r) => `${r.href}: hub "${r.text}" vs strip "${byHref.get(r.href)}"`), []);
-  // And the hub never offers the Regal as one of its „Weitere Listen".
-  assert.ok(!hub.some((r) => r.href.endsWith('/regal')), 'the hub group offers the Regal as a further list');
+test('the Start tab offers none of the lists — the strip is their way in (#1853)', async (t) => {
+  const dom = await render(t, 'start');
+  assert.equal(dom.app.querySelector('.hub-offshelf, .rail__offshelf'), null, '„Weitere Listen" is back on the Start tab');
+  // Anti-vacuous: the Regal's strip still carries all four.
+  assert.equal(rowsOf(strip(await render(t, 'regal'))).filter((r) => !r.href.endsWith('/regal')).length, 4);
 });
 
 test('the strip is the Regal\'s ONLY way onto the lists — no sheet, no footer, no toolbar control', async (t) => {

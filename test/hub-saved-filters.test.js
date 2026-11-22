@@ -46,7 +46,9 @@ const round = (over = {}) => ({
 });
 
 const noRecos = () => async () => ({ recommendations: [] });
-const chipLabels = (root) => [...root.querySelectorAll('.hub-preset')].map((b) => b.textContent.trim());
+// The presets proper: „Direkt wählen" leads the same row since #1853 and is
+// pinned on its own in test/start-tab-stage.test.js.
+const chipLabels = (root) => [...root.querySelectorAll('.hub-preset:not(.hub-preset--direct)')].map((b) => b.textContent.trim());
 const builtInLabels = (dom) => ['short', 'light', 'meaty', 'family'].map((k) => dom.run(`t('hub.preset.${k}')`));
 
 test('the registry is not empty, so the loops below cannot pass vacuously', () => {
@@ -100,7 +102,7 @@ test('a saved chip opens the setup with the WHOLE filter — every key present, 
   const r = round({ savedFilters: SAVED });
   dom.call('renderStartTab', r, r.games);
 
-  const chips = dom.app.querySelectorAll('.hub-preset');
+  const chips = dom.app.querySelectorAll('.hub-preset:not(.hub-preset--direct)');
   chips[0].click();
   chips[2].click();
   // Every key is spelled out, so nothing falls through to the round's
@@ -124,6 +126,6 @@ test('tapping a saved chip does not touch lastSessionFilters', (t) => {
   const r = round({ savedFilters: SAVED });
   dom.call('renderStartTab', r, r.games);
   const before = calls.length;
-  dom.app.querySelector('.hub-preset').click();
+  dom.app.querySelector('.hub-preset:not(.hub-preset--direct)').click();
   assert.equal(calls.length, before, `the chip made a request: ${calls.slice(before).join(', ')}`);
 });

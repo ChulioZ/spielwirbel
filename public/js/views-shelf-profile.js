@@ -15,8 +15,9 @@
    bands as stat tiles (the Rundenpuls's `.pulse-tile`) on the card, the same bars
    in felt/paper on the screen.
 
-   Part of the frontend; all files share one global script scope. Loaded after
-   views-round-start.js, which calls hubShelfProfileCard at RENDER time. */
+   Its Start-tab card left in #1853 (the Regal heading's profile line, #1852,
+   is its way in). Part of the frontend; all files share one global script
+   scope. */
 
 // The builder's dependencies, injected for the reason shelf-profile.js's header
 // gives: the draw pool's own seat predicate, the (Uncredited) filter, and each
@@ -163,30 +164,6 @@ function shelfGapList(gaps, max, open) {
     list.appendChild(row);
   });
   return list;
-}
-
-/* The Start tab's card. Null below the threshold, like every Start card, and
-   null when the shelf has no dominant range worth a sentence. */
-function hubShelfProfileCard(round, activeGames, statsByGame) {
-  if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
-  const p = shelfProfile(activeGames, shelfProfileDeps(statsByGame));
-  /* One sentence and the link, in every design (#1683). The tile used to draw
-     the lead dimension's bars and the first gaps — a slice of the screen it
-     links to rather than a summary of what the shelf IS. The bars, Der Tisch's
-     seat tiles and the gap list all still live on the screen. */
-  const sentence = shelfHeadlineText(shelfHeadline(p));
-  if (!sentence) return null;
-  const card = hubCard('ti-id', t('shelfProfile.title'));
-  card.classList.add('hub-card--shelf', 'hub-card--link');
-  const body = card.querySelector('.hub-card__body');
-  body.appendChild(h(`<p class="shelf-card__headline">${esc(sentence)}</p>`));
-  const link = h(`<a class="hub-row hub-row--quiet hub-card__go">
-       <span class="hub-row__main"><span class="hub-row__sub">${esc(t('shelfProfile.more'))}</span></span>
-       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-     </a>`);
-  navLink(link, roundPath(round.id, 'shelf-profile'), () => showShelfProfile(round.id));
-  body.appendChild(link);
-  return card;
 }
 
 /* shelfHeadline's clause descriptors (shelf-profile.js) as words. Each clause

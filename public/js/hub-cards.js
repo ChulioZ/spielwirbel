@@ -3,13 +3,13 @@
 
    Six renderers and one frame. Everything they say is DERIVED on demand from
    the round payload the tab already holds (public/js/hub-insights.js) — no new
-   field, no new table, no extra request — except the recommendations teaser at
-   the bottom, which fetches after first paint.
+   field, no new table, no extra request. (The recommendations teaser that
+   fetched after first paint left in #1853, with the three previews: the Regal's
+   scope strip reaches the recommendations at every width.)
 
    Split along the seam views-round-start.js's own banner had marked since #923:
    the LAUNCHPAD (identity, the one CTA, the tickets) and the CARDS are edited
-   independently, and the three sub-page previews had already left for
-   hub-previews.js in #1185. The tab that composes all of them stays next door.
+   independently. The tab that composes all of them stays next door.
 
    THE LOAD-BEARING RULE FOR EVERY CARD: it renders NOTHING when it has nothing
    to say — no heading, no empty container, no skeleton. Each renderer below
@@ -81,59 +81,24 @@ function hubSentenceCard(icon, title, text) {
    how many games are ready, a strip of their covers, and why there are no
    scores yet. The one next step is the CTA directly above it, which reads
    „Erste Session wirbeln" in the same state. */
+// At most this many covers on the young-round card — one row at every width.
+const HUB_YOUNG_COVERS = 6;
+
 function hubYoungCard(round, activeGames) {
   if (!designIs('tisch') || !activeGames.length || !roundIsYoung(round)) return null;
   const card = hubCard('ti-cards', tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'));
   card.classList.add('hub-card--young');
   const body = card.querySelector('.hub-card__body');
-  // aria-hidden for the reason hubRegalPreview's strip is: the title already
-  // says what is here, and a cover is not something this card offers to open.
+  // aria-hidden: the title already says what is here, and a cover is not
+  // something this card offers to open.
   const strip = h('<div class="hub-preview__covers" aria-hidden="true"></div>');
-  activeGames.slice(0, HUB_PREVIEW_COVERS).forEach((game) => {
+  activeGames.slice(0, HUB_YOUNG_COVERS).forEach((game) => {
     const style = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
     strip.appendChild(h(`<span class="hub-preview__cover"${style}>${game.image ? '' : coverPlaceholder(game)}</span>`));
   });
   body.appendChild(strip);
   body.appendChild(h(`<p class="hub-card__facts">${esc(t('hub.young.readyText'))}</p>`));
   return card;
-}
-
-/* Der Tisch's DEMO summary (T7.6, #1280): the demo round's three sub-pages as
-   one condensed list — what is behind each tab and how much of it there is —
-   in the place the three preview tiles take on every other round. The same
-   three destinations, so nothing becomes unreachable: each row is that
-   preview's link, and the tab strip / dock still carry all three.
-
-   The values are the previews' own figures (the shelf count, the played-
-   evening count, roundStandings' leader), never a second derivation. The
-   sheet's fourth row („Wie wär's mit") is left out: that card is on the same
-   screen, directly below, so the row would link to where the reader already
-   is. */
-function hubDemoSummary(round, activeGames) {
-  const list = h(`<nav class="hub-demo" aria-label="${esc(t('hub.demo.label'))}"></nav>`);
-  const { winners, rankOf } = roundStandings(round);
-  const leaders = winners.filter((m) => rankOf[m.id] === 1);
-  // `s.finished`, like hubChronikPreview — the count the Chronik lists.
-  const played = round.sessions.filter((s) => s.finished).length;
-  const lead = leaders.length === 1 ? t('hub.preview.pokaleLead', { name: leaders[0].name })
-    : leaders.length ? t('hub.preview.pokaleLeadTie', { n: leaders.length }) : '';
-  [
-    { tab: 'regal', icon: 'ti-layout-grid', value: tn(activeGames.length, 'home.chip.gamesOne', 'home.chip.games') },
-    { tab: 'chronik', icon: 'ti-history', value: tn(played, 'home.chip.sessionsOne', 'home.chip.sessions') },
-    { tab: 'pokale', icon: 'ti-trophy', value: lead },
-  ].filter(({ tab }) => !(tab === 'pokale' && simpleHidden('trophies'))).forEach(({ tab, icon, value }) => {
-    const row = h(`<a class="hub-demo__row">
-         <i class="ti ${icon}" aria-hidden="true"></i>
-         <span class="hub-demo__main">
-           <span class="hub-demo__label">${esc(t('hub.tab.' + tab))}</span>
-           <span class="hub-demo__hint">${esc(t('hub.demo.hint.' + tab))}</span>
-         </span>
-         ${value ? `<span class="hub-demo__value">${esc(value)}</span>` : ''}
-       </a>`);
-    navLink(row, roundPath(round.id, tab), () => showRound(round.id, tab));
-    list.appendChild(row);
-  });
-  return list;
 }
 
 /* „Gefällt dir das?" (T7.6, #1280): the demo's one invitation to make it real.
@@ -235,6 +200,9 @@ function hubSuggestRow(round, { game, reason }) {
    saved none. Mixing them would put a group's own „Kinderrunde" beside a
    generic „Leichte Kost" as if the app's guess were as deliberate as theirs.
 
+   It never returns null since #1853: „Direkt wählen" leads the row at every
+   shelf size, so the row is the one place the CTA's modifiers live.
+
    ONE RENDERER FOR EVERY DESIGN. Klassisch's Start tab, its rail and Der
    Tisch's felt band all call this function, and a design only STYLES
    `.hub-presets` / `.chip.hub-preset` — it never builds its own row.
@@ -253,10 +221,18 @@ function hubSuggestRow(round, { game, reason }) {
    the round's remembered preset exactly as it was — which is a property of
    where the write lives, not a guard this code has to remember. */
 function hubPresetChips(round, activeGames) {
+  const row = h(`<div class="hub-presets" role="group" aria-label="${esc(t('hub.preset.label'))}"></div>`);
+  /* „Direkt wählen" FIRST (#1853): it replaced the separate „Jetzt spielen"
+     button that sat under the chips (#1682), so the one action has one row of
+     modifiers rather than a row and a second button. Always present — the
+     picker offers a game the group does not own, so even an empty shelf can
+     play something. */
+  const direct = h(`<button class="chip hub-preset hub-preset--direct">${iconText('ti-player-play', t('hub.preset.direct'))}</button>`);
+  direct.addEventListener('click', () => showDirectPlayPicker(round));
+  row.appendChild(direct);
+  if (!activeGames.length) return row;
   const saved = Array.isArray(round.savedFilters) ? round.savedFilters : [];
   const chips = saved.length ? [] : quickPresets(activeGames, hubDeps());
-  if (!saved.length && !chips.length) return null;
-  const row = h(`<div class="hub-presets" role="group" aria-label="${esc(t('hub.preset.label'))}"></div>`);
   // The Start tab's copy is `rail-owned` (see the caller); the rail builds its
   // own from the same function, so the two can never offer different chips.
   saved.forEach((sf) => {
@@ -298,21 +274,11 @@ function hubPulseCard(round, activeGames) {
   const tisch = designIs('tisch');
   const ph = designIs('programmheft');
   const pulse = roundPulse(round, activeGames, { minSessions: 1 }, hubDeps());
-  if (!pulse) {
-    /* Nothing played in the last twelve months. A YOUNG round gets the
-       sentence, never a „0" (T7.4, #1269) — Der Tisch once it has games, Die
-       Brücke from the freshly founded round on (#1243, B7.1 — „Leer" still
-       shows the block, empty shelf or not). Klassisch, Ocean and Forest keep
-       the card off here as they always did (Forest stands a locked block in
-       its place, forestLockedPulse). The count is the pulse's own floor — one
-       session since #1586 — so the copy promises numbers exactly when
-       roundPulse() draws them. */
-    const young = roundIsYoung(round);
-    const say = (tisch && young && activeGames.length) || (designIs('bruecke') && young);
-    return say
-      ? hubSentenceCard('ti-activity', t('hub.pulse.title'), tn(1, 'hub.young.pulseOne', 'hub.young.pulse'))
-      : null;
-  }
+  /* Nothing played in the last twelve months: no card. The young round's
+     sentence variants (T7.4, B7.1) left with the card's Start-tab home in
+     #1853 — the Chronik head it lives in now (round-head-lines.js) shows no
+     pulse at all for a round that has nothing to summarise. */
+  if (!pulse) return null;
   const card = hubCard('ti-activity', t('hub.pulse.title'));
   const body = card.querySelector('.hub-card__body');
   /* Until the third played session the card says WHEN series come (T7.5;
@@ -419,63 +385,137 @@ function hubPulseTiles(round, card, pulse) {
   return card;
 }
 
-/* d) Kümmerliste — gaps that quietly degrade other features, each row a link to
-   the screen that fixes it.
+/* d) „Zu tun · n" (#1853) — ONE folded row for the two lists of things to fix:
+   the Kümmerliste (gaps that quietly degrade other features, each row a link
+   to the screen that fixes it) and the retirement recommendations. Collapsed by
+   default, with the combined count on its bar: a to-do list is something you
+   open when you have a minute, not the evening's headline.
 
-   Guarded on `game.edit` even though every grantee role clears that floor today,
-   for the reason the discard control above states: the routes behind these fixes
-   decide on a capability, so the card that points at them asks the same
-   question — a re-tightening tomorrow then removes the card instead of leaving
-   a list of things the reader is not allowed to do. */
-function hubCareCard(round, activeGames) {
-  if (simpleHidden('todo')) return null; // „Einfacher Modus" (#1646)
-  if (!roundCan(round, 'game.edit')) return null;
-  const list = careList(round, activeGames, hubDeps());
-  if (list.empty) return null;
-  const card = hubCard('ti-tool', t('hub.care.title'));
-  const body = card.querySelector('.hub-card__body');
+   The Kümmerliste half is guarded on `game.edit` even though every grantee role
+   clears that floor today: the routes behind these fixes decide on a
+   capability, so the row that points at them asks the same question. The
+   recommendations keep the banner's own two actions — „Aussortieren" per game
+   and „Ausblenden" for the session (`minimizedRecs`). */
+function hubTodoRow(round, activeGames, recs) {
+  const care = !simpleHidden('todo') && roundCan(round, 'game.edit') // „Einfacher Modus" (#1646)
+    ? careList(round, activeGames, hubDeps()) : null;
+  const careN = care && !care.empty
+    ? care.winnerlessTotal + care.loansTotal + care.noRangeTotal + care.coverlessTotal : 0;
+  let recN = recs.length && !minimizedRecs.has(round.id) ? recs.length : 0;
+  if (!careN && !recN) return null;
+  const row = h(`<section class="hub-todo">
+       <button type="button" class="hub-todo__bar" aria-expanded="false" aria-controls="hubTodoBody">
+         <i class="ti ti-tool" aria-hidden="true"></i>
+         <span class="hub-todo__label"></span>
+         <i class="ti ti-chevron-down hub-todo__caret" aria-hidden="true"></i>
+       </button>
+       <div class="hub-todo__body" id="hubTodoBody" hidden></div>
+     </section>`);
+  const bar = row.querySelector('.hub-todo__bar');
+  const body = row.querySelector('.hub-todo__body');
+  const label = () => { row.querySelector('.hub-todo__label').textContent = t('hub.todo.label', { n: careN + recN }); };
+  label();
+  bar.addEventListener('click', () => {
+    const open = body.hidden;
+    body.hidden = !open;
+    row.classList.toggle('is-open', open);
+    bar.setAttribute('aria-expanded', String(open));
+  });
 
-  const section = (total, one, many, rows, label, href, go) => {
+  const section = (total, one, many, rows, text, href, go) => {
     if (!total) return;
     body.appendChild(h(`<div class="hub-care__head">${esc(tn(total, one, many))}</div>`));
     rows.forEach((item) => {
-      const row = h(`<a class="hub-row hub-row--quiet">
-           <span class="hub-row__main"><span class="hub-row__sub">${esc(label(item))}</span></span>
+      const link = h(`<a class="hub-row hub-row--quiet">
+           <span class="hub-row__main"><span class="hub-row__sub">${esc(text(item))}</span></span>
            <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
          </a>`);
-      navLink(row, href(item), () => go(item));
-      body.appendChild(row);
+      navLink(link, href(item), () => go(item));
+      body.appendChild(link);
     });
   };
+  if (careN) {
+    // The winnerless rows first: a played evening with no winner leaves the
+    // standings, the win rate and the member records untouched, so it is the
+    // gap that costs the most and the one nothing else on any screen mentions.
+    section(
+      care.winnerlessTotal, 'hub.care.winnerOne', 'hub.care.winner', care.winnerless,
+      (s) => {
+        const g = round.games.find((x) => x.id === s.chosenGameId);
+        return g ? t('hub.care.winnerRow', { game: g.title, when: fmtDate(s.createdAt) }) : fmtDate(s.createdAt);
+      },
+      (s) => resultsPath(round.id, s.id),
+      (s) => showResults(round, s)
+    );
+    // A box out for eight weeks (#1775) — before the shelf data gaps: it is a
+    // real box in somebody else's house.
+    section(
+      care.loansTotal, 'hub.care.loanOne', 'hub.care.loan', care.loans,
+      (g) => t('hub.care.loanRow', { title: g.title, name: loanBorrowerName(round, g.loan), date: fmtLoanDay(g.loan.since) }),
+      (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
+    );
+    section(
+      care.noRangeTotal, 'hub.care.rangeOne', 'hub.care.range', care.noRange,
+      (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
+    );
+    section(
+      care.coverlessTotal, 'hub.care.coverOne', 'hub.care.cover', care.coverless,
+      (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
+    );
+  }
+  if (recN) body.appendChild(hubTodoRecs(round, recs, (rec) => {
+    // „Ausblenden": the recommendations leave the row for this session; the
+    // row itself goes when nothing is left in it.
+    rec.remove();
+    recN = 0;
+    if (!careN) row.remove();
+    else label();
+  }));
+  return row;
+}
 
-  // The winnerless rows first: a played evening with no winner leaves the
-  // standings, the win rate and the member records untouched, so it is the gap
-  // that costs the most and the one nothing else on any screen mentions.
-  section(
-    list.winnerlessTotal, 'hub.care.winnerOne', 'hub.care.winner', list.winnerless,
-    (s) => {
-      const g = round.games.find((x) => x.id === s.chosenGameId);
-      return g ? t('hub.care.winnerRow', { game: g.title, when: fmtDate(s.createdAt) }) : fmtDate(s.createdAt);
-    },
-    (s) => resultsPath(round.id, s.id),
-    (s) => showResults(round, s)
-  );
-  // A box out for eight weeks (#1775) — after the winnerless rows, before the
-  // shelf data gaps: it is a real box in somebody else's house.
-  section(
-    list.loansTotal, 'hub.care.loanOne', 'hub.care.loan', list.loans,
-    (g) => t('hub.care.loanRow', { title: g.title, name: loanBorrowerName(round, g.loan), date: fmtLoanDay(g.loan.since) }),
-    (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
-  );
-  section(
-    list.noRangeTotal, 'hub.care.rangeOne', 'hub.care.range', list.noRange,
-    (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
-  );
-  section(
-    list.coverlessTotal, 'hub.care.coverOne', 'hub.care.cover', list.coverless,
-    (g) => g.title, (g) => gamePath(round.id, g.id), (g) => showGameDetail(round.id, g.id)
-  );
-  return card;
+/* The retirement half of „Zu tun": enough data = at least three times as many
+   votes as members (the caller's threshold). At most five games, then a count. */
+function hubTodoRecs(round, recs, dismiss) {
+  const part = h(`<div class="hub-todo__recs">
+       <div class="hub-care__head">${esc(t('rec.title', { n: recs.length }))}</div>
+       <div class="muted hub-todo__sub">${esc(t('rec.sub'))}</div>
+       <div class="recommend-list"></div>
+       <button type="button" class="link-btn hub-todo__dismiss">${iconText('ti-x', t('rec.dismiss'))}</button>
+     </div>`);
+  const list = part.querySelector('.recommend-list');
+  recs.slice(0, 5).forEach(({ game, reasons }) => {
+    const item = h(`<div class="recommend-item">
+         <div class="recommend-item__info">
+           <a class="recommend-item__title">${esc(game.title)}</a>
+           <span class="recommend-item__reason">${reasons.map(esc).join(' · ')}</span>
+         </div>
+         <button class="btn recommend-item__btn">${esc(t('rec.retire'))}</button>
+       </div>`);
+    navLink(item.querySelector('.recommend-item__title'), gamePath(round.id, game.id), () =>
+      showGameDetail(round.id, game.id)
+    );
+    item.querySelector('.recommend-item__btn').addEventListener('click', async () => {
+      if (!await confirmDialog({
+        body: t('detail.retireConfirm', { title: game.title }),
+        confirmLabel: t('detail.retire'), icon: 'ti-archive', danger: false,
+      })) return;
+      try {
+        await api('POST', `/api/rounds/${round.id}/games/${game.id}/retire`, { retired: true });
+        toast(t('games.retired', { title: game.title }), { tone: 'success' });
+        showRound(round.id);
+      } catch (e) { toast(e.message, { tone: 'error' }); }
+    });
+    list.appendChild(item);
+  });
+  if (recs.length > 5) {
+    list.appendChild(h(`<div class="muted recommend-more">${esc(tn(recs.length - 5, 'rec.moreOne', 'rec.more'))}</div>`));
+  }
+  part.querySelector('.hub-todo__dismiss').addEventListener('click', () => {
+    minimizedRecs.add(round.id);
+    dismiss(part);
+  });
+  return part;
 }
 
 /* e) „Heute vor einem Jahr" — rare by construction: on 364 days of the year
@@ -503,61 +543,6 @@ function hubAnniversaryCard(round) {
   navLink(row, resultsPath(round.id, session.id), () => showResults(round, session));
   card.querySelector('.hub-card__body').appendChild(row);
   return card;
-}
-
-/* f) Empfehlungs-Teaser — one or two rows from the recommendations screen
-   (#682), which below 1280px is reachable only from the desktop rail and is
-   therefore effectively invisible on a phone.
-
-   FETCHED AFTER FIRST PAINT, never in showRound's Promise.all: the route does a
-   full getRound plus the corpus join, so putting it on the critical path would
-   double the round read for a card that is often empty.
-
-   It answers 200 with an empty list — not 404 — for a round below the profile
-   floor, an instance with no corpus, and an instance with no BGG_API_TOKEN. All
-   three, and any error at all, degrade to rendering nothing; the reader loses a
-   teaser they never knew was coming.
-
-   The reason lines go through `recReasonText`, the recommendations screen's own
-   phrasing of the server's terms. A second opinion here is precisely the drift
-   .claude/rules/shared-constants-across-the-stack.md exists for. */
-async function renderRecoTeaser(rid, grid) {
-  if (simpleHidden('suggestions')) return; // „Einfacher Modus" (#1646)
-  let data;
-  try { data = await api('GET', `/api/rounds/${rid}/recommendations`); }
-  catch { return; }
-  const recs = (data && data.recommendations) || [];
-  if (!recs.length) return;
-  // The tab may have been left while the fetch was in flight — a re-render, a
-  // tab switch, a navigation. The grid is then detached and appending to it
-  // would build a card nobody can ever see, on top of a round that may not even
-  // be on screen any more.
-  if (!grid.isConnected) return;
-  const card = hubCard('ti-sparkles', t('suggest.title'));
-  card.classList.add('hub-card--link');
-  const body = card.querySelector('.hub-card__body');
-  recs.slice(0, 2).forEach((rec) => {
-    const why = (rec.reasons || []).map(recReasonText).filter(Boolean)[0] || '';
-    const row = h(`<div class="hub-row hub-row--static">
-         <span class="hub-row__main">
-           <span class="hub-row__title">${esc(rec.title)}</span>
-           ${why ? `<span class="hub-row__sub">${esc(why)}</span>` : ''}
-         </span>
-       </div>`);
-    body.appendChild(row);
-  });
-  const more = h(`<a class="hub-row hub-row--quiet hub-card__go">
-       <span class="hub-row__main"><span class="hub-row__sub">${esc(t('hub.reco.more'))}</span></span>
-       <i class="ti ti-chevron-right hub-row__go" aria-hidden="true"></i>
-     </a>`);
-  navLink(more, roundPath(rid, 'recommendations'), () => showRecommendations(rid));
-  body.appendChild(more);
-  grid.appendChild(cardSlot(card));
-  // This card is content, so the #869 stand-in above is no longer standing in
-  // for an empty pane. It was rendered before the fetch resolved — the only
-  // ordering available for something deliberately kept off the critical path.
-  const gap = grid.parentNode && grid.parentNode.querySelector('.empty--rail-gap');
-  if (gap) gap.remove();
 }
 
 /* The EMPTY TABLE (T7.3, #1269): a 0-game round's one next step — „Der Topf ist

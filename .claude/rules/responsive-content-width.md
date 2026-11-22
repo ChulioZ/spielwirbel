@@ -243,14 +243,12 @@ lists, at every width and in every design. The spec now compares that strip with
 the hub's „Weitere Listen" group (`.hub-offshelf`) — same destinations, same
 counts — and keeps its floor on the hub group.
 
-**#1579 brought the four back into Klassisch's rail — on the Start tab only.**
-There the hub group is `rail-owned` and `railOffShelfGroup` (round-rail.js)
-carries the links, so the #682 trap is answered by the pairing, not by keeping
-the group visible: `test/hub-more-lists-compact.test.js` asserts the rail's links
-equal the hub group's, that no other tab's rail grows them back, and that a lean
-rail never makes the group `rail-owned`. The group sits LAST in the rail, so a
-tab change adds or drops it without moving anything above — the rail-jump-0px
-property this file measures.
+**#1579 brought the four back into Klassisch's rail on the Start tab; #1853
+removed both that rail group and the hub group** — the Regal's strip reaches the
+lists at every width, so both were a duplicate way in. With no pairing left
+there is no #682 trap to answer here; `test/off-shelf-parity.test.js` pins the
+strip as the one way in, and `test/tisch-hub-compose.test.js` that the Klassisch
+rail is the five links again.
 
 ## What survived from #332, and why
 
