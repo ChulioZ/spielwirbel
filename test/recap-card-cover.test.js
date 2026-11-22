@@ -128,61 +128,63 @@ const cardByEyebrow = (root, iconClass) => {
   return hits[0];
 };
 
-// ---- the Pokale trophy cards ----------------------------------------------
+// ---- the Pokale records (a list since #1856) ------------------------------
 
-test('the Meistgespielt card leads with its game’s cover, sized for the thumb', async (t) => {
+/** The one record row whose label carries `iconClass`. */
+const recordByIcon = (root, iconClass) => {
+  const hits = [...root.querySelectorAll('.pokale-record')].filter((c) => c.querySelector(`.pokale-record__label .${iconClass}`));
+  assert.equal(hits.length, 1, `expected exactly one record with .${iconClass} in its label, got ${hits.length}`);
+  return hits[0];
+};
+
+test('the Meistgespielt record leads with its game’s cover, sized for the thumb', async (t) => {
   const dom = boot(t);
   await dom.call('showRound', RID, 'pokale');
-  const card = cardByEyebrow(dom.app, 'ti-flame');
-
-  assert.ok(card.classList.contains('pokale-card--cover'), 'the card must opt into the cover grid');
-  assert.equal(card.querySelector('.pokale-card__icon'), null, 'the trophy icon must not also keep a row of its own');
-  assert.equal(card.querySelector('.pokale-game__title').textContent, 'Ark Nova');
-
-  const thumb = card.querySelector('.pokale-card__thumb');
-  assert.ok(thumb, 'the card renders no cover frame at all');
+  const row = recordByIcon(dom.app, 'ti-flame');
+  assert.equal(row.querySelector('.pokale-record__icon'), null, 'the record icon must not also keep a box of its own');
+  assert.equal(row.querySelector('.pokale-record__name').textContent, 'Ark Nova');
+  const thumb = row.querySelector('.pokale-record__thumb');
+  assert.ok(thumb, 'the record renders no cover frame at all');
   assert.equal(thumb.querySelector('.cover-ph'), null, 'a game with real art must not also draw the placeholder');
-  /* jsdom has no IntersectionObserver, so createCoverLoader takes its eager
-     fallback branch and the background is applied synchronously. The width term
-     is what proves the thumb size was requested rather than the provider's
-     full-resolution master. */
+  // jsdom has no IntersectionObserver: the eager fallback applies it at once.
   assert.ok(thumb.style.backgroundImage.includes('abc.jpg'), 'the game’s own image must be the one loaded');
   assert.ok(/[?&]w=160\b/.test(thumb.style.backgroundImage), `expected a 160px thumb, got ${thumb.style.backgroundImage}`);
 });
 
-test('the Staubfänger card falls back to the deterministic placeholder gradient', async (t) => {
+test('a coverless game’s record falls back to the deterministic placeholder gradient', (t) => {
   const dom = boot(t);
-  await dom.call('showRound', RID, 'pokale');
-  const card = cardByEyebrow(dom.app, 'ti-sparkles');
-  assert.equal(card.querySelector('.pokale-game__title').textContent, 'Azul');
-
-  const thumb = card.querySelector('.pokale-card__thumb');
+  const azul = ROUND.games.find((g) => g.id === 'g2');
+  const row = dom.call('pokaleRecordRow', ROUND, {
+    icon: 'ti-star', label: 'Bestbewertet', games: [azul], value: '4,0', loadCover: dom.call('createCoverLoader'),
+  });
+  const thumb = row.querySelector('.pokale-record__thumb');
   assert.ok(thumb, 'a coverless game must still get a cover frame, not a missing column');
   const ph = thumb.querySelector('.cover-ph');
   assert.ok(ph, 'a coverless game must get the deterministic placeholder layer');
-  /* Pinned against the real hash rather than "some number is present": the
-     custom property is what colours the gradient, and it must be UNITLESS —
-     `calc(h + 40deg)` inside `oklch(from …)` is a type error the browser drops
-     silently, leaving every card a flat box (cover.js, #256). */
+  // Unitless, or `calc(h + 40deg)` inside `oklch(from …)` is dropped (cover.js, #256).
   assert.equal(ph.getAttribute('style'), `--cover-h:${gameHue('Azul')}`);
   assert.equal(thumb.style.backgroundImage, '', 'nothing should have been loaded into a placeholder frame');
 });
 
-test('the trophy thumb targets its game but stays out of the tab order', async (t) => {
+test('the record thumb targets its game but stays out of the tab order', async (t) => {
   const dom = boot(t);
   await dom.call('showRound', RID, 'pokale');
-  const card = cardByEyebrow(dom.app, 'ti-flame');
-  const thumb = card.querySelector('.pokale-card__thumb');
-  const title = card.querySelector('.pokale-game__title');
-  /* Same target as the title beside it, so it is a redundant link: mouse-
-     clickable, but hidden from the accessibility tree rather than announcing as
-     a second, nameless control (`.claude/rules/ds-row-is-a-click-target.md`,
-     and the archive rows' precedent in #663). */
+  const row = recordByIcon(dom.app, 'ti-flame');
+  const thumb = row.querySelector('.pokale-record__thumb');
+  const title = row.querySelector('.pokale-record__name');
+  // Redundant with the title beside it (#663): hidden from the tree and the tab order.
   assert.equal(thumb.getAttribute('href'), title.getAttribute('href'));
   assert.match(thumb.getAttribute('href'), /\/game\//);
   assert.equal(thumb.getAttribute('aria-hidden'), 'true');
   assert.equal(thumb.getAttribute('tabindex'), '-1');
   assert.equal(title.getAttribute('aria-hidden'), null, 'the title must stay the reachable link');
+});
+
+test('the Staubfänger is gone from Pokale (#1856) — it was a game suggestion, not a record', async (t) => {
+  const dom = boot(t);
+  await dom.call('showRound', RID, 'pokale');
+  assert.equal(dom.app.querySelector('.pokale-record .ti-sparkles, .pokale-card .ti-sparkles'), null);
+  assert.doesNotMatch(dom.app.textContent, /Staubfänger/);
 });
 
 // ---- the Chronik's period cards -------------------------------------------

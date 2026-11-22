@@ -305,6 +305,9 @@
   .marker-card__name,
   .badge__name,
   .badge-moment__title,
+  .pokale-records__title,
+  .badge-collection__title,
+  .challenge-history__title,
   .badge-card__name,
   .konto-section__h,
   .rs-section__h,
@@ -3975,13 +3978,6 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__title { color: var(--box-ink); font-weight: 700; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__sub { color: var(--box-ink-soft); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-card__thumb { border-radius: 0; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__play {
-  border: 1.5px solid var(--box-ink);
-  border-radius: 0;
-  background: transparent;
-  color: var(--box-ink);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .pokale-game__play:hover { background: var(--box-ink); color: var(--box); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .precap .precap__thin { color: var(--box-ink-soft); }
 /* From 1280 the box stands in its own column right of the editions (P13.1);
    below that it follows them, as P13.2 reads the page. */
@@ -4152,64 +4148,31 @@
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .pokale-table tbody .pokale-table__name { font-size: 17px; }
 }
 
-/* The plaques under the table: a 2px rule over a tracked label, the value in
-   Anton. The cover goes — P13.3 draws none on a plaque, and the game's title
-   beside it is the same link. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side > .pokale-cards {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin-top: 22px;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+/* The records under the table (#1856): the printed list — a 2px rule over each
+   row, the tracked label over the holder in Anton, the value on the right. The
+   cover goes — P13.3 draws none on a plaque, and the title beside it is the
+   same link. Every design's one list (`.pokale-records`), skinned. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-records { margin-top: 22px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-records__list { display: grid; gap: var(--space-3); border: 0; border-radius: 0; background: transparent; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record {
+  align-items: flex-end;
   padding: 6px 0 0;
-  background: transparent;
-  border: 0;
   border-top: var(--rule-strong) solid var(--ink);
-  border-radius: 0;
-  box-shadow: none;
   color: var(--ink);
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__thumb { display: none; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card > * { grid-column: auto; text-align: left; justify-self: start; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game { justify-content: flex-start; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__icon { display: none; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__label .ti { color: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__value,
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__title {
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record + .pokale-record { border-top: var(--rule-strong) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page :is(.pokale-record__thumb, .pokale-record__icon) { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record__label { font-size: 12px; letter-spacing: 0.14em; color: var(--ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record__label .ti { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record__who {
   font-family: var(--font-display);
   font-weight: 400;
   font-size: var(--display-6);
   line-height: var(--leading-quote);
-  color: var(--ink);
-  overflow-wrap: anywhere;
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__sub { font-size: 14px; color: var(--ink-2); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__play {
-  border: 1.5px solid var(--ink);
-  border-radius: 0;
-  background: transparent;
-  color: var(--ink);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__play:hover { background: var(--ink); color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record__value { font-size: 14px; font-weight: 400; color: var(--ink-2); }
 @media (min-width: 1024px) {
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-card__value,
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-split__side .pokale-game__title { font-size: var(--display-5); }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-page .pokale-record__who { font-size: var(--display-5); }
 }
 
 /* ---- The member page (P13.5/P13.6): no wash, no watermark, no gauge — a
@@ -6273,7 +6236,7 @@
 
    Every rule is gated on the light scheme. A rule that DISPLAYs a K17
    container keeps `:not([hidden])` — K17 hides the empty moment and the
-   folded „N offen" grid with the attribute
+   folded grid with the attribute (gone with #1856)
    (.claude/rules/hidden-attribute-vs-display-rule.md).
 
    Not built from the sheet: the member row's three-medal peek beside the
@@ -6370,7 +6333,7 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-member, .badge-grid--compact, .badge-moment) .badge__mark[data-tier]::after { display: none; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-grid--compact, .badge-moment) .badge__mark[data-tier]::after { display: none; }
 
 /* --- The tile: medal over name over line (the strip, the account row) ------ */
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge {
@@ -6447,250 +6410,45 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head h2 .ti { display: none; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__summary { margin-bottom: 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__empty { margin: 10px 0 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
-/* The key: on a phone the sheet prints only the count (P17.3). */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend { display: none; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__mark { width: 16px; height: 16px; border-radius: 50%; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="progress"] .badge-legend__mark { background: conic-gradient(var(--ink) 60%, var(--sunken) 0); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-legend__item[data-state="locked"] .badge-legend__mark { border: 2px dashed var(--ink-soft); background: none; }
-
-/* The round as a strip under the rubric line: four across on a phone, the
-   name and the count as one tracked kicker, the line left to the card. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round {
-  margin: 0;
-  padding: 10px 0 12px;
-  border: 0;
-  border-bottom: var(--rule-strong) solid var(--ink);
-  border-radius: 0;
-  background: none;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__head {
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 2px 8px;
-  margin: 0 0 8px;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band__name, .badge-band__count) {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 12px; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__line { display: none; }
-
-/* The people: one disclosure per member in standings order on a phone. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members { display: flex; flex-direction: column; gap: 0; }
+/* The holder rows (#1856): the sheet's person-columns rubric becomes rows —
+   a square face, the name in Anton, the counts under it, the earned medals
+   small to the right, all between 2px rules like the standings table above.
+   The round's row carries the rubric's black box. */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members { gap: 0; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member {
-  padding: 0;
+  padding: 8px 0;
   border: 0;
-  border-bottom: var(--rule-col) solid var(--ink);
+  border-top: var(--rule-col) solid var(--ink);
   border-radius: 0;
-  background: none;
+  background: transparent;
+  color: var(--ink);
 }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  column-gap: 10px;
-  align-items: center;
-  min-height: 60px;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__summary { grid-column: 2 / 4; grid-row: 2; align-self: start; }
-/* „Platz N" beside the name, so the counts below keep the column's width. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1; align-self: end; white-space: nowrap; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 0;
-  font-size: 15px;
-  font-weight: 700;
-}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members__item:last-child .badge-member { border-bottom: var(--rule-col) solid var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member:hover { background: var(--sunken); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member--round { padding: 8px 12px; background: var(--box); color: var(--box-ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member--round:hover { background: var(--box); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member--round :is(.badge-member__summary, .badge-member__more, .badge-member__go) { color: var(--box-ink-soft); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-member__avatar, .badge-member__roundmark) { width: 32px; height: 32px; border-radius: 0; font-size: 15px; /* glyph, not type */ }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__roundmark { background: var(--box-ink); color: var(--box); }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__name {
   font-family: var(--font-display);
   font-weight: 400;
   font-size: var(--display-6);
   line-height: var(--leading-display);
   text-transform: uppercase;
-  color: var(--ink);
 }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__summary { font-size: 13px; color: var(--ink-2); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__rank {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head::after {
-  grid-column: 4;
-  grid-row: 1 / 3;
-  margin: 0;
-  content: "\ea61";
-  font-family: "tabler-icons";
-  font-size: 20px;
-  color: var(--ink);
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
-
-/* A member's medals as ROWS: the medal, then name over line, between dotted
-   hairs (the sheet's columns and the phone's open row are one drawing). */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid:not([hidden]) {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0;
-  padding-bottom: 8px;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge {
-  --ph-mark: 44px;
-  display: grid;
-  grid-template-columns: var(--ph-mark) minmax(0, 1fr) auto;
-  column-gap: 12px;
-  row-gap: 0;
-  align-items: center;
-  justify-items: start;
-  min-height: 52px;
-  padding: 4px 0;
-  border-top: 1px dotted var(--hair);
-  text-align: left;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__mark { grid-row: 1 / 3; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__name { grid-column: 2; align-self: end; margin: 0; font-size: 15px; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__line { grid-column: 2 / 4; align-self: start; font-size: 13px; color: var(--ink-2); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge:is([data-state="locked"], [data-state="secret"]) .badge__line { color: var(--ink-soft); }
-/* „Neu" takes its own cell after the name rather than printing over it. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge__new { position: static; grid-column: 3; grid-row: 1; align-self: end; }
-/* „N offen" (P17.8): a dashed print box, not a link line. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__more {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--target-min);
-  margin: 6px 0 10px;
-  padding: 0 8px;
-  border: 1.5px dashed var(--ink-soft);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-2);
-  text-decoration: none;
-}
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--rest:not([hidden]) { margin: 0; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__go { color: var(--ink); }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__pin { --ph-mark: 28px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-collection__title { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-soft); }
 
 @media (min-width: 1024px) {
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .app > .badge-section { max-width: none; }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head { padding-bottom: 8px; }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head h2 { font-size: var(--display-3); }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section__summary { margin-bottom: 8px; font-size: 14px; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-legend {
-    display: flex;
-    flex: none;
-    gap: 18px;
-    margin: 0 0 8px auto;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink-2);
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-section__summary { margin-left: auto; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-section > .section-head .badge-section__summary + .badge-legend { margin-left: 0; }
-
-  /* The round: a newspaper strip — its name in Anton at the left, the medals
-     in 118px cells between dotted rules. */
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    align-items: center;
-    gap: 24px;
-    padding: 14px 0 16px;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__head { flex-direction: column; align-items: flex-start; margin: 0; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__name {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: var(--display-5);
-    line-height: var(--leading-display);
-    letter-spacing: 0;
-    color: var(--ink);
-    overflow-wrap: anywhere;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band__count { font-size: 14px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-2); }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid:not([hidden]) { display: flex; flex-wrap: wrap; gap: 14px 4px; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge {
-    --ph-mark: 56px;
-    width: 118px;
-    border-right: 1px dotted var(--hair);
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__name { font-size: 14px; text-align: center; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round .badge__line {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-    padding: 0 4px;
-    text-align: center;
-  }
-
-  /* The people as COLUMNS in standings order — as many as there are people up
-     to six, so four members get four columns (P17.2). A column's left rule is
-     a shadow the strip clips at its own edge, so the first column of every row
-     has none without any selector having to know which one that is. */
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    overflow: hidden;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member {
-    padding: 16px 20px 20px;
-    border-bottom: 0;
-    box-shadow: -1px 0 0 var(--ink);
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head {
-    min-height: 0;
-    padding-bottom: 8px;
-    border-bottom: var(--rule-strong) solid var(--ink);
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__head::after { display: none; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__avatar { width: 36px; height: 36px; font-size: 17px; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__name { font-size: 28px; overflow-wrap: anywhere; white-space: normal; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member .badge {
-    min-height: 58px;
-    padding: 6px 0;
-    border-top: 0;
-    border-bottom: 1px dotted var(--hair);
-  }
-
-  /* From seven people (P17.8): six columns, the earned marks as bare 26px
-     seals that wrap, the rest behind „N offen". The fold button is K17's tell
-     for a dense round; the names stay in every seal's aria-label. */
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member { padding: 10px 10px 12px; border-bottom: var(--rule-col) solid var(--ink); }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__head { gap: 6px; padding-bottom: 6px; border-bottom: 0; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__avatar { width: 18px; height: 18px; font-size: 0; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member__name {
-    font-family: var(--font);
-    font-weight: 700;
-    font-size: 13px;
-    line-height: 1.2;
-    text-transform: none;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) :is(.badge-member__summary, .badge-member__rank) { display: none; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not([hidden]) {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 0;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member .badge {
-    --ph-mark: 26px;
-    display: block;
-    min-height: 0;
-    padding: 0;
-    border: 0;
-  }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-members:has(> .badge-member > .badge-member__more) .badge-member :is(.badge__name, .badge__line, .badge__new) { display: none; }
+  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member__pin { --ph-mark: 32px; }
 }
 
 /* --- The tap-open card (P17.1 right): a printed box, the name in Anton. --- */
@@ -6765,22 +6523,11 @@
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge { --ph-mark: 44px; gap: 6px; padding: 0; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-grid--compact .badge__name { display: block; margin: 0; font-size: 12px; text-align: center; }
 
-/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
-   full tiles as bare marks — no name, no condition (the card has it). Scoped
-   through the band and the row so it outranks their column rules. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { --ph-mark: 36px; min-width: 24px; padding: 2px; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
-/* A member's medals are list ROWS between dotted hairs; a closed mark in the
-   strip is a bare medal, so it leaves that row drawing and sits under the list. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--strip:not([hidden]) { padding: 8px 0; border-top: 1px dotted var(--hair); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-member > .badge-grid--strip .badge { display: inline-flex; min-height: 0; border-top: 0; }
-/* The desktop band sets each column 118px wide with a dotted rule. */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid--strip .badge { width: auto; border-right: 0; }
-/* From 1024px the band is a head | tiles grid: the strip joins the tiles' column. */
-@media (min-width: 1024px) {
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-band--round > .badge-grid--strip { grid-column: 2; }
-}
+/* The collection's strip of closed marks (#1541, #1856): locked and secret
+   entries as bare medals — no name, no condition (the card has it). */
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip .badge { --ph-mark: 36px; min-width: 24px; padding: 2px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .badge-collection__group > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
 @media (min-width: 1024px) {
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges { flex-wrap: nowrap; gap: 20px; padding: 12px 0; }
   :root[data-design="programmheft"]:not([data-scheme="dark"]) .member-card__badges > .member-card__badges-label { flex: 0 0 110px; }

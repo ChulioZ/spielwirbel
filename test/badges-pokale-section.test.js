@@ -1,7 +1,8 @@
 'use strict';
 
-/* Pokale › Abzeichen in Klassisch (#1388, K17): the section, its dense and
- * empty forms, the tile's accessible name, and the tap-open card — rendered
+/* Pokale › Abzeichen in Klassisch (#1388, K17; one row per holder since
+ * #1856): the section, its empty form, the holder rows, the collection behind
+ * each, the tile's accessible name, and the card opened inside it — rendered
  * under jsdom and clicked, never matched out of the source
  * (.claude/rules/testing-views-under-jsdom.md). What each mark IS comes from
  * achievements.js and is test/achievements.test.js's business; this file is
@@ -35,166 +36,197 @@ test('a round with no finished session gets one line and no tiles — and no hub
   assert.equal(dom.call('hubBadgeLine', r), null, 'the hub line is absent before the first finished session');
 });
 
-test('the round band comes first, then one row per member in the standings order', async (t) => {
+const rows = (dom) => [...section(dom).querySelectorAll('.badge-member')];
+// Open a holder's collection and hand back its body (sheet or popover).
+function collection(dom, mid) {
+  dom.document.getElementById(`abzeichen-${mid}`).click();
+  return dom.document.querySelector('.badge-collection');
+}
+
+test('the round row comes first, then one row per member in the standings order (#1856)', async (t) => {
   // Ben wins twice, Anna once: the standings put Ben first.
   const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] }), night('s3', 3, { winnerIds: ['m2'] })]);
   const dom = await pokale(t, r);
+  assert.deepEqual(rows(dom).map((b) => b.dataset.mid), ['round', 'm2', 'm1']);
+  assert.ok(rows(dom)[0].classList.contains('badge-member--round'), 'the round row leads');
+  assert.equal(section(dom).querySelector('ol.badge-members').children.length, 3, 'an ordered list — standings order is meaning');
+  for (const row of rows(dom)) {
+    assert.equal(row.tagName, 'BUTTON', 'the whole row is a button');
+    assert.equal(row.type, 'button');
+  }
+});
+
+test('a row is one line: earned pins only, the counts, a chevron — no legend, no place, no „N offen" (#1856)', async (t) => {
+  const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] })]);
+  const dom = await pokale(t, r, { wide: true });
   const sec = section(dom);
-  const first = sec.querySelector('.badge-band--round, .badge-member');
-  assert.ok(first.classList.contains('badge-band--round'), 'the round band leads');
-  assert.deepEqual([...sec.querySelectorAll('.badge-member')].map((d) => d.dataset.mid), ['m2', 'm1']);
-  assert.equal(sec.querySelector('.badge-member').tagName, 'DETAILS', 'a member row is a disclosure on the phone');
-  assert.equal(sec.querySelector('.badge-member').open, true, 'the first row starts open on a phone');
-  assert.equal(sec.querySelectorAll('.badge-member')[1].open, false, 'the rest start closed on a phone');
+  assert.equal(sec.querySelector('.badge-legend'), null, 'no legend — the rows draw earned marks only');
+  assert.equal(sec.querySelector('.badge-member__rank'), null, 'no „Platz N" — the standings say it');
+  assert.equal(sec.querySelector('details'), null, 'no disclosure open state at any width');
+  assert.equal(sec.querySelectorAll('.badge').length, 0, 'no tiles on the page — they live in the collection');
+  const anna = sec.querySelector('#abzeichen-m1');
+  const earned = dom.run(`roundBadges(${JSON.stringify(r)}).members.m1.filter((e) => e.state === 'earned').length`);
+  assert.ok(earned > 0, 'the fixture earns Anna something');
+  assert.equal(anna.querySelectorAll('.badge-member__pin').length, Math.min(earned, dom.run('BADGE_ROW_PINS')));
+  assert.ok([...anna.querySelectorAll('.badge-member__pin')].every((p) => p.dataset.state === 'earned'), 'only earned pins');
+  assert.equal(anna.querySelector('.badge-member__pins').getAttribute('aria-hidden'), 'true', 'a pin is decorative');
+  assert.ok(anna.querySelector('.badge-member__go'), 'a chevron');
+  assert.match(anna.getAttribute('aria-label'), new RegExp(`^Anna, ${earned} verdient`), 'the name carries the counts');
 });
 
-test('above 860px every member row starts open', async (t) => {
-  const dom = await pokale(t, badgeRound([night('s1', 1)]), { wide: true });
-  assert.ok([...section(dom).querySelectorAll('.badge-member')].every((d) => d.open));
+test('a row draws at most BADGE_ROW_PINS pins and says the rest as „+N"', async (t) => {
+  // Sixty nights Anna wins, alternating two games: ten marks of hers earned.
+  const many = Array.from({ length: 60 }, (_, i) => night(`s${i + 1}`, (i % 28) + 1, { chosenGameId: i % 2 ? 'g1' : 'g2' }));
+  const r = badgeRound(many);
+  const dom = await pokale(t, r);
+  const row = section(dom).querySelector('#abzeichen-m1');
+  const earned = dom.run(`roundBadges(${JSON.stringify(r)}).members.m1.filter((e) => e.state === 'earned').length`);
+  const max = dom.run('BADGE_ROW_PINS');
+  assert.ok(earned > max, `the fixture must overflow the row (${earned} earned)`);
+  assert.equal(row.querySelectorAll('.badge-member__pin').length, max);
+  assert.equal(row.querySelector('.badge-member__more[data-cut="6"]').textContent, `+${earned - max}`);
+  // A phone shows three pins (styles.css), so it shows the count beyond THREE.
+  const narrow = dom.run('BADGE_ROW_PINS_NARROW');
+  assert.equal(row.querySelector(`.badge-member__more[data-cut="${narrow}"]`).textContent, `+${earned - narrow}`);
 });
 
-test('every tile is a button naming its state in words, in the sheets’ shape', async (t) => {
+test('the phone hides exactly the pins its „+N" counts', () => {
+  const { mediaBlocks, rulesOf } = require('./support/css');
+  const narrow = mediaBlocks().filter(([q]) => /max-width:\s*420px/.test(q)).flatMap(([, css]) => rulesOf(css));
+  const hides = narrow.filter(([, b]) => /display:\s*none/.test(b)).flatMap(([sel]) => sel.split(',').map((x) => x.trim()));
+  const nth = hides.map((x) => /\.badge-member__pin:nth-child\(n\+(\d+)\)/.exec(x)).find(Boolean);
+  assert.ok(nth, 'the phone no longer narrows the row');
+  assert.equal(Number(nth[1]) - 1, 3, 'the pins left on a phone');
+  assert.ok(hides.includes('.badge-member__more[data-cut="6"]'), 'the wide count still shows on a phone');
+  assert.ok(narrow.some(([sel, b]) => sel.trim() === '.badge-member__more[data-cut="3"]' && /display:\s*inline/.test(b)), 'the narrow count never shows');
+});
+
+test('every tile in a collection is a button naming its state in words, in the sheets’ shape', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1)]));
-  const sec = section(dom);
-  const tiles = [...sec.querySelectorAll('.badge')];
-  assert.ok(tiles.length > 20, 'the round band and both member rows rendered');
+  const round = collection(dom, 'round');
+  const tiles = [...round.querySelectorAll('.badge')];
+  assert.ok(tiles.length > 10, 'the round collection rendered');
   for (const b of tiles) {
     assert.equal(b.tagName, 'BUTTON', 'a mark is reachable and operable by keyboard');
-    assert.equal(b.type, 'button');
     assert.match(b.dataset.state, /^(earned|progress|locked|secret)$/);
-    // State is never colour alone: the accessible name carries it as a word.
     const word = dom.run(`t('badges.state.${b.dataset.state}')`).toLowerCase();
     assert.ok(b.getAttribute('aria-label').includes(`, ${word}`), `${b.dataset.key}: ${b.getAttribute('aria-label')}`);
   }
-  const founded = tileOf(sec.querySelector('.badge-band--round'), 'founded');
+  const founded = tileOf(round, 'founded');
   assert.equal(founded.getAttribute('aria-label'), 'Gegründet, verdient, neu. Verdient im Juli 2026 · Catan');
   assert.ok(founded.hasAttribute('data-new'));
-  const regular = tileOf(sec.querySelector('#abzeichen-m1'), 'regular');
-  assert.equal(regular.getAttribute('aria-label'), 'Stammgast, unterwegs. 1 / 10 · Bei 10 Sessions dabei');
-  assert.equal(regular.querySelector('.badge__mark').style.getPropertyValue('--pct'), '10', 'the ring length is the share done');
-  const secret = sec.querySelector('.badge[data-state="secret"]');
+  const secret = round.querySelector('.badge[data-state="secret"]');
   assert.equal(secret.querySelector('.badge__name').textContent, dom.run("t('badges.state.secret')"), 'a secret keeps its name until earned');
   assert.ok(secret.querySelector('.ti-lock-question'), 'and shows the padlock, not its own glyph');
+});
+
+test('a member’s in-progress tile carries its ring and its count', async (t) => {
+  const dom = await pokale(t, badgeRound([night('s1', 1)]));
+  const regular = tileOf(collection(dom, 'm1'), 'regular');
+  assert.equal(regular.getAttribute('aria-label'), 'Stammgast, unterwegs. 1 / 10 · Bei 10 Sessions dabei');
+  assert.equal(regular.querySelector('.badge__mark').style.getPropertyValue('--pct'), '10', 'the ring length is the share done');
 });
 
 test('a reached tier is said once, in the name — no corner pill (operator decision 2026-09-26)', async (t) => {
   const ten = Array.from({ length: 10 }, (_, i) => night(`s${i + 1}`, i + 1));
   const dom = await pokale(t, badgeRound(ten));
-  const sessions = tileOf(section(dom).querySelector('.badge-band--round'), 'sessions');
+  const round = collection(dom, 'round');
+  const sessions = tileOf(round, 'sessions');
   assert.equal(sessions.dataset.state, 'earned', 'ten finished sessions reach the first tier');
   assert.match(sessions.querySelector('.badge__name').textContent, / 10$/);
-  assert.equal(section(dom).querySelectorAll('.badge__tier').length, 0);
+  assert.equal(round.querySelectorAll('.badge__tier').length, 0);
 });
 
-/* #1541: the full tiles lead and the closed ones shrink into a strip after
-   them — in the round band and in every member row. The condition leaves the
+/* The collection's three groups (#1856, after #1541): Verdient and Unterwegs
+   as full tiles, Offen as a strip of bare marks. The condition leaves the
    locked tile (it lives in the card), but never the accessible name. */
-const RANK = { earned: 0, progress: 1, locked: 2, secret: 2 };
-function assertLeadThenStrip(holder, label) {
-  const full = [...holder.querySelectorAll(':scope > .badge-grid:not(.badge-grid--strip) .badge')];
-  const strip = [...holder.querySelectorAll(':scope > .badge-grid--strip .badge')];
-  assert.ok(full.length && strip.length, `${label}: both a full grid and a strip`);
-  assert.ok(full.every((b) => b.dataset.state === 'earned' || b.dataset.state === 'progress'), `${label}: full tiles are earned or in progress`);
-  assert.ok(strip.every((b) => b.dataset.state === 'locked' || b.dataset.state === 'secret'), `${label}: the strip holds locked and secret`);
-  const ranks = full.map((b) => RANK[b.dataset.state]);
-  assert.deepEqual(ranks, [...ranks].sort((a, b) => a - b), `${label}: earned before progress`);
-  assert.ok(holder.querySelector(':scope > .badge-grid--strip').classList.contains('badge-grid--compact') === false,
+function assertGroups(host, label) {
+  const group = (st) => host.querySelector(`.badge-collection__group[data-state="${st}"]`);
+  const states = [...host.querySelectorAll('.badge-collection__group')].map((g) => g.dataset.state);
+  assert.deepEqual(states, ['earned', 'progress', 'locked'], `${label}: Verdient, Unterwegs, Offen`);
+  assert.ok([...group('earned').querySelectorAll('.badge')].every((b) => b.dataset.state === 'earned'), `${label}: earned group`);
+  assert.ok([...group('progress').querySelectorAll('.badge')].every((b) => b.dataset.state === 'progress'), `${label}: progress group`);
+  const strip = group('locked').querySelector('.badge-grid--strip');
+  assert.ok(strip, `${label}: Offen is the strip`);
+  assert.equal(strip.classList.contains('badge-grid--compact'), false,
     `${label}: the strip is not the Tischkarte's compact row, whose design skins print the name`);
-  for (const b of strip) {
+  const closed = [...strip.querySelectorAll('.badge')];
+  assert.ok(closed.length && closed.every((b) => /^(locked|secret)$/.test(b.dataset.state)), `${label}: locked and secret, secrets included`);
+  for (const b of closed) {
     assert.equal(b.querySelector('.badge__line'), null, `${label}: ${b.dataset.key} carries no condition line on the tile`);
     assert.ok(b.getAttribute('aria-label').length > b.dataset.key.length, `${label}: ${b.dataset.key} keeps its accessible name`);
   }
+  assert.match(group('earned').querySelector('.badge-collection__title').textContent, /^Verdient · \d+$/);
 }
 
-test('earned and in-progress tiles lead; locked and secret ones follow as a compact strip (#1541)', async (t) => {
+test('a collection groups the marks into Verdient, Unterwegs and Offen, in catalogue order (#1856)', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] })]));
-  const sec = section(dom);
-  assertLeadThenStrip(sec.querySelector('.badge-band--round'), 'round band');
-  for (const row of sec.querySelectorAll('.badge-member')) assertLeadThenStrip(row, row.dataset.mid);
-  // Catalogue order is kept within a group.
-  const keys = (sel) => [...sec.querySelectorAll(`.badge-band--round ${sel} .badge`)].map((b) => b.dataset.key);
-  // The round's own catalogue entries — a key may exist for both holders.
+  const round = collection(dom, 'round');
+  assertGroups(round, 'round');
   const catalogue = Array.from(dom.run("BADGE_CATALOGUE.filter((d) => d.holder === 'round').map((d) => d.key)"));
-  const k = keys('.badge-grid--strip');
+  const k = [...round.querySelectorAll('.badge-grid--strip .badge')].map((b) => b.dataset.key);
   assert.deepEqual(k, catalogue.filter((c) => k.includes(c)), 'stable catalogue order inside the strip');
+  dom.run('closeSheet()');
+  await waitFor(() => !dom.document.querySelector('.sheet-backdrop'));
+  assertGroups(collection(dom, 'm1'), 'm1');
 });
 
-test('a strip mark opens the same card, with the condition the tile no longer shows (#1541)', async (t) => {
+test('a tile opens its card INLINE, and Back to the collection returns focus to the tile (#1856)', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1)]));
-  const locked = section(dom).querySelector('.badge-band--round .badge-grid--strip .badge[data-state="locked"]');
+  const host = collection(dom, 'round');
+  const locked = host.querySelector('.badge-grid--strip .badge[data-state="locked"]');
+  const key = locked.dataset.key;
   locked.click();
-  const card = dom.document.querySelector('.sheet-backdrop .badge-card');
-  assert.ok(card, 'the card opens');
+  assert.equal(dom.document.querySelectorAll('.sheet-backdrop').length, 1, 'still ONE overlay — the collection was not replaced');
+  const card = host.querySelector('.badge-card');
+  assert.ok(card, 'the card opens inside the collection');
   assert.ok(card.querySelector('.badge-card__cond').textContent.length > 0, 'and states the condition');
+  assert.equal(dom.document.activeElement, card.querySelector('.badge-card__name'), 'focus moves to the card’s name');
+  host.querySelector('.badge-collection__back').click();
+  assert.equal(host.querySelector('.badge-card'), null, 'back shows the collection again');
+  assert.equal(dom.document.activeElement.dataset.key, key, 'focus returns to the tile it came from');
 });
 
-test('from seven members a row shows only its earned marks, the rest behind „N offen"', async (t) => {
-  const seven = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7'];
-  const dom = await pokale(t, badgeRound([night('s1', 1, { memberIds: seven })], 7));
-  const row = section(dom).querySelector('#abzeichen-m1');
-  const shown = [...row.querySelectorAll(':scope > .badge-grid:not(.badge-grid--rest) .badge')];
-  // Erster Sieg, Gründungsmitglied and Anfängerglück — her earned marks, nothing else.
-  assert.deepEqual(shown.map((b) => [b.dataset.key, b.dataset.state]),
-    [['firstWin', 'earned'], ['founder', 'earned'], ['beginnersLuck', 'earned']], 'only earned marks in the row');
-  const more = row.querySelector('.badge-member__more');
-  const rest = [...row.querySelectorAll(':scope > .badge-grid--rest')];
-  const restTiles = rest.flatMap((g) => [...g.querySelectorAll('.badge')]);
-  assert.equal(more.textContent, `${restTiles.length} offen`);
-  assert.deepEqual(more.getAttribute('aria-controls').split(' '), rest.map((g) => g.id), 'the toggle names every grid it reveals');
-  const strip = row.querySelector(':scope > .badge-grid--rest.badge-grid--strip');
-  assert.ok(strip, 'the closed marks fold into the compact strip (#1541)');
-  assert.ok([...strip.querySelectorAll('.badge')].every((b) => /^(locked|secret)$/.test(b.dataset.state)));
-  assert.ok(rest.every((g) => g.hidden));
-  assert.equal(more.getAttribute('aria-expanded'), 'false');
-  more.click();
-  assert.ok(rest.every((g) => !g.hidden), 'the toggle reveals the rest');
-  assert.equal(more.getAttribute('aria-expanded'), 'true');
-
-  // Six members is not dense: every tile in the row.
-  const six = await pokale(t, badgeRound([night('s1', 1, { memberIds: seven.slice(0, 6) })], 6));
-  assert.equal(section(six).querySelector('.badge-member__more'), null);
-});
-
-test('below 860px the card is a sheet: focus lands in it, Escape closes it and returns focus', async (t) => {
+test('below 860px the collection is a sheet: focus lands in it, Escape closes it and returns focus to the row', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1)]));
-  const tile = tileOf(section(dom), 'founded');
-  tile.focus();
-  tile.click();
+  const row = dom.document.getElementById('abzeichen-round');
+  row.focus();
+  row.click();
   const sheet = dom.document.querySelector('.sheet-backdrop');
   assert.ok(sheet, 'a sheet on a phone');
   assert.equal(dom.document.querySelector('.popover'), null);
+  assert.equal(sheet.querySelector('.sheet').getAttribute('aria-label'), 'Abzeichen von Kartographen');
+  assert.ok(sheet.contains(dom.document.activeElement), 'focus moves into the collection');
+  tileOf(sheet, 'founded').click();
   const card = sheet.querySelector('.badge-card');
-  assert.ok(card, 'the card is inside the sheet');
   assert.equal(card.querySelector('.badge-card__name').textContent, 'Gegründet');
   assert.equal(card.querySelector('.badge-card__holder').textContent, 'Kartographen');
   assert.equal(card.querySelector('.badge-card__earned').textContent, 'Verdient im Juli 2026 · Catan');
-  assert.equal(dom.document.activeElement, card.querySelector('.badge-card__name'), 'focus moves to the card’s name');
 
   dom.document.activeElement.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
   await waitFor(() => !dom.document.querySelector('.sheet-backdrop'), { label: 'Escape closes the sheet' });
-  await waitFor(() => dom.document.activeElement === tile, { label: 'focus returns to the tile' });
+  await waitFor(() => dom.document.activeElement === row, { label: 'focus returns to the row' });
 });
 
-test('below 860px Back closes the card', async (t) => {
+test('below 860px Back closes the collection', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1)]));
-  tileOf(section(dom), 'founded').click();
-  assert.ok(dom.document.querySelector('.sheet-backdrop .badge-card'));
+  collection(dom, 'm1');
+  assert.ok(dom.document.querySelector('.sheet-backdrop .badge-collection'));
   dom.window.history.back();
   await waitFor(() => !dom.document.querySelector('.sheet-backdrop'), { label: 'Back closes the sheet' });
 });
 
-test('from 860px the card is an anchored popover, named as a dialog, and Escape returns focus', async (t) => {
+test('from 860px the collection is an anchored popover, named as a dialog, and Escape returns focus', async (t) => {
   const dom = await pokale(t, badgeRound([night('s1', 1)]), { wide: true });
-  const tile = tileOf(section(dom).querySelector('#abzeichen-m1'), 'regular');
-  tile.focus();
-  tile.click();
-  const pop = dom.document.querySelector('.popover.popover--badge');
+  const row = dom.document.getElementById('abzeichen-m1');
+  row.focus();
+  row.click();
+  const pop = dom.document.querySelector('.popover.popover--badges');
   assert.ok(pop, 'a popover on a desktop');
   assert.equal(dom.document.querySelector('.sheet-backdrop'), null);
   assert.equal(pop.getAttribute('role'), 'dialog');
-  const name = pop.querySelector('.badge-card__name');
-  assert.equal(pop.getAttribute('aria-labelledby'), name.id);
-  assert.equal(dom.document.activeElement, name);
+  assert.equal(pop.getAttribute('aria-label'), 'Abzeichen von Anna');
+  tileOf(pop, 'regular').click();
   // Every tier, the reached ones marked by a glyph and a word — not by colour.
   const tiers = [...pop.querySelectorAll('.badge-card__tier')];
   assert.deepEqual(tiers.map((li) => li.textContent.replace(/,.*$/, '').trim()), ['10', '25', '50', '100', '250']);
@@ -203,25 +235,32 @@ test('from 860px the card is an anchored popover, named as a dialog, and Escape 
 
   dom.document.activeElement.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
   await waitFor(() => !dom.document.querySelector('.popover'), { label: 'Escape closes the popover' });
-  assert.equal(dom.document.activeElement, tile, 'focus returns to the tile that opened it');
+  assert.equal(dom.document.activeElement, row, 'focus returns to the row that opened it');
 });
 
-test('showBadges lands on the member’s row, opened and focused', async (t) => {
+test('showBadges lands on the holder’s row with the collection open; without a holder, on the section', async (t) => {
   const r = badgeRound([night('s1', 1)]);
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
   stubApi(dom, r);
   wideAt(dom, false);
   await dom.call('showBadges', RID, 'm2');
-  const row = await waitFor(() => dom.document.getElementById('abzeichen-m2'), { label: 'the Pokale tab rendered' });
-  assert.equal(row.open, true, 'Ben’s row is opened although it is not the first');
-  assert.equal(dom.document.activeElement, row.querySelector('summary'));
+  await waitFor(() => dom.document.getElementById('abzeichen-m2'), { label: 'the Pokale tab rendered' });
+  const sheet = await waitFor(() => dom.document.querySelector('.sheet-backdrop .badge-collection'), { label: 'Ben’s collection opened' });
+  assert.equal(sheet.closest('.sheet').getAttribute('aria-label'), 'Abzeichen von Ben');
+  dom.run('closeSheet()');
+  await waitFor(() => !dom.document.querySelector('.sheet-backdrop'));
+  await waitFor(() => dom.document.activeElement === dom.document.getElementById('abzeichen-m2'), { label: 'focus is on the row' });
 
-  // The target is consumed: a later visit lands nowhere in particular.
-  dom.document.body.focus();
+  // The target is consumed: a later visit opens nothing.
   await dom.call('showRound', RID, 'pokale');
   await waitFor(() => dom.document.getElementById('abzeichen-m2'));
-  assert.equal(dom.document.getElementById('abzeichen-m2').open, false);
+  assert.equal(dom.document.querySelector('.sheet-backdrop'), null);
+
+  // No holder („+N weitere"): the section, focused, no collection.
+  await dom.call('showBadges', RID, null);
+  await waitFor(() => dom.document.activeElement === dom.document.getElementById('abzeichen'), { label: 'the section is focused' });
+  assert.equal(dom.document.querySelector('.sheet-backdrop'), null);
 });
 
 /* A long German name in a narrow tile (Der Tisch at 390px: four tiles a row)

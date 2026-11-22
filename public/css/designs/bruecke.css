@@ -2659,46 +2659,34 @@
   :root[data-design="bruecke"] .rec-list > .rec-card .rec-card__rank { top: 20px; border-radius: 0; }
 }
 
-/* ===== #1422 — Pokale: the trophy cards as B3.4's plates ===== */
+/* ===== #1422, #1856 — Pokale: the records as B3.4's plates ===== */
 /* Source: docs/design/bruecke/Bruecke-B3-Runde-Desktop.dc.html (B3.4) and
-   Bruecke-B6-Phone-Rest.dc.html (B6.2). Markup: views-pokale.js adds
-   `.pokale-cards--plates` to the cards row under Brücke only. The four cards
-   are every design's four, in the same order with the same covers and
-   „Jetzt spielen" launchers: a design owns its layout, not its content
-   (operator decision in the #1489 review, 2026-10-02 — the sheet's three
-   plates were dropped, two of them being statistics no other design shows).
-
-   A plate is the sheet's: the notation eyebrow (#1245 already sets it in
-   mono), the value as a display line in capitals, one sub line, no icon; the
-   cover leads where there is one (#979). The value is --display-s at every
-   width, not the plates' --display-m: a plate had the column's full width,
-   a card shares it with a 64px cover and the launcher, and at 26px in the
-   340px column a plain title broke mid-word („CARCASSONN / E", measured in
-   headless Chrome at 1440px). One size for all four keeps the stack even.
-   One column at every width: beside the board from 1280px
-   (#1245's split), under it below. Colour rules are dark-gated; geometry is
-   not. */
-:root[data-design="bruecke"] .pokale-cards--plates { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card { gap: 5px; padding: 16px 18px; }
-:root[data-design="bruecke"] .pokale-cards--plates > .pokale-card--cover { gap: 5px 14px; }
-:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__icon,
-:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label .ti { display: none; }
-:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__label { margin-top: 0; }
-:root[data-design="bruecke"] .pokale-cards--plates .pokale-card__value,
-:root[data-design="bruecke"] .pokale-cards--plates .pokale-game__title {
+   Bruecke-B6-Phone-Rest.dc.html (B6.2). Since #1856 the records are every
+   design's one list (`.pokale-records`), so the plates are a skin on its rows:
+   the notation eyebrow in mono, the holder as a display line in capitals, the
+   value in mono on the right; the cover leads where there is one (#979). A
+   design owns its layout, not its content (operator decision in the #1489
+   review, 2026-10-02). One column at every width: beside the board from
+   1280px (#1245's split), under it below. Colour rules are dark-gated;
+   geometry is not. */
+:root[data-design="bruecke"] .pokale-records__list { display: grid; gap: 8px; border: 0; border-radius: 0; background: none; }
+:root[data-design="bruecke"] .pokale-record { border: 1px solid transparent; border-radius: 0; padding: 12px 16px; }
+:root[data-design="bruecke"] .pokale-record + .pokale-record { border-top-width: 1px; }
+:root[data-design="bruecke"] .pokale-record__thumb { border-radius: 0; }
+:root[data-design="bruecke"] .pokale-record__label { font-family: var(--font-mono); font-weight: 500; letter-spacing: var(--track-notation); }
+:root[data-design="bruecke"] .pokale-record__label .ti { display: none; }
+:root[data-design="bruecke"] .pokale-record__who {
+  font-family: var(--font-display);
   font-size: var(--display-s);
   line-height: 1.1;
   letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
-:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates > .pokale-card {
-  border-color: var(--line);
-  background: var(--surface);
-  box-shadow: none;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .pokale-cards--plates .pokale-card__sub { font-weight: 400; color: var(--ink-2); }
+:root[data-design="bruecke"] .pokale-record__value { font-family: var(--font-mono); font-size: var(--text-xs); letter-spacing: .06em; text-transform: uppercase; }
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-record { border-color: var(--line); background: var(--surface); }
+:root[data-design="bruecke"][data-scheme="dark"] .pokale-record__value { color: var(--ink-2); }
 @media (max-width: 560px) {
-  :root[data-design="bruecke"] .pokale-cards--plates > .pokale-card { padding: 12px; }
+  :root[data-design="bruecke"] .pokale-record { padding: 10px 12px; }
 }
 
 /* ===== #1242 — Anmelden, Konto anlegen, Passkey, Konto, Designwahl ===== */
@@ -5498,29 +5486,6 @@
 :root[data-design="bruecke"] .badge-section__empty { font-size: var(--text-md); }
 :root[data-design="bruecke"][data-scheme="dark"] .badge-section__empty { color: var(--ink-2); }
 
-/* The legend: each swatch drawn as a small plate in its state. */
-:root[data-design="bruecke"] .badge-legend {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: var(--track-notation);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"] .badge-legend__mark {
-  width: 22px;
-  height: 11px;
-  border-radius: 0;
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
-}
-:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--brand); }
-:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="progress"] .badge-legend__mark {
-  border: 1px solid var(--brand);
-  background: linear-gradient(90deg, var(--badge-load) 50%, var(--surface) 0);
-}
-:root[data-design="bruecke"][data-scheme="dark"] .badge-legend__item[data-state="locked"] .badge-legend__mark {
-  border: 1px solid var(--badge-open-edge);
-  background: var(--surface);
-}
-
 /* The grids: plates in a column each, three a row on a phone (B17.3) — 88px
    is the widest column that still gives three in the band at 390px, and it
    holds the 72px plate of a six-tier entry. */
@@ -5529,73 +5494,24 @@
   gap: 12px 6px;
 }
 
-/* The round's own row: a darker band, the round's name over its count. */
-:root[data-design="bruecke"] .badge-band--round {
-  margin-bottom: 18px;
-  padding: 14px;
-  border-radius: 0;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .badge-band--round {
-  --b-ground: var(--bar);
-  border-color: var(--line);
-  background: var(--bar);
-}
-:root[data-design="bruecke"] .badge-band__head { flex-wrap: wrap; align-items: baseline; justify-content: flex-start; gap: 4px 10px; }
-:root[data-design="bruecke"] .badge-band__name {
-  font-family: var(--font-display);
-  font-size: var(--display-s);
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: var(--track-display);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"] .badge-band__count {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: var(--track-notation);
-  text-transform: uppercase;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .badge-band__name { color: var(--ink); }
-:root[data-design="bruecke"][data-scheme="dark"] .badge-band__count { color: var(--ink-soft); }
-
-/* The members (B17.3 on a phone): one plate per person, the square initial
-   in their colour, a chevron that opens the row. */
-:root[data-design="bruecke"] .badge-members { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-:root[data-design="bruecke"] .badge-member { padding: 0; border-radius: 0; }
-:root[data-design="bruecke"][data-scheme="dark"] .badge-member {
-  border-color: var(--line);
-  background: var(--surface);
-}
-:root[data-design="bruecke"] .badge-member__head {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto auto;
-  column-gap: 12px;
-  row-gap: 1px;
-  min-height: 56px;
-  padding: 10px 14px;
-}
-:root[data-design="bruecke"] .badge-member__head > .badge-member__avatar { grid-row: 1 / 3; }
-:root[data-design="bruecke"] .badge-member__head > .badge-member__name { grid-column: 2; align-self: end; }
-:root[data-design="bruecke"] .badge-member__head > .badge-member__summary { grid-column: 2; align-self: start; }
-:root[data-design="bruecke"] .badge-member__head > .badge-member__rank { grid-column: 3; grid-row: 1 / 3; align-self: center; margin-left: 0; }
-:root[data-design="bruecke"] .badge-member__head::after {
-  grid-column: 4;
-  grid-row: 1 / 3;
-  align-self: center;
-  margin-left: 0;
-  font-family: "tabler-icons";
-  font-size: 20px; /* glyph, not type */
-  content: "\ea61";
-}
-:root[data-design="bruecke"] .badge-member[open] > .badge-member__head::after { content: "\ea5f"; }
-:root[data-design="bruecke"][data-scheme="dark"] .badge-member__head::after { color: var(--brand); }
-:root[data-design="bruecke"][data-scheme="dark"] .badge-member__head:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
-:root[data-design="bruecke"] .badge-member__avatar {
+/* The holder rows (#1856, B17.3's plate per person at every width): the
+   square initial in the member's colour, the name in capitals over the counts
+   in mono, the earned plates small beside it, a cyan chevron. The ROUND's row
+   is the darker band. */
+:root[data-design="bruecke"] .badge-members { gap: 8px; }
+:root[data-design="bruecke"] .badge-member { padding: 8px 14px; border-radius: 0; }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member { border-color: var(--line); background: var(--surface); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member--round { --b-ground: var(--bar); background: var(--bar); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member:hover { border-color: var(--brand); }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; }
+:root[data-design="bruecke"] .badge-member__head { min-height: 52px; gap: 12px; }
+:root[data-design="bruecke"] :is(.badge-member__avatar, .badge-member__roundmark) {
   width: 36px;
   height: 36px;
   border-radius: 0;
   font-size: 13px; /* glyph, not type */
 }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member__roundmark { background: var(--brand); color: var(--on-accent); }
 :root[data-design="bruecke"] .badge-member__name {
   font-family: var(--font-display);
   font-size: var(--display-s);
@@ -5604,7 +5520,7 @@
   letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
-:root[data-design="bruecke"] :is(.badge-member__summary, .badge-member__rank) {
+:root[data-design="bruecke"] :is(.badge-member__summary, .badge-member__more) {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: 500;
@@ -5612,66 +5528,23 @@
   text-transform: uppercase;
 }
 :root[data-design="bruecke"][data-scheme="dark"] .badge-member__name { color: var(--ink); }
-:root[data-design="bruecke"][data-scheme="dark"] :is(.badge-member__summary, .badge-member__rank) { color: var(--ink-soft); }
-:root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) {
-  margin-top: 0;
-  padding: 12px 14px 14px;
-}
-:root[data-design="bruecke"][data-scheme="dark"] .badge-member[open] > .badge-grid:not([hidden]) { border-top: 1px solid var(--hairline); }
-:root[data-design="bruecke"] .badge-member__more {
-  margin: 0 14px 12px;
+:root[data-design="bruecke"][data-scheme="dark"] :is(.badge-member__summary, .badge-member__more) { color: var(--ink-soft); }
+:root[data-design="bruecke"] .badge-member__go { font-size: 20px; /* glyph, not type */ }
+:root[data-design="bruecke"][data-scheme="dark"] .badge-member__go { color: var(--brand); }
+/* The plates themselves are the shared earned plate (badgeEmblem), small. */
+:root[data-design="bruecke"] .badge-member__pin .badge__mark { --b-cut: 4px; min-width: 34px; height: 20px; font-size: 12px; /* glyph, not type */ }
+:root[data-design="bruecke"] .badge-collection__title {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-weight: 500;
   letter-spacing: var(--track-notation);
   text-transform: uppercase;
 }
-:root[data-design="bruecke"] .badge-member > .badge-grid--rest:not([hidden]) { padding: 0 14px 14px; }
 
-/* From the editor split up (B17.2): the band is a row — the round's name
-   left, its plates right — and the members are a duty roster, one row per
-   person with the name column left and the plates beside it, divided by
-   hairlines instead of boxed. All rows start open there (K17); the summary is
-   placed absolutely rather than the <details> made a grid, which WebKit
-   before 18 does not lay out. */
 @media (min-width: 860px) {
   :root[data-design="bruecke"] .badge-section { padding: 30px 28px 26px; }
   :root[data-design="bruecke"] .badge-section > .section-head h2 { font-size: var(--display-l); }
-  :root[data-design="bruecke"] .badge-band--round {
-    display: grid;
-    grid-template-columns: minmax(150px, 210px) minmax(0, 1fr);
-    align-items: center;
-    gap: 18px;
-    padding: 16px 18px;
-  }
-  :root[data-design="bruecke"] .badge-band__head { flex-direction: column; align-items: flex-start; margin-bottom: 0; }
-  :root[data-design="bruecke"] .badge-band--round > .badge-grid:not([hidden]),
-  :root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) {
-    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  }
-  :root[data-design="bruecke"] .badge-members { gap: 0; }
-  :root[data-design="bruecke"] .badge-member {
-    position: relative;
-    min-height: 76px;
-    padding: 12px 0 12px 226px;
-    border-width: 0 0 1px;
-  }
-  :root[data-design="bruecke"][data-scheme="dark"] .badge-member { background: none; border-color: var(--line); }
-  :root[data-design="bruecke"] .badge-member__head {
-    position: absolute;
-    top: 12px;
-    left: 0;
-    width: 210px;
-    min-height: 0;
-    padding: 4px 0;
-    grid-template-columns: 40px minmax(0, 1fr);
-  }
-  :root[data-design="bruecke"] .badge-member__head > .badge-member__avatar { grid-row: 1 / 4; width: 40px; height: 40px; }
-  :root[data-design="bruecke"] .badge-member__head > .badge-member__rank { grid-column: 2; grid-row: 3; align-self: start; }
-  :root[data-design="bruecke"] .badge-member__head::after { display: none; }
-  :root[data-design="bruecke"] .badge-member[open] > .badge-grid:not([hidden]) { padding: 0; }
-  :root[data-design="bruecke"][data-scheme="dark"] .badge-member[open] > .badge-grid:not([hidden]) { border-top: 0; }
-  :root[data-design="bruecke"] .badge-member__more { margin: 10px 0 0; }
-  :root[data-design="bruecke"] .badge-member > .badge-grid--rest:not([hidden]) { padding: 10px 0 0; }
+  :root[data-design="bruecke"] .badge-member { padding: 10px 18px; }
+  :root[data-design="bruecke"] .badge-member__pin .badge__mark { min-width: 40px; height: 22px; }
 }
 
 /* --- The card on a tap (B17.1 „Karte, kein Modal") ------------------------ */
@@ -5742,21 +5615,16 @@
 :root[data-design="bruecke"] .badge-grid--compact .badge__mark { min-width: 72px; height: 28px; }
 :root[data-design="bruecke"] .badge-grid--compact .badge__name { display: block; align-self: center; }
 
-/* Pokale's strip of closed marks (#1541): locked and secret entries follow the
-   full tiles as bare marks — no name, no condition (the card has it). Scoped
-   through the band and the row so it outranks their column rules. */
-:root[data-design="bruecke"] :is(.badge-band--round, .badge-member) > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-:root[data-design="bruecke"] :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge { min-width: 24px; padding: 2px; }
-:root[data-design="bruecke"] :is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
+/* The collection's strip of closed marks (#1541, #1856): locked and secret
+   entries as bare marks — no name, no condition (the card has it). Scoped
+   through the group so it outranks the column grid. */
+:root[data-design="bruecke"] .badge-collection__group > .badge-grid--strip:not([hidden]) { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+:root[data-design="bruecke"] .badge-collection__group > .badge-grid--strip .badge { min-width: 24px; padding: 2px; }
+:root[data-design="bruecke"] .badge-collection__group > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new) { display: none; }
 /* No tier bars on a closed plate — every bar would be hollow, and the card
    lists the ladder — so the plate shrinks to its glyph instead of 72px. */
-:root[data-design="bruecke"] :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge__mark { min-width: 40px; }
-:root[data-design="bruecke"] :is(.badge-band--round, .badge-member) > .badge-grid--strip .badge__tier { display: none; }
-/* From 860px the band is a head | tiles grid: the strip joins the tiles' column. */
-@media (min-width: 860px) {
-  :root[data-design="bruecke"] .badge-band--round > .badge-grid--strip { grid-column: 2; }
-  :root[data-design="bruecke"] .badge-band--round > .badge-grid + .badge-grid--strip { margin-top: 0; }
-}
+:root[data-design="bruecke"] .badge-collection__group > .badge-grid--strip .badge__mark { min-width: 40px; }
+:root[data-design="bruecke"] .badge-collection__group > .badge-grid--strip .badge__tier { display: none; }
 
 /* --- The Spielerkarte's account tier (B17.7): four framed rows. ---------- */
 :root[data-design="bruecke"] .badge-grid--account:not([hidden]) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

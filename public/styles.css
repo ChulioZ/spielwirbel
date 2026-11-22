@@ -807,7 +807,11 @@ h1, h2, h3 { font-family: var(--font-display); }
      the grid). `:has()` alone only ever matched the first kind, which quietly
      capped the lobby at the reading measure — 2 round cards across instead of
      4, on the first screen anyone sees. */
-  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles, .rec-list),
+  /* `.pokale-page`, `.challenge-section` and `.badge-section` are Pokale's ONE
+     content width (#1856): the standings page, the challenge row and the
+     Abzeichen rows all take the pane, where the last two used to stop at the
+     reading measure beside a standings block that did not. */
+  .app > *:not(.rail):not(.dock):is(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles, .rec-list, .pokale-page, .challenge-section, .badge-section),
   .app > *:not(.rail):not(.dock):not(.precap):has(.cards, .pokale-cards, .marker-cards, .lobby-list, .ds-list--tiles) {
     max-width: none;
   }
@@ -3431,6 +3435,7 @@ a.btn:where(:has(> .ti:first-child):not([hidden], [aria-label])) {
 /* Text titles underline on hover; image/tile targets get a brand ring. */
 .trow__title.game-link:hover,
 .pokale-game__title.game-link:hover,
+.pokale-record__name.game-link:hover,
 .archive-row__title.game-link:hover {
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
@@ -10097,8 +10102,8 @@ kbd {
 }
 .pokale-card__sub { font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
 
-/* The trophy cards (Meistgespielt, Bestbewertet, Staubfänger), the Rückblick's
-   worst-rated + disagreement cards and the Chronik's period cards LEAD WITH THE
+/* The Rückblick's worst-rated + disagreement cards and the Chronik's period
+   cards (and, as list rows, Pokale's records since #1856) LEAD WITH THE
    NAMED GAME'S COVER (#979) — the move `.recap-fav` below already made for the
    favourite tiles (#695). Before it, the Pokale tab was the one hub tab with no
    imagery above the fold while every neighbouring surface (home round cards,
@@ -10151,7 +10156,8 @@ kbd {
   font-size: var(--text-sm);
 }
 
-/* Game rows with a per-game "Jetzt spielen" launcher (Meistgespielt etc.). */
+/* The game rows of a card naming one or more games (the Rückblick, the
+   Chronik's period cards). No launcher since #1856: starting is Start's job. */
 .pokale-card__games { display: flex; flex-direction: column; gap: 4px; }
 .pokale-game {
   display: flex;
@@ -10172,23 +10178,54 @@ kbd {
   font-weight: 700;
   overflow-wrap: anywhere;
 }
-.pokale-game__play {
-  flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--brand-edge);
-  border-radius: var(--radius-pill);
-  background: var(--brand-tint);
-  color: var(--brand-ink, var(--brand-strong));
-  cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+
+/* Pokale's „Rekorde" (#1856): one list, a row per record — cover (or icon),
+   the label over the holder, the value on the right. The same rows in every
+   design; a design skins them, it adds none. */
+.pokale-records { margin-top: 8px; }
+.pokale-records__title { margin: 0 0 8px; font-size: var(--text-md); }
+.pokale-records__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
 }
-.pokale-game__play .ti { font-size: var(--text-md); }
-.pokale-game__play:hover { background: var(--brand-tint-soft); }
-.pokale-game__play:active { transform: scale(0.94); }
+.pokale-record {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+}
+.pokale-record + .pokale-record { border-top: 1px solid var(--line); }
+/* `position: relative` anchors the absolutely positioned .cover-ph (#256). */
+.pokale-record__thumb {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background-size: cover;
+  background-position: center;
+}
+.pokale-record__icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--brand-ink, var(--brand));
+  font-size: var(--text-xl);
+}
+.pokale-record__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.pokale-record__label { font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+.pokale-record__label .ti { margin-right: 4px; }
+.pokale-record__who { font-weight: 700; overflow-wrap: anywhere; }
+.pokale-record__name:hover { text-decoration: underline; }
+.pokale-record__value { flex: none; max-width: 45%; text-align: right; font-size: var(--text-sm); font-weight: 600; color: var(--ink-soft); }
 
 /* The two game-link tiles hold a LIST OF LINKS, not a number, so they take the
    full row rather than a fraction of it — at every width, not only on a phone.
@@ -12574,37 +12611,6 @@ kbd {
    done (and a count in its line), a locked or secret one is a DASHED outline —
    and every tile's aria-label names the state in words. */
 .badge-section__summary { font-size: var(--text-sm); color: var(--ink-soft); }
-/* The legend (#1386): a key to the drawing, one swatch per state drawn the way
-   the tiles draw it — filled, ringed, dashed. Its own line under the title on a
-   phone, beside the count from the editor split up. */
-.badge-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  flex: 1 0 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-@media (min-width: 860px) { .badge-legend { flex: none; margin-left: auto; } }
-.badge-legend__item { display: inline-flex; align-items: center; gap: 6px; }
-.badge-legend__mark {
-  flex: none;
-  box-sizing: border-box;
-  width: 14px;
-  height: 14px;
-  border-radius: var(--radius-pill);
-}
-.badge-legend__item[data-state="earned"] .badge-legend__mark { background: var(--brand); }
-.badge-legend__item[data-state="progress"] .badge-legend__mark {
-  background:
-    radial-gradient(closest-side, var(--surface) calc(100% - 3px), transparent calc(100% - 2px)),
-    conic-gradient(var(--brand) 60%, var(--sunken) 0);
-}
-.badge-legend__item[data-state="locked"] .badge-legend__mark { border: 2px dashed var(--control-edge); }
 .badge-section__empty { margin: 0; }
 .badge-grid {
   display: grid;
@@ -12613,9 +12619,6 @@ kbd {
 }
 .badge-grid--compact,
 .badge-grid--strip { grid-template-columns: repeat(auto-fill, minmax(44px, max-content)); gap: 6px; }
-/* #1541: the locked/secret marks after the full tiles — set off by a gap. */
-.badge-grid + .badge-grid--strip { margin-top: 10px; }
-.badge-grid--rest { margin-top: 10px; }
 .badge-grid[hidden] { display: none; }
 
 .badge {
@@ -12684,52 +12687,84 @@ kbd {
 .badge[data-state="locked"] .badge__name,
 .badge[data-state="secret"] .badge__name { color: var(--ink-soft); }
 
-/* The compact row (Tischkarte) and Pokale's strip of closed marks (#1541):
+/* The compact row (Tischkarte) and the collection's strip of closed marks (#1541):
    marks only, the name stays in the aria-label. */
 :is(.badge-grid--compact, .badge-grid--strip) .badge { padding: 4px; border-color: transparent; background: none; }
 :is(.badge-grid--compact, .badge-grid--strip) .badge__mark { width: 36px; height: 36px; font-size: var(--text-md); }
 :is(.badge-grid--compact, .badge-grid--strip) :is(.badge__name, .badge__line, .badge__new) { display: none; }
 
-.badge-band--round {
-  margin-bottom: 14px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--sunken-soft);
-}
-.badge-band__head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-.badge-band__name { font-weight: 700; }
-.badge-band__count { font-size: var(--text-sm); color: var(--ink-soft); }
-
-.badge-members { display: grid; gap: 10px; }
-@media (min-width: 1280px) { .badge-members { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* The holder rows (#1856): one line each — face, name over the counts, the
+   earned pins, a chevron. The whole row is a <button> opening the collection. */
+/* `minmax(0, 1fr)` and `min-width: 0`: a grid item is `min-width: auto`, so a
+   long name (nowrap, in a display face) would widen the track past a 390px
+   phone instead of ellipsising — measured at 494px under Die Brücke. */
+.badge-members { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.badge-members__item { min-width: 0; }
 .badge-member {
-  padding: 10px 14px;
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
   scroll-margin-top: 80px;
 }
-.badge-member__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  cursor: pointer;
-  list-style: none;
+.badge-member:hover { background: var(--sunken-soft); }
+.badge-member:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
+.badge-member--round { background: var(--sunken-soft); }
+.badge-member__head { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.badge-member__avatar { flex: none; }
+.badge-member__roundmark {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand-ink, var(--brand));
+  font-size: var(--text-md);
 }
-.badge-member__head::-webkit-details-marker { display: none; }
-.badge-member__head::after { content: "\25BE"; color: var(--ink-soft); margin-left: auto; }
-.badge-member[open] > .badge-member__head::after { content: "\25B4"; }
-.badge-member__head:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; border-radius: var(--radius-sm); }
+.badge-member__who { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .badge-member__name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge-member__summary { font-size: var(--text-sm); color: var(--ink-soft); }
-/* „Platz N" (#1386): the Tafel's place, pushed right; the disclosure mark
-   follows it instead of taking the free space itself. */
-.badge-member__rank { margin-left: auto; font-size: var(--text-sm); font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
-.badge-member__head:has(.badge-member__rank)::after { margin-left: 0; }
-.badge-member[open] > .badge-grid { margin-top: 10px; }
-.badge-member__more { margin-top: 8px; }
+.badge-member__summary { font-size: var(--text-sm); color: var(--ink-soft); white-space: nowrap; }
+/* The pins clip rather than wrap: a wrapped row is a taller row, and „+N"
+   already says how many more there are. */
+.badge-member__pins {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+}
+.badge-member__pin .badge__mark { width: 26px; height: 26px; border-width: 1px; font-size: var(--text-sm); }
+.badge-member__more { flex: none; font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); }
+.badge-member__go { flex: none; color: var(--ink-soft); }
+/* One „+N" per cut-off (views-badges.js): the wide one by default, the narrow
+   one — with its three pins — on a phone. */
+.badge-member__more[data-cut="3"] { display: none; }
+@media (max-width: 420px) {
+  .badge-member__pin:nth-child(n+4),
+  .badge-member__more[data-cut="6"] { display: none; }
+  .badge-member__more[data-cut="3"] { display: inline; }
+}
+
+/* The collection (#1856): the holder's marks by state inside the editor. */
+/* A popover sizes to its content under `.popover`'s 300px cap
+   (.claude/rules/popover-width-is-shrink-to-fit.md), which gave a 20-mark
+   collection a 247px column; it gets a width of its own. Compounded to beat
+   that cap rather than tie with it; a design's own editor cap (Forest's 420px)
+   still out-ranks it, which is that design's call. */
+.popover.popover--badges { width: min(560px, calc(100vw - 32px)); max-width: none; }
+.badge-collection { display: grid; gap: 16px; }
+.badge-collection__title { margin: 0 0 8px; font-size: var(--text-sm); color: var(--ink-soft); }
+.badge-collection__back { justify-self: start; }
 
 /* Result moment: part of the page, not an overlay — the closing action stays
    below it and is operable from first paint. */
@@ -12782,6 +12817,31 @@ kbd {
 }
 [data-state="completed"] .challenge-bar__fill { background: var(--challenge-done, var(--good, var(--brand))); }
 .challenge-section { margin: 24px 0; }
+/* One row in every state (#1856); the sheet behind it holds the rest. */
+.challenge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid var(--brand-edge);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.challenge-row:hover { background: var(--sunken-soft); }
+.challenge-row:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
+.challenge-row--start { border-style: dashed; }
+.challenge-row__icon { flex: none; font-size: var(--text-xl); color: var(--brand-ink, var(--brand)); }
+.challenge-row__main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.challenge-row__goal { font-weight: 700; }
+.challenge-row__status { font-size: var(--text-sm); color: var(--ink-soft); }
+.challenge-row__go { flex: none; color: var(--ink-soft); }
+.challenge-overview { display: grid; gap: 12px; }
 .challenge-current {
   padding: 14px;
   border: 1px solid var(--brand-edge);
@@ -12791,9 +12851,9 @@ kbd {
 .challenge-current__goal { margin: 0; font-weight: 600; }
 .challenge-current__status { margin: 4px 0 0; font-size: var(--text-sm); color: var(--ink-soft); }
 .challenge-current__end { margin-top: 10px; }
-.challenge-section__start { margin-top: 12px; }
-.challenge-history { margin-top: 14px; font-size: var(--text-sm); }
-.challenge-history > summary { cursor: pointer; color: var(--ink-soft); }
+.challenge-section__start { justify-self: start; }
+.challenge-history { font-size: var(--text-sm); }
+.challenge-history__title { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); }
 .challenge-history__list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
 .challenge-history__item { display: flex; flex-direction: column; }
 .challenge-history__goal { font-weight: 600; }

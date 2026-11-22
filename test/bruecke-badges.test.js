@@ -32,7 +32,7 @@ const { loadApp, flush } = require('./support/dom');
 const { rulesOf, bodyOf } = require('./support/css');
 const { token, toHex } = require('./support/theme');
 const { designById } = require('../public/js/designs');
-const { night, badgeRound, stubApi, wideAt } = require('./support/badge-fixture');
+const { night, badgeRound, stubApi, wideAt, collectionTiles } = require('./support/badge-fixture');
 const { BADGE_CATALOGUE } = require('../public/js/achievements');
 
 const RAW = fs.readFileSync(path.join(__dirname, '..', 'public/css/designs/bruecke.css'), 'utf8');
@@ -71,7 +71,7 @@ const defOf = (key) => BADGE_CATALOGUE.find((d) => d.key === key);
 
 test('a tiered tile carries one bar per tier, the reached ones `data-on`, inside the mark', async (t) => {
   const { dom } = await pokale(t);
-  const tiles = [...dom.app.querySelectorAll('.badge-section .badge')];
+  const tiles = collectionTiles(dom);
   let tiered = 0;
   let onSeen = 0;
   for (const tile of tiles) {
@@ -95,28 +95,29 @@ test('a tiered tile carries one bar per tier, the reached ones `data-on`, inside
   }
   assert.ok(tiered >= 8, `only ${tiered} tiered tiles — the fixture no longer reaches the bars`);
   assert.ok(onSeen >= 1, 'no reached tier in the fixture — `data-on` is never exercised');
-  assert.equal(dom.app.querySelector('.badge__tier').getAttribute('aria-hidden'), null,
+  assert.equal(tiles.find((b) => b.querySelector('.badge__tier')).querySelector('.badge__tier').getAttribute('aria-hidden'), null,
     'the bars inherit the mark\'s aria-hidden; the name says the tier');
 });
 
 test('the card\'s plate carries the same bars', async (t) => {
   const { dom } = await pokale(t);
-  const tile = [...dom.app.querySelectorAll('.badge-section .badge[data-state="earned"]')]
-    .find((b) => b.querySelector('.badge__tier [data-on]'));
+  const tile = collectionTiles(dom, 'm1').find((b) => b.dataset.state === 'earned' && b.querySelector('.badge__tier [data-on]'));
   assert.ok(tile, 'no earned tile with a reached tier');
+  const bars0 = tile.querySelector('.badge__tier').outerHTML;
   tile.click();
   await flush();
   const card = dom.document.querySelector('.badge-card');
   const bars = card.querySelector('.badge-card__head > .badge__mark > .badge__tier');
   assert.ok(bars, 'the card\'s mark has no bars');
-  assert.equal(bars.outerHTML, tile.querySelector('.badge__tier').outerHTML);
+  assert.equal(bars.outerHTML, bars0);
 });
 
 test('every other design renders no bars at all — the tier stays in the name alone there', async (t) => {
   for (const design of ['klassisch', 'tisch', 'ocean']) {
     const { dom } = await pokale(t, design);
-    assert.ok(dom.app.querySelectorAll('.badge-section .badge').length > 10, `${design}: no tiles rendered`);
-    assert.equal(dom.app.querySelectorAll('.badge__tier').length, 0, `${design} renders tier bars`);
+    const tiles = collectionTiles(dom);
+    assert.ok(tiles.length > 10, `${design}: no tiles rendered`);
+    assert.equal(tiles.filter((b) => b.querySelector('.badge__tier')).length, 0, `${design} renders tier bars`);
   }
 });
 

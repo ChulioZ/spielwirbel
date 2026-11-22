@@ -94,8 +94,11 @@ async function placements(t, design) {
   el.className = 'badge-moment';
   dom.call('fillBadgeMoment', el, r, r.sessions[3]);
   out.moment = el.outerHTML;
-  dom.app.querySelector('.badge-section .badge').click();
+  // The holder's collection (#1856), and a card opened inside it.
+  dom.app.querySelector('.badge-section #abzeichen-m1').click();
   await flush();
+  out.collection = dom.document.querySelector('.badge-collection').outerHTML;
+  dom.document.querySelector('.badge-collection .badge').click();
   out.card = dom.document.querySelector('.badge-card').outerHTML;
   return out;
 }
@@ -103,7 +106,7 @@ async function placements(t, design) {
 test('Ocean renders exactly K17\'s markup in every placement — the skin is CSS only', async (t) => {
   const klassisch = await placements(t, 'klassisch');
   const ocean = await placements(t, 'ocean');
-  assert.ok(klassisch.section.includes('data-state="progress"'), 'the fixture reaches a running count');
+  assert.ok(klassisch.collection.includes('data-state="progress"'), 'the fixture reaches a running count');
   assert.ok(klassisch.moment.includes('badge-moment__item'), 'the fixture reaches the moment');
   for (const k of Object.keys(klassisch)) assert.equal(norm(ocean[k]), norm(klassisch[k]), k);
 });
@@ -117,9 +120,9 @@ test('the shell draws only on pseudo-element slots styles.css leaves free', () =
   const pseudo = selectorsOf(rulesOf(section())).filter((s) => /::(before|after)\b/.test(s));
   assert.ok(pseudo.some((s) => /\.badge__mark::before$/.test(s)), 'the lid is not on .badge__mark::before');
   assert.ok(pseudo.some((s) => /\.badge__mark::after$/.test(s)), 'the dish is not on .badge__mark::after');
-  // The one deliberate take-over: K17's own disclosure triangle, re-drawn as
-  // O17.3's chevron — it restyles the app's glyph rather than adding a drawing.
-  const RESTYLED = new Set(['.badge-member__head::after']);
+  // K17's disclosure triangle went with the disclosure (#1856): the chevron is
+  // a real glyph now, so no slot is taken over.
+  const RESTYLED = new Set();
   const taken = [];
   for (const sel of pseudo) {
     const subject = sel.split(/[\s>+~]+/).pop();

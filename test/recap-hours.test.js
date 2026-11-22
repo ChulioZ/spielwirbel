@@ -157,8 +157,8 @@ test('„Teilen" hands the card the same hours line the screen shows', async (t)
 });
 
 const longestCard = (dom) =>
-  [...dom.app.querySelectorAll('.pokale-card')].find(
-    (c) => (c.querySelector('.pokale-card__label') || {}).textContent === dom.run("t('pokale.longest')")
+  [...dom.app.querySelectorAll('.pokale-record')].find(
+    (c) => (c.querySelector('.pokale-record__label') || {}).textContent === dom.run("t('pokale.longest')")
   );
 
 test('Pokale names the longest session from the first timed one', async (t) => {
@@ -169,10 +169,10 @@ test('Pokale names the longest session from the first timed one', async (t) => {
   const dom = boot(t, roundWith(sessions));
   await dom.call('showRound', RID, 'pokale');
   const card = longestCard(dom);
-  assert.ok(card, 'the Längste Session card is missing');
-  assert.equal(card.querySelector('.pokale-game__title').textContent, 'Catan');
+  assert.ok(card, 'the Längste Session record is missing');
+  assert.equal(card.querySelector('.pokale-record__name').textContent, 'Catan');
   assert.equal(
-    card.querySelector('.pokale-card__sub').textContent,
+    card.querySelector('.pokale-record__value').textContent,
     `${dom.run('fmtPlayMinutes(95)')} · ${dom.run("fmtDate('2026-07-01T20:00:00.000Z')")}`
   );
 });
@@ -180,7 +180,7 @@ test('Pokale names the longest session from the first timed one', async (t) => {
 test('Pokale has no longest-session card without a timed session — deleting it removes the card', async (t) => {
   const dom = boot(t, roundWith([played('s2', 'g2', '2026-07-02T20:00:00.000Z', null)]));
   await dom.call('showRound', RID, 'pokale');
-  assert.ok(dom.app.querySelector('.pokale-card'), 'other Pokale cards still render');
+  assert.ok(dom.app.querySelector('.pokale-record'), 'other Pokale records still render');
   assert.equal(longestCard(dom), undefined);
 });
 

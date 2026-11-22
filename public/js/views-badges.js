@@ -11,9 +11,11 @@
            reached — Die Brücke's bars (#1392), rendered under it alone
      .badge-card                      the tap-open card (popover ≥ 860, sheet below)
      .badge-section                   Pokale › Abzeichen
-       .badge-legend (earned · progress · locked, in the section head)
-       .badge-band--round, .badge-member (a <details>, standings order)
-         .badge-member__rank          „Platz N", the Tafel's place (#1386)
+       .badge-member (a <button>, one per holder: the round first, then the
+         standings order — #1856) with .badge-member__head, __avatar | __roundmark,
+         __name, __summary, __pins (.badge-emblem marks) and __more („+N")
+       .badge-collection              the holder's whole collection (openEditor),
+         .badge-collection__group per state; a tile opens its card INLINE
      .badge-moment                    the result screen, at most two marks
        .badge-moment--special         Das Programmheft's „Sonderausgabe" band on
                                       one item, with .badge-moment__kicker (#1393)
@@ -45,15 +47,15 @@
 
 'use strict';
 
-// From this many members a member row shows only its earned marks and folds
-// the rest behind „N offen" (X17.8 in all four sheets): 7 × 9 tiles is a wall.
-const BADGE_DENSE_FROM = 7;
 // The result moment shows at most this many; the rest fold into „+N weitere"
 // (handover §3.4, the operator's decision table).
 const BADGE_MOMENT_MAX = 2;
-// The editor split's breakpoint (sheet.js) — the member rows start open above
-// it, where the section is a grid rather than a column of disclosures.
-const BADGE_WIDE_FROM = 860;
+// How many earned pins a holder row draws before „+N" (#1856), and how many
+// stay once a phone narrows the row (≤ 420px, styles.css). A „+N" is rendered
+// for each cut-off and CSS shows the one matching the pins it shows — a single
+// count beside pins CSS had hidden would say „+3" next to three pins of nine.
+const BADGE_ROW_PINS = 6;
+const BADGE_ROW_PINS_NARROW = 3;
 // The mark a secret entry shows until it is earned (all four sheets).
 const BADGE_SECRET_GLYPH = 'ti-lock-question';
 /* Das Programmheft's „Sonderausgabe" (#1393, P17.5): the big tiers that get
@@ -64,7 +66,8 @@ const BADGE_SPECIAL_EDITION = { sessions: [100, 250, 500], regular: [100, 250] }
 const badgeSpecialEdition = (key, tier) => (BADGE_SPECIAL_EDITION[key] || []).includes(tier);
 
 /* Where showBadges() wants the Pokale section to land, consumed by the next
-   Pokale render of that round: { rid, mid } (mid null = the round's band). */
+   Pokale render of that round: { rid, mid } — mid 'round' is the round's row,
+   null the section itself (#1856). */
 let badgeTarget = null;
 
 const badgeDefOf = (key) => BADGE_CATALOGUE.find((d) => d.key === key);
@@ -245,10 +248,11 @@ function badgeTile(e, ctx, opts = {}) {
    target, and a feed mark opens nothing (the card lives on the Spielerkarte).
    Never a `--pct` (it would paint the progress ring) and never `data-fresh`
    (the falling pin / rising bubble): a feed event has neither. `cls` names the
-   slot, which sizes the mark. Decorative: the line beside it names the mark. */
-function badgeEmblem(glyph, cls) {
+   slot, which sizes the mark; `holder` 'round' makes it Forest's leaf (a
+   Pokale holder row's pin, #1856). Decorative: the line beside it names it. */
+function badgeEmblem(glyph, cls, holder) {
   return `<span class="badge-emblem${cls ? ` ${esc(cls)}` : ''}" data-state="earned" aria-hidden="true">`
-    + `<span class="badge__mark" aria-hidden="true"><i class="ti ${esc(glyph || 'ti-medal')}"></i></span></span>`;
+    + `<span class="badge__mark"${badgeShapeAttr(holder)} aria-hidden="true"><i class="ti ${esc(glyph || 'ti-medal')}"></i></span></span>`;
 }
 
 let badgeCardSeq = 0;
@@ -260,63 +264,58 @@ let badgeCardSeq = 0;
    (.claude/rules/popover-vs-sheet-editors.md). Nothing here is a form, and
    nothing on the page waits for it. */
 function openBadgeCard(anchor, e, ctx, holder) {
-  const def = badgeDefOf(e.key);
-  const id = `badge-card-${++badgeCardSeq}`;
-  const glyph = e.state === 'secret' ? BADGE_SECRET_GLYPH : e.glyph;
   openEditor(anchor, 'badge', t('badges.title'), (el) => {
+    const card = badgeCardEl(e, ctx, holder);
     // The popover is a bare <div>; name it as the dialog the sheet already is.
     if (el.classList.contains('popover')) {
       el.setAttribute('role', 'dialog');
-      el.setAttribute('aria-labelledby', id);
+      el.setAttribute('aria-labelledby', card.querySelector('.badge-card__name').id);
     }
-    const reached = new Set((e.history || []).map((x) => x.tier));
-    const tiers = def.tiers && e.state !== 'secret'
-      ? `<ol class="badge-card__tiers" aria-label="${esc(t('badges.card.tiers'))}">${def.tiers.map((th) => (reached.has(th)
-        ? `<li class="badge-card__tier" data-reached><i class="ti ti-check" aria-hidden="true"></i> ${th}<span class="sr-only">, ${esc(t('badges.state.earned'))}</span></li>`
-        : `<li class="badge-card__tier">${th}</li>`)).join('')}</ol>`
-      : '';
-    const pct = badgePct(e);
-    const next = badgeProgress(e)
-      ? `<div class="badge-card__next">${esc([def.tiers && e.state === 'earned' ? t('badges.card.next', { n: e.of }) : '', badgeProgress(e)].filter(Boolean).join(' · '))}<span class="badge-card__bar" aria-hidden="true" style="--pct:${pct}"></span></div>`
-      : '';
-    const earned = badgeEarnedText(e, ctx);
-    const card = h(`<div class="badge-card" data-state="${esc(e.state)}">
-         <div class="badge-card__head">
-           <span class="badge__mark"${badgeTierAttr(e)}${badgeShapeAttr(e.holder)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
-           <div class="badge-card__title">
-             <h3 class="badge-card__name" id="${id}" tabindex="-1">${esc(badgeName(e))}</h3>
-             ${holder ? `<div class="badge-card__holder">${esc(holder)}</div>` : ''}
-           </div>
-         </div>
-         <p class="badge-card__cond">${esc(badgeCondition(e, ctx, { allTiers: true }))}</p>
-         ${tiers}${next}
-         ${earned ? `<div class="badge-card__earned">${esc(earned)}</div>` : ''}
-       </div>`);
     el.appendChild(card);
     // After the container is live — focus() on a detached node does nothing.
     return () => card.querySelector('.badge-card__name').focus();
   });
 }
 
-// Navigate to Pokale › Abzeichen, landing on one member's row (or the round's
-// band). The target is consumed by the next Pokale render of that round.
-function showBadges(rid, mid) {
-  badgeTarget = { rid, mid: mid || null };
-  return showRound(rid, 'pokale');
+// The card itself — the overlay above, and inline in a collection (#1856).
+function badgeCardEl(e, ctx, holder) {
+  const def = badgeDefOf(e.key);
+  const id = `badge-card-${++badgeCardSeq}`;
+  const glyph = e.state === 'secret' ? BADGE_SECRET_GLYPH : e.glyph;
+  const reached = new Set((e.history || []).map((x) => x.tier));
+  const tiers = def.tiers && e.state !== 'secret'
+    ? `<ol class="badge-card__tiers" aria-label="${esc(t('badges.card.tiers'))}">${def.tiers.map((th) => (reached.has(th)
+      ? `<li class="badge-card__tier" data-reached><i class="ti ti-check" aria-hidden="true"></i> ${th}<span class="sr-only">, ${esc(t('badges.state.earned'))}</span></li>`
+      : `<li class="badge-card__tier">${th}</li>`)).join('')}</ol>`
+    : '';
+  const pct = badgePct(e);
+  const next = badgeProgress(e)
+    ? `<div class="badge-card__next">${esc([def.tiers && e.state === 'earned' ? t('badges.card.next', { n: e.of }) : '', badgeProgress(e)].filter(Boolean).join(' · '))}<span class="badge-card__bar" aria-hidden="true" style="--pct:${pct}"></span></div>`
+    : '';
+  const earned = badgeEarnedText(e, ctx);
+  return h(`<div class="badge-card" data-state="${esc(e.state)}">
+       <div class="badge-card__head">
+         <span class="badge__mark"${badgeTierAttr(e)}${badgeShapeAttr(e.holder)} aria-hidden="true"><i class="ti ${esc(glyph)}"></i>${badgeTierBars(e)}</span>
+         <div class="badge-card__title">
+           <h3 class="badge-card__name" id="${id}" tabindex="-1">${esc(badgeName(e))}</h3>
+           ${holder ? `<div class="badge-card__holder">${esc(holder)}</div>` : ''}
+         </div>
+       </div>
+       <p class="badge-card__cond">${esc(badgeCondition(e, ctx, { allTiers: true }))}</p>
+       ${tiers}${next}
+       ${earned ? `<div class="badge-card__earned">${esc(earned)}</div>` : ''}
+     </div>`);
 }
 
-// A link to the section: a real href for ⌘-click, showBadges for a plain one.
-function badgeLink(el, rid, mid) {
-  navLink(el, roundPath(rid, 'pokale'), () => showBadges(rid, mid));
-  return el;
-}
-
-/* Pokale › Abzeichen. The round's band first, then one row per member in the
-   order the standings list them (`ranked`, roundStandings), each carrying its
-   tie-aware place from the same call (`rankOf` — only members with a record
-   have one, exactly as the Tafel ranks them). A round with no finished session
-   gets one line and no tiles — no wall of grey padlocks. */
-function renderBadgeSection(round, ranked, rankOf) {
+/* Pokale › Abzeichen (#1856): ONE ROW PER HOLDER — the round first, then the
+   active members in the standings order (`ranked`, roundStandings), so the two
+   lists on one page cannot disagree about who comes first. A row draws only
+   the holder's EARNED marks, as pins, so it is one line at every width: there
+   is no legend (nothing in a row needs a key), no „Platz N" (the standings
+   beside it say that) and no dense mode. The whole row is a <button> that
+   opens the holder's collection. A round with no finished session gets one
+   line and no rows — no wall of grey padlocks. */
+function renderBadgeSection(round, ranked) {
   const sec = h(`<section class="section badge-section" id="abzeichen" tabindex="-1" aria-labelledby="abzeichen-title">
        <div class="section-head"><h2 id="abzeichen-title">${iconText('ti-medal', t('badges.title'))}</h2></div>
      </section>`);
@@ -336,140 +335,160 @@ function renderBadgeSection(round, ranked, rankOf) {
       : tn(fresh, 'badges.newOne', 'badges.new'));
   }
   sec.querySelector('.section-head').appendChild(h(`<span class="badge-section__summary">${esc(summary.join(' · '))}</span>`));
-  sec.querySelector('.section-head').appendChild(badgeLegend());
 
-  const roundEarned = ctx.all.round.filter((e) => e.state === 'earned').length;
-  const band = h(`<div class="badge-band badge-band--round" id="abzeichen-round" tabindex="-1">
-       <div class="badge-band__head">
-         <span class="badge-band__name">${esc(round.name)}</span>
-         <span class="badge-band__count">${esc(t('badges.ofTotal', { n: roundEarned, total: ctx.all.round.length }))}</span>
-       </div>
-     </div>`);
-  badgeFillLeadAndStrip(band, ctx.all.round, (e, opts) => badgeTile(e, ctx, { holder: round.name, ...opts }));
-  sec.appendChild(band);
-
-  const dense = members.length >= BADGE_DENSE_FROM;
-  const wide = !!(window.matchMedia && window.matchMedia(`(min-width: ${BADGE_WIDE_FROM}px)`).matches);
-  const wantMid = badgeTarget && badgeTarget.rid === round.id ? badgeTarget.mid : null;
-  const list = h('<div class="badge-members"></div>');
-  members.forEach((m, i) => list.appendChild(badgeMemberRow(round, ctx, m, {
-    dense,
-    rank: rankOf ? rankOf[m.id] : undefined,
-    // Open on a desktop; on a phone the first row (T17.3), or the one a tap
-    // on the Tischkarte or a Chronik row asked for.
-    open: wide || (wantMid ? wantMid === m.id : i === 0),
-  })));
+  // An ordered list: standings order is meaning (.claude/rules/tiles-vs-lists.md).
+  const list = h('<ol class="badge-members"></ol>');
+  const add = (holder) => {
+    const li = h('<li class="badge-members__item"></li>');
+    li.appendChild(badgeHolderRow(ctx, holder));
+    list.appendChild(li);
+  };
+  add({ mid: 'round', name: round.name, entries: ctx.all.round, round: true });
+  members.forEach((m) => add({ mid: m.id, name: m.name, entries: ctx.all.members[m.id] || [], member: m }));
   sec.appendChild(list);
   return sec;
 }
 
-/* #1541: what a holder has (earned, then in progress) leads as full tiles, and
-   what it has not (locked, secret) follows as a strip of bare marks — 42
-   entries a holder made the section a wall of grey outlines that buried the
-   Ruhmeshalle. Catalogue order holds within each group. The strip is NOT
+/* One holder's row. The pins are decorative (the feed's badgeEmblem host, so
+   every design's earned skin reaches them); the row's accessible name carries
+   the holder and the counts, which is everything the pins say. */
+function badgeHolderRow(ctx, holder) {
+  const { round } = ctx;
+  const entries = holder.entries;
+  const earned = entries.filter((e) => e.state === 'earned');
+  const progress = entries.filter((e) => e.state === 'progress').length;
+  const counts = [tn(earned.length, 'badges.count.earnedOne', 'badges.count.earned')];
+  if (progress) counts.push(tn(progress, 'badges.count.progressOne', 'badges.count.progress'));
+  const face = holder.round
+    ? `<span class="badge-member__roundmark" aria-hidden="true"${badgeShapeAttr('round')}><i class="ti ti-users"></i></span>`
+    : `<span class="avatar badge-member__avatar" style="background:${memberColor(round, holder.mid)}" aria-hidden="true">${avatarFace(initials(holder.name), { userId: holder.member.userId })}</span>`;
+  const shown = earned.slice(0, BADGE_ROW_PINS);
+  const more = [BADGE_ROW_PINS_NARROW, BADGE_ROW_PINS].filter((cut) => earned.length > cut)
+    .map((cut) => `<span class="badge-member__more" data-cut="${cut}">+${earned.length - cut}</span>`).join('');
+  const row = h(`<button type="button" class="badge-member${holder.round ? ' badge-member--round' : ''}" id="abzeichen-${esc(holder.mid)}" data-mid="${esc(holder.mid)}">
+       <span class="badge-member__head">
+         ${face}
+         <span class="badge-member__who">
+           <span class="badge-member__name">${esc(holder.name)}</span>
+           <span class="badge-member__summary">${esc(counts.join(' · '))}</span>
+         </span>
+         <span class="badge-member__pins" aria-hidden="true">${shown.map((e) => badgeEmblem(e.glyph, 'badge-member__pin', e.holder)).join('')}${more}</span>
+         <i class="ti ti-chevron-right badge-member__go" aria-hidden="true"></i>
+       </span>
+     </button>`);
+  row.setAttribute('aria-label', `${holder.name}, ${counts.join(' · ')}`);
+  row.setAttribute('aria-haspopup', 'dialog');
+  row.addEventListener('click', () => openBadgeCollection(row, ctx, holder));
+  return row;
+}
+
+/* The holder's collection (#1856): Verdient as full tiles, Unterwegs with their
+   rings, Offen as the strip of bare marks, secrets included — through
+   openEditor, so a sheet below 860px and a popover above, with Escape, Back,
+   the backdrop and focus restoration to the row
+   (.claude/rules/popover-vs-sheet-editors.md).
+
+   A tile's card opens INLINE, in the same overlay, with a back control:
+   openPopover and openSheet both REPLACE the active overlay, so opening the
+   card as its own overlay would close the collection it came from. */
+function openBadgeCollection(anchor, ctx, holder) {
+  const title = t('badges.collectionTitle', { name: holder.name });
+  return openEditor(anchor, 'badges', title, (el) => {
+    // The popover is a bare <div>; name it as the dialog the sheet already is
+    // (a form-sheet design's head has done so already).
+    if (el.classList.contains('popover') && !el.getAttribute('role')) {
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-label', title);
+    }
+    const host = h('<div class="badge-collection"></div>');
+    el.appendChild(host);
+    const tile = (e, opts = {}) => badgeTile(e, ctx, { holder: holder.name, ...opts, onActivate: () => showCard(e) });
+    const showList = (focusKey) => {
+      host.replaceChildren();
+      const groups = [
+        ['earned', entries((e) => e.state === 'earned'), false],
+        ['progress', entries((e) => e.state === 'progress'), false],
+        ['locked', entries((e) => !badgeLeads(e)), true],
+      ];
+      groups.forEach(([state, list, strip]) => {
+        if (!list.length) return;
+        const group = h(`<section class="badge-collection__group" data-state="${state}">
+             <h3 class="badge-collection__title">${esc(t(`badges.state.${state}`))} · ${list.length}</h3>
+           </section>`);
+        if (strip) group.appendChild(badgeStripGrid(list, tile));
+        else {
+          const grid = h('<div class="badge-grid"></div>');
+          list.forEach((e) => grid.appendChild(tile(e)));
+          group.appendChild(grid);
+        }
+        host.appendChild(group);
+      });
+      if (focusKey) {
+        const back = host.querySelector(`.badge[data-key="${focusKey}"]`);
+        if (back) back.focus({ preventScroll: true });
+      }
+    };
+    function entries(pred) { return holder.entries.filter(pred); }
+    function showCard(e) {
+      host.replaceChildren();
+      const back = h(`<button type="button" class="link-btn badge-collection__back">${iconText('ti-chevron-left', t('common.back'))}</button>`);
+      back.addEventListener('click', () => showList(e.key));
+      host.append(back, badgeCardEl(e, ctx, holder.name));
+      host.querySelector('.badge-card__name').focus({ preventScroll: true });
+    }
+    showList();
+    // preventScroll on every focus here: a popover CLOSES on a page scroll
+    // (popover.js onScroll), and focusing a tile in a clamped popover fires one
+    // — measured under Der Tisch at 1470px, where the collection opened and
+    // closed in the same frame.
+    return () => {
+      const first = host.querySelector('.badge');
+      if (first) first.focus({ preventScroll: true });
+    };
+  });
+}
+
+// Navigate to Pokale › Abzeichen, landing on one holder's row — 'round' for
+// the round's — with that holder's collection open, or on the section itself
+// when no holder is named. The target is consumed by the next Pokale render.
+function showBadges(rid, mid) {
+  badgeTarget = { rid, mid: mid || null };
+  return showRound(rid, 'pokale');
+}
+
+// A link to the section: a real href for ⌘-click, showBadges for a plain one.
+function badgeLink(el, rid, mid) {
+  navLink(el, roundPath(rid, 'pokale'), () => showBadges(rid, mid));
+  return el;
+}
+
+/* #1541: what a holder has (earned, then in progress) leads, and what it has
+   not (locked, secret) follows as a strip of bare marks. The strip is NOT
    `.badge-grid--compact`: every design skins that one as the Tischkarte's row,
    which prints the name. A strip mark drops its condition line (operator
    decision 2026-10-04) — it lives in the card, and in the aria-label. */
 const BADGE_LEAD = { earned: 0, progress: 1 };
 const badgeLeads = (e) => e.state in BADGE_LEAD;
-function badgeLeadOrder(entries) {
-  return entries.filter(badgeLeads).sort((a, b) => BADGE_LEAD[a.state] - BADGE_LEAD[b.state]);
-}
-function badgeStripGrid(entries, tile, attrs = '') {
-  const grid = h(`<div class="badge-grid badge-grid--strip"${attrs}></div>`);
+function badgeStripGrid(entries, tile) {
+  const grid = h('<div class="badge-grid badge-grid--strip"></div>');
   entries.forEach((e) => grid.appendChild(tile(e, { line: false })));
   return grid;
 }
-function badgeFillLeadAndStrip(host, entries, tile) {
-  const lead = badgeLeadOrder(entries);
-  const closed = entries.filter((e) => !badgeLeads(e));
-  if (lead.length) {
-    const grid = h('<div class="badge-grid"></div>');
-    lead.forEach((e) => grid.appendChild(tile(e)));
-    host.appendChild(grid);
-  }
-  if (closed.length) host.appendChild(badgeStripGrid(closed, tile));
-}
 
-/* The key to the drawing (T17.2, O17.2): one swatch per state a tile can show
-   before it is opened. Secret is left out, as in every sheet — its padlock
-   glyph says so on the tile. aria-hidden: each tile already names its state
-   in words, so a screen reader would only hear the key twice. The words are
-   the tiles' own state strings; each design draws the swatch as its mark. */
-function badgeLegend() {
-  return h(`<ul class="badge-legend" aria-hidden="true">${['earned', 'progress', 'locked'].map((st) =>
-    `<li class="badge-legend__item" data-state="${st}"><span class="badge-legend__mark"></span>${esc(t(`badges.state.${st}`))}</li>`).join('')}</ul>`);
-}
-
-// One member's row: a <details> whose summary is the member, their counts and
-// their place in the standings.
-function badgeMemberRow(round, ctx, m, { dense, open, rank }) {
-  const entries = ctx.all.members[m.id] || [];
-  const earned = entries.filter((e) => e.state === 'earned');
-  const progress = entries.filter((e) => e.state === 'progress').length;
-  const counts = [tn(earned.length, 'badges.count.earnedOne', 'badges.count.earned')];
-  if (progress) counts.push(tn(progress, 'badges.count.progressOne', 'badges.count.progress'));
-  const row = h(`<details class="badge-member" id="abzeichen-${esc(m.id)}" data-mid="${esc(m.id)}">
-       <summary class="badge-member__head">
-         <span class="avatar badge-member__avatar" style="background:${memberColor(round, m.id)}">${avatarFace(initials(m.name), { userId: m.userId })}</span>
-         <span class="badge-member__name">${esc(m.name)}</span>
-         <span class="badge-member__summary">${esc(counts.join(' · '))}</span>
-         ${rank ? `<span class="badge-member__rank">${esc(t('badges.rank', { n: rank }))}</span>` : ''}
-       </summary>
-     </details>`);
-  if (open) row.open = true;
-  const tile = (e, opts) => badgeTile(e, ctx, { holder: m.name, ...opts });
-  if (!dense) {
-    badgeFillLeadAndStrip(row, entries, tile);
-    return row;
-  }
-  // A dense round (X17.8): earned marks in the row; in-progress tiles and the
-  // strip behind „N offen", both revealed by the one toggle.
-  if (earned.length) {
-    const grid = h('<div class="badge-grid"></div>');
-    earned.forEach((e) => grid.appendChild(tile(e)));
-    row.appendChild(grid);
-  }
-  const going = entries.filter((e) => e.state === 'progress');
-  const closed = entries.filter((e) => !badgeLeads(e));
-  const restCount = going.length + closed.length;
-  if (restCount) {
-    const id = `abzeichen-${m.id}-offen`;
-    const grids = [];
-    if (going.length) {
-      const g = h(`<div class="badge-grid badge-grid--rest" id="${esc(id)}" hidden></div>`);
-      going.forEach((e) => g.appendChild(tile(e)));
-      grids.push(g);
-    }
-    if (closed.length) grids.push(badgeStripGrid(closed, tile, ` id="${esc(id)}-strip" hidden`));
-    grids.forEach((g) => g.classList.add('badge-grid--rest'));
-    const more = h(`<button type="button" class="link-btn badge-member__more" aria-expanded="false" aria-controls="${esc(grids.map((g) => g.id).join(' '))}">${esc(tn(restCount, 'badges.count.openOne', 'badges.count.open'))}</button>`);
-    more.addEventListener('click', () => {
-      const show = more.getAttribute('aria-expanded') !== 'true';
-      more.setAttribute('aria-expanded', String(show));
-      grids.forEach((g) => { g.hidden = !show; });
-    });
-    row.appendChild(more);
-    grids.forEach((g) => row.appendChild(g));
-  }
-  return row;
-}
-
-/* After the Pokale page is in the document: land on the row showBadges() asked
-   for. Consumed either way, so a later, unrelated visit never scrolls. */
+/* After the Pokale page is in the document: land where showBadges() asked —
+   the holder's row with its collection open, or the section. Consumed either
+   way, so a later, unrelated visit never scrolls. */
 function badgeRevealTarget(rid) {
   const want = badgeTarget;
   badgeTarget = null;
   if (!want || want.rid !== rid) return;
-  const el = document.getElementById(want.mid ? `abzeichen-${want.mid}` : 'abzeichen-round')
-    || document.getElementById('abzeichen');
+  const row = want.mid ? document.getElementById(`abzeichen-${want.mid}`) : null;
+  const el = row || document.getElementById('abzeichen');
   if (!el) return;
-  // No `el.open = true` here: renderBadgeSection already opened this row from
-  // the same target, and a second opener made each untestable (a deliberate
-  // break of either stayed green — .claude/rules/redundant-guards-make-each-other-untestable.md).
   if (typeof el.scrollIntoView === 'function') el.scrollIntoView({ block: 'start' });
-  const focusTo = el.tagName === 'DETAILS' ? el.querySelector('summary') : el;
-  focusTo.focus({ preventScroll: true });
+  el.focus({ preventScroll: true });
+  // The row's own click opens the collection, so focus returns to it on close.
+  if (row) row.click();
 }
 
 /* The Start tab's „Zuletzt gespielt" carries one more line (#1853, from the
@@ -535,7 +554,7 @@ function chronikBadgeRows(round, marks) {
          <span class="chronik-row__label">${esc(t('badges.title'))}</span>
          <a class="chronik-row__text">${esc(`${holder} · ${name}`)}</a>
        </div>`);
-    badgeLink(row.querySelector('a'), round.id, x.mid);
+    badgeLink(row.querySelector('a'), round.id, x.mid || 'round');
     return row;
   });
 }

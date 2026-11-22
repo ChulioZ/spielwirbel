@@ -7,7 +7,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { loadApp } = require('./support/dom');
+const { loadApp, waitFor } = require('./support/dom');
 
 const RID = 'r1';
 const DAY = 24 * 60 * 60 * 1000;
@@ -64,16 +64,23 @@ test('Start row: an ended challenge lingers for a week, then leaves', (t) => {
   assert.equal(dom.call('hubChallengeRow', round({ challenge: running({ startedAt: iso(-30), deadline: iso(-8) }) })), null);
 });
 
-test('Pokale: no challenge offers „Challenge starten"; the sheet POSTs the picked goal', async (t) => {
+const sheetBody = (dom) => dom.window.document.querySelector('.sheet-backdrop .editor--challenge');
+
+test('Pokale: with no challenge the section is ONE „Challenge starten" row, opening the start form; it POSTs the picked goal (#1856)', async (t) => {
   const calls = [];
   const dom = boot(t, calls);
   const sec = dom.call('renderChallengeSection', round());
   dom.app.appendChild(sec);
-  assert.ok(sec.querySelector('.challenge-section__empty'));
-  assert.equal(sec.querySelector('.challenge-current__end'), null);
-  sec.querySelector('.challenge-section__start').click();
+  assert.equal(sec.id, 'challenge', 'the Start tab and the Chronik land on this id');
+  assert.equal(sec.children.length, 1, 'one row, nothing else');
+  const row = sec.querySelector('button.challenge-row--start');
+  assert.ok(row, 'the row is a button');
+  assert.equal(row.getAttribute('aria-label'), 'Challenge starten');
+  assert.equal(sec.querySelector('.challenge-section__empty, .challenge-history'), null, 'no paragraph on the page');
+  row.click();
   const doc = dom.window.document;
   const kind = doc.getElementById('challengeKind');
+  assert.ok(kind, 'with no history the row opens the start form directly');
   assert.deepEqual([...kind.options].map((o) => o.value), ['newGames', 'wholeShelf', 'sessions', 'distinctGames']);
   kind.value = 'distinctGames';
   kind.dispatchEvent(new dom.window.Event('change'));
@@ -92,22 +99,70 @@ test('Pokale: the whole-shelf preset is not offered on an empty shelf, and needs
   const dom = boot(t);
   const sec = dom.call('renderChallengeSection', round({ games: [] }));
   dom.app.appendChild(sec);
-  sec.querySelector('.challenge-section__start').click();
+  sec.querySelector('.challenge-row').click();
   const kind = dom.window.document.getElementById('challengeKind');
   assert.ok(![...kind.options].some((o) => o.value === 'wholeShelf'));
 });
 
-test('Pokale: a running challenge can be ended, not restarted; the history lists past ones', (t) => {
+test('Pokale: with no challenge and no right to write, the section is not there at all (#1856)', (t) => {
+  const dom = boot(t);
+  dom.set('roundCan', () => false);
+  assert.equal(dom.call('renderChallengeSection', round()), null);
+  // A running one is still shown to a reader, without its end control.
+  const sec = dom.call('renderChallengeSection', round({ challenge: running() }));
+  dom.app.appendChild(sec);
+  sec.querySelector('.challenge-row').click();
+  assert.ok(sheetBody(dom).querySelector('.challenge-current'), 'the sheet shows the status');
+  assert.equal(sheetBody(dom).querySelector('.challenge-current__end, .challenge-section__start'), null);
+});
+
+test('Pokale: a running challenge is one row — flag, goal, status, bar, chevron — and its sheet ends it, never restarts it; the history is there (#1856)', (t) => {
   const dom = boot(t);
   const past = { kind: 'wholeShelf', shelfSnapshot: ['g1'], startedAt: iso(-60), deadline: iso(-40) };
   const sec = dom.call('renderChallengeSection', round({ challenge: running(), challengeHistory: [past] }));
-  assert.equal(sec.querySelector('.challenge-current__goal').textContent, '3 Sessions');
-  assert.equal(sec.querySelector('.challenge-current__end').textContent, 'Challenge beenden');
-  assert.equal(sec.querySelector('.challenge-section__start'), null);
-  const items = sec.querySelectorAll('.challenge-history__item');
+  dom.app.appendChild(sec);
+  assert.equal(sec.children.length, 1);
+  const row = sec.querySelector('button.challenge-row');
+  assert.equal(row.dataset.state, 'running');
+  assert.equal(row.querySelector('.challenge-row__goal').textContent, '3 Sessions');
+  assert.match(row.querySelector('.challenge-row__status').textContent, /^0 von 3 · bis .+ · noch 10 Tage$/);
+  assert.ok(row.querySelector('.challenge-bar'), 'the bar is on the row');
+  assert.equal(row.querySelector('.challenge-bar').getAttribute('aria-hidden'), 'true', 'the row’s name says it in words');
+  assert.ok(row.querySelector('.challenge-row__go.ti-chevron-right'));
+  assert.match(row.getAttribute('aria-label'), /^Challenge: 3 Sessions\. 0 von 3/);
+  row.click();
+  const body = sheetBody(dom);
+  assert.equal(body.querySelector('.challenge-current__goal').textContent, '3 Sessions');
+  assert.equal(body.querySelector('.challenge-current__end').textContent, 'Challenge beenden');
+  assert.equal(body.querySelector('.challenge-section__start'), null);
+  const items = body.querySelectorAll('.challenge-history__item');
   assert.equal(items.length, 1);
   assert.equal(items[0].dataset.state, 'expired');
   assert.equal(items[0].querySelector('.challenge-history__goal').textContent, 'Jedes Spiel im Regal einmal');
+});
+
+test('Pokale: an ended challenge shows its outcome on the row; the sheet archives it and offers a new one in place (#1856)', async (t) => {
+  const dom = boot(t);
+  // From 860px the editor is a popover, which REPLACES any popover open — so
+  // a start form opened as its own overlay would restore focus to the start
+  // button it came from, gone with the overview. In place, it returns to the row.
+  dom.run('window.matchMedia = (q) => ({ matches: /min-width/.test(q), addEventListener() {}, removeEventListener() {} });');
+  const doc = dom.window.document;
+  const sec = dom.call('renderChallengeSection', round({ challenge: running({ startedAt: iso(-10), deadline: iso(-2) }) }));
+  dom.app.appendChild(sec);
+  const row = sec.querySelector('.challenge-row');
+  assert.equal(row.dataset.state, 'expired');
+  assert.match(row.querySelector('.challenge-row__status').textContent, new RegExp(dom.run("t('challenge.state.expired', { date: '' })").trim().split(' ')[0]));
+  row.focus();
+  row.click();
+  const pop = () => doc.querySelector('.popover--challenge');
+  assert.equal(pop().querySelector('.challenge-current__end').textContent, dom.run("t('challenge.archive')"));
+  pop().querySelector('.challenge-section__start').click();
+  assert.equal(doc.querySelectorAll('.popover').length, 1);
+  assert.ok(pop().querySelector('#challengeKind'), 'the start form is in the same overlay');
+  doc.activeElement.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+  await waitFor(() => !doc.querySelector('.popover'), { label: 'Escape closes the popover' });
+  assert.equal(doc.activeElement, row, 'focus returns to the challenge row');
 });
 
 test('result moment: the latest session that moved it gets one line; the one that completes it says so', (t) => {

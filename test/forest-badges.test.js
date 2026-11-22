@@ -25,7 +25,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { loadApp, flush } = require('./support/dom');
-const { night, badgeRound, stubApi, wideAt } = require('./support/badge-fixture');
+const { night, badgeRound, stubApi, wideAt, collectionTiles } = require('./support/badge-fixture');
 const { accountBadges, BADGE_CATALOGUE } = require('../public/js/achievements');
 
 const GOLDEN = path.join(__dirname, 'fixtures', 'forest-badges-klassisch-golden.json');
@@ -61,8 +61,11 @@ async function surfaces(t, design) {
   let dom = boot(t, design, r);
   await dom.call('renderPokaleTab', r);
   out.pokale = squash(dom.app.querySelector('.badge-section').outerHTML);
-  dom.app.querySelector('.badge-member .badge').click();
+  // The holder's collection (#1856), and a card opened inside it.
+  dom.app.querySelector('.badge-section #abzeichen-m1').click();
   await flush();
+  out.collection = squash(dom.document.querySelector('.badge-collection').outerHTML);
+  dom.document.querySelector('.badge-collection .badge').click();
   const card = dom.document.querySelector('.badge-card');
   out.card = card ? squash(card.outerHTML) : '';
   out.tischkarte = squash(dom.call('memberCardBadges', r, r.members[0]).outerHTML);
@@ -190,31 +193,23 @@ test('the tier dots: one ring each, the reached ones filled Laubgrün', () => {
   assert.equal(decl(body('.badge__dots'), 'flex-wrap'), 'wrap', 'six dots must wrap rather than overflow a narrow cell');
 });
 
-test('the branch and the shelves are auto-fill grids — no count of entries anywhere', () => {
+test('the collection’s shelves are auto-fill grids — no count of entries anywhere (#1856)', () => {
   const grids = RULES.filter(([, b]) => /grid-template-columns/.test(b)).map(([s, b]) => [norm(s), decl(b, 'grid-template-columns')]);
-  const branch = grids.filter(([s]) => s.includes('.badge-band--round > .badge-grid'));
-  assert.ok(branch.length >= 2 && branch.every(([, v]) => /^repeat\(auto-fill, minmax\(\d+px, 1fr\)\)$/.test(v)), JSON.stringify(branch));
-  // No repeat(N, …) but the phone shelf's four and the desktop's two member
-  // columns — neither depends on how many marks exist.
-  const fixed = grids.filter(([, v]) => /repeat\(\d+,/.test(v)).map(([s, v]) => `${s.slice(s.indexOf(GATE) + GATE.length).trim()} → ${v}`);
-  assert.deepEqual(fixed, [
-    '.badge-member > .badge-grid:not([hidden]) → repeat(4, minmax(0, 1fr))',
-    '.badge-members:not(:has(> .badge-member > .badge-member__more)) → repeat(2, minmax(0, 1fr))',
-  ]);
+  const shelf = grids.filter(([s]) => s.endsWith('.badge-grid:not([hidden])'));
+  assert.ok(shelf.length >= 1 && shelf.every(([, v]) => /^repeat\(auto-fill, minmax\(\d+px, 1fr\)\)$/.test(v)), JSON.stringify(shelf));
+  // Nothing sets a column COUNT: the rows are one line, the shelves auto-fill.
+  const fixed = grids.filter(([, v]) => /repeat\(\d+,/.test(v)).map(([sel, v]) => `${sel} → ${v}`);
+  assert.deepEqual(fixed, []);
 });
 
 test('a mark on its way keeps its count wherever it is drawn (the moss level is decoration)', () => {
-  assert.equal(decl(body('.badge-band--round .badge:not([data-state="progress"]) .badge__line'), 'display'), 'none');
-  // Every other rule hiding a line names a place a counting mark never sits:
-  // a dense row's EARNED shelf, the Tischkarte (earned only), the moment, and
-  // Pokale's strip, which holds only locked and secret marks (#1541).
+  // The one rule hiding a line names the collection's strip, which holds only
+  // locked and secret marks (#1541) — never a counting one.
   const hides = RULES.filter(([, b]) => /display:\s*none/.test(b))
     .flatMap(([sel]) => members(sel).filter((m) => /\.badge__line\b/.test(m)))
     .map((m) => m.slice(GATE.length).trim());
   assert.deepEqual(hides, [
-    '.badge-band--round .badge:not([data-state="progress"]) .badge__line',
-    '.badge-members:has(> .badge-member > .badge-member__more) .badge-member > .badge-grid:not(.badge-grid--rest) :is(.badge__name, .badge__dots, .badge__line, .badge__new)',
-    ':is(.badge-band--round, .badge-member) > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new)',
+    '.badge-collection__group > .badge-grid--strip :is(.badge__name, .badge__line, .badge__dots, .badge__new)',
   ]);
 });
 
@@ -266,18 +261,25 @@ async function forestPokale(t, sessions, memberCount = 2, design = 'forest') {
   await dom.call('renderPokaleTab', r);
   return { dom, r, sec: dom.app.querySelector('.badge-section') };
 }
+// The tiles of one holder's collection (#1856), as live nodes.
+const tilesOf = (dom, mid) => collectionTiles(dom, mid);
 
 test('under Forest a round mark is a leaf and a person’s mark a jar — in the band, the card and the Chronik', async (t) => {
   const { dom, r, sec } = await forestPokale(t, nights(10, ['m1', 'm2']));
-  const roundMarks = [...sec.querySelectorAll('.badge-band--round .badge__mark')];
-  assert.ok(roundMarks.length >= 15, `only ${roundMarks.length} round marks`);
-  assert.ok(roundMarks.every((m) => m.dataset.shape === 'leaf'), 'a round mark is not a leaf');
-  const personMarks = [...sec.querySelectorAll('.badge-member .badge__mark')];
+  // The rows' pins: leaves on the round's row, jars on a person's.
+  const roundPins = [...sec.querySelectorAll('#abzeichen-round .badge-member__pin .badge__mark')];
+  assert.ok(roundPins.length >= 1, 'the round row draws no pin');
+  assert.ok(roundPins.every((m) => m.dataset.shape === 'leaf'), 'a round pin is not a leaf');
+  assert.ok([...sec.querySelectorAll('#abzeichen-m1 .badge-member__pin .badge__mark')].every((m) => !m.hasAttribute('data-shape')), 'a person’s pin is a leaf');
+  const personMarks = tilesOf(dom, 'm1').map((b) => b.querySelector('.badge__mark'));
   assert.ok(personMarks.length >= 15);
   assert.ok(personMarks.every((m) => !m.hasAttribute('data-shape')), 'a person’s mark is drawn as a leaf');
+  const roundTiles = tilesOf(dom, 'round');
+  const roundMarks = roundTiles.map((b) => b.querySelector('.badge__mark'));
+  assert.ok(roundMarks.length >= 15, `only ${roundMarks.length} round marks`);
+  assert.ok(roundMarks.every((m) => m.dataset.shape === 'leaf'), 'a round mark is not a leaf');
   // The card of a round mark is a leaf too.
-  sec.querySelector('.badge-band--round .badge').click();
-  await flush();
+  roundTiles[0].click();
   assert.equal(dom.document.querySelector('.badge-card .badge__mark').dataset.shape, 'leaf');
   // The Chronik: the round's „Sessions 10" row is a leaf, the people's rows jars.
   const rows = dom.call('chronikBadgeRows', r, dom.call('badgeChronikIndex', r).get('s10'));
@@ -289,9 +291,10 @@ test('under Forest a round mark is a leaf and a person’s mark a jar — in the
 });
 
 test('one dot per tier, the reached ones on — generic over the catalogue, never on a secret', async (t) => {
-  const { sec } = await forestPokale(t, nights(10, ['m1', 'm2']));
+  const { dom } = await forestPokale(t, nights(10, ['m1', 'm2']));
   let tiered = 0;
-  for (const tile of sec.querySelectorAll('.badge')) {
+  const all = collectionTiles(dom);
+  for (const tile of all) {
     const def = BADGE_CATALOGUE.find((d) => d.key === tile.dataset.key);
     const dots = tile.querySelector('.badge__dots');
     if (tile.dataset.state === 'secret' || !def.tiers) {
@@ -309,7 +312,7 @@ test('one dot per tier, the reached ones on — generic over the catalogue, neve
   }
   assert.ok(tiered >= 10, `only ${tiered} tiered tiles checked`);
   // The six-tier ladder (#1463) is drawn in full.
-  const sessions = sec.querySelector('.badge-band--round .badge[data-key="sessions"] .badge__dots');
+  const sessions = tilesOf(dom, 'round').find((b) => b.dataset.key === 'sessions').querySelector('.badge__dots');
   assert.equal(sessions.children.length, 6);
   assert.equal(sessions.querySelectorAll('[data-on]').length, 1, 'Sessions 10 is the first of six');
 });
@@ -325,8 +328,8 @@ test('a secret never shows its tier count, even a tiered one', (t) => {
 });
 
 test('a secret round mark is a leaf with ti-lock-question and „Geheim"', async (t) => {
-  const { sec } = await forestPokale(t, nights(3, ['m1', 'm2']));
-  const secret = sec.querySelector('.badge-band--round .badge[data-state="secret"]');
+  const { dom } = await forestPokale(t, nights(3, ['m1', 'm2']));
+  const secret = tilesOf(dom, 'round').find((b) => b.dataset.state === 'secret');
   assert.ok(secret, 'the round has a secret mark');
   assert.equal(secret.querySelector('.badge__mark').dataset.shape, 'leaf');
   assert.ok(secret.querySelector('.badge__mark .ti-lock-question'));
@@ -348,6 +351,7 @@ test('every other design keeps K17: no leaf attribute, no dots', async (t) => {
   for (const design of ['tisch', 'programmheft', 'bruecke', 'ocean']) {
     const { dom, r, sec } = await forestPokale(t, nights(10, ['m1', 'm2']), 2, design);
     assert.equal(sec.querySelector('[data-shape], .badge__dots'), null, `${design} draws Forest’s markup`);
+    assert.ok(collectionTiles(dom).every((b) => !b.querySelector('[data-shape], .badge__dots')), `${design}: a collection draws Forest’s markup`);
     const rows = dom.call('chronikBadgeRows', r, dom.call('badgeChronikIndex', r).get('s10'));
     assert.ok(rows.every((row) => !row.querySelector('[data-shape]')), `${design}: a Chronik row carries the leaf`);
   }

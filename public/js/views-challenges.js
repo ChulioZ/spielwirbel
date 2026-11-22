@@ -5,8 +5,9 @@
 
      .hub-card--challenge   the Start card while a challenge runs (and for a
                             few days after it ends, so the group sees the end)
-     .challenge-section     Pokale › Challenge: the current one, start / end,
-                            and the short history
+     .challenge-section     Pokale › Challenge: ONE ROW (.challenge-row,
+                            #1856) opening the sheet with the current one,
+                            start / end, and the history
      .challenge-moment      the result screen: one line when THIS session moved
                             or completed the current challenge, inside the
                             Abzeichen moment so it sits in each design's frame
@@ -92,45 +93,99 @@ function hubChallengeRow(round, now = Date.now()) {
 
 /* ------------------------------ Pokale section ---------------------------- */
 
-// Null under the simple mode, so the caller appends nothing.
+/* Pokale › Challenge is ONE ROW in every state (#1856): a running challenge
+   as flag, goal, bar and „4 / 10 · noch 40 Tage"; an ended one as its outcome;
+   with none, „Challenge starten" for a viewer who may write and nothing at all
+   for one who may not. The row opens the sheet with the status, end or archive,
+   the start form and the history. `id="challenge"` stays: the Start tab's row
+   (hubChallengeRow) and the Chronik land here. Null under the simple mode, or
+   when there is nothing to show, so the caller appends nothing. */
 function renderChallengeSection(round, now = Date.now()) {
   if (simpleHidden('trophies')) return null;
-  const sec = h(`<section class="challenge-section" id="challenge">
-       <div class="section-head"><h2>${iconText('ti-flag', t('challenge.title'))}</h2></div>
-     </section>`);
   const cur = currentChallenge(round, now);
   const canEdit = roundCan(round, 'round.write');
-  if (cur) {
-    const box = h(`<div class="challenge-current" data-state="${esc(cur.state)}">
-         <p class="challenge-current__goal">${esc(challengeGoalText(cur))}</p>
-         <p class="challenge-current__status">${esc(challengeStatusText(cur, now))}</p>
-         ${challengeBar(cur)}
-       </div>`);
-    if (canEdit) {
-      const running = cur.state === 'running';
-      const btn = h(`<button type="button" class="link-btn challenge-current__end">${esc(t(running ? 'challenge.end' : 'challenge.archive'))}</button>`);
-      btn.addEventListener('click', () => endChallenge(round, running));
-      box.appendChild(btn);
-    }
-    sec.appendChild(box);
-  } else {
-    sec.appendChild(h(`<p class="muted challenge-section__empty">${esc(t('challenge.none'))}</p>`));
-  }
-  if (canEdit && (!cur || cur.state !== 'running')) {
-    const start = h(`<button type="button" class="btn challenge-section__start">${iconText('ti-flag', t('challenge.start'))}</button>`);
-    start.addEventListener('click', () => openChallengeSheet(round, start));
-    sec.appendChild(start);
-  }
-  const past = challengeHistory(round, now);
-  if (past.length) {
-    const list = h(`<details class="challenge-history"><summary>${esc(t('challenge.history'))}</summary><ul class="challenge-history__list"></ul></details>`);
-    past.forEach((ch) => list.querySelector('ul').appendChild(h(`<li class="challenge-history__item" data-state="${esc(ch.state)}">
-         <span class="challenge-history__goal">${esc(challengeGoalText(ch))}</span>
-         <span class="challenge-history__status">${esc([fmtDate(ch.startedAt), challengeStatusText(ch, now)].join(' · '))}</span>
-       </li>`)));
-    sec.appendChild(list);
-  }
+  if (!cur && !canEdit) return null;
+  const sec = h(`<section class="challenge-section" id="challenge" aria-label="${esc(t('challenge.title'))}"></section>`);
+  const row = cur
+    ? h(`<button type="button" class="challenge-row" data-state="${esc(cur.state)}">
+         <i class="ti ${cur.state === 'completed' ? 'ti-flag-check' : 'ti-flag'} challenge-row__icon" aria-hidden="true"></i>
+         <span class="challenge-row__main">
+           <span class="challenge-row__goal">${esc(challengeGoalText(cur))}</span>
+           <span class="challenge-row__status">${esc(challengeStatusText(cur, now))}</span>
+           ${challengeBar(cur)}
+         </span>
+         <i class="ti ti-chevron-right challenge-row__go" aria-hidden="true"></i>
+       </button>`)
+    : h(`<button type="button" class="challenge-row challenge-row--start">
+         <i class="ti ti-flag challenge-row__icon" aria-hidden="true"></i>
+         <span class="challenge-row__main"><span class="challenge-row__goal">${esc(t('challenge.start'))}</span></span>
+         <i class="ti ti-chevron-right challenge-row__go" aria-hidden="true"></i>
+       </button>`);
+  // The bar is role="img" inside a button, whose name would swallow it; the
+  // row's own name says the goal and the status in words instead.
+  const bar = row.querySelector('.challenge-bar');
+  if (bar) { bar.removeAttribute('role'); bar.removeAttribute('aria-label'); bar.setAttribute('aria-hidden', 'true'); }
+  row.setAttribute('aria-label', cur
+    ? `${t('challenge.title')}: ${challengeGoalText(cur)}. ${challengeStatusText(cur, now)}`
+    : t('challenge.start'));
+  row.setAttribute('aria-haspopup', 'dialog');
+  row.addEventListener('click', () => openChallengeOverview(round, row, now));
+  sec.appendChild(row);
   return sec;
+}
+
+/* The sheet behind the row: the current status, end or archive (round.write),
+   the start form when nothing runs, and the history. With no challenge and no
+   history it IS the start form — a sheet holding one button that opens the
+   form would be a step for nothing. The form is drawn into the same overlay,
+   since openEditor replaces whatever overlay is open. */
+function openChallengeOverview(round, anchor, now = Date.now()) {
+  const cur = currentChallenge(round, now);
+  const canEdit = roundCan(round, 'round.write');
+  const past = challengeHistory(round, now);
+  if (!cur && !past.length) return openChallengeSheet(round, anchor);
+  return openEditor(anchor, 'challenge', t('challenge.title'), (el, close) => {
+    const host = h('<div class="challenge-overview"></div>');
+    el.appendChild(host);
+    if (cur) {
+      const box = h(`<div class="challenge-current" data-state="${esc(cur.state)}">
+           <p class="challenge-current__goal">${esc(challengeGoalText(cur))}</p>
+           <p class="challenge-current__status">${esc(challengeStatusText(cur, now))}</p>
+           ${challengeBar(cur)}
+         </div>`);
+      if (canEdit) {
+        const running = cur.state === 'running';
+        const btn = h(`<button type="button" class="link-btn challenge-current__end">${esc(t(running ? 'challenge.end' : 'challenge.archive'))}</button>`);
+        btn.addEventListener('click', () => { close(); endChallenge(round, running); });
+        box.appendChild(btn);
+      }
+      host.appendChild(box);
+    } else {
+      host.appendChild(h(`<p class="muted challenge-section__empty">${esc(t('challenge.none'))}</p>`));
+    }
+    if (canEdit && (!cur || cur.state !== 'running')) {
+      const start = h(`<button type="button" class="btn challenge-section__start">${iconText('ti-flag', t('challenge.start'))}</button>`);
+      start.addEventListener('click', () => {
+        host.replaceChildren(...challengeStartForm(round, close));
+        const first = host.querySelector('select');
+        if (first) first.focus({ preventScroll: true });
+      });
+      host.appendChild(start);
+    }
+    if (past.length) {
+      const list = h(`<div class="challenge-history"><h3 class="challenge-history__title">${esc(t('challenge.history'))}</h3><ul class="challenge-history__list"></ul></div>`);
+      past.forEach((ch) => list.querySelector('ul').appendChild(h(`<li class="challenge-history__item" data-state="${esc(ch.state)}">
+           <span class="challenge-history__goal">${esc(challengeGoalText(ch))}</span>
+           <span class="challenge-history__status">${esc([fmtDate(ch.startedAt), challengeStatusText(ch, now)].join(' · '))}</span>
+         </li>`)));
+      host.appendChild(list);
+    }
+    // preventScroll: a popover closes on a page scroll (popover.js).
+    return () => {
+      const first = host.querySelector('button');
+      if (first) first.focus({ preventScroll: true });
+    };
+  });
 }
 
 const challengeRefresh = async (rid) => {
@@ -154,44 +209,49 @@ const challengeDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padSt
 
 function openChallengeSheet(round, anchor) {
   openEditor(anchor, 'challenge', t('challenge.sheet.title'), (el, close) => {
-    const hasShelf = round.games.some(isActiveGame);
-    const kinds = CHALLENGE_KINDS.filter((k) => k !== 'wholeShelf' || hasShelf);
-    const kind = h(`<select class="input" id="challengeKind">${kinds
-      .map((k) => `<option value="${k}">${esc(t(`challenge.kind.${k}`))}</option>`).join('')}</select>`);
-    const n = h(`<input class="input" id="challengeN" type="number" inputmode="numeric" min="${CHALLENGE_N_MIN}" max="${CHALLENGE_N_MAX}" value="5" />`);
-    const deadline = h('<input class="input" id="challengeDeadline" type="date" />');
-    const today = new Date();
-    deadline.min = challengeDay(today);
-    deadline.max = challengeDay(new Date(today.getTime() + (CHALLENGE_DEADLINE_MAX_DAYS - 1) * 24 * 60 * 60 * 1000));
-    deadline.value = challengeDay(new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000));
-    const field = (id, label, control) => {
-      const f = h(`<div class="field"><label for="${id}">${esc(label)}</label></div>`);
-      f.appendChild(control);
-      return f;
-    };
-    const nField = field('challengeN', t('challenge.sheet.n'), n);
-    // Inline display rather than `hidden`: `.field` carries its own display rule
-    // in some designs, which the attribute alone would lose to.
-    const sync = () => { nField.style.display = CHALLENGE_COUNTED.includes(kind.value) ? '' : 'none'; };
-    kind.addEventListener('change', sync);
-    sync();
-    const ok = h(`<button type="button" class="btn btn--primary">${esc(t('challenge.sheet.submit'))}</button>`);
-    ok.addEventListener('click', async () => {
-      const body = { kind: kind.value, deadline: challengeDeadlineInstant(deadline.value) };
-      if (CHALLENGE_COUNTED.includes(kind.value)) body.n = Number(n.value);
-      const invalid = challengeStartError(body);
-      if (invalid) return toast(t(invalid === 'Invalid n' ? 'challenge.error.n' : 'challenge.error.deadline', { min: CHALLENGE_N_MIN, max: CHALLENGE_N_MAX }));
-      try {
-        await api('POST', `/api/rounds/${round.id}/challenge`, body);
-        close();
-        toast(t('challenge.toast.started'), { tone: 'success' });
-        await challengeRefresh(round.id);
-      } catch (e) { toast(e.message, { tone: 'error' }); }
-    });
-    el.append(field('challengeKind', t('challenge.sheet.kind'), kind), nField,
-      field('challengeDeadline', t('challenge.sheet.deadline'), deadline), editorActions(ok));
-    return () => kind.focus();
+    el.append(...challengeStartForm(round, close));
+    return () => el.querySelector('#challengeKind').focus();
   });
+}
+
+// The start form's nodes, for its own sheet and for the overview's.
+function challengeStartForm(round, close) {
+  const hasShelf = round.games.some(isActiveGame);
+  const kinds = CHALLENGE_KINDS.filter((k) => k !== 'wholeShelf' || hasShelf);
+  const kind = h(`<select class="input" id="challengeKind">${kinds
+    .map((k) => `<option value="${k}">${esc(t(`challenge.kind.${k}`))}</option>`).join('')}</select>`);
+  const n = h(`<input class="input" id="challengeN" type="number" inputmode="numeric" min="${CHALLENGE_N_MIN}" max="${CHALLENGE_N_MAX}" value="5" />`);
+  const deadline = h('<input class="input" id="challengeDeadline" type="date" />');
+  const today = new Date();
+  deadline.min = challengeDay(today);
+  deadline.max = challengeDay(new Date(today.getTime() + (CHALLENGE_DEADLINE_MAX_DAYS - 1) * 24 * 60 * 60 * 1000));
+  deadline.value = challengeDay(new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000));
+  const field = (id, label, control) => {
+    const f = h(`<div class="field"><label for="${id}">${esc(label)}</label></div>`);
+    f.appendChild(control);
+    return f;
+  };
+  const nField = field('challengeN', t('challenge.sheet.n'), n);
+  // Inline display rather than `hidden`: `.field` carries its own display rule
+  // in some designs, which the attribute alone would lose to.
+  const sync = () => { nField.style.display = CHALLENGE_COUNTED.includes(kind.value) ? '' : 'none'; };
+  kind.addEventListener('change', sync);
+  sync();
+  const ok = h(`<button type="button" class="btn btn--primary">${esc(t('challenge.sheet.submit'))}</button>`);
+  ok.addEventListener('click', async () => {
+    const body = { kind: kind.value, deadline: challengeDeadlineInstant(deadline.value) };
+    if (CHALLENGE_COUNTED.includes(kind.value)) body.n = Number(n.value);
+    const invalid = challengeStartError(body);
+    if (invalid) return toast(t(invalid === 'Invalid n' ? 'challenge.error.n' : 'challenge.error.deadline', { min: CHALLENGE_N_MIN, max: CHALLENGE_N_MAX }));
+    try {
+      await api('POST', `/api/rounds/${round.id}/challenge`, body);
+      close();
+      toast(t('challenge.toast.started'), { tone: 'success' });
+      await challengeRefresh(round.id);
+    } catch (e) { toast(e.message, { tone: 'error' }); }
+  });
+  return [field('challengeKind', t('challenge.sheet.kind'), kind), nField,
+    field('challengeDeadline', t('challenge.sheet.deadline'), deadline), editorActions(ok)];
 }
 
 /* ---------------------------- the result screen --------------------------- */

@@ -40,8 +40,9 @@ function pokaleStatCard(round, icon, label, value, sub, linkMid) {
  * the Start ticket, the results spotlight, the Regal, and the Lieblingsspiele
  * tiles at the bottom of this very screen (#695).
  *
- * The three callers are `pokaleGameCard` below (so the Pokale trophy cards, the
- * Rückblick's worst-rated card and the Chronik's period cards), the „Größte
+ * The three callers are `pokaleGameCard` below (so the Rückblick's
+ * worst-rated card and the Chronik's period cards — Pokale's own records are
+ * list rows since #1856, `pokaleRecordRow`, which keeps the rule), the „Größte
  * Uneinigkeit" card, and the member page's „Stärkstes Spiel" / „Lieblingsspiel"
  * pair — a cross-file call in one shared global scope, safe because it happens
  * at RENDER time and because views-member.js loads after this file anyway
@@ -80,9 +81,10 @@ function wireGameCardHead(card, rid, lead, loadCover) {
   makeGameLink(thumb, rid, lead.id, { redundant: true });
 }
 
-// Like pokaleStatCard but the value is one or more games, each listed on its own
-// row with a "Jetzt spielen" launcher (icon-only; omitted for an archived game —
-// retired or completed, neither is in the active collection any more).
+// Like pokaleStatCard but the value is one or more games, each on its own row.
+// No „Jetzt spielen" since #1856: starting a game is the Start tab's job, so
+// the Chronik's period cards and the Rückblick — this builder's callers — draw
+// the record and link the game, nothing more.
 //
 // A TIE LEADS WITH THE FIRST GAME'S COVER. The alternative — dropping the cover
 // whenever a card names more than one game — makes the rare case the odd one
@@ -101,17 +103,50 @@ function pokaleGameCard(round, icon, label, games, sub, loadCover) {
     const row = h(`<span class="pokale-game">
          <a class="pokale-game__title">${esc(g.title)}</a>
        </span>`);
-    // The game name opens its detail page (archived games too — the detail
-    // view supports them; only the "Jetzt spielen" launcher is omitted).
+    // The game name opens its detail page (archived games too).
     makeGameLink(row.querySelector('.pokale-game__title'), round.id, g.id);
-    if (!g.retired && !g.completed && !g.wish && !g.guestGame) {
-      const btn = h(`<button class="pokale-game__play" title="${esc(t('directPlay.button'))}" aria-label="${esc(t('directPlay.button'))}"><i class="ti ti-player-play" aria-hidden="true"></i></button>`);
-      btn.addEventListener('click', () => startDirectSession(round, g));
-      row.appendChild(btn);
-    }
     list.appendChild(row);
   });
   return card;
+}
+
+/* One row of Pokale's „Rekorde" (#1856): a small cover when it names a game
+   (the #979 rule above, in list form), the label, the holder — the games,
+   ties joined, each a link — and the value on the right. `games` or `people`
+   names the holder; a person names no cover, so the row leads with its icon. */
+function pokaleRecordRow(round, { icon, label, games, people, value, loadCover }) {
+  const lead = games && games[0];
+  const row = h(`<li class="pokale-record">
+       ${lead ? `<a class="pokale-record__thumb">${coverPlaceholder(lead)}</a>` : `<span class="pokale-record__icon"><i class="ti ${icon}" aria-hidden="true"></i></span>`}
+       <span class="pokale-record__body">
+         <span class="pokale-record__label">${lead ? `<i class="ti ${icon}" aria-hidden="true"></i>` : ''}${esc(label)}</span>
+         <span class="pokale-record__who"></span>
+       </span>
+       <span class="pokale-record__value">${esc(value)}</span>
+     </li>`);
+  const who = row.querySelector('.pokale-record__who');
+  const join = (items, link) => items.forEach((x, i) => {
+    if (i) who.appendChild(document.createTextNode(', '));
+    const a = h(`<a class="pokale-record__name">${esc(x.title || x.name)}</a>`);
+    link(a, x);
+    who.appendChild(a);
+  });
+  if (lead) {
+    const thumb = row.querySelector('.pokale-record__thumb');
+    if (lead.image) loadCover(thumb, coverUrl(lead.image, COVER_THUMB));
+    // Redundant with the first title beside it (#663): mouse-clickable, out
+    // of the tab order and the accessibility tree.
+    makeGameLink(thumb, round.id, lead.id, { redundant: true });
+    join(games, (a, g) => makeGameLink(a, round.id, g.id));
+  } else if (people.length === 1) {
+    join(people, (a, m) => makeMemberLink(a, round.id, m.id));
+  } else {
+    // Several who won the same run together are named together and linked
+    // nowhere, as the stat card did (test/tie-rule.test.js): one holder is a
+    // link, a joint holding is a statement about all of them.
+    who.textContent = joinNames(people.map((m) => m.name));
+  }
+  return row;
 }
 
 // Resolve stat ids back to the games they name, dropping any that no longer
@@ -321,7 +356,7 @@ function renderPokaleTab(round) {
   const finished = round.sessions.filter((s) => s.finished);
 
   // `ph-page`: Das Programmheft's page hook (#1379), as on the Chronik.
-  const sec = h(`<div class="section${designIs('programmheft') ? ' ph-page' : ''}"></div>`);
+  const sec = h(`<div class="section pokale-page${designIs('programmheft') ? ' ph-page' : ''}"></div>`);
   /* NO ⓘ since 2026-09-22. It existed because the Siegwertung (#895) ranked the
      standings on a number the group had not seen before and owed an explanation
      somewhere; a count of wins owes none, and the whole `win` topic went with
@@ -362,6 +397,7 @@ function renderPokaleTab(round) {
     if (challenge) app.appendChild(challenge);
     // Abzeichen (#1388): the section's one empty line, no tiles.
     app.appendChild(renderBadgeSection(round));
+    badgeRevealTarget(round.id);
     return;
   }
 
@@ -485,12 +521,18 @@ function renderPokaleTab(round) {
     stageTo.appendChild(restEl);
   }
 
-  // One lazy-cover loader per section, shared by every trophy card below
-  // (#979) — a loader each would mean an IntersectionObserver each.
+  // One lazy-cover loader per section, shared by every record row below (#979).
   const loadCover = createCoverLoader();
-  // Under Die Brücke the same four cards, in the same order, are styled as
-  // B3.4's plates (#1422, bruecke.css) — a design owns the layout, not the content.
-  const cards = h(`<div class="pokale-cards${bruecke ? ' pokale-cards--plates' : ''}"></div>`);
+  /* „Rekorde" (#1856): ONE list, the same rows in every design — Die Brücke's
+     plates and the Programmheft's column skin it. It replaced the trophy cards,
+     and with them the Staubfänger, which was a game SUGGESTION wearing a
+     trophy (it re-rolled Math.random() among tied games on every render) and
+     six „Jetzt spielen" launchers, which belong to the Start tab. */
+  const records = h(`<section class="pokale-records" aria-labelledby="pokale-records-title">
+       <h2 class="pokale-records__title" id="pokale-records-title">${esc(t('pokale.records'))}</h2>
+       <ol class="pokale-records__list"></ol>
+     </section>`);
+  const cards = records.querySelector('.pokale-records__list');
 
   // Most played: chosen most often across finished nights (game must exist).
   //
@@ -521,9 +563,10 @@ function renderPokaleTab(round) {
     .filter((gid) => playCount[gid] === maxPlays)
     .map((gid) => round.games.find((x) => x.id === gid));
   if (mostGames.length) {
-    cards.appendChild(
-      pokaleGameCard(round, 'ti-flame', t('pokale.mostPlayed'), mostGames, tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover)
-    );
+    cards.appendChild(pokaleRecordRow(round, {
+      icon: 'ti-flame', label: t('pokale.mostPlayed'), games: mostGames,
+      value: tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover,
+    }));
   }
 
   // Best rated: highest overall average with a bit of data behind it; ties
@@ -531,9 +574,10 @@ function renderPokaleTab(round) {
   // the Rückblick's worst-rated card (views-recap.js) cannot drift apart on the evidence
   // threshold or on how ties are handled — they are one aggregation read twice.
   if (recap.best) {
-    cards.appendChild(
-      pokaleGameCard(round, 'ti-star', t('pokale.bestRated'), recapGames(round, recap.best.gameIds), fmtAvg(displayScore(recap.best.score)), loadCover)
-    );
+    cards.appendChild(pokaleRecordRow(round, {
+      icon: 'ti-star', label: t('pokale.bestRated'), games: recapGames(round, recap.best.gameIds),
+      value: fmtAvg(displayScore(recap.best.score)), loadCover,
+    }));
   }
 
   // Streak: how many of the latest nights in a row a member won — a shared win
@@ -550,13 +594,9 @@ function renderPokaleTab(round) {
   // promise a series this card is already showing.
   const seriesHeld = played < YOUNG_ROUND_SERIES_FROM;
   if (streakMs.length && streak >= 2 && !seriesHeld) {
-    // One holder's name links to their detail page, like the podium above.
-    // Several who won the same run together are named together; a card value
-    // is one link, so that line links nobody rather than picking one of them.
-    const solo = streakMs.length === 1 ? streakMs[0].id : null;
-    cards.appendChild(
-      pokaleStatCard(round, 'ti-bolt', t('pokale.streak'), joinNames(streakMs.map((m) => m.name)), t('pokale.streakN', { n: streak }), solo)
-    );
+    cards.appendChild(pokaleRecordRow(round, {
+      icon: 'ti-bolt', label: t('pokale.streak'), people: streakMs, value: t('pokale.streakN', { n: streak }),
+    }));
   }
 
   // Längste Session (#1772): the round's longest timed session, from the first
@@ -565,10 +605,13 @@ function renderPokaleTab(round) {
   // „Abend": the entity's name in every UI language (test/session-naming).
   const longest = longestSession(finished, round.games);
   if (longest) {
-    cards.appendChild(
-      pokaleGameCard(round, 'ti-clock', t('pokale.longest'), recapGames(round, [longest.chosenGameId]),
-        `${fmtPlayMinutes(longest.durationMinutes)} · ${fmtDate(longest.createdAt)}`, loadCover)
-    );
+    const games = recapGames(round, [longest.chosenGameId]);
+    if (games.length) {
+      cards.appendChild(pokaleRecordRow(round, {
+        icon: 'ti-clock', label: t('pokale.longest'), games,
+        value: `${fmtPlayMinutes(longest.durationMinutes)} · ${fmtDate(longest.createdAt)}`, loadCover,
+      }));
+    }
   }
 
   // Bester Kauf (#1773): the lowest cost per session among priced games with
@@ -577,57 +620,22 @@ function renderPokaleTab(round) {
   // Spielepass chip divides by. Absent until a game qualifies.
   const buy = bestBuy(round.games, playCounts(round));
   if (buy) {
-    cards.appendChild(
-      pokaleGameCard(round, 'ti-coin', t('pokale.bestBuy'), buy.games,
-        t('purchasePrice.perSession', { price: fmtPurchaseCents(buy.cents, buy.currency) }), loadCover)
-    );
+    cards.appendChild(pokaleRecordRow(round, {
+      icon: 'ti-coin', label: t('pokale.bestBuy'), games: buy.games,
+      value: t('purchasePrice.perSession', { price: fmtPurchaseCents(buy.cents, buy.currency) }), loadCover,
+    }));
   }
 
-  // Gathering dust: the active game whose last night is longest ago (or never).
-  const lastAt = {};
-  finished.forEach((s) => {
-    if (!s.chosenGameId) return;
-    const at = s.createdAt;
-    if (!lastAt[s.chosenGameId] || at > lastAt[s.chosenGameId]) lastAt[s.chosenGameId] = at;
-  });
-  const active = round.games.filter((g) => !g.retired && !g.completed && !g.wish && !g.guestGame);
-  // Find the earliest last-played timestamp ('' = never played sorts first),
-  // then pick a random game among all that tie for it, so the same game isn't
-  // always highlighted.
-  let dustyAt = null;
-  active.forEach((g) => {
-    const at = lastAt[g.id] || '';
-    if (dustyAt === null || at < dustyAt) dustyAt = at;
-  });
-  const dustyCandidates = active.filter((g) => (lastAt[g.id] || '') === dustyAt);
-  const dusty = dustyCandidates.length
-    ? { g: dustyCandidates[Math.floor(Math.random() * dustyCandidates.length)], at: dustyAt }
-    : null;
-  if (dusty && active.length > 1) {
-    cards.appendChild(
-      pokaleGameCard(
-        round,
-        'ti-sparkles',
-        t('pokale.dusty'),
-        [dusty.g],
-        dusty.at ? t('pokale.dustyAt', { when: fmtMonth(dusty.at) }) : t('pokale.dustyNever'),
-        loadCover
-      )
-    );
-  }
-
-  if (cards.children.length) ((forest ? split : side) || split || sec).appendChild(cards);
+  if (cards.children.length) ((forest ? split : side) || split || sec).appendChild(records);
   app.appendChild(sec);
-  /* Abzeichen (#1388, views-badges.js): below the podium and the plaques, the
-     round's band then one row per member in THIS standings order — so the two
-     lists on one page cannot disagree about who comes first. */
   // The group challenge (#1779): the goal the table plays towards, above the
-  // marks it collects by playing.
+  // marks it collects by playing — one row since #1856.
   const challenge = renderChallengeSection(round);
   if (challenge) app.appendChild(challenge);
-  /* A young round has no podium yet (#1855): its Abzeichen rows print no
-     place, or the page would say „Platz 1" right under „Ein Podium braucht
-     3 Sessions." */
-  app.appendChild(renderBadgeSection(round, ranked, young ? null : rankOf));
+  /* Abzeichen (#1388, views-badges.js): the round's row, then one row per
+     member in THIS standings order — so the two lists on one page cannot
+     disagree about who comes first. No place is printed (#1856): the
+     standings above already say it. */
+  app.appendChild(renderBadgeSection(round, ranked));
   badgeRevealTarget(round.id);
 }

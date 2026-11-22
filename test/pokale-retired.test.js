@@ -100,15 +100,17 @@ function bootApp(t) {
    it. Both game-naming builders route their link through makeGameLink, so the
    href is what actually distinguishes them (`gamePath`, router.js:80). */
 const namedGames = (root) =>
-  [...root.querySelectorAll('.pokale-game__title, .pokale-card__value')]
-    .filter((el) => !el.classList.contains('pokale-card__value') || /\/game\//.test(el.getAttribute('href') || ''))
+  [...root.querySelectorAll('.pokale-game__title, .pokale-card__value, .pokale-record__name')]
+    .filter((el) => el.classList.contains('pokale-game__title') || /\/game\//.test(el.getAttribute('href') || ''))
     .map((el) => el.textContent);
 
-/** One stat card, found by the label it renders. */
-const cardByLabel = (root, label) =>
-  [...root.querySelectorAll('.pokale-card')].find(
-    (c) => (c.querySelector('.pokale-card__label') || {}).textContent === label
-  );
+/* One stat card or Pokale record row (#1856), found by the label it renders.
+   Both kinds, so a guard over the Pokale tab sees the records list and a
+   guard over the Rückblick still sees its cards. */
+const CARD = '.pokale-card, .pokale-record';
+const labelOf = (c) => (c.querySelector('.pokale-card__label, .pokale-record__label') || {}).textContent;
+const subOf = (c) => c.querySelector('.pokale-card__sub, .pokale-record__value');
+const cardByLabel = (root, label) => [...root.querySelectorAll(CARD)].find((c) => labelOf(c) === label);
 
 // ---- the Pokale tab -------------------------------------------------------
 
@@ -124,15 +126,15 @@ const recordLabels = (dom) => [
   dom.run("t('pokale.mostPlayed')"),
 ];
 
-test('the only card that may name a retired game is the Meistgespielt record', async (t) => {
+test('the only record or card that may name a retired game is the Meistgespielt record', async (t) => {
   const dom = bootApp(t);
   await dom.call('showRound', RID, 'pokale');
   // Two since #1855 moved the Rückblick's taste cards to the Regal (asserted
   // by the next test): Meistgespielt plus Bestbewertet stay here.
   assert.ok(namedGames(dom.app).length >= 2, 'the tab must actually have rendered its cards');
   const records = recordLabels(dom);
-  const cards = [...dom.app.querySelectorAll('.pokale-card')];
-  const labelled = cards.filter((c) => records.includes((c.querySelector('.pokale-card__label') || {}).textContent));
+  const cards = [...dom.app.querySelectorAll(CARD)];
+  const labelled = cards.filter((c) => records.includes(labelOf(c)));
   assert.equal(labelled.length, 1, 'the record card must be on screen, or the subtraction below is hiding one');
   const elsewhere = cards.filter((c) => !labelled.includes(c)).flatMap((c) => namedGames(c));
   assert.ok(
@@ -174,7 +176,7 @@ test('Meistgespielt still counts a retired game\'s nights — the sessions happe
   // about the current shelf. The taste cards below behave the opposite way, and
   // this pair is what keeps the two from being "tidied" into one rule.
   assert.deepEqual(namedGames(card), ['Azul']);
-  assert.equal(card.querySelector('.pokale-card__sub').textContent, dom.run("tn(3, 'home.chip.sessionsOne', 'home.chip.sessions')"));
+  assert.equal(subOf(card).textContent, dom.run("tn(3, 'home.chip.sessionsOne', 'home.chip.sessions')"));
 });
 
 test('Größte Uneinigkeit skips a retired game but keeps a completed one', async (t) => {

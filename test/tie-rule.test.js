@@ -101,23 +101,23 @@ async function streakCard(t, sessions) {
   dom.set('accountsActive', () => false);
   dom.set('isLoggedIn', () => false);
   await dom.call('renderPokaleTab', roundWith(sessions));
-  return [...dom.app.querySelectorAll('.pokale-card')].find((c) => c.querySelector('.ti-bolt'));
+  return [...dom.app.querySelectorAll('.pokale-record')].find((c) => c.querySelector('.ti-bolt'));
 }
 
 test('2 — on the Pokale tab, a run held jointly names both holders and links neither', async (t) => {
   const joint = await streakCard(t, [night(['mia']), night(['aylin', 'nils']), night(['nils', 'aylin'])]);
   assert.ok(joint, 'the streak card is shown for a jointly held run');
-  const value = joint.querySelector('.pokale-card__value');
+  const value = joint.querySelector('.pokale-record__who');
   assert.equal(value.textContent, 'Aylin und Nils', 'in the round’s member order, not the ticking order');
-  assert.equal(value.tagName, 'SPAN', 'one value cannot link two people');
+  assert.equal(value.querySelector('a'), null, 'one record cannot link two people');
   assert.match(joint.textContent, /2 Siege in Folge/);
 });
 
 test('2 — on the Pokale tab, a run through a tie shows its one holder, linked', async (t) => {
   const card = await streakCard(t, [night(['mia']), night(['aylin']), night(['aylin', 'nils'])]);
-  const value = card.querySelector('.pokale-card__value');
+  const value = card.querySelector('.pokale-record__who');
   assert.equal(value.textContent, 'Aylin', 'the longer run is the one shown');
-  assert.equal(value.tagName, 'A', 'a single holder still links to their page');
+  assert.equal(value.firstElementChild.tagName, 'A', 'a single holder still links to their page');
   assert.match(card.textContent, /2 Siege in Folge/);
 });
 
