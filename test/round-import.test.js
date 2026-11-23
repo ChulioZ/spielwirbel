@@ -258,3 +258,15 @@ test('the Chronik records the import, and only that — no per-game entries', as
   assert.equal(list[0].games, round.games.length);
   assert.equal(list[0].sessions, report.sessions);
 });
+
+test('the marker is the source\'s, else its retired design\'s, else hashed from the NEW id', () => {
+  const { markerIndexFromId, LEGACY_MARKER_INDEX } = require('../public/js/round-marker');
+  const base = { id: 'src', name: 'R', members: [], games: [], sessions: [] };
+  let n = 0;
+  const mint = () => `fresh${n++}`;
+  assert.equal(buildRoundImport({ ...base, marker: 5 }, mint).round.marker, 5);
+  const [design, index] = Object.entries(LEGACY_MARKER_INDEX)[1];
+  assert.equal(buildRoundImport({ ...base, background: { type: 'theme', id: design } }, mint).round.marker, index);
+  const built = buildRoundImport(base, mint);
+  assert.equal(built.round.marker, markerIndexFromId(built.round.id), 'the minted id, never the file\'s');
+});
