@@ -1414,6 +1414,68 @@ h1, h2, h3 { font-family: var(--font-display); }
   color: var(--ink-soft);
   box-shadow: inset 0 2px 5px color-mix(in oklab, var(--shade) 14%, transparent);
 }
+/* The stage SAYS where the round stands (#1854, hub-stage-say.js): one
+   sentence in the design's display face, a sub-line, what the state is about
+   lying on the table, and the state's own primary. Every design keeps its own
+   material by INHERITING: the text takes the colour of whatever stage surface
+   it sits on (the felt, the shell's column, the mission slot, the black box,
+   the stump's column, the Klassisch page), so it measures exactly as the
+   surface's own text does — no colour of its own to fall below AA on one of
+   them. STATIC: no animation and no transition here (operator ruling, #1122);
+   test/start-tab-say.test.js holds this block to that. */
+.hub-say {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0 0 16px;
+  color: inherit;
+}
+.hub-say__label {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.hub-say__line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1.15;
+  color: inherit;
+  overflow-wrap: break-word;
+}
+.hub-say__sub { margin: 0; font-size: var(--text-md); line-height: 1.45; max-width: 46ch; }
+.hub-say__table { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+/* `position: relative` is load-bearing: the no-cover placeholder (.cover-ph)
+   is absolutely positioned, and without a containing block here it escaped the
+   card and stretched the page — measured +240px of scroll on a young Der Tisch
+   round at 390px, whose games had no covers yet. */
+.hub-say__card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--control-edge);
+  background: var(--surface) center / cover no-repeat;
+  box-shadow: var(--shadow-1);
+}
+/* A face-down card: the draw stays secret, so a back says „a game" and no more. */
+.hub-say__card--back {
+  border-color: var(--brand-strong);
+  background: repeating-linear-gradient(45deg, var(--brand) 0 6px, var(--brand-strong) 6px 12px);
+}
+.hub-say__more { font-weight: 700; }
+.btn.hub-say__go { margin-top: 8px; }
+/* While a session is open „Session wirbeln" is the SECOND action, under the
+   stage's primary: an ordinary button, the CTA's width, a step smaller. */
+.btn.hub-cta.hub-cta--second { --press-mb: 18px; font-size: var(--text-lg); padding: 12px 18px; }
+.hub-cta--second .ti { font-size: var(--text-xl); }
 
 /* ---- The Start tab's card flow (#923, #942) ----
 
@@ -3672,20 +3734,8 @@ a.btn:where(:has(> .ti:first-child):not([hidden], [aria-label])) {
   border: 2px dashed var(--brand-edge);
   border-radius: var(--radius-lg);
 }
-/* The Start tab's stand-in for what the rail takes. Its hero and its big CTA
-   are both `.rail-owned`, so from 1280px up the pane was left holding only
-   `.hub-actions` whenever the round had no ticket to show — one visible child
-   over 816px of bare page, on every young round's home screen.
-
-   Below that width the hero and CTA are in the pane themselves, so the stand-in
-   must NOT render or it duplicates them. The two rules are adjacent and equally
-   specific on purpose: the media block wins by source order, which cannot be
-   broken by moving code the way the `.rail-owned` specificity trap above was. */
-.empty--rail-gap { display: none; }
-@media (min-width: 1280px) { .empty--rail-gap { display: block; } }
 /* A 0-game round's EMPTY TABLE (#1269): one `.empty` with the two ways to fill
-   the pot, right before the locked CTA — in every design. It is also the
-   ≥1280 stand-in, so the view drops `.empty--rail-gap` when it renders. The
+   the pot, right before the locked CTA — in every design. The
    actions stack on a phone (each a full-width target) and sit side by side
    once there is room; a reading measure keeps the sentence a two-line thought
    across a wide pane. */

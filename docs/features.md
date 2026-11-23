@@ -440,10 +440,18 @@ What the app does, in detail. For a short overview see the
   three stay visible on
   the round's sub-screens, marking the section they belong to:
   - **Start** – one **stage**, in every design (issue #1853): the members,
-    whatever session is running — an open vote or a session voted and not yet
-    finished, ABOVE the action, since it is the evening already in progress —
-    the big "start session" button, and exactly one row of chips under it that
-    never wraps (it scrolls sideways on a phone): **„Direkt wählen"** first,
+    one sentence that **says where the round stands** (issue #1854) —
+    „Was spielen wir heute?" once a session has been played, „Abstimmung
+    läuft." with how many games are in the pot and who has voted (names up to
+    three, then „4 von 6"; the drawn games lie face down, so the draw stays
+    secret) and its own „Weiter abstimmen", „Auf dem Tisch: <Spiel>" with that
+    cover and „Ergebnis eintragen" for a session voted but not finished, and
+    „12 Spiele warten auf eure erste Session." with the first covers on a round
+    that has not played yet. It speaks for the newest open session; any other
+    one stays a ticket under it, ABOVE the action, since it is the evening
+    already in progress. Then the big "start session" button — the second
+    action, „Neue Session wirbeln", while a session is open — and exactly one
+    row of chips under it (none while a vote runs) that never wraps (it scrolls sideways on a phone): **„Direkt wählen"** first,
     which picks one game to play straight away, including one the group does
     not own, then the quick-start chips that open the setup with the draw
     already narrowed — the round's own **saved filters** once it has any,
@@ -460,7 +468,7 @@ What the app does, in detail. For a short overview see the
     the group's own votes rate badly, each with its „Aussortieren" and the whole
     list with its „Ausblenden"; a slim row for a running group challenge that
     opens its Pokale section; and the rare self-gating cards — a „**heute vor N
-    Jahren**" anniversary when one falls on today, the young round's invitation,
+    Jahren**" anniversary when one falls on today,
     the empty table of a round without games, and the one-time „Einfacher
     Modus" offer. Nothing on the Start tab restates another screen: the
     Rundenpuls lives in the Chronik's head, the Regal-Steckbrief's sentence

@@ -262,22 +262,15 @@ function forestResumeNotice({ round, session }) {
    and Chronik empty screens), in their own strings — the Programmheft's P7
    blocks (#1377) are the precedent, in Forest's material. */
 
-/* What stands under the stump on a young round (F7.3–F7.5), or null:
-   - no game (F7.3): the empty table — „Der Stumpf ist noch leer" and the two
-     ways to fill it, „Spiel hinzufügen" the primary. The stump then shows only
-     its rings (forestStump(null)), so this table's primary is the page's one.
-   - games, nothing played (F7.4): what is waiting, in the display face, and why
-     there are no scores yet.
-   Once played, nothing: F7.5's „when series come" moved into the Rundenpuls
-   card it explains (#1586 merge interview, 2026-10-07). */
+/* What stands under the stump on a 0-game round (F7.3), or null: the empty
+   table — „Der Stumpf ist noch leer" and the two ways to fill it, „Spiel
+   hinzufügen" the primary. The stump then shows only its rings
+   (forestStump(null)), so this table's primary is the page's one. A round with
+   games and nothing played (F7.4) is said by the stage's sentence since #1854
+   (hub-stage-say.js), the same in every design. F7.5's „when series come"
+   moved into the Rundenpuls card it explains (#1586, 2026-10-07). */
 function forestYoung(round, activeGames) {
   if (!activeGames.length) return hubEmptyTable(round, { titleKey: 'hub.young.emptyTitleForest' });
-  if (roundIsYoung(round)) {
-    return h(`<div class="forest-young">
-         <p class="forest-young__title">${esc(tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'))}</p>
-         <p class="forest-young__text">${esc(t('hub.young.readyText'))}</p>
-       </div>`);
-  }
   return null;
 }
 

@@ -784,6 +784,18 @@
 :root[data-design="tisch"][data-scheme="dark"] .rail__cta:hover:not(:disabled) {
   background: linear-gradient(180deg, var(--brass-hi), var(--brass-hi));
 }
+/* While a session is open the plate is the SECOND action (#1854): the stage's
+   own primary („Weiter abstimmen", „Ergebnis eintragen") wears the brass, and
+   „Session wirbeln" steps back to an outline on the felt — paper ink, a gold
+   rim, no fill and no cast edge, so the eye lands on the one thing to do. */
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta.hub-cta--second,
+:root[data-design="tisch"][data-scheme="dark"] .hub-cta.hub-cta--second:hover:not(:disabled) {
+  min-height: 52px;
+  background: transparent;
+  border: 1.5px solid var(--gold-edge);
+  color: var(--felt-ink);
+  box-shadow: none;
+}
 /* Pressed: the plate sinks onto the table and its edge goes with it. */
 :root[data-design="tisch"][data-scheme="dark"] .hub-cta:active:not(:disabled),
 :root[data-design="tisch"][data-scheme="dark"] .rail__cta:active:not(:disabled) {

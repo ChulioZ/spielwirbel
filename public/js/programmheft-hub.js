@@ -259,26 +259,6 @@ function phYoungSide(round, activeGames, { suggest }) {
     : null);
 }
 
-/* The lead of a round with games and no session yet (P7.4): the column keeps
-   its „Zuletzt gespielt" kicker, says there is none yet, and prints what is
-   waiting — the shelf's count large, in the vermilion. A notice, not a link:
-   the one action is the box beside it, which reads „Erste Session wirbeln". */
-function phYoungLead(activeGames) {
-  const n = activeGames.length;
-  return h(`<div class="ph-young">
-       <span class="ph-young__kicker">${esc(t('round.lastPlayedLabel'))}</span>
-       <span class="ph-young__title">${esc(t('round.startEmptyTitle'))}</span>
-       <span class="ph-young__text">${esc(t('round.startEmpty'))}</span>
-       <span class="ph-young__row">
-         <span class="ph-young__count" aria-hidden="true">${esc(String(n))}</span>
-         <span class="ph-young__body">
-           <span class="ph-young__ready">${esc(tn(n, 'hub.young.readyOne', 'hub.young.ready'))}</span>
-           <span class="ph-young__text">${esc(t('hub.young.readyText'))}</span>
-         </span>
-       </span>
-     </div>`);
-}
-
 /* The empty lobby (P7.1): the black box that founds the first round, and three
    empty columns standing where the rounds will go — the first captioned „Hier
    erscheint deine Runde". The columns are print, not content: aria-hidden,

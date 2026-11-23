@@ -53,6 +53,8 @@
   "    a.avatar.member-link.nav-link",
   "    button.avatar.avatar--add [aria-label]",
   "      i.ti.ti-plus [aria-hidden=true]",
+  "section.hub-say.hub-say--normal",
+  "  h2.hub-say__line",
   "button.btn.btn--primary.hub-cta.rail-owned",
   "  i.ti.ti-tornado [aria-hidden=true]",
   "div.hub-presets.rail-owned [role=group aria-label]",

@@ -148,9 +148,12 @@ test('the hub offers no resume for a split parent, and groups its tables', async
     ['/round/7/session/c1', '/round/7/session/c2']);
 });
 
-test('an unparented in-progress session keeps its own ticket', async (t) => {
+test('an unparented in-progress session is what the stage speaks for (#1854)', async (t) => {
   const dom = await hub(t, [child('s9', 'g1', ['m0'], { parentSessionId: undefined })]);
-  assert.equal(dom.app.querySelectorAll('.ticket--live').length, 1);
+  // It is the round's one open session, so the stage says it is on the table
+  // and draws no second ticket for it.
+  assert.equal(dom.app.querySelectorAll('.hub-say--table').length, 1);
+  assert.equal(dom.app.querySelectorAll('.ticket--live').length, 0);
   assert.equal(dom.app.querySelectorAll('.split-group').length, 0);
 });
 

@@ -83,8 +83,8 @@ test('a young round meets the screen it always met — no empty cards, no empty 
   assert.equal(dom.app.querySelector('.hub-cards'), null, 'an empty grid was appended');
   assert.equal(dom.app.querySelectorAll('.hub-cards .card-slot').length, 0,
     'an empty grid grew a slot — `:empty` cannot collapse it and the young round pays the margin');
-  // And #869's stand-in is still doing its job, which the grid must not steal.
-  assert.ok(dom.app.querySelector('.empty--rail-gap'), 'the young round lost its rail stand-in');
+  // What the young round says is the stage's sentence (#1854), not a card.
+  assert.ok(dom.app.querySelector('.hub-say--young'), 'the young round lost its stage sentence');
 });
 
 test('an established round gets the suggestion card and one „Zu tun" row — no pulse, no previews (#1853)', (t) => {
@@ -103,8 +103,6 @@ test('an established round gets the suggestion card and one „Zu tun" row — n
   const todo = dom.app.querySelector('.hub-todo');
   assert.ok(todo, 'the loose end lost its row');
   assert.equal(todo.querySelector('.hub-todo__label').textContent, dom.run("t('hub.todo.label', { n: 1 })"));
-  // With content in the pane, the stand-in for the rail gap must be gone.
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the stand-in rendered beside real content');
 });
 
 test('a suggestion row links to that game, and says why it is there', (t) => {

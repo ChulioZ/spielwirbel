@@ -98,7 +98,6 @@ function brueckeMission(btn, round, activeGames) {
   btn.classList.add('bruecke-mission__fire');
   panel.querySelector('.bruecke-mission__ignition').appendChild(btn);
   if (!ready) brueckeMissionEmpty(panel, round);
-  else if (roundIsYoung(round)) panel.querySelector('.bruecke-mission__ignition').after(brueckeYoungLine(activeGames));
   return panel;
 }
 
@@ -123,17 +122,6 @@ function brueckeMissionEmpty(panel, round) {
   if (canImportBgg()) {
     emptyStateAction(panel, { icon: 'ti-arrow-right', label: t('bggImport.tile'), link: true, onClick: () => showBggImport(round) });
   }
-}
-
-/* The young round's line under the ignition (B7.3, #1243): a round with games
-   and no session yet — how many games stand ready, and that none has been
-   played. Both halves are the app's own strings (the invitation count and the
-   Start tab's empty title), the same pair Ocean prints under its shell. */
-function brueckeYoungLine(activeGames) {
-  return h(`<p class="bruecke-young">
-       <strong class="bruecke-young__ready">${esc(tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'))}</strong>
-       <span class="bruecke-young__none">${esc(t('round.startEmptyTitle'))}</span>
-     </p>`);
 }
 
 /* The members and the decorative line (B2.2 row, B3.1 list).

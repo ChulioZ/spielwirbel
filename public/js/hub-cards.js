@@ -77,30 +77,6 @@ function hubSentenceCard(icon, title, text) {
   return card;
 }
 
-/* Der Tisch's invitation for a round with games and no session (T7.4, #1269):
-   how many games are ready, a strip of their covers, and why there are no
-   scores yet. The one next step is the CTA directly above it, which reads
-   „Erste Session wirbeln" in the same state. */
-// At most this many covers on the young-round card — one row at every width.
-const HUB_YOUNG_COVERS = 6;
-
-function hubYoungCard(round, activeGames) {
-  if (!designIs('tisch') || !activeGames.length || !roundIsYoung(round)) return null;
-  const card = hubCard('ti-cards', tn(activeGames.length, 'hub.young.readyOne', 'hub.young.ready'));
-  card.classList.add('hub-card--young');
-  const body = card.querySelector('.hub-card__body');
-  // aria-hidden: the title already says what is here, and a cover is not
-  // something this card offers to open.
-  const strip = h('<div class="hub-preview__covers" aria-hidden="true"></div>');
-  activeGames.slice(0, HUB_YOUNG_COVERS).forEach((game) => {
-    const style = game.image ? ` style="background-image:url('${coverUrl(game.image, COVER_THUMB)}')"` : '';
-    strip.appendChild(h(`<span class="hub-preview__cover"${style}>${game.image ? '' : coverPlaceholder(game)}</span>`));
-  });
-  body.appendChild(strip);
-  body.appendChild(h(`<p class="hub-card__facts">${esc(t('hub.young.readyText'))}</p>`));
-  return card;
-}
-
 /* „Gefällt dir das?" (T7.6, #1280): the demo's one invitation to make it real.
    The button is the banner's own exit (leaveDemoForRegister, demo-account.js)
    rather than a second copy of it — the demo's tokens must be dropped before

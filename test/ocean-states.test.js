@@ -134,13 +134,15 @@ const played = {
   winnerIds: ['m1'], chosenGameId: 'g1', events: [],
 };
 
-test('a young Ocean round says under the shell what is waiting', async (t) => {
+test('a young Ocean round says above the shell what is waiting', async (t) => {
   const dom = boot(t, 'ocean', roundWith());
   await dom.call('showRound', RID, 'start');
-  const line = dom.app.querySelector('.ocean-shell + .ocean-young');
-  assert.ok(line, 'the young line does not sit directly under the shell');
-  assert.equal(text(line.querySelector('.ocean-young__ready')), dom.run("tn(2, 'hub.young.readyOne', 'hub.young.ready')"));
-  assert.equal(text(line.querySelector('.ocean-young__none')), dom.run("t('round.startEmptyTitle')"));
+  // Since #1854 the stage's sentence, ahead of the shell, in place of the line
+  // the shell used to carry under it.
+  const say = dom.app.querySelector('.hub-say--young');
+  assert.ok(say, 'nothing says what is waiting');
+  assert.ok(say.compareDocumentPosition(dom.app.querySelector('.ocean-shell')) & 4, 'the sentence is below the shell');
+  assert.equal(text(say.querySelector('.hub-say__line')), dom.run("tn(2, 'hub.stage.youngOne', 'hub.stage.young')"));
   // „Wie wär's mit" says WHEN, in the pair beside the shell (Der Tisch's copy).
   const sentence = dom.app.querySelector('.ocean-pair .hub-card--sentence');
   assert.ok(sentence, 'the suggestion card says nothing on a young Ocean round');
@@ -148,18 +150,22 @@ test('a young Ocean round says under the shell what is waiting', async (t) => {
     dom.run("tn(SUGGEST_MIN_SHELF, 'hub.young.suggestOne', 'hub.young.suggest')"));
 });
 
-test('the young line leaves once a session is played, and never shows on Klassisch', async (t) => {
+test('the young sentence leaves once a session is played, and Klassisch says the same one', async (t) => {
   const grown = boot(t, 'ocean', roundWith({ sessions: [played] }));
   await grown.call('showRound', RID, 'start');
-  assert.equal(grown.app.querySelector('.ocean-young'), null);
+  assert.equal(grown.app.querySelector('.hub-say--young'), null);
+  assert.ok(grown.app.querySelector('.hub-say--normal'), 'a played round lost its sentence');
 
   const empty = boot(t, 'ocean', roundWith({ games: [] }));
   await empty.call('showRound', RID, 'start');
-  assert.equal(empty.app.querySelector('.ocean-young'), null, 'a 0-game round has the empty table, not the young line');
+  assert.equal(empty.app.querySelector('.hub-say'), null, 'a 0-game round has the empty table, not a sentence');
 
+  // The stage applies to all six designs (#1854) — Klassisch's sentence too,
+  // but still no sentence CARDS there.
   const k = boot(t, 'klassisch', roundWith());
   await k.call('showRound', RID, 'start');
-  assert.equal(k.app.querySelector('.ocean-young, .hub-card--sentence'), null);
+  assert.ok(k.app.querySelector('.hub-say--young'), 'Klassisch does not say what is waiting');
+  assert.equal(k.app.querySelector('.hub-card--sentence'), null);
 });
 
 // --- the stylesheet ---------------------------------------------------------

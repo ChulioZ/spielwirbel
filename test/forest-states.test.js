@@ -101,7 +101,9 @@ test('Klassisch: the young states render exactly the DOM they rendered before #1
 // are pinned for Klassisch separately.
 test('Klassisch: the young states keep their words', async (t) => {
   let dom = await hub(t, null, readyRound());
-  assert.equal(text(dom.app.querySelector('.hub-cta')), 'Session wirbeln');
+  // „Erste Session wirbeln" in every design since #1854 — Klassisch included,
+  // because the stage's states and their primaries are the same everywhere.
+  assert.equal(text(dom.app.querySelector('.hub-cta')), 'Erste Session wirbeln');
   dom = await hub(t, null, emptyRound());
   assert.equal(text(dom.app.querySelector('.empty--table .empty__title')), 'Der Topf ist noch leer');
   dom = await lobby(t, null, [], { onboard: true });
@@ -136,11 +138,12 @@ test('Forest F7.4: games but no session — „Erste Session wirbeln" and what i
   const cta = dom.app.querySelector('.forest-stump > .hub-cta');
   assert.match(text(cta), /^Erste Session wirbeln$/);
   assert.deepEqual(primaries(dom), [cta], 'not exactly one primary action');
-  const young = dom.app.querySelector('.forest-stump + .forest-young');
-  assert.ok(young, 'nothing under the stump says what is waiting');
-  assert.equal(text(young.querySelector('.forest-young__title')), '12 Spiele stehen bereit');
-  assert.match(text(young.querySelector('.forest-young__text')), /^Noch keine Session/);
-  assert.equal(young.querySelector('a, button'), null, 'the young line is a notice, not a second action');
+  // Since #1854 the stage's sentence says what is waiting, above the stump.
+  const young = dom.app.querySelector('.forest-hub__main > .hub-say--young');
+  assert.ok(young, 'nothing on the stage says what is waiting');
+  assert.ok(young.compareDocumentPosition(dom.app.querySelector('.forest-stump')) & 4, 'the sentence is below the stump');
+  assert.equal(text(young.querySelector('.hub-say__line')), '12 Spiele warten auf eure erste Session.');
+  assert.equal(young.querySelector('a, button'), null, 'the young sentence is a notice, not a second action');
 
   // No locked previews or pulse since #1853 — the Start tab shows neither.
   assert.equal(dom.app.querySelector('.forest-locked, .hub-preview'), null, 'a locked block is back');
@@ -151,7 +154,7 @@ test('Forest F7.5: after the first session — the stump says „Session wirbeln
   assert.match(text(dom.app.querySelector('.forest-stump > .hub-cta')), /^Session wirbeln$/);
   /* The series sentence lives in the Rundenpuls card it explains (#1586 merge
      interview, 2026-10-07) — in the Chronik head since #1852/#1853. */
-  assert.equal(dom.app.querySelector('.forest-young'), null, 'the series line still stands under the stump');
+  assert.equal(dom.app.querySelector('.hub-say--young'), null, 'a played round still says it is waiting');
   assert.ok(dom.app.querySelector('.forest-pair .forest-last'), '„Zuletzt gespielt" is gone');
   assert.equal(dom.app.querySelector('.forest-locked'), null, 'a locked block survived the first session');
 });
@@ -197,7 +200,8 @@ test('Forest #1471: no text is set in a hairline, hatch or motif colour, and not
   const own = stripComments(FOREST_RAW.slice(start, next === -1 ? undefined : next));
   assert.ok(own.includes('.forest-stump--empty'), 'the #1471 section lost its empty stump');
   const decls = [...own.matchAll(/(?:^|[;{\s])color:\s*var\((--[\w-]+)\)/g)].map((m) => m[1]);
-  assert.ok(decls.length >= 10, `only ${decls.length} colour declarations found — did the parse break?`);
+  // 8 since #1854 took the young line (and its two colours) off the stump.
+  assert.ok(decls.length >= 8, `only ${decls.length} colour declarations found — did the parse break?`);
   const banned = ['--line', '--hatch', '--bark', '--bark-light', '--wood', '--wood-ring', '--wood-edge', '--leaf-1', '--leaf-2', '--leaf-3', '--leaf-4'];
   for (const token of decls) assert.ok(!banned.includes(token), `text in ${token}`);
   assert.doesNotMatch(own, /text-overflow:\s*ellipsis|white-space:\s*nowrap/, 'a long title may be cut');

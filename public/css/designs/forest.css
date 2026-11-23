@@ -1498,30 +1498,6 @@
 }
 :root[data-design="forest"] .forest-hub .empty--table .empty__actions .btn { max-width: 100%; white-space: normal; }
 
-/* ---- The young line under the stump (F7.4): what is waiting, in the display
-   face. F7.5's series sentence moved into the Rundenpuls card (#1586). */
-:root[data-design="forest"] .forest-young {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  max-width: 540px;
-  margin: -4px auto 0;
-  text-align: center;
-}
-:root[data-design="forest"] .forest-young p { margin: 0; }
-:root[data-design="forest"] .forest-young__title {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 400;
-  line-height: var(--leading-title);
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-:root[data-design="forest"] .forest-young__text { font-size: 16px; line-height: var(--leading-text); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__title { color: var(--ink); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .forest-young__text { color: var(--ink-soft); }
-
 /* On a phone the locked Pokale and Chronik share a row, like the live pair
    (#1466's rule matches the live ones by their link, which these title links
    also carry — so here they are matched by the block itself). */

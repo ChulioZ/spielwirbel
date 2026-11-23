@@ -4762,24 +4762,6 @@
 }
 :root[data-design="ocean"]:not([data-scheme="dark"]) .lobby-cta:hover .lobby-cta__action { background: var(--brand-strong); }
 
-/* --- The young round (O7.3) --------------------------------------------------
-   Games on the shelf, no session yet: the shell stays the centre, and one line
-   under it says what is waiting. --ink and --ink-soft on the page clear AA on
-   every water stop the hub sits on (the colour block's figures: 8.7:1 and
-   above for --ink, 6.3:1 on the page for --ink-soft). */
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin: 0;
-  text-align: center;
-  line-height: 1.4;
-  color: var(--ink);
-}
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young__ready { font-weight: 700; }
-:root[data-design="ocean"]:not([data-scheme="dark"]) .ocean-young__none { font-weight: 600; color: var(--ink-soft); }
-
 /* --- The demo (O7.4) ---------------------------------------------------------
    The Bändchen: the example round is marked in Ocean's sun, the one yellow the
    design has, so it cannot be taken for a round of one's own. Every child takes
