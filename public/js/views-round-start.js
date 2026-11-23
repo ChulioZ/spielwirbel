@@ -12,6 +12,12 @@
    their own homes). Don't bring a preview back: a fact twice on one screen is
    what the 2026-11-21 deep-dive measured as half the phone height.
 
+   THE STAGE SAYS WHERE THE ROUND STANDS (#1854): one sentence, what it is
+   about on the table and the state's own primary (stageState in
+   stage-state.js, drawn by hub-stage-say.js). While a session is open its
+   primary leads and „Session wirbeln" becomes the second action; while a vote
+   runs the chip row is not drawn at all.
+
    WHAT IS RUNNING SITS ABOVE THE ACTION. An open vote is the evening already in
    progress, so its ticket leads the stage and „Session wirbeln" — starting a
    second one — follows it. „Abstimmung verwerfen" is not here at all any more:
@@ -127,14 +133,21 @@ function renderStartTab(round, activeGames) {
      chips are the ONLY ones at every width. */
   const railOwned = railIsLean() ? '' : ' rail-owned';
 
-  // --- What is running, ABOVE the action (#1853). Die Brücke's tickets sit in
-  // its mission slot ahead of the Missionskontrolle panel; the Programmheft's
-  // at the top of the black box, over its kicker.
-  const running = hubRunningTickets(round);
-  if (running) {
-    if (ph) launch.prepend(running);
-    else launch.appendChild(running);
-  }
+  /* --- The stage SAYS where the round stands (#1854): one sentence, the
+     state's own primary where it has one, what it is about on the table
+     (hub-stage-say.js). It speaks for the newest open session; any other one
+     stays a ticket directly under it (#1853 put them ABOVE the action). Die
+     Brücke's sit in its mission slot ahead of the Missionskontrolle panel; the
+     Programmheft's at the top of the black box, over its kicker. A 0-game round
+     keeps the empty table below instead of a sentence. */
+  const st = stageOf(round, activeGames);
+  const say = st.kind === 'empty' ? null : hubStageSay(round, st);
+  const running = hubRunningTickets(round, st.session ? st.session.id : null);
+  if (ph) [running, say].forEach((el) => { if (el) launch.prepend(el); });
+  else [say, running].forEach((el) => { if (el) launch.appendChild(el); });
+  // While a session is open the stage's own primary leads, and „Session
+  // wirbeln" becomes the second action under it.
+  const busy = st.kind === 'running' || st.kind === 'table';
 
   /* The young round (T7.3, T7.4; #1269). A 0-game round gets the EMPTY TABLE
      right before the locked button, with the two ways to fill it — in EVERY
@@ -143,12 +156,13 @@ function renderStartTab(round, activeGames) {
   if (activeGames.length === 0 && !bh && !forest) (ph ? ph.lead : launch).appendChild(hubEmptyTable(round));
   // Ocean's one themed verb, „Abtauchen" (O9 §2), on the one action; Die
   // Brücke's „Mission starten" with its own glyph (B9 „Hauptaktion 1").
-  const ctaLabel = ocean ? t('round.startSessionOcean')
+  const ctaLabel = st.kind === 'running' ? t('hub.stage.newSession')
+    : ocean ? t('round.startSessionOcean')
     : bh ? t('round.startSessionBruecke')
-      : (tisch || ph || forest) && activeGames.length && roundIsYoung(round)
+      : activeGames.length && roundIsYoung(round)
         ? t('hub.young.firstCta') : t('round.startSession');
   const startBtn = h(
-    `<button class="btn btn--primary hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
+    `<button class="btn ${busy ? 'hub-cta--second' : 'btn--primary'} hub-cta${railOwned}"><i class="ti ${bh ? 'ti-rocket' : 'ti-tornado'}" aria-hidden="true"></i>${esc(ctaLabel)}</button>`
   );
   startBtn.addEventListener('click', () => showStartSession(round));
   if (activeGames.length === 0) {
@@ -161,22 +175,26 @@ function renderStartTab(round, activeGames) {
   }
   if (bh) launch.appendChild(brueckeMission(startBtn, round, activeGames));
   else launch.appendChild(ocean ? oceanShell(startBtn) : forest ? forestStump(activeGames.length ? startBtn : null) : startBtn);
-  // Ocean's young round (#1216, O7.3): one line under the shell says what is
-  // waiting for the first session. Forest's says it for every unplayed state.
-  if (ocean && activeGames.length && roundIsYoung(round)) launch.appendChild(oceanYoungLine(activeGames));
+  // Forest's empty table stands UNDER the stump (F7.3). What a young round is
+  // waiting for is the stage's sentence now (#1854), in every design.
   const forestLine = forest && forestYoung(round, activeGames);
   if (forestLine) launch.appendChild(forestLine);
 
   /* ONE chip row under the action (#1853): „Direkt wählen" first, then the
      quick-start presets — hubPresetChips builds both, for the rail too. It does
      not wrap; on a phone it scrolls sideways (styles.css). `rail-owned` exactly
-     like the CTA above: from 1280px up Klassisch's rail carries both. */
-  const chips = hubPresetChips(round, activeGames);
-  if (!railIsLean()) chips.classList.add('rail-owned');
-  if (ph && chips.querySelector('.hub-preset:not(.hub-preset--direct)')) launch.appendChild(phPresetsLabel());
-  if (forest) chips.prepend(forestPresetsLabel());
-  // Die Brücke: inside the Missionskontrolle panel, under the ignition.
-  (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(chips);
+     like the CTA above: from 1280px up Klassisch's rail carries both. While a
+     vote runs there is no row at all (#1854, decided 2026-11-21): the one
+     thing to do is finish that vote, and „Neue Session wirbeln" is still there
+     for a second one. */
+  if (st.kind !== 'running') {
+    const chips = hubPresetChips(round, activeGames);
+    if (!railIsLean()) chips.classList.add('rail-owned');
+    if (ph && chips.querySelector('.hub-preset:not(.hub-preset--direct)')) launch.appendChild(phPresetsLabel());
+    if (forest) chips.prepend(forestPresetsLabel());
+    // Die Brücke: inside the Missionskontrolle panel, under the ignition.
+    (bh ? launch.querySelector('.bruecke-mission') : launch).appendChild(chips);
+  }
   // „Einfacher Modus" offer (#1768): below the one action, above what it hides.
   const simplePrompt = simpleModePromptCard(round);
   if (simplePrompt) feed.appendChild(simplePrompt);
@@ -213,9 +231,6 @@ function renderStartTab(round, activeGames) {
     const lead = forestLead(round, lastPlayed);
     if (badges) lead.querySelector('.forest-last__text').appendChild(badges);
     pair.appendChild(lead);
-  } else if (ph && activeGames.length && roundIsYoung(round)) {
-    // P7.4 (#1377): nothing played yet — the lead says what is waiting.
-    ph.lead.appendChild(phYoungLead(activeGames));
   } else if (lastPlayed) {
     const ticket = hubLastTicket(round, lastPlayed);
     if (badges) ticket.querySelector('.ticket__info').appendChild(badges);
@@ -254,8 +269,6 @@ function renderStartTab(round, activeGames) {
     if (youngSuggest) ph.suggest.appendChild(youngSuggest);
   }
   [
-    // Der Tisch's invitation (T7.4, #1269) leads — it is the one next step.
-    hubYoungCard(round, activeGames),
     cols || bh || ph ? null : suggest,
     hubAnniversaryCard(round),
   ].forEach((card) => { if (card) grid.appendChild(cardSlot(card)); });
@@ -266,22 +279,11 @@ function renderStartTab(round, activeGames) {
   const todo = hubTodoRow(round, activeGames, recs);
   if (todo) side.appendChild(todo);
 
-  // From 1280px up the rail owns Klassisch's hero and big CTA, so a round with
-  // nothing else to show left the pane bare (#869). This is the pane's
-  // stand-in; `.empty--rail-gap` renders it ONLY where the rail exists. Asked of
-  // the DOM, so a new kind of content is covered without anyone remembering
-  // this line. The empty table (#1269) is already that stand-in, at every width.
-  if (!cols && !bh && !ph && !app.querySelector('.ticket') && !grid.querySelector('.hub-card')
-    && !app.querySelector('.empty--table, .hub-todo, .hub-challenge')) {
-    const gap = emptyState({
-      icon: 'ti-tornado',
-      title: t('round.startEmptyTitle'),
-      text: t('round.startEmpty'),
-    });
-    gap.classList.add('empty--rail-gap');
-    app.appendChild(gap);
-  }
-
+  /* No rail stand-in any more (#869 → #1854): from 1280px up the rail takes
+     Klassisch's hero and big CTA, and the pane used to be left bare on a young
+     round. The stage's sentence (.hub-say) is not rail-owned and renders for
+     every round with a game, and a 0-game round has the empty table — so a
+     pane with nothing in it is a state this tab can no longer reach. */
   if (grid.children.length) (bh ? bh.more : feed).appendChild(grid);
   if (bh) brueckeStatus();
 }
@@ -296,14 +298,15 @@ function hubSettingsGear(round) {
 
 /* The running sessions as tickets (#1853 moved them above the action): open
    votes, then sessions whose voting is done but that have no final state yet.
-   Null when nothing is running, so the stage carries no empty wrapper. */
-function hubRunningTickets(round) {
+   Null when nothing is running, so the stage carries no empty wrapper.
+   `except` is the session the stage's sentence already speaks for (#1854). */
+function hubRunningTickets(round, except = null) {
   const wrap = h('<div class="hub-running"></div>');
   // Open votes. Every open session's votes live on the server as they are
   // given (#655), so voting is simply still running, here or on someone's phone.
   // The draw stays secret until everyone has rated, so this ticket shows
   // neither cover nor title — only how many games were drawn.
-  newestSessionsFirst(round.sessions.filter((s) => !s.done && !s.cancelled)).forEach((session) => {
+  newestSessionsFirst(round.sessions.filter((s) => !s.done && !s.cancelled && s.id !== except)).forEach((session) => {
     const n = (session.gameIds || []).length;
     const ticket = h(`<button class="ticket ticket--live">
          <span class="ticket__main">
@@ -330,7 +333,7 @@ function hubRunningTickets(round) {
      outcome, and its children are nested under one header, so three tickets at
      the same minute read as one evening's three tables. */
   const inProgress = round.sessions
-    .filter((s) => s.done && !s.finished && !s.cancelled && !isSplitParent(s));
+    .filter((s) => s.done && !s.finished && !s.cancelled && !isSplitParent(s) && s.id !== except);
   const splitParents = new Map(round.sessions.filter(isSplitParent).map((s) => [s.id, s]));
   const groupKey = (s) => (s.parentSessionId && splitParents.has(s.parentSessionId) ? s.parentSessionId : null);
   const mounts = new Map(); // parent id -> the element its tables render into

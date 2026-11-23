@@ -895,6 +895,20 @@
   color: var(--on-vermilion);
   border-color: var(--vermilion);
 }
+/* While a session is open (#1854) the box's vermilion belongs to the stage's
+   own primary, and „Session wirbeln" steps back to a paper outline: an ink
+   `.btn--primary` would sit black on the black box and lose to the CTA. */
+:root[data-design="programmheft"] .ph-hub__box .btn.hub-say__go { width: 100%; justify-content: center; --press-mb: 0px; }
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .btn.hub-say__go {
+  background: var(--vermilion);
+  color: var(--on-vermilion);
+  border-color: var(--vermilion);
+}
+:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .btn.hub-cta.hub-cta--second:not(:disabled) {
+  background: transparent;
+  color: var(--box-ink);
+  border-color: var(--box-ink);
+}
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box :focus-visible { outline-color: var(--ring-on-box); }
 :root[data-design="programmheft"] .ph-hub__box .hub-presets { margin: 0; }
 :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub__box .hub-presets .chip {
@@ -3480,47 +3494,6 @@
   :root[data-design="programmheft"] .ph-hub__lead .empty--table .empty__title { font-size: var(--display-3); }
 }
 
-/* ---- The lead of a round that has not played yet (P7.4): the kicker, „Noch
-   keine Session" in Anton, and what is waiting — the count large in the
-   vermilion (display type, where P1 allows it), the sentence beside it. */
-:root[data-design="programmheft"] .ph-young { display: flex; flex-direction: column; gap: var(--space-3); }
-:root[data-design="programmheft"] .ph-young__kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
-:root[data-design="programmheft"] .ph-young__title {
-  font-family: var(--font-display);
-  font-size: var(--display-4);
-  line-height: var(--leading-display);
-  text-transform: uppercase;
-  overflow-wrap: anywhere;
-  hyphens: auto;
-}
-:root[data-design="programmheft"] .ph-young__text { font-size: 16px; line-height: 1.5; max-width: 52ch; }
-:root[data-design="programmheft"] .ph-young__row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  padding-top: var(--space-3);
-}
-:root[data-design="programmheft"] .ph-young__count {
-  flex: none;
-  font-family: var(--font-display);
-  font-size: var(--display-3);
-  line-height: var(--leading-display);
-  font-variant-numeric: tabular-nums;
-}
-:root[data-design="programmheft"] .ph-young__body { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-:root[data-design="programmheft"] .ph-young__ready { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
-:root[data-design="programmheft"] .ph-young__body .ph-young__text { font-size: 15px; line-height: 1.45; }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young { color: var(--ink); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__text { color: var(--ink-2); }
-/* The size repeats beside the colour so the rule itself shows vermilion is
-   only ever display type (P1; test/design-tokens-programmheft.test.js). */
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__count { color: var(--vermilion); font-size: var(--display-3); }
-:root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-young__row { border-top: var(--rule-strong) solid var(--ink); }
-@media (min-width: 1280px) {
-  :root[data-design="programmheft"] .ph-young__title { font-size: var(--display-3); }
-  :root[data-design="programmheft"] .ph-young__text { font-size: 17px; }
-  :root[data-design="programmheft"]:not([data-scheme="dark"]) .ph-hub .ph-young__count { font-size: 96px; }
-}
 
 /* ---- The lead's young note (P7.5): when series come, in soft ink. */
 /* The lead's cover is the containing block of its no-cover placeholder: the

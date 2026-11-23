@@ -185,7 +185,6 @@ test('Programmheft hub: the P3.2 checklist, block by block, in reading order', a
   // Reading order is the phone order.
   const order = [head, box, cell('lead'), cell('suggest'), cell('side'), cell('more')];
   for (let i = 1; i < order.length; i++) assert.ok(precedes(dom, order[i - 1], order[i]), `block ${i} is out of order`);
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the rail-gap stand-in rendered under the Programmheft');
 });
 
 test('Programmheft hub: the lead prints the winners inside the results screen\'s own sentence', async (t) => {

@@ -126,15 +126,15 @@ test('Programmheft P7.3: a round without games — the empty table leads, everyt
   assert.equal(dom.app.querySelector('.ph-hub__strip, .hub-preview, .hub-offshelf'), null, 'the bottom strip is back');
 });
 
-test('Programmheft P7.4: games but no session — the lead says what is ready, the box says „Erste Session"', async (t) => {
+test('Programmheft P7.4: games but no session — the black box says what is waiting and „Erste Session"', async (t) => {
   const dom = await hub(t, 'programmheft', readyRound());
-  const young = dom.app.querySelector('.ph-hub__lead .ph-young');
-  assert.ok(young, 'the lead column is empty on a round that has not played yet');
-  assert.equal(young.querySelector('.ph-young__kicker').textContent, 'Zuletzt gespielt');
-  assert.equal(young.querySelector('.ph-young__title').textContent, 'Noch keine Session');
-  assert.equal(young.querySelector('.ph-young__count').textContent, '12');
-  assert.equal(young.querySelector('.ph-young__ready').textContent, '12 Spiele stehen bereit');
-  assert.equal(young.querySelector('a, button'), null, 'the lead is a notice — the one action is the box');
+  // Since #1854 the stage's sentence, at the top of the black box; the lead
+  // column's own young notice went with it (an empty cell is display: none).
+  const young = dom.app.querySelector('.ph-hub__box > .hub-say--young');
+  assert.ok(young, 'the black box does not say what is waiting');
+  assert.equal(dom.app.querySelector('.ph-hub__box').firstElementChild, young, 'the sentence is not on top of the box');
+  assert.equal(young.querySelector('.hub-say__line').textContent, '12 Spiele warten auf eure erste Session.');
+  assert.equal(young.querySelector('a, button'), null, 'the sentence is a notice — the one action is the box');
   assert.match(text(dom.app.querySelector('.ph-hub__box .hub-cta')), /Erste Session wirbeln/);
   assert.equal(dom.app.querySelectorAll('.ph-hub .btn--primary').length, 1, 'more than one primary on the page');
 

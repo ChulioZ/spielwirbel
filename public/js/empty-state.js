@@ -30,8 +30,8 @@
    glyphs the call sites use are already declared — see
    `.claude/rules/tabler-icon-codepoints.md` before introducing a new one).
 
-   Returns the node so the caller can add a modifier; the Start tab's stand-in
-   is `.empty--rail-gap`, which is this component plus a visibility rule. */
+   Returns the node so the caller can add a modifier (the Start tab's empty
+   table is `.empty--table`, this component plus its two actions). */
 function emptyState({ icon, title, text }) {
   return h(`<div class="empty">
        <span class="empty__icon"><i class="ti ${esc(icon)}" aria-hidden="true"></i></span>

@@ -28,7 +28,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { RULES, bodyOf, bodyOfIn, mediaBlocks } = require('./support/css');
+const { RULES, bodyOf, bodyOfIn } = require('./support/css');
 const { loadApp } = require('./support/dom');
 
 /* A young round: games on the shelf, nothing played yet. This is the exact
@@ -40,19 +40,6 @@ const youngRound = () => ({
   games: [{ id: 10, title: 'Azul' }, { id: 11, title: 'Cascadia' }],
   sessions: [],
   tags: [],
-});
-
-const played = () => ({
-  id: 900,
-  done: true,
-  finished: true,
-  createdAt: '2026-08-10T18:00:00.000Z',
-  chosenGameId: 10,
-  gameIds: [10],
-  winnerIds: [1],
-  // gameStats() indexes this per member; an absent map throws rather than
-  // reading as "nobody rated", so the shape has to be real (#602's fixture note).
-  votes: { 1: { 10: { rating: 4 } }, 2: { 10: { rating: 5 } } },
 });
 
 // ---- the component ---------------------------------------------------------
@@ -110,31 +97,18 @@ test('the Chronik and Pokale empty states are the same component', async (t) => 
   );
 });
 
-test('the Start tab composes a stand-in when the rail takes its hero, and it is not rail-owned', (t) => {
+test('a young Klassisch round fills the pane with the stage sentence, not rail-owned (#869 → #1854)', (t) => {
+  /* From 1280px up the rail takes the hero and the CTA. #869 gave the bare pane
+     an empty-state stand-in; the stage's sentence replaced it, so what this
+     pins is the same guarantee: something in the pane that the rail rule does
+     not hide. */
   const dom = loadApp();
   t.after(() => dom.close());
   const r = youngRound();
-
   dom.call('renderStartTab', r, r.games);
-  const gap = dom.app.querySelector('.empty--rail-gap');
-  assert.ok(gap, 'the Start tab still leaves the pane empty from 1280px up');
-  assert.ok(gap.classList.contains('empty'), 'the Start stand-in is not built from the shared component');
-  assert.ok(
-    !gap.classList.contains('rail-owned'),
-    'the Start stand-in is rail-owned — hidden by the very rule that created the void',
-  );
-
-  /* Anti-vacuous: a round that HAS something to show in the pane must not get
-     the stand-in, or every populated Start screen grows a spurious card. */
-  dom.app.innerHTML = '';
-  const busy = youngRound();
-  busy.sessions = [played()];
-  dom.call('renderStartTab', busy, busy.games);
-  assert.equal(
-    dom.app.querySelector('.empty--rail-gap'),
-    null,
-    'the stand-in rendered on a Start tab that already has a ticket to show',
-  );
+  const say = dom.app.querySelector('.hub-say');
+  assert.ok(say, 'the young round left the pane empty from 1280px up');
+  assert.ok(!say.closest('.rail-owned'), 'the stage sentence is rail-owned — hidden by the very rule that empties the pane');
 });
 
 // ---- the CSS ---------------------------------------------------------------
@@ -160,7 +134,7 @@ test('.empty carries the .lobby-cta treatment, factored rather than duplicated',
 
      Matched per selector MEMBER, not on the whole selector text: the shared
      rules are written `.lobby-cta__icon,\n.empty__icon`, and `whole('.empty')`
-     rejects `.empty--rail-gap` outright (its `-` is in `[\w-]`). Both mistakes
+     rejects `.empty--table` outright (its `-` is in `[\w-]`). Both mistakes
      leave a loop that runs over one rule and reads exactly like one that
      covers the component. */
   const emptyRules = RULES.filter(([sel]) => sel.split(',').some((s) => s.trim().startsWith('.empty')));
@@ -170,14 +144,3 @@ test('.empty carries the .lobby-cta treatment, factored rather than duplicated',
   }
 });
 
-test('the Start stand-in is hidden below the rail breakpoint and shown above it', () => {
-  /* It stands in for what the rail takes, so it must appear ONLY where the rail
-     exists. Both halves are asserted: a modifier that forgets the default
-     renders a duplicate card under the CTA at phone widths, where the issue
-     says the screen already composes correctly. */
-  assert.match(bodyOf('.empty--rail-gap', RULES) || '', /display:\s*none/, '.empty--rail-gap is not hidden by default');
-  const wide = mediaBlocks().filter(([q]) => /min-width:\s*1280px/.test(q));
-  assert.ok(wide.length, 'the 1280px block vanished');
-  const shown = wide.some(([, css]) => /\.empty--rail-gap\s*\{[^}]*display:\s*block/.test(css));
-  assert.ok(shown, 'the Start stand-in is never shown, so the pane stays empty at 1280px');
-});

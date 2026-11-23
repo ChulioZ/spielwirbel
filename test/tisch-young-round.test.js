@@ -62,16 +62,17 @@ test('Klassisch 0-game hub gets the empty table and the visible reason too', asy
   assert.ok(table, 'Klassisch shows no next step on a 0-game round');
   assert.equal(table.nextElementSibling, cta, 'the table sits right before the locked button');
   assert.equal(table.querySelectorAll('.empty__actions .btn').length, 2);
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in; two would stack');
   const adds = [...dom.app.querySelectorAll('button, a')].filter((el) => !el.closest('.rail, .dock') && /Spiel hinzufügen/.test(el.textContent));
   assert.equal(adds.length, 1, '„Spiel hinzufügen" lives on the table now, not twice');
 });
 
-test('Klassisch with games and no session: no invitation, no sentence cards, the usual label', async (t) => {
+test('Klassisch with games and no session: the stage sentence, no sentence cards, the first-session label', async (t) => {
   const dom = await hub(t, null, round({ games: 3 }));
   const cta = pane(dom).find((el) => el.matches('.hub-cta'));
-  assert.equal(cta.textContent.trim(), 'Session wirbeln');
-  assert.equal(dom.app.querySelector('.hub-card--young, .hub-card--sentence'), null);
+  // The stage's states are the same in every design since #1854.
+  assert.equal(cta.textContent.trim(), 'Erste Session wirbeln');
+  assert.ok(dom.app.querySelector('.hub-say--young'), 'Klassisch does not say what is waiting');
+  assert.equal(dom.app.querySelector('.hub-card--sentence'), null);
   assert.deepEqual(cardTitles(dom), [], 'a young Klassisch round still meets no card at all');
 });
 
@@ -89,7 +90,6 @@ test('Der Tisch 0-game hub: the empty table sits between the seats and the plate
   assert.match(table.querySelector('.empty__text').textContent, /von BGG\.$/);
   const actions = [...table.querySelectorAll('.empty__actions > button')].map((b) => b.textContent.trim());
   assert.deepEqual(actions, ['Spiel hinzufügen', 'Von BGG übernehmen']);
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null, 'the table IS the stand-in — no second empty box');
   assert.equal(dom.app.querySelector('.hub-actions'), null, 'the quick actions row is back (#1853)');
 });
 
@@ -124,18 +124,22 @@ test('Der Tisch prints the lock reason on the plate and links it as the descript
 
 // ------------------------------------------------------------- Der Tisch, games but no session
 
-test('Der Tisch round with games and no session: first-session label, invitation first, sentences instead of zeros', async (t) => {
+test('Der Tisch round with games and no session: first-session label, the stage says what waits, sentences instead of zeros', async (t) => {
   const dom = await hub(t, 'tisch', round({ games: 3 }));
   const cta = dom.app.querySelector('.hub-stage > .hub-cta');
   assert.equal(cta.disabled, false);
   assert.equal(cta.textContent.trim(), 'Erste Session wirbeln');
   assert.equal(cta.querySelector('.hub-cta__reason'), null);
 
-  assert.deepEqual(cardTitles(dom), ['3 Spiele stehen bereit', 'Wie wär’s mit'],
-    'the invitation leads, then the suggestion sentence — the Rundenpuls left the Start tab (#1853)');
-  const young = dom.app.querySelector('.hub-card--young');
-  assert.equal(young.querySelectorAll('.hub-preview__cover').length, 3);
-  assert.equal(young.querySelector('.hub-preview__covers').getAttribute('aria-hidden'), 'true');
+  /* The invitation card became the stage's sentence on the felt (#1854): what
+     waits, its covers face up, and no card of its own. */
+  assert.deepEqual(cardTitles(dom), ['Wie wär’s mit'],
+    'only the suggestion sentence is a card — the Rundenpuls left the Start tab (#1853)');
+  const young = dom.app.querySelector('.hub-stage > .hub-say--young');
+  assert.ok(young, 'the young sentence is not on the felt');
+  assert.equal(young.querySelector('.hub-say__line').textContent, '3 Spiele warten auf eure erste Session.');
+  assert.equal(young.querySelectorAll('.hub-say__card').length, 3);
+  assert.equal(young.querySelector('.hub-say__table').getAttribute('aria-hidden'), 'true');
 
   const sentences = [...dom.app.querySelectorAll('.hub-card--sentence .hub-card__facts')].map((p) => p.textContent);
   assert.deepEqual(sentences, ['Vorschläge gibt es ab 6 Spielen im Regal.'],
@@ -157,7 +161,7 @@ test('Der Tisch round that has played is not young: no invitation, no sentences,
   };
   const dom = await hub(t, 'tisch', round({ games: 3, sessions: [played] }));
   assert.equal(dom.app.querySelector('.hub-stage > .hub-cta').textContent.trim(), 'Session wirbeln');
-  assert.equal(dom.app.querySelector('.hub-card--young, .hub-card--sentence'), null,
+  assert.equal(dom.app.querySelector('.hub-card--sentence'), null,
     'a played round is past the young sentences — its later thresholds are asserted in test/tisch-young-thresholds.test.js');
 });
 

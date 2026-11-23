@@ -1069,6 +1069,12 @@ public/
     views-round-start.js  Start tab: the stage — hero, what is running, the one
                           big CTA and its one chip row — and what the tab
                           composes below it (#923, #1853)
+    stage-state.js        where a round stands — young, normal, a vote running,
+                          a session on the table — as the Start tab's stage says
+                          it; pure, Node-tested (#1854)
+    hub-stage-say.js      the stage's sentence, what lies on its table (backs
+                          for a secret draw, covers) and the state's primary
+                          (#1854)
     hub-cards.js          the Start tab's card renderers, their shared frame,
                           the one chip row („Direkt wählen" + presets) and the
                           folded „Zu tun" row, split out of the above at its

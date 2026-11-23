@@ -620,7 +620,8 @@ test('the discard is HIDDEN from a caller the capability refuses, rather than 40
 test('the Start tab offers the discard to nobody — the live ticket leads to the lobby instead (#1853)', (t) => {
   const found = screenLabels(t, { screen: 'start', role: 'owner' });
   assert.ok(!found.includes('Abstimmung verwerfen'), `the Start tab still offers the discard: ${found}`);
-  // The ticket is NOT gated: hiding the vote itself would take the round's
-  // co-players out of the session they are supposed to be voting in.
-  assert.ok(found.some((l) => l.includes('Jetzt abstimmen')), `the live-vote ticket is gone: ${found}`);
+  // The way into the vote is NOT gated: hiding it would take the round's
+  // co-players out of the session they are supposed to be voting in. Since
+  // #1854 it is the stage's own primary rather than a ticket.
+  assert.ok(found.some((l) => l.includes('Weiter abstimmen')), `the way into the vote is gone: ${found}`);
 });

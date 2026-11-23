@@ -123,13 +123,15 @@ test('a Brücke round with games keeps „Bereit" and no empty-table actions', a
 
 // --- the young round (B7.3) -------------------------------------------------
 
-test('a young Brücke round says under the ignition what is waiting, and when suggestions come', async (t) => {
+test('a young Brücke round says in the mission slot what is waiting, and when suggestions come', async (t) => {
   const dom = boot(t, 'bruecke', roundWith());
   await dom.call('showRound', RID, 'start');
-  const line = dom.app.querySelector('.bruecke-mission__ignition + .bruecke-young');
-  assert.ok(line, 'the young line does not sit directly under the ignition');
-  assert.equal(text(line.querySelector('.bruecke-young__ready')), dom.run("tn(2, 'hub.young.readyOne', 'hub.young.ready')"));
-  assert.equal(text(line.querySelector('.bruecke-young__none')), dom.run("t('round.startEmptyTitle')"));
+  // Since #1854 the stage's sentence says it, ahead of the Missionskontrolle —
+  // the ignition's own young line went with it.
+  const say = dom.app.querySelector('.bruecke-hub__mission > .hub-say--young');
+  assert.ok(say, 'the young sentence is not in the mission slot');
+  assert.equal(text(say.querySelector('.hub-say__line')), dom.run("tn(2, 'hub.stage.youngOne', 'hub.stage.young')"));
+  assert.ok(say.compareDocumentPosition(dom.app.querySelector('.bruecke-mission')) & 4, 'the sentence is below the panel');
   // „Wie wär's mit" says WHEN — never a „0". The Rundenpuls left the Start tab
   // in #1853 (it lives in the Chronik head, which a young round leaves empty).
   const suggest = dom.app.querySelector('.bruecke-hub__suggest .hub-card--sentence');
@@ -143,19 +145,20 @@ test('the freshly founded Brücke round has the empty panel, not the young line'
   const dom = boot(t, 'bruecke', roundWith({ games: [] }));
   await dom.call('showRound', RID, 'start');
   assert.ok(dom.app.querySelector('.bruecke-mission'), 'no Missionskontrolle on a fresh round');
-  assert.equal(dom.app.querySelector('.bruecke-young'), null, 'a 0-game round has the empty panel, not the young line');
+  assert.equal(dom.app.querySelector('.hub-say'), null, 'a 0-game round has the empty panel, not a sentence');
 });
 
-test('the young line leaves once a session is played', async (t) => {
+test('the young sentence leaves once a session is played', async (t) => {
   const dom = boot(t, 'bruecke', roundWith({ sessions: [played] }));
   await dom.call('showRound', RID, 'start');
-  assert.equal(dom.app.querySelector('.bruecke-young'), null);
+  assert.equal(dom.app.querySelector('.hub-say--young'), null);
+  assert.ok(dom.app.querySelector('.hub-say--normal'), 'a played round lost its sentence');
 });
 
-test('Klassisch keeps its young hub: no young line, no sentence cards, the reason inside the button', async (t) => {
+test('Klassisch keeps its young hub: no sentence cards, the reason inside the button', async (t) => {
   const young = boot(t, 'klassisch', roundWith());
   await young.call('showRound', RID, 'start');
-  assert.equal(young.app.querySelector('.bruecke-young, .hub-card--sentence'), null);
+  assert.equal(young.app.querySelector('.hub-card--sentence'), null);
 
   const empty = boot(t, 'klassisch', roundWith({ games: [] }), { bgg: true });
   await empty.call('showRound', RID, 'start');

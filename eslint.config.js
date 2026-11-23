@@ -562,25 +562,25 @@ const frontendGlobals = {
   renderHubTabs: 'readonly', renderSubScreenTabs: 'readonly', renderStartTab: 'readonly',
   // views-round-start.js (#923) — the Start tab and its card grid
   hubDeps: 'readonly', hubCard: 'readonly', hubSuggestCard: 'readonly',
-  hubPresetChips: 'readonly', hubTodoRow: 'readonly', hubTodoRecs: 'readonly', hubChallengeRow: 'readonly', hubSettingsGear: 'readonly', hubRunningTickets: 'readonly', hubLastTicket: 'readonly', HUB_YOUNG_COVERS: 'readonly', hubPulseCard: 'readonly',
+  hubPresetChips: 'readonly', hubTodoRow: 'readonly', hubTodoRecs: 'readonly', hubChallengeRow: 'readonly', hubSettingsGear: 'readonly', hubRunningTickets: 'readonly', stageState: 'readonly', stageVoters: 'readonly', STAGE_VOTER_NAMES: 'readonly', stageOf: 'readonly', stageVoterText: 'readonly', hubStageSay: 'readonly', hubStageTable: 'readonly', STAGE_BACKS_SHOWN: 'readonly', STAGE_YOUNG_COVERS: 'readonly', hubLastTicket: 'readonly', hubPulseCard: 'readonly',
   hubAnniversaryCard: 'readonly',
   editableRoundName: 'readonly', saveRoundName: 'readonly',
   // #1269 — Der Tisch's young-round states (hub-cards.js, views-round-start.js)
-  roundIsYoung: 'readonly', hubSentenceCard: 'readonly', hubYoungCard: 'readonly',
+  roundIsYoung: 'readonly', hubSentenceCard: 'readonly',
   hubEmptyTable: 'readonly',
   // hub-reflow.js (#1496) — moving a hub's cells between its phone and desktop arrangements
   reflowAt: 'readonly',
   // ocean-hub.js (#1211) — Ocean's lobby tiles and round hub composition
   oceanHubFrame: 'readonly', oceanShell: 'readonly', oceanHeroCompose: 'readonly',
-  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly', oceanYoungLine: 'readonly',
+  oceanRoundCard: 'readonly', oceanResumeNotice: 'readonly',
   // programmheft-hub.js (#1372) — the Programmheft's lobby tiles and round hub composition
   phHubFrame: 'readonly', phPresetsLabel: 'readonly', phHeroCompose: 'readonly', phLead: 'readonly',
   phRoundCard: 'readonly', phResumeNotice: 'readonly', phLobbyKicker: 'readonly',
   // #1377 — its empty and young states
-  phLocked: 'readonly', phYoungSide: 'readonly', phYoungLead: 'readonly',
+  phLocked: 'readonly', phYoungSide: 'readonly',
   phFirstRun: 'readonly',
   // bruecke-hub.js (#1238) — Die Brücke's lobby notice and round hub composition
-  brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeYoungLine: 'readonly', brueckeHeroCompose: 'readonly',
+  brueckeHubFrame: 'readonly', brueckeMission: 'readonly', brueckeMissionEmpty: 'readonly', brueckeHeroCompose: 'readonly',
   brueckeStatus: 'readonly', brueckeResumeNotice: 'readonly', brueckeUpLink: 'readonly',
   // forest-hub.js (#1466) — Forest's lobby tiles, notice and round hub composition
   forestHubFrame: 'readonly', forestStump: 'readonly', forestPresetsLabel: 'readonly', forestMarkerLine: 'readonly',

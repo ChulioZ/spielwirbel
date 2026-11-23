@@ -67,6 +67,15 @@ const busyRound = () => ({
   activity: [],
 });
 
+// The busy round without its running vote: the stage then speaks for the
+// voted, unfinished session, and the chip row is back (#1854 hides it only
+// while a vote runs).
+const calmRound = () => {
+  const r = busyRound();
+  r.sessions = r.sessions.filter((s) => s.id !== 'open');
+  return r;
+};
+
 async function hub(t, design, round = busyRound()) {
   const dom = loadApp({ locale: 'de' });
   t.after(() => dom.close());
@@ -103,17 +112,24 @@ for (const design of DESIGNS) {
       assert.deepEqual(inPane(dom, sel).map((el) => el.className), [], `${design}: ${what} is back`);
     }
     assert.ok(!dom.app.textContent.includes('Abstimmung verwerfen'), `${design}: the discard is still offered on Start`);
-    // Anti-vacuous: the stage itself rendered, with both running tickets.
-    assert.equal(inPane(dom, '.ticket--live').length, 2, `${design}: the running sessions are missing`);
+    // Anti-vacuous: the stage itself rendered. Since #1854 its sentence speaks
+    // for the newest open session (the vote) and the other one stays a ticket.
+    assert.equal(inPane(dom, '.hub-say--running').length, 1, `${design}: the stage does not say the vote is running`);
+    assert.equal(inPane(dom, '.ticket--live').length, 1, `${design}: the other running session lost its ticket`);
   });
 
   test(`${design}: what is running comes before the one action, and one chip row follows it`, async (t) => {
-    const dom = await hub(t, design);
-    const cta = inPane(dom, '.hub-cta')[0];
-    assert.ok(cta, `${design}: no CTA in the pane`);
-    for (const ticket of inPane(dom, '.ticket--live')) {
-      assert.ok(ticket.compareDocumentPosition(cta) & FOLLOWS(dom), `${design}: a running ticket sits below the CTA`);
+    const busy = await hub(t, design);
+    const busyCta = inPane(busy, '.hub-cta')[0];
+    assert.ok(busyCta, `${design}: no CTA in the pane`);
+    for (const el of inPane(busy, '.ticket--live, .hub-say')) {
+      assert.ok(el.compareDocumentPosition(busyCta) & FOLLOWS(busy), `${design}: ${el.className} sits below the CTA`);
     }
+    // While a vote runs there is no chip row at all (#1854).
+    assert.equal(inPane(busy, '.hub-presets').length, 0, `${design}: presets offered while a vote runs`);
+
+    const dom = await hub(t, design, calmRound());
+    const cta = inPane(dom, '.hub-cta')[0];
     const rows = inPane(dom, '.hub-presets');
     assert.equal(rows.length, 1, `${design}: not exactly one chip row`);
     assert.ok(cta.compareDocumentPosition(rows[0]) & FOLLOWS(dom), `${design}: the chip row is above the CTA`);
@@ -172,7 +188,7 @@ test('„Ausblenden" takes the recommendations out of „Zu tun" and leaves the 
 });
 
 test('„Direkt wählen" opens the direct-play picker', async (t) => {
-  const dom = await hub(t, 'klassisch');
+  const dom = await hub(t, 'klassisch', calmRound());
   const seen = [];
   dom.set('showDirectPlayPicker', (r) => seen.push(r.id));
   inPane(dom, '.hub-preset--direct')[0].click();

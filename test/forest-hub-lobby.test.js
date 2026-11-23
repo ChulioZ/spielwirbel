@@ -196,7 +196,6 @@ test('Forest hub: the F3.2 checklist, block by block, in reading order', async (
   assert.equal(dom.app.querySelector('.hub-cards > .card-slot:empty'), null, 'an empty slot in the card grid');
   const order = [col('crew'), col('main'), col('aside')];
   for (let i = 1; i < order.length; i++) assert.ok(precedes(dom, order[i - 1], order[i]), `block ${i} is out of order`);
-  assert.equal(dom.app.querySelector('.empty--rail-gap'), null);
 });
 
 test('Forest hub: a session without a winner says how it ended, and one with winners names them', async (t) => {

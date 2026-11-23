@@ -4542,7 +4542,8 @@
    wording), B7.3 (the young round, the empty shelf and the empty lobby on a
    phone). The markup is the app's own empty state (`emptyState` +
    `emptyStateAction`, js/empty-state.js) and two Brücke pieces
-   (brueckeMissionEmpty, brueckeYoungLine in bruecke-hub.js); everything below
+   (brueckeMissionEmpty in bruecke-hub.js; the young round's line became the
+   stage's sentence in #1854); everything below
    lays them out.
 
    „ink-dim ist keine Textfarbe": the locked „Mission starten" is the ONE text
@@ -4587,22 +4588,6 @@
 }
 :root[data-design="bruecke"][data-scheme="dark"] .empty__actions .link-btn { color: var(--brand); }
 :root[data-design="bruecke"][data-scheme="dark"] .empty__actions .link-btn:hover { color: var(--brand-strong); }
-
-/* ---- The young round (B7.3): one line under the ignition — what stands
-   ready, and that nothing has been played yet. Real text, so the reading
-   ramp; never the accent at this size (rule 1). */
-:root[data-design="bruecke"] .bruecke-young {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  margin: -6px 0 0;
-  text-align: center;
-  font-size: var(--text-md);
-}
-:root[data-design="bruecke"] .bruecke-young__ready { font-weight: 600; }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-young__ready { color: var(--ink); }
-:root[data-design="bruecke"][data-scheme="dark"] .bruecke-young__none { color: var(--ink-2); }
 
 /* ---- The empty lobby (B7.3, „Flotte ohne Runde"): the create card is a
    dashed cyan wire, not the accent-tinted frame — its medallion the square
