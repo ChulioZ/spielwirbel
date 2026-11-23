@@ -551,7 +551,11 @@ const frontendGlobals = {
   OFF_SHELF_LISTS: 'readonly', offShelfListOf: 'readonly',
   showTags: 'readonly', showTransferGames: 'readonly',
   // round-export.js (#1702) — the round settings' data export.
-  downloadRoundExport: 'readonly',
+  downloadRoundExport: 'readonly', roundExportUnzip: 'readonly',
+  // round-import-file.js + round-import-view.js (#1756) — the export's format
+  // marker and the new-round screen's „Aus Export importieren".
+  withRoundExportMarker: 'readonly', readRoundExport: 'readonly', roundExportSummary: 'readonly',
+  ROUND_IMPORT_BYTES_MAX: 'readonly', pickRoundExportFile: 'readonly',
   showInvite: 'readonly', inviteError: 'readonly', insertFriendPicker: 'readonly',
   showBggImport: 'readonly', canImportBgg: 'readonly', bggImportError: 'readonly',
   buildBggForm: 'readonly',

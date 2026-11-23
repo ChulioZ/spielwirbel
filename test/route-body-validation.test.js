@@ -36,6 +36,10 @@ const walk = (dir, prefix = '') => fs.readdirSync(dir, { withFileTypes: true }).
    argument; an entry whose handler stops reading the body goes stale and is
    reported below, so the list cannot rot into names nobody has looked at. */
 const ALLOW = {
+  // The round import (#1756): the body is a whole round export, validated by the
+  // zod envelope schema INSIDE buildRoundImport (lib/round-import.js), which also
+  // allowlists every entity's fields — a second schema at the route would restate it.
+  'rounds.js POST /import': 'validated and allowlisted by lib/round-import.js (zod roundFileSchema)',
   // Twelve handlers validate PER FIELD through emailSchema/passwordSchema/… —
   // it is zod, but a parallel pattern to the shared boundary (M-003 P-side).
   'account.js': 'per-field zod schemas (safeParse on each field), not the shared boundary',

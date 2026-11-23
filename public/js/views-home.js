@@ -479,6 +479,17 @@ async function showNewRound() {
         </div>
       </div>`
     : '';
+  // „Aus Export importieren" (#1756): a round's data export read back in as a
+  // NEW round — always offered, since the file can come from another account
+  // or another instance. The card is the same component as the copy above.
+  const fileImportField = `<div class="field import-card">
+      <i class="ti ti-file-import import-card__icon" aria-hidden="true"></i>
+      <div class="import-card__body">
+        <span class="field__label">${esc(t('roundImport.label'))}</span>
+        <button type="button" class="btn btn--sm" id="importExport"><i class="ti ti-file-upload" aria-hidden="true"></i> ${esc(t('roundImport.choose'))}</button>
+        <div class="muted import-card__note">${esc(t('roundImport.note'))}</div>
+      </div>
+    </div>`;
 
   app.innerHTML = '';
   // The form is a dead end without this (#623): it renders no dock and no rail,
@@ -504,6 +515,7 @@ async function showNewRound() {
           <input id="roundName" class="input" placeholder="${esc(t('newRound.namePlaceholder'))}" autocorrect="off" spellcheck="false" />
         </div>
         ${importField}
+        ${fileImportField}
       </div>
       <div class="setup-grid__aside">
         <div class="field">
@@ -603,6 +615,8 @@ async function showNewRound() {
     memberInput.focus();
     renderMembers();
   }
+  // Deferred: round-import-view.js loads after this file.
+  form.querySelector('#importExport').addEventListener('click', () => pickRoundExportFile());
   form.querySelector('#addMember').addEventListener('click', addMember);
   memberInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); addMember(); }

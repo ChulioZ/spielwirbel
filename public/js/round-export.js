@@ -18,7 +18,7 @@
 
    The zip is fflate's (`js/vendor/fflate.min.js`,
    `.claude/rules/vendored-frontend-library.md`); this file is its only
-   caller, hence the global comment below rather than a `frontendGlobals`
+   caller (the import reads through `roundExportUnzip`, #1756), hence the global comment below rather than a `frontendGlobals`
    entry.
 
    CSV: UTF-8 with a BOM (Excel otherwise reads umlauts and Hangul as
@@ -208,13 +208,21 @@ function roundExportTables(round) {
 }
 
 // The zip's bytes. `round.json` is the snapshot as fetched — the "complete
-// round as stored" the CSVs cannot carry (session logs, filters, cover paths).
-function roundExportZip(round) {
+// round as stored" the CSVs cannot carry (session logs, filters, cover paths) —
+// with the format marker in front (#1756, round-import-file.js), which is what
+// „Aus Export importieren" reads it back by.
+function roundExportZip(round, now = new Date()) {
   const enc = new TextEncoder();
   const files = {};
   Object.entries(roundExportTables(round)).forEach(([n, text]) => { files[n] = enc.encode(text); });
-  files['round.json'] = enc.encode(`${JSON.stringify(round, null, 2)}\n`);
+  files['round.json'] = enc.encode(`${JSON.stringify(withRoundExportMarker(round, now), null, 2)}\n`);
   return fflate.zipSync(files, { level: 6 });
+}
+
+// Reading an export back (#1756, round-import-view.js) unzips through this
+// file too, so fflate keeps ONE wrapper (.claude/rules/vendored-frontend-library.md).
+function roundExportUnzip(bytes, opts) {
+  return fflate.unzipSync(bytes, opts);
 }
 
 // The settings row's action. `fetchRoundFresh`, not `fetchRound`: the latter

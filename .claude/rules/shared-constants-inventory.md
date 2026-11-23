@@ -935,6 +935,19 @@ taste site that takes verdicts differently — as each seat's share of a play's
 value (`playEvidence` in vote-score.js, the thirteenth) — so the Regal, the
 Chronik and Discover (`lib/repo/lift-play-value.js`) share that too.
 
+**The forty-seventh is `public/js/round-import-file.js`** (#1756): the round
+export's format marker (`ROUND_EXPORT_FORMAT`, `ROUND_EXPORT_FORMAT_VERSION`,
+`withRoundExportMarker`), the envelope check `roundExportProblem`, the caps
+`ROUND_IMPORT_SESSIONS_MAX`/`ROUND_IMPORT_BYTES_MAX`, and `roundImportSessions`
+— which sessions an import brings over. The export writes the marker and the
+import reads it back on another instance, so a marker spelled twice would make
+a release refuse its own files. `lib/round-import.js` requires it for the check,
+the session fixed point and the route's byte limit; the browser uses the same
+three to pre-check a picked file and to state the session count in the
+confirmation, so the number the user approves is the number that lands.
+`roundImportSessions` takes `sessionOutcome`/`sessionChildIds` injected (a
+public/js file cannot require a sibling).
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

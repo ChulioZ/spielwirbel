@@ -295,6 +295,10 @@ lib/
   session-import.js  an imported play history (#1665) as stored sessions: the
                      people and games mapping resolved against the round, new
                      member and game ids minted, one finished session per play
+  round-import.js    a round's data export read back in as a NEW round (#1756):
+                     validates the file, allowlists every field, drops what
+                     would grant access (/uploads paths, account links) and
+                     re-mints every id — the pure translation both backends write
   session-events.js  writes the session activity log: builds one entry and
                      appends it inside the repo mutator's own read-modify-write,
                      so the log cannot drift from what it records (issue #209)
@@ -556,7 +560,9 @@ lib/
                                              or replace, DELETE to remove — #1774)
     rounds.js        /api/rounds            (list — incl. granted rounds (#207);
                                              detail, create, delete; revoke/leave
-                                             a share via …/:rid/shares/:userId)
+                                             a share via …/:rid/shares/:userId;
+                                             POST /import — a round from its
+                                             data export, as a new round, #1756)
     games.js         …/games                (add [+cover hotlink/source],
                                              edit [+link to provider],
                                              retire/restore, complete/restore,
@@ -1156,9 +1162,14 @@ public/
                           writer for the round export (issue #1702)
     csv-formula.js        the leading characters a CSV writer defuses —
                           shared by round-export.js and lib/csv.js
+    round-import-file.js  the export's format marker and the import's envelope
+                          check, caps and session selection — shared with
+                          lib/round-import.js (#1756)
     round-export.js       a round's data as a zip — one CSV per table plus
                           round.json — built in the browser from the screens'
                           own score/outcome helpers, saved as a download (#1702)
+    round-import-view.js  „Aus Export importieren" on the new-round screen: reads
+                          the zip in the browser, confirms, posts round.json (#1756)
     views-round-settings.js round Einstellungen screen: the round-level actions
                           (invite, move games, export, delete/leave) in one place (#561),
                           the round's name and colour marker on the page
