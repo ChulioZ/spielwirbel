@@ -55,11 +55,15 @@
 // (handover §3.4, the operator's decision table).
 const BADGE_MOMENT_MAX = 2;
 // How many earned pins a holder row draws before „+N" (#1856), and how many
-// stay once a phone narrows the row (≤ 420px, styles.css). A „+N" is rendered
-// for each cut-off and CSS shows the one matching the pins it shows — a single
-// count beside pins CSS had hidden would say „+3" next to three pins of nine.
+// stay once the ROW is narrow or very narrow (its content under 450px / 320px) —
+// container queries in styles.css since #1857, so a tiled plaque narrows like
+// a phone does. A „+N" is rendered for each cut-off and CSS shows the one
+// matching the pins it shows — a single count beside pins CSS had hidden would
+// say „+3" next to three pins of nine.
 const BADGE_ROW_PINS = 6;
 const BADGE_ROW_PINS_NARROW = 3;
+const BADGE_ROW_PINS_TINY = 2;
+const BADGE_ROW_CUTS = [BADGE_ROW_PINS_TINY, BADGE_ROW_PINS_NARROW, BADGE_ROW_PINS];
 // The mark a secret entry shows until it is earned (all four sheets).
 const BADGE_SECRET_GLYPH = 'ti-lock-question';
 /* Das Programmheft's „Sonderausgabe" (#1393, P17.5): the big tiers that get
@@ -311,6 +315,15 @@ function badgeCardEl(e, ctx, holder) {
      </div>`);
 }
 
+/* The row's summary, one inline-block per fact (#1857): a narrow row breaks
+   BETWEEN facts — „2 Siege ·" over „1 unterwegs" — and only a fact wider than
+   the whole column wraps inside itself, rather than running on under the pins.
+   (No-break spaces did the first half and could not do the second: at 320px
+   „7 unterwegs" stayed one line and ran under them.) */
+const badgeSummaryHtml = (facts) => facts
+  .map((f, i) => `<span class="badge-member__fact">${esc(f)}${i < facts.length - 1 ? ' ·' : ''}</span>`)
+  .join(' ');
+
 /* One holder's row. The pins are decorative (the feed's badgeEmblem host, so
    every design's earned skin reaches them); the row's accessible name carries
    the holder and the counts, which is everything the pins say. */
@@ -332,7 +345,7 @@ function badgeHolderRow(ctx, holder) {
     ? `<span class="badge-member__roundmark" aria-hidden="true"${badgeShapeAttr('round')}><i class="ti ti-users"></i></span>`
     : `<span class="avatar badge-member__avatar" style="background:${memberColor(round, holder.mid)}" aria-hidden="true">${avatarFace(initials(holder.name), { userId: holder.member.userId })}</span>`;
   const shown = earned.slice(0, BADGE_ROW_PINS);
-  const more = [BADGE_ROW_PINS_NARROW, BADGE_ROW_PINS].filter((cut) => earned.length > cut)
+  const more = BADGE_ROW_CUTS.filter((cut) => earned.length > cut)
     .map((cut) => `<span class="badge-member__more" data-cut="${cut}">+${earned.length - cut}</span>`).join('');
   const row = h(`<button type="button" class="badge-member${holder.round ? ' badge-member--round' : ''}" id="abzeichen-${esc(holder.mid)}" data-mid="${esc(holder.mid)}">
        <span class="badge-member__head">
@@ -340,7 +353,7 @@ function badgeHolderRow(ctx, holder) {
          ${face}
          <span class="badge-member__who">
            <span class="badge-member__name">${esc(holder.label || holder.name)}</span>
-           <span class="badge-member__summary">${esc(visible.join(' · '))}</span>
+           <span class="badge-member__summary">${badgeSummaryHtml(visible)}</span>
          </span>
          <span class="badge-member__pins" aria-hidden="true">${shown.map((e) => badgeEmblem(e.glyph, 'badge-member__pin', e.holder)).join('')}${more}</span>
          <i class="ti ti-chevron-right badge-member__go" aria-hidden="true"></i>

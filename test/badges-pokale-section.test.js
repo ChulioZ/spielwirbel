@@ -90,17 +90,46 @@ test('a row draws at most BADGE_ROW_PINS pins and says the rest as „+N"', asyn
   // A phone shows three pins (styles.css), so it shows the count beyond THREE.
   const narrow = dom.run('BADGE_ROW_PINS_NARROW');
   assert.equal(row.querySelector(`.badge-member__more[data-cut="${narrow}"]`).textContent, `+${earned - narrow}`);
+  // And a very narrow row two (#1857) — its own count beyond TWO.
+  const tiny = dom.run('BADGE_ROW_PINS_TINY');
+  assert.equal(row.querySelector(`.badge-member__more[data-cut="${tiny}"]`).textContent, `+${earned - tiny}`);
 });
 
-test('the phone hides exactly the pins its „+N" counts', () => {
-  const { mediaBlocks, rulesOf } = require('./support/css');
-  const narrow = mediaBlocks().filter(([q]) => /max-width:\s*420px/.test(q)).flatMap(([, css]) => rulesOf(css));
+test('a NARROW ROW hides exactly the pins its „+N" counts — at any viewport (#1857)', () => {
+  /* Keyed to the row's own width, not the viewport: since #1857 a row is
+     narrow in a 372px tile at 1470 and in the round's 340px plaque column, and
+     a viewport query left six pins there that covered the name and the wins. */
+  const { atBlocks, mediaBlocks, rulesOf, CSS } = require('./support/css');
+  const narrow = atBlocks(CSS, 'container').filter(([q]) => /^badge-row\s*\(max-width:\s*\d+px\)/.test(q)).flatMap(([, css]) => rulesOf(css));
   const hides = narrow.filter(([, b]) => /display:\s*none/.test(b)).flatMap(([sel]) => sel.split(',').map((x) => x.trim()));
   const nth = hides.map((x) => /\.badge-member__pin:nth-child\(n\+(\d+)\)/.exec(x)).find(Boolean);
-  assert.ok(nth, 'the phone no longer narrows the row');
-  assert.equal(Number(nth[1]) - 1, 3, 'the pins left on a phone');
-  assert.ok(hides.includes('.badge-member__more[data-cut="6"]'), 'the wide count still shows on a phone');
+  assert.ok(nth, 'a narrow row no longer narrows its pins');
+  assert.equal(Number(nth[1]) - 1, 3, 'the pins left in a narrow row');
+  assert.ok(hides.includes('.badge-member__more[data-cut="6"]'), 'the wide count still shows in a narrow row');
   assert.ok(narrow.some(([sel, b]) => sel.trim() === '.badge-member__more[data-cut="3"]' && /display:\s*inline/.test(b)), 'the narrow count never shows');
+  // The row is that container, and no viewport query cuts the pins any more.
+  assert.ok(rulesOf(CSS).some(([sel, b]) => sel.trim() === '.badge-member' && /container:\s*badge-row\s*\/\s*inline-size/.test(b)), 'the row is not the container');
+  const byViewport = mediaBlocks().flatMap(([, css]) => rulesOf(css)).filter(([sel]) => /\.badge-member__pin:nth-child/.test(sel));
+  assert.deepEqual(byViewport.map(([sel]) => sel.trim()), [], 'a viewport query still cuts the pins');
+});
+
+test('a VERY narrow row keeps two pins and the count beyond two (#1857)', () => {
+  /* Measured: a 304px row content box (a 360px phone) under Der Tisch left the name and
+     wins 57px beside three pins, and „7 unterwegs" ran under them. The tighter
+     block must come AFTER the 480px one — both match there, and source order
+     decides which „+N" shows. */
+  const { atBlocks, rulesOf, CSS } = require('./support/css');
+  const blocks = atBlocks(CSS, 'container').filter(([q]) => /^badge-row\s*\(max-width:/.test(q));
+  const width = ([q]) => Number(/max-width:\s*(\d+)px/.exec(q)[1]);
+  assert.equal(blocks.length, 2, 'two narrow cuts');
+  assert.ok(width(blocks[1]) < width(blocks[0]), 'the tighter cut must come last, or the wider one wins');
+  const rules = rulesOf(blocks[1][1]);
+  const hides = rules.filter(([, b]) => /display:\s*none/.test(b)).flatMap(([sel]) => sel.split(',').map((x) => x.trim()));
+  assert.ok(hides.includes('.badge-member__pin:nth-child(n+3)'), 'two pins left');
+  assert.ok(hides.includes('.badge-member__more[data-cut="3"]'), 'the count beyond three still shows');
+  assert.ok(rules.some(([sel, b]) => sel.trim() === '.badge-member__more[data-cut="2"]' && /display:\s*inline/.test(b)), 'the count beyond two never shows');
+  // Everywhere else the count beyond two is hidden.
+  assert.ok(rulesOf(CSS).some(([sel, b]) => sel.split(',').map((x) => x.trim()).includes('.badge-member__more[data-cut="2"]') && /display:\s*none/.test(b)));
 });
 
 test('every tile in a collection is a button naming its state in words, in the sheets’ shape', async (t) => {

@@ -10316,6 +10316,9 @@ kbd {
 .pokale-pins__go { flex: none; }
 /* Under the bar on a phone; beside it from 860px, so a row costs no extra
    height where there is width to spare. */
+/* The bar row is a `badge-row` container too, so its pins take the same
+   cut-offs as a plaque row's (below): at 320px six of them ran out of the row. */
+.pokale-bars__row:has(> .pokale-pins) { container: badge-row / inline-size; }
 .pokale-bars__row > .pokale-pins { display: flex; margin: 2px 0 0 auto; }
 @media (min-width: 860px) {
   .pokale-bars__row:has(> .pokale-pins) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
@@ -10333,6 +10336,7 @@ kbd {
 .pokale-table .badge-member__pin:nth-child(n+4),
 .pokale-table .badge-member__more[data-cut="6"] { display: none; }
 .pokale-table .badge-member__more[data-cut="3"] { display: inline; }
+.pokale-table .badge-member__more[data-cut="2"] { display: none; }
 
 /* Pokale's „Rekorde" (#1856): one list, a row per record — cover (or icon),
    the label over the holder, the value on the right. The same rows in every
@@ -12884,30 +12888,76 @@ kbd {
   color: var(--brand-ink, var(--brand));
   font-size: var(--text-md);
 }
-.badge-member__who { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.badge-member__who { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
 .badge-member__name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.badge-member__summary { font-size: var(--text-sm); color: var(--ink-soft); white-space: nowrap; }
-/* The pins clip rather than wrap: a wrapped row is a taller row, and „+N"
-   already says how many more there are. */
+/* The summary may take a second line: one inline-block per fact
+   (views-badges.js), so it breaks between them — „2 Siege ·" over
+   „1 unterwegs" — and a fact wraps inside itself only when it alone is wider
+   than the column. */
+.badge-member__summary { font-size: var(--text-sm); color: var(--ink-soft); }
+.badge-member__fact { display: inline-block; max-width: 100%; }
+/* The pins never shrink and never clip (#1857). They used to take the free
+   space with `overflow: hidden` and `justify-content: flex-end`, so a narrow row
+   cut the FIRST pin off on the left while the summary — nowrap — ran on under
+   the rest. What bounds them now is the cut below: at most six, three in a
+   narrow row, and the name and summary take whatever is left. */
 .badge-member__pins {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: none;
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 4px;
-  overflow: hidden;
 }
 .badge-member__pin .badge__mark { width: 26px; height: 26px; border-width: 1px; font-size: var(--text-sm); }
 .badge-member__more { flex: none; font-size: var(--text-xs); font-weight: 700; color: var(--ink-soft); }
 .badge-member__go { flex: none; color: var(--ink-soft); }
 /* One „+N" per cut-off (views-badges.js): the wide one by default, the narrow
-   one — with its three pins — on a phone. */
+   one — with its three pins — in a narrow ROW. Keyed to the row's own width
+   (#1857), not the viewport: a row is narrow on a phone, in a 372px person
+   plaque tiled at 1470 and in the round's 340px plaque column alike.
+
+   The widths are the row's CONTENT box — a container query does not count its
+   padding. Under 450px six pins leave the name and the wins too little room;
+   under 320px (a 360px phone) three do. */
+.badge-member { container: badge-row / inline-size; }
+.badge-member__more[data-cut="2"],
 .badge-member__more[data-cut="3"] { display: none; }
-@media (max-width: 420px) {
+@container badge-row (max-width: 449px) {
   .badge-member__pin:nth-child(n+4),
   .badge-member__more[data-cut="6"] { display: none; }
   .badge-member__more[data-cut="3"] { display: inline; }
+  /* A narrow row lays out as two lines: the name beside the pins, and the
+     summary UNDER BOTH, across the row's whole width — beside the pins it had
+     ~100px at 390 and wrapped every plaque to three lines. `display: contents`
+     lifts the name and summary out of their column into this grid. */
+  .badge-member__head {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "place face name pins go" "place face sum sum sum";
+    align-items: center;
+    row-gap: 2px;
+  }
+  /* No place (the round's row, a young round): no empty first column, whose
+     gap would indent the row. */
+  .badge-member__head:not(:has(> .badge-member__place)) {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "face name pins go" "face sum sum sum";
+  }
+  .badge-member__who { display: contents; }
+  .badge-member__place { grid-area: place; }
+  .badge-member__head > :is(.badge-member__avatar, .badge-member__roundmark) { grid-area: face; }
+  .badge-member__name { grid-area: name; }
+  .badge-member__summary { grid-area: sum; }
+  .badge-member__pins { grid-area: pins; }
+  .badge-member__go { grid-area: go; }
+}
+/* A very narrow row — a 360px phone — keeps two: with three, Der Tisch's name
+   and wins had 57px and „7 unterwegs" ran under the pins. AFTER the block
+   above, which also matches here: source order decides which „+N" shows. */
+@container badge-row (max-width: 319px) {
+  .badge-member__pin:nth-child(n+3),
+  .badge-member__more[data-cut="3"] { display: none; }
+  .badge-member__more[data-cut="2"] { display: inline; }
 }
 
 /* The collection (#1856): the holder's marks by state inside the editor. */
