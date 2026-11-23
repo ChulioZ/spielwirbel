@@ -90,7 +90,8 @@ const labels = (list) => [...list.querySelectorAll(':scope > .pokale-record > .p
 test('under Brücke the right column holds the one records list, in the standard order (#1856)', async (t) => {
   const dom = boot(t, 'bruecke');
   await dom.call('showRound', RID, 'pokale');
-  const records = dom.app.querySelector('.pokale-split > .pokale-records');
+  // On the round's plaque since #1857, which is the split's right column.
+  const records = dom.app.querySelector('.pokale-split > .pokale-plaque > .pokale-records');
   assert.ok(records, 'the records are not the split’s right column');
   const list = records.querySelector('.pokale-records__list');
   assert.equal(list.tagName, 'OL');
@@ -107,7 +108,7 @@ test('Klassisch shows the same records list under the standings, and nothing lau
   const dom = boot(t, 'klassisch');
   await dom.call('showRound', RID, 'pokale');
   assert.equal(dom.app.querySelector('.pokale-split'), null);
-  const list = dom.app.querySelector('.pokale-page > .pokale-records .pokale-records__list');
+  const list = dom.app.querySelector('.pokale-page > .pokale-plaque > .pokale-records .pokale-records__list');
   assert.ok(list, 'the records list is not in the page section');
   assert.deepEqual(labels(list), RECORDS);
   assert.equal(dom.app.querySelector('.pokale-game__play'), null, 'a „Jetzt spielen" launcher survives on Pokale');

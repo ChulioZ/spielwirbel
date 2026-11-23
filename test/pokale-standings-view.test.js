@@ -95,7 +95,10 @@ const pokale = async (t, round) => {
 };
 
 const onStage = (dom) => [...dom.app.querySelectorAll('.podium__entry')].map((e) => e.dataset.mid);
-const inRest = (dom) => [...dom.app.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid);
+// Everyone below the stage is named on their own plaque since #1857 (the
+// summary line under the podium is gone): the badge section's rows.
+const plaqueOf = (dom, mid) => dom.app.querySelector(`.badge-section .badge-member[data-mid="${mid}"]`);
+const inRest = (dom) => [...dom.app.querySelectorAll('.badge-section .badge-member')].map((e) => e.dataset.mid);
 
 // ---- the defect ------------------------------------------------------------
 
@@ -213,7 +216,8 @@ test('a member who has never played does not stand at zero', async (t) => {
      zero having never turned up, above everyone who played and lost. */
   const dom = await pokale(t, roundWith(group, [...MEMBERS, 'never']));
   assert.ok(!onStage(dom).includes('never'));
-  assert.ok(inRest(dom).includes('never'));
+  assert.ok(inRest(dom).includes('never'), 'still named, on a plaque of their own');
+  assert.equal(plaqueOf(dom, 'never').querySelector('.badge-member__place'), null, 'and without a place');
 });
 
 // ---- what the stage prints --------------------------------------------------
@@ -244,13 +248,17 @@ test('an entry carries its own win count, and the same text upright or sideways'
   for (const el of top) assert.match(el.textContent, /1 Sieg\b/);
 });
 
-test('the rest line states the count it is ordered by', async (t) => {
+test('a plaque below the stage states the count it is ordered by, and its place (#1857)', async (t) => {
   const many = [...group, ...solos, night(['anna'], MEMBERS), night(['ben'], MEMBERS)];
   const dom = await pokale(t, roundWith(many, [...MEMBERS, 'ida']));
-  const rest = dom.app.querySelector('.podium__rest');
-  assert.ok(rest, 'a fifth member has to land below a three-step stage');
-  assert.match(rest.textContent, /Siege|Sieg\b/, 'the rest line states the win count');
-  assert.equal(rest.querySelector('.podium__score'), null, 'and no longer a Siegwertung beside it');
+  const below = inRest(dom).filter((mid) => !onStage(dom).includes(mid));
+  assert.ok(below.length, 'a fifth member has to land below a three-step stage');
+  for (const mid of below) {
+    const row = plaqueOf(dom, mid);
+    assert.match(row.querySelector('.badge-member__summary').textContent, /Siege|Sieg\b/, 'the plaque states the win count');
+    assert.equal(row.querySelector('.podium__score'), null, 'and no Siegwertung beside it');
+  }
+  assert.deepEqual(inRest(dom), [...new Set(inRest(dom))], 'each person once');
 });
 
 test('the standings need NO ⓘ — a win count explains itself', async (t) => {

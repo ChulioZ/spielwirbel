@@ -340,6 +340,10 @@ I18N.en = {
   'pokale.streakN': '{n} wins in a row',
   'pokale.longest': 'Longest session',
   'pokale.bestBuy': 'Best buy',
+  'pokale.news.title': 'New since {game} · {date}',
+  'pokale.news.titleBare': 'New since the last session · {date}',
+  'pokale.news.record': 'New record: {record} · {game}',
+  'pokale.plaque.place': 'Place {n}',
 
   'recap.title': 'Recap',
   'recap.lead': 'What your shelf says about you — from every rating in this round.',

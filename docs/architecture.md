@@ -1120,6 +1120,9 @@ public/
                           the share delivery its card (and the account recap's
                           and the Regal-Steckbrief's) goes out through (#1345)
     views-pokale.js       Pokale tab: podium + the records list
+    views-pokale-plaques.js
+                          Pokale as the Ehrentafel (#1857): the „Neu seit" band,
+                          the round's plaque, a person's pins in a bar/table row
     views-recap.js        the Rückblick, one folded row at the foot of the Regal
     views-archive.js      the three off-shelf screens (retired / completed /
                           Wunschliste) through one renderer

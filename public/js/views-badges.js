@@ -11,9 +11,13 @@
            reached — Die Brücke's bars (#1392), rendered under it alone
      .badge-card                      the tap-open card (popover ≥ 860, sheet below)
      .badge-section                   Pokale › Abzeichen
-       .badge-member (a <button>, one per holder: the round first, then the
-         standings order — #1856) with .badge-member__head, __avatar | __roundmark,
-         __name, __summary, __pins (.badge-emblem marks) and __more („+N")
+       .badge-member (a <button>, one per member in standings order — the
+         person's plaque since #1857; the round's own row sits on the round's
+         plaque) with .badge-member__head, __place (only when the stage ranks
+         people), __avatar | __roundmark, __name, __summary (wins · unterwegs),
+         __pins (.badge-emblem marks) and __more („+N")
+     .pokale-pins                     (views-pokale-plaques.js) the same pins + „unterwegs" as a button
+                                      INSIDE a bar / table row (#1857)
        .badge-collection              the holder's whole collection (openEditor),
          .badge-collection__group per state; a tile opens its card INLINE
      .badge-moment                    the result screen, at most two marks
@@ -307,48 +311,6 @@ function badgeCardEl(e, ctx, holder) {
      </div>`);
 }
 
-/* Pokale › Abzeichen (#1856): ONE ROW PER HOLDER — the round first, then the
-   active members in the standings order (`ranked`, roundStandings), so the two
-   lists on one page cannot disagree about who comes first. A row draws only
-   the holder's EARNED marks, as pins, so it is one line at every width: there
-   is no legend (nothing in a row needs a key), no „Platz N" (the standings
-   beside it say that) and no dense mode. The whole row is a <button> that
-   opens the holder's collection. A round with no finished session gets one
-   line and no rows — no wall of grey padlocks. */
-function renderBadgeSection(round, ranked) {
-  const sec = h(`<section class="section badge-section" id="abzeichen" tabindex="-1" aria-labelledby="abzeichen-title">
-       <div class="section-head"><h2 id="abzeichen-title">${iconText('ti-medal', t('badges.title'))}</h2></div>
-     </section>`);
-  if (!round.sessions.some((s) => s.finished)) {
-    sec.appendChild(h(`<p class="muted badge-section__empty">${esc(t('badges.empty'))}</p>`));
-    return sec;
-  }
-  const ctx = badgeContext(round);
-  const members = ranked || activeMembers(round);
-  const every = ctx.all.round.concat(...members.map((m) => ctx.all.members[m.id] || []));
-  const earned = every.filter((e) => e.state === 'earned').length;
-  const fresh = every.filter((e) => e.isNew).length;
-  const summary = [tn(earned, 'badges.count.earnedOne', 'badges.count.earned')];
-  if (fresh) {
-    summary.push(ctx.latestGame
-      ? tn(fresh, 'badges.newSinceOne', 'badges.newSince', { game: ctx.latestGame })
-      : tn(fresh, 'badges.newOne', 'badges.new'));
-  }
-  sec.querySelector('.section-head').appendChild(h(`<span class="badge-section__summary">${esc(summary.join(' · '))}</span>`));
-
-  // An ordered list: standings order is meaning (.claude/rules/tiles-vs-lists.md).
-  const list = h('<ol class="badge-members"></ol>');
-  const add = (holder) => {
-    const li = h('<li class="badge-members__item"></li>');
-    li.appendChild(badgeHolderRow(ctx, holder));
-    list.appendChild(li);
-  };
-  add({ mid: 'round', name: round.name, entries: ctx.all.round, round: true });
-  members.forEach((m) => add({ mid: m.id, name: m.name, entries: ctx.all.members[m.id] || [], member: m }));
-  sec.appendChild(list);
-  return sec;
-}
-
 /* One holder's row. The pins are decorative (the feed's badgeEmblem host, so
    every design's earned skin reaches them); the row's accessible name carries
    the holder and the counts, which is everything the pins say. */
@@ -359,6 +321,13 @@ function badgeHolderRow(ctx, holder) {
   const progress = entries.filter((e) => e.state === 'progress').length;
   const counts = [tn(earned.length, 'badges.count.earnedOne', 'badges.count.earned')];
   if (progress) counts.push(tn(progress, 'badges.count.progressOne', 'badges.count.progress'));
+  /* A person's plaque (#1857) leads with the wins and says the marks as pins
+     plus „N unterwegs" — the earned count stays in the accessible name, which
+     is everything the decorative pins say. */
+  const hasWins = holder.wins !== null && holder.wins !== undefined;
+  const winsText = hasWins ? tn(holder.wins, 'pokale.winsOne', 'pokale.wins') : null;
+  const visible = hasWins ? [winsText].concat(progress ? [counts[1]] : []) : counts;
+  const placeText = holder.place ? t('pokale.plaque.place', { n: holder.place }) : null;
   const face = holder.round
     ? `<span class="badge-member__roundmark" aria-hidden="true"${badgeShapeAttr('round')}><i class="ti ti-users"></i></span>`
     : `<span class="avatar badge-member__avatar" style="background:${memberColor(round, holder.mid)}" aria-hidden="true">${avatarFace(initials(holder.name), { userId: holder.member.userId })}</span>`;
@@ -367,16 +336,17 @@ function badgeHolderRow(ctx, holder) {
     .map((cut) => `<span class="badge-member__more" data-cut="${cut}">+${earned.length - cut}</span>`).join('');
   const row = h(`<button type="button" class="badge-member${holder.round ? ' badge-member--round' : ''}" id="abzeichen-${esc(holder.mid)}" data-mid="${esc(holder.mid)}">
        <span class="badge-member__head">
+         ${holder.place ? `<span class="badge-member__place" aria-hidden="true">${esc(String(holder.place))}</span>` : ''}
          ${face}
          <span class="badge-member__who">
-           <span class="badge-member__name">${esc(holder.name)}</span>
-           <span class="badge-member__summary">${esc(counts.join(' · '))}</span>
+           <span class="badge-member__name">${esc(holder.label || holder.name)}</span>
+           <span class="badge-member__summary">${esc(visible.join(' · '))}</span>
          </span>
          <span class="badge-member__pins" aria-hidden="true">${shown.map((e) => badgeEmblem(e.glyph, 'badge-member__pin', e.holder)).join('')}${more}</span>
          <i class="ti ti-chevron-right badge-member__go" aria-hidden="true"></i>
        </span>
      </button>`);
-  row.setAttribute('aria-label', `${holder.name}, ${counts.join(' · ')}`);
+  row.setAttribute('aria-label', [holder.name, placeText, winsText, counts.join(' · ')].filter(Boolean).join(', '));
   row.setAttribute('aria-haspopup', 'dialog');
   row.addEventListener('click', () => openBadgeCollection(row, ctx, holder));
   return row;

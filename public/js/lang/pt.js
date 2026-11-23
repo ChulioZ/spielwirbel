@@ -347,6 +347,10 @@ I18N.pt = {
   'pokale.streakN': '{n} vitórias seguidas',
   'pokale.longest': 'Sessão mais longa',
   'pokale.bestBuy': 'Melhor compra',
+  'pokale.news.title': 'Novidades desde {game} · {date}',
+  'pokale.news.titleBare': 'Novidades desde a última sessão · {date}',
+  'pokale.news.record': 'Novo recorde: {record} · {game}',
+  'pokale.plaque.place': 'Posição {n}',
 
   'recap.title': 'Retrospectiva',
   'recap.lead': 'O que a sua estante diz sobre vocês — a partir de cada avaliação deste grupo.',

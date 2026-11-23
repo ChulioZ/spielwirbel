@@ -149,6 +149,38 @@ function pokaleRecordRow(round, { icon, label, games, people, value, loadCover }
   return row;
 }
 
+/* Meistgespielt: the games chosen most often across `finished` (the game must
+   still exist), ties sharing the record. Read by the record row and by the
+   „Neu seit" band (#1857), which asks whether the latest session MADE its game
+   the holder — so both answer from one count.
+
+   ARCHIVED GAMES COUNT HERE, retired ones included — deliberately, and against
+   the reflex that #643 set up next door. This is a factual record of nights
+   that happened, not a statement about the current shelf: retiring a game does
+   not unmake the evenings the group spent on it, so those sessions keep
+   counting and a retired game may still top it (operator decision,
+   2026-08-04). The cards that DO drop retired games — Größte Uneinigkeit and
+   Lieblingsspiele, via `retiredIds` in recap.js — are about taste, which is a
+   claim the group has withdrawn. Don't unify the two; see
+   `.claude/rules/active-games-filter-sites.md`.
+
+   Nor with the RECOMMENDER's play counter (#778), which tallies the same
+   `chosenGameId` over the same sessions and deliberately drops retired games
+   — it asks "what should we play more of", where this asks "what did we
+   play". `.claude/rules/recommendation-scoring.md` §12. */
+function pokaleMostPlayed(round, finished) {
+  const playCount = {};
+  finished.forEach((s) => {
+    if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
+      playCount[s.chosenGameId] = (playCount[s.chosenGameId] || 0) + 1;
+  });
+  const max = Math.max(0, ...Object.values(playCount));
+  const games = Object.keys(playCount)
+    .filter((gid) => playCount[gid] === max)
+    .map((gid) => round.games.find((x) => x.id === gid));
+  return { games, max };
+}
+
 // Resolve stat ids back to the games they name, dropping any that no longer
 // exist (recap.js already ignores deleted ids; this keeps the view honest for
 // anything it is handed).
@@ -247,7 +279,7 @@ function roundStandings(round) {
    leader(s) and „Ein Podium braucht 3 Sessions." in place of the podium.
    Each named leader stays a link to their page, exactly as a podium entry is,
    and `named` tells the caller who is already on screen — everyone else still
-   reaches the summary line below, so no member becomes unreachable. With no
+   reaches their own plaque below (#1857), so no member becomes unreachable. With no
    decided evening yet there is nobody to name and only the sentence shows. */
 function pokaleYoungLead(round, winners, rankOf, wins) {
   const leaders = winners.filter((m) => rankOf[m.id] === 1);
@@ -291,8 +323,12 @@ function pokaleYoungLead(round, winners, rankOf, wins) {
    „1 · 2 · 3", a leaderboard's own grammar — and no crown: the lead is the
    cyan rank, not a medal. The place is the shared one `roundStandings`
    computed, so a tie prints one number twice; a member with no win yet has
-   no place and shows a dash. */
-function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } = {}) {
+   no place and shows a dash.
+
+   `pins(member)` (#1857) hands back that member's Abzeichen button, appended
+   to the row BESIDE its link: here the standings row IS the person's plaque,
+   so nobody is listed twice, and a <button> cannot nest in the <a>. */
+function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true, pins = null } = {}) {
   const top = Math.max(1, ...ranked.map((m) => wins[m.id]));
   const list = h('<ol class="pokale-bars"></ol>');
   ranked.forEach((m) => {
@@ -309,6 +345,7 @@ function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } 
          <span class="pokale-bars__count"><span class="pokale-bars__n">${n}</span><span class="pokale-bars__word">${esc(tn(n, 'pokale.winWordOne', 'pokale.winWord'))}</span></span>
        </a></li>`);
     makeMemberLink(row.querySelector('a'), round.id, m.id);
+    if (pins) row.appendChild(pins(m));
     list.appendChild(row);
   });
   return list;
@@ -326,9 +363,13 @@ function pokaleBars(round, ranked, rankOf, wins, { rank = false, crown = true } 
    one tap from here shows the same numbers. A member with no win yet has no
    place (a dash), as on Brücke's board; no contested session yet means no quote.
    The leader's row takes the gold tint (P13.3), never a silver or bronze —
-   there are no such tokens (operator decision 7). */
-function pokaleTable(round, ranked, rankOf, wins) {
+   there are no such tokens (operator decision 7).
+
+   `pins(member)` (#1857) fills a last „Abzeichen" column, so the table row is
+   the person's plaque — see pokaleBars. */
+function pokaleTable(round, ranked, rankOf, wins, { pins = null } = {}) {
   const cols = [['place', 'pokale.col.place'], ['name', 'pokale.col.name'], ['wins', 'member.wins'], ['sessions', 'member.sessions'], ['rate', 'member.winRate']];
+  if (pins) cols.push(['badges', 'badges.title']);
   const table = h(`<table class="pokale-table">
        <thead><tr>${cols.map(([c, key]) => `<th scope="col" class="pokale-table__${c}">${esc(t(key))}</th>`).join('')}</tr></thead>
        <tbody></tbody>
@@ -347,6 +388,7 @@ function pokaleTable(round, ranked, rankOf, wins) {
          <td class="pokale-table__rate">${st.winRate === null ? '–' : Math.round(st.winRate * 100) + '%'}</td>
        </tr>`);
     makeMemberLink(row.querySelector('a'), round.id, m.id);
+    if (pins) row.appendChild(h('<td class="pokale-table__badges"></td>')).appendChild(pins(m));
     body.appendChild(row);
   });
   return table;
@@ -374,14 +416,10 @@ function renderPokaleTab(round) {
   const forest = designIs('forest');
   const head = h(`<div class="section-head"><h1>${esc(t(bruecke || programmheft || forest ? 'hub.tab.pokale' : 'pokale.title'))}</h1></div>`);
   sec.appendChild(head);
-  // Ocean names the span beside the title, as its Chronik does (#1218, O13.2
-  // „Seit Oktober 2025 · 23 Sessions") — the same key, counted the same way,
-  // so the two pages cannot disagree about how many sessions the round has.
+  // The span („23 Sessions seit Oktober 2025") moved from beside the title —
+  // Ocean, Die Brücke, the Programmheft and Forest — onto the round's plaque in
+  // every design (#1857); printing it twice on one page would say it twice.
   const ocean = designIs('ocean');
-  if ((ocean || bruecke || programmheft || forest) && finished.length) {
-    const since = finished.reduce((a, s) => (s.createdAt < a ? s.createdAt : a), finished[0].createdAt);
-    head.appendChild(h(`<span class="chronik__count">${esc(tn(finished.length, 'chronik.countOne', 'chronik.count', { month: fmtMonth(since) }))}</span>`));
-  }
 
   if (finished.length === 0) {
     const empty = sec.appendChild(emptyState({ icon: 'ti-trophy', title: t('pokale.emptyTitle'), text: t('pokale.empty') }));
@@ -415,9 +453,17 @@ function renderPokaleTab(round) {
   }, sessionRatings);
 
   const { wins, ranked, winners, rankOf } = roundStandings(round);
+  // One Abzeichen derivation for the whole page (#1857): the band, the round's
+  // plaque and every person's plaque read it, so they cannot disagree.
+  const badgeCtx = badgeContext(round);
+  const memberPins = (m) => pokaleMemberPins(badgeCtx, m);
+  // „Neu seit <Spiel>" (#1857): first under the heading, only when the latest
+  // session changed something.
+  const news = renderPokaleNews(round, badgeCtx);
+  if (news) sec.appendChild(news);
 
   /* Der Tisch sets the award PLAQUES in a column beside the stage (#1276,
-     T13.2): the podium and its summary line on the left, the plaques to its
+     T13.2): the podium on the left, the round's plaque (#1857) to its
      right from 1280px. Below that the split is a plain block, so the plaques
      follow the podium — the markup order IS the reading order at every width,
      and no `order:` is needed (WCAG 2.4.3). Klassisch gets no wrapper: `stageTo`
@@ -452,21 +498,21 @@ function renderPokaleTab(round) {
   const young = played < YOUNG_ROUND_PODIUM_FROM;
   const youngLead = young ? pokaleYoungLead(round, winners, rankOf, wins) : null;
   // Into the STAGE, first (#1855): appended to the section it landed after the
-  // split, so the designs with one named the leader below the rest line and
-  // the plaques. Klassisch and Ocean have no split, where stageTo IS the section.
+  // split, so the designs with one named the leader below the summary line
+  // (gone since #1857) and the plaques. Klassisch and Ocean have no split, where stageTo IS the section.
   if (youngLead) stageTo.appendChild(youngLead.el);
   /* Ocean's standings are BARS, one per person (#1218, O13.2): „kein Podest,
      keine Medaillen — ein Balken je Person, so lang wie ihre Siege". Every
-     active member is listed, most wins first, so the summary line below has
-     nobody left to name and is not rendered. The young-round sentence above
+     active member is listed, most wins first, and since #1857 each bar row is
+     that person's plaque (pins and all). The young-round sentence above
      still stands in for it: bars off one or two evenings rank on noise exactly
      as a podium would. */
   const bars = (ocean || bruecke) && !young && winners.length
-    ? pokaleBars(round, ranked, rankOf, wins, bruecke ? { rank: true, crown: false } : {})
+    ? pokaleBars(round, ranked, rankOf, wins, { ...(bruecke ? { rank: true, crown: false } : {}), pins: memberPins })
     : null;
   if (bars) stageTo.appendChild(bars);
-  // Every active member, so the summary line below has nobody left to name.
-  const table = (programmheft || forest) && !young && winners.length ? pokaleTable(round, ranked, rankOf, wins) : null;
+  // Every active member; since #1857 each row is that person's plaque too.
+  const table = (programmheft || forest) && !young && winners.length ? pokaleTable(round, ranked, rankOf, wins, { pins: memberPins }) : null;
   if (table) side.appendChild(table);
   // Forest's grove replaces the podium (#1473, F13.3, E7), plaques under both.
   const grove = forest && table ? stageTo.appendChild(forestGrove(round, ranked, rankOf, wins)) : null;
@@ -497,29 +543,10 @@ function renderPokaleTab(round) {
     if (programmheft) stageTo.appendChild(h(`<h2 class="pokale-split__kicker">${esc(t('pokale.title'))}</h2>`));
     stageTo.appendChild(podium);
   }
-  /* Anyone ranked below the third step drops to the summary line, in standings
-     order. Nothing else lands here: the steps are uncapped, so a crowded place
-     can no longer push a member off the stage into a „+N weitere" count.
-
-     This is also where a member with NO win is named — „0 Siege" rather than
-     absent — which is what keeps `winners`' „has won at least once" filter from
-     making anyone invisible. */
-  const onPodium = youngLead ? youngLead.named
-    : new Set(cols.flatMap((c) => c.shown.map((it) => it.member.id)));
-  const rest = bars || table ? [] : ranked.filter((m) => !onPodium.has(m.id));
-  if (rest.length) {
-    const line = rest
-      .map(
-        (m) =>
-          `<a class="podium__rest-name" data-mid="${esc(m.id)}">${esc(m.name)}</a> · ${esc(tn(wins[m.id], 'pokale.winsOne', 'pokale.wins'))}`
-      )
-      .join('&ensp;—&ensp;');
-    const restEl = h(`<div class="muted podium__rest">${line}</div>`);
-    restEl.querySelectorAll('.podium__rest-name[data-mid]').forEach((el) => {
-      makeMemberLink(el, round.id, el.dataset.mid);
-    });
-    stageTo.appendChild(restEl);
-  }
+  /* No summary line under the stage since #1857: everyone is named once on
+     their own plaque (renderBadgeSection, or the bar / table row itself), and
+     that is what keeps a member with NO win from being invisible — „0 Siege"
+     on their plaque rather than absent. */
 
   // One lazy-cover loader per section, shared by every record row below (#979).
   const loadCover = createCoverLoader();
@@ -529,43 +556,17 @@ function renderPokaleTab(round) {
      trophy (it re-rolled Math.random() among tied games on every render) and
      six „Jetzt spielen" launchers, which belong to the Start tab. */
   const records = h(`<section class="pokale-records" aria-labelledby="pokale-records-title">
-       <h2 class="pokale-records__title" id="pokale-records-title">${esc(t('pokale.records'))}</h2>
+       <h3 class="pokale-records__title" id="pokale-records-title">${esc(t('pokale.records'))}</h3>
        <ol class="pokale-records__list"></ol>
      </section>`);
   const cards = records.querySelector('.pokale-records__list');
 
-  // Most played: chosen most often across finished nights (game must exist).
-  //
-  // ARCHIVED GAMES COUNT HERE, retired ones included — deliberately, and against
-  // the reflex that #643 set up next door. This card is a factual record of
-  // nights that happened, not a statement about the current shelf: retiring a
-  // game does not unmake the evenings the group spent on it, so those sessions
-  // keep counting and a retired game may still top the card (operator decision,
-  // 2026-08-04). The cards that DO drop retired games — Größte Uneinigkeit and
-  // Lieblingsspiele, via `retiredIds` in recap.js — are about taste, which is a
-  // claim the group has withdrawn. Don't unify the two; see
-  // `.claude/rules/active-games-filter-sites.md`.
-  //
-  // Nor with the RECOMMENDER's play counter (#778), which tallies the same
-  // `chosenGameId` over the same sessions and deliberately drops retired games
-  // — it asks "what should we play more of", where this card asks "what did we
-  // play". `.claude/rules/recommendation-scoring.md` §12.
-  const playCount = {};
-  finished.forEach((s) => {
-    if (s.chosenGameId && round.games.some((g) => g.id === s.chosenGameId))
-      playCount[s.chosenGameId] = (playCount[s.chosenGameId] || 0) + 1;
-  });
-  let maxPlays = 0;
-  Object.keys(playCount).forEach((gid) => {
-    if (playCount[gid] > maxPlays) maxPlays = playCount[gid];
-  });
-  const mostGames = Object.keys(playCount)
-    .filter((gid) => playCount[gid] === maxPlays)
-    .map((gid) => round.games.find((x) => x.id === gid));
-  if (mostGames.length) {
+  // Most played (pokaleMostPlayed, which carries the retired-games decision).
+  const most = pokaleMostPlayed(round, finished);
+  if (most.games.length) {
     cards.appendChild(pokaleRecordRow(round, {
-      icon: 'ti-flame', label: t('pokale.mostPlayed'), games: mostGames,
-      value: tn(maxPlays, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover,
+      icon: 'ti-flame', label: t('pokale.mostPlayed'), games: most.games,
+      value: tn(most.max, 'home.chip.sessionsOne', 'home.chip.sessions'), loadCover,
     }));
   }
 
@@ -626,16 +627,26 @@ function renderPokaleTab(round) {
     }));
   }
 
-  if (cards.children.length) ((forest ? split : side) || split || sec).appendChild(records);
+  /* The round's plaque (#1857): its records, the challenge (#1779) and its own
+     Abzeichen, in the column the records held — beside the standings from
+     1280px where a design splits, below them otherwise. */
+  const plaque = renderPokaleRoundPlaque(round, finished, {
+    records: cards.children.length ? records : null,
+    challenge: renderChallengeSection(round),
+    ctx: badgeCtx,
+  });
+  ((forest ? split : side) || split || sec).appendChild(plaque);
   app.appendChild(sec);
-  // The group challenge (#1779): the goal the table plays towards, above the
-  // marks it collects by playing — one row since #1856.
-  const challenge = renderChallengeSection(round);
-  if (challenge) app.appendChild(challenge);
-  /* Abzeichen (#1388, views-badges.js): the round's row, then one row per
-     member in THIS standings order — so the two lists on one page cannot
-     disagree about who comes first. No place is printed (#1856): the
-     standings above already say it. */
-  app.appendChild(renderBadgeSection(round, ranked));
+  /* One plaque per person (#1857, views-badges.js), in THIS standings order.
+     Where the standings are already one row per person — Ocean's and Die
+     Brücke's bars, the Programmheft's and Forest's table — those rows carry the
+     pins and nobody is listed twice; the section then has nothing to add. A
+     place is printed only when the stage ranks people at all. */
+  if (!bars && !table) {
+    app.appendChild(renderBadgeSection(round, ranked, { ctx: badgeCtx, wins, rankOf: young ? null : rankOf }));
+  } else {
+    (bars || table).id = 'abzeichen';
+    (bars || table).setAttribute('tabindex', '-1');
+  }
   badgeRevealTarget(round.id);
 }

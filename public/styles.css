@@ -3523,11 +3523,9 @@ a.btn:where(:has(> .ti:first-child):not([hidden], [aria-label])) {
 .avatar.member-link { transition: box-shadow var(--dur-base) var(--ease-out); }
 .avatar.member-link:hover { box-shadow: 0 0 0 3px var(--brand-edge); }
 .result-people__person.member-link:focus-visible,
-.podium__entry.member-link:focus-visible,
-.podium__rest-name.member-link:focus-visible { border-radius: var(--radius-sm); }
+.podium__entry.member-link:focus-visible { border-radius: var(--radius-sm); }
 .result-people__person.member-link:hover .result-people__name,
-.podium__entry.member-link:hover .podium__name,
-.podium__rest-name.member-link:hover {
+.podium__entry.member-link:hover .podium__name {
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--brand) 60%, transparent);
 }
@@ -10109,7 +10107,6 @@ kbd {
 @media (max-width: 639px) {
   .podium--single .podium__col.podium__col--spacer { display: none; }
 }
-.podium__rest { text-align: center; font-size: var(--text-sm); font-weight: 600; margin-bottom: 18px; }
 .pokale-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -10228,6 +10225,114 @@ kbd {
   font-weight: 700;
   overflow-wrap: anywhere;
 }
+
+/* Pokale as the Ehrentafel (#1857, views-pokale-plaques.js).
+   „Neu seit": a row of chips under the heading, only when something is new.
+   Each chip is its own target, so they wrap rather than truncate. */
+.pokale-news { margin: 0 0 18px; }
+.pokale-news__title { margin: 0 0 8px; font-size: var(--text-md); }
+.pokale-news__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.pokale-news__entry { min-width: 0; max-width: 100%; }
+.pokale-news__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 6px 14px 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.pokale-news__item:hover { background: var(--sunken-soft); }
+.pokale-news__item:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
+.pokale-news__pin .badge__mark { width: 28px; height: 28px; border-width: 1px; font-size: var(--text-sm); }
+.pokale-news__icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-tint);
+  color: var(--brand-ink, var(--brand));
+}
+.pokale-news__text { min-width: 0; }
+
+/* The round's plaque: its name and span, then the records, the challenge row
+   and the round's Abzeichen row, one under the other. */
+.pokale-plaque { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.pokale-plaque__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.pokale-plaque__title { margin: 0; font-size: var(--text-lg); min-width: 0; overflow-wrap: anywhere; }
+.pokale-plaque__since { font-size: var(--text-sm); color: var(--ink-soft); }
+.pokale-plaque > .pokale-records { margin-top: 0; }
+.pokale-plaque > .challenge-section { margin: 0; }
+
+/* A person's place on their plaque, only where the stage ranks people. */
+.badge-member__place {
+  flex: none;
+  min-width: 1.5em;
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+/* The plaques tile from 1280px ONLY when each prints its place
+   (.claude/rules/tiles-vs-lists.md, the #1576 precedent): row-major, so the
+   standings order reads left to right and then on. */
+/* Compounded: `.badge-members` sets its single column further down the sheet,
+   and a tie at (0,1,0) would lose on source order. */
+@media (min-width: 1280px) {
+  .badge-members.badge-members--placed { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+}
+
+/* The pins inside a bar or table row, where that row is the person's plaque. */
+.pokale-pins {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  scroll-margin-top: 80px;
+}
+.pokale-pins:hover { background: var(--sunken-soft); }
+.pokale-pins:focus-visible { outline: 3px solid var(--brand-edge); outline-offset: 2px; }
+.pokale-pins__pins { flex: 0 1 auto; justify-content: flex-start; }
+.pokale-pins__text { white-space: nowrap; }
+.pokale-pins__go { flex: none; }
+/* Under the bar on a phone; beside it from 860px, so a row costs no extra
+   height where there is width to spare. */
+.pokale-bars__row > .pokale-pins { display: flex; margin: 2px 0 0 auto; }
+@media (min-width: 860px) {
+  .pokale-bars__row:has(> .pokale-pins) { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .pokale-bars__row > .pokale-pins { margin: 0; }
+}
+/* The table's last column takes only what it needs: the pins, „+N" and the
+   chevron, without „N unterwegs" (still in the button's accessible name). A
+   table column is narrow at every width — Forest's side column is 524px beside
+   the grove at 1470 — and with the text and six pins the cell measured 247px
+   and pushed the table 65px past the page. So a table row also always takes
+   the narrow cut of three pins, the switch the badge rows make below 420px. */
+.pokale-table__badges { width: 1%; text-align: right; white-space: nowrap; }
+.pokale-table .pokale-pins { gap: 4px; padding: 4px 2px; }
+.pokale-table .pokale-pins__text { display: none; }
+.pokale-table .badge-member__pin:nth-child(n+4),
+.pokale-table .badge-member__more[data-cut="6"] { display: none; }
+.pokale-table .badge-member__more[data-cut="3"] { display: inline; }
 
 /* Pokale's „Rekorde" (#1856): one list, a row per record — cover (or icon),
    the label over the holder, the value on the right. The same rows in every

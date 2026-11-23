@@ -294,13 +294,15 @@ test('Forest: „Pokale" titles the page, „Ruhmeshalle" heads the grove, the t
   const dom = boot(t, 'forest');
   await dom.call('showRound', RID, 'pokale');
   assert.equal(text(dom.app.querySelector('.section-head h1')), 'Pokale');
-  assert.ok(dom.app.querySelector('.section-head .chronik__count'), 'no span beside the title');
+  // The span moved from beside the title onto the round's plaque (#1857).
+  assert.equal(dom.app.querySelector('.section-head .chronik__count'), null, 'the span is printed twice');
+  assert.match(text(dom.app.querySelector('.pokale-plaque__since')), /Sessions seit/);
   const split = dom.app.querySelector('.pokale-split');
   const stage = split.querySelector(':scope > .pokale-split__stage');
   const side = split.querySelector(':scope > .pokale-split__side');
   assert.equal(text(stage.querySelector('.forest-grove h2.forest-grove__title')), 'Ruhmeshalle');
   assert.ok(side.querySelector('.pokale-table'), 'the table is not in the side column');
-  const cards = split.querySelector(':scope > .pokale-records');
+  const cards = split.querySelector(':scope > .pokale-plaque > .pokale-records');
   assert.ok(cards, 'the records do not sit under both columns');
   assert.ok(side.compareDocumentPosition(cards) & 4);
   assert.equal(dom.app.querySelector('.podium, .podium__rest'), null, 'the grove replaces the podium and the summary line');

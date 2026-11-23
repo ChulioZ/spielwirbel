@@ -529,25 +529,46 @@ What the app does, in detail. For a short overview see the
     actually have something in them. Any of them can be shared as an image: the
     card is drawn on the device and handed to the share sheet (or saved), so
     nothing is published anywhere.
-  - **Pokale** (trophies) – a winners' podium (three pedestals, `[2 | 1 | 3]`
-    with the crown in the middle; members tied on a place stand side by side on
-    one step, and nobody is capped off it) plus one **Rekorde** list (issue
-    #1856): most played, best rated, current winning streak, the „Längste
-    Session" (the round's longest timed session, once one has a duration,
-    #1772) and the „Bester Kauf", each a row that names its game (with its
-    cover) or its holder and the value, only when it exists. Nothing on Pokale
-    starts a game — that is the Start tab's job. Each section of the tab
-    answers one question, and they all share one content width. The round's
-    **Rückblick** — totals, the worst-rated game, the one the group disagrees
-    about most, and every member's own favourite — sits at the foot of the
-    Regal (#1855). Pokale is the all-time record; the time-scoped view of the
-    same idea is the Chronik's period recap above.
+  - **Pokale** (trophies) – the round's **Ehrentafel** (issue #1857), in
+    three parts under the standings' scene (the podium — three pedestals,
+    `[2 | 1 | 3]` with the crown in the middle, members tied on a place side by
+    side on one step, nobody capped off it — or a design's own bars, table or
+    grove):
+    - **„Neu seit <Spiel> · <Datum>"**, at the top and only when the round's
+      latest session changed something: the Abzeichen it earned (the same marks
+      the result screen celebrates and the Start tab's „Zuletzt gespielt" line
+      counts, one per mark), a record it took — a session longer than every
+      earlier one, or the game that just became the most played — and the step
+      it made in the group challenge. Each item opens where it lives: a mark
+      its holder's collection, a record its game, the step the challenge.
+    - **The round's plaque**: the round's name and „N Sessions seit <Monat>",
+      the **Rekorde** list (#1856 — most played, best rated, current winning
+      streak, the „Längste Session" once one has a duration (#1772) and the
+      „Bester Kauf", each a row naming its game with its cover, or its holder,
+      and the value, only when it exists), the challenge row and the round's
+      own Abzeichen. Where a design splits the page it stands beside the
+      standings from 1280px.
+    - **One plaque per person**, in standings order: the place (only once the
+      podium is shown), the avatar, the name and the wins, the earned pins with
+      „+N" and „N unterwegs", opening that person's collection. Designs whose
+      standings already list everyone — Ocean's and Die Brücke's bars, the
+      Programmheft's and Forest's table — carry the pins in that row instead,
+      so nobody is listed twice. With places the plaques tile from 1280px.
+
+    Nothing on Pokale starts a game — that is the Start tab's job — and
+    nothing on it moves at rest. Everything is derived from the sessions, so
+    deleting a session updates the band, the records and the plaques alike. The
+    round's **Rückblick** — totals, the worst-rated game, the one the group
+    disagrees about most, and every member's own favourite — sits at the foot
+    of the Regal (#1855). Pokale is the all-time record; the time-scoped view of
+    the same idea is the Chronik's period recap above.
 
     The standings rank on the **number of wins**, and each entry shows that
     count and nothing else. The podium is simply the top three places, so a
     member who has played and never won stands if they are in them — on „0
-    Siege" — and the only reason to be listed below the stage is being fourth.
-    A member who has taken part in no decided session at all is not ranked.
+    Siege" — and everyone else is named on their own plaque below, with their
+    place. A member who has taken part in no decided session at all is not
+    ranked: their plaque carries no place.
 
     **A young round gets no podium yet** (issues #1280, #1318): until the third
     played session, three places drawn off one or two evenings would rank people
@@ -575,11 +596,10 @@ What the app does, in detail. For a short overview see the
     completed it, and the Chronik keeps a row under the session that completed
     it. Hidden with the Abzeichen under „Einfacher Modus".
 
-    **Abzeichen** (badges, issue #1388) sit below the standings as one row per
-    holder (issue #1856): the round first, then the members in standings order,
-    each with its avatar, „9 verdient · 5 unterwegs", its earned marks as small
-    pins („+N" when they overflow the line) and a chevron. There is no legend
-    and no place — the standings above say who is where. The whole row opens
+    **Abzeichen** (badges, issue #1388) sit on the plaques (issue #1857): the
+    round's on the round's plaque, a person's on theirs (or in their bar or
+    table row), each as its earned marks in small pins („+N" when they overflow
+    the line), „N unterwegs" and a chevron. There is no legend. The row opens
     that holder's **collection** (a sheet on a phone, a popover on a wide
     screen), grouped into Verdient, Unterwegs and Offen. The marks are the
     first win, ten

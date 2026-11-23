@@ -345,6 +345,10 @@ I18N.nl = {
   'pokale.streakN': '{n} keer op rij gewonnen',
   'pokale.longest': 'Langste sessie',
   'pokale.bestBuy': 'Beste aankoop',
+  'pokale.news.title': 'Nieuw sinds {game} · {date}',
+  'pokale.news.titleBare': 'Nieuw sinds de laatste sessie · {date}',
+  'pokale.news.record': 'Nieuw record: {record} · {game}',
+  'pokale.plaque.place': 'Plaats {n}',
 
   'recap.title': 'Terugblik',
   'recap.lead': 'Wat jullie kast over jullie zegt — uit elke beoordeling in deze groep.',

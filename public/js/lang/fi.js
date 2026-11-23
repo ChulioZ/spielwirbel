@@ -322,6 +322,10 @@ I18N.fi = {
   'pokale.streakN': '{n} voittoa putkeen',
   'pokale.longest': 'Pisin sessio',
   'pokale.bestBuy': 'Paras ostos',
+  'pokale.news.title': 'Uutta pelin {game} jälkeen · {date}',
+  'pokale.news.titleBare': 'Uutta edellisen session jälkeen · {date}',
+  'pokale.news.record': 'Uusi ennätys: {record} · {game}',
+  'pokale.plaque.place': 'Sija {n}',
 
   'recap.title': 'Yhteenveto',
   'recap.lead': 'Mitä hyllysi kertoo teistä — kaikkien tämän porukan arvioiden perusteella.',

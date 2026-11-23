@@ -321,7 +321,7 @@
   .marker-card__name,
   .badge__name,
   .badge-moment__title,
-  .pokale-records__title,
+  .pokale-records__title, .pokale-news__title, .pokale-plaque__title,
   .badge-collection__title,
   .challenge-history__title,
   .badge-card__name,
@@ -1898,7 +1898,7 @@
     align-items: start;
     gap: var(--space-5) 28px;
   }
-  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > .pokale-records { grid-column: 1 / -1; }
+  :root[data-design="forest"] .pokale-split:has(> .pokale-split__side) > .pokale-plaque { grid-column: 1 / -1; }
 }
 
 /* The grove: a glade card with a meadow along its foot, one tree per person.
@@ -1998,13 +1998,20 @@
 @media (max-width: 559px) {
   :root[data-design="forest"] .pokale-table :is(.pokale-table__sessions, .pokale-table__rate) { display: none; }
 }
+/* Beside the grove (1100–1499px) the side column is 343–520px, and the
+   Abzeichen column (#1857) makes the table 526px — it pushed the page sideways.
+   There the table drops Sessions and Siegquote, as it does on a phone; both are
+   the member page's own figures, one tap away. From 1500px it has the room. */
+@media (min-width: 1100px) and (max-width: 1499px) {
+  :root[data-design="forest"] .pokale-table:has(.pokale-table__badges) :is(.pokale-table__sessions, .pokale-table__rate) { display: none; }
+}
 
 /* The records (F13.3/F13.4, one list since #1856): a stump card, the label in
    moss green, the rows split by bark hairlines. */
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-records__list { border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record + .pokale-record { border-top-color: var(--bark-light); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record__label { color: var(--brand); }
-:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-records .pokale-record__thumb { border-radius: 50%; }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-plaque .pokale-records__list { border: 0; border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-1); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-plaque .pokale-record + .pokale-record { border-top-color: var(--bark-light); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-plaque .pokale-record__label { color: var(--brand); }
+:root[data-design="forest"]:not([data-scheme="dark"]) .pokale-split > .pokale-plaque .pokale-record__thumb { border-radius: 50%; }
 
 /* ---- The member page (F13.5/F13.6): the Tischkarte, and from 1100px a
    column beside it with the boxes, „Zuletzt dabei" and the two game tiles. */

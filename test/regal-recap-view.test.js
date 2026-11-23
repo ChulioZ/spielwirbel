@@ -76,7 +76,7 @@ for (const { id } of DESIGN_REGISTRY) {
     assert.equal(pokale(dom, round).querySelector('.recap, .regal-recap'), null, 'Pokale still renders a Rückblick');
   });
 
-  test(`${id}: a young round names its leader FIRST, before the rest line`, (t) => {
+  test(`${id}: a young round names its leader FIRST, before the plaques`, (t) => {
     // Two played evenings, below YOUNG_ROUND_PODIUM_FROM: Anna leads with one win.
     const round = badgeRound([
       night('s1', 1, { memberIds: THREE }),
@@ -86,15 +86,15 @@ for (const { id } of DESIGN_REGISTRY) {
     const dom = boot(t, id, round, { wide: true });
     const app = pokale(dom, round);
     const lead = app.querySelector('.pokale-young');
-    const rest = app.querySelector('.podium__rest');
-    assert.ok(lead && rest, 'the young round renders its leader and its rest line');
-    assert.ok(lead.compareDocumentPosition(rest) & 4, 'the leader must come before the rest line');
-    // Where the design splits stage from plaques, both stand in the stage.
+    // Everyone is named on a plaque of their own since #1857, in every design
+    // (a young round has no bars or table to carry them).
+    const plaques = app.querySelector('.badge-section .badge-members');
+    assert.ok(lead && plaques, 'the young round renders its leader and the plaques');
+    assert.ok(lead.compareDocumentPosition(plaques) & 4, 'the leader must come before the plaques');
+    assert.equal(plaques.querySelector('.badge-member__place'), null, 'a young round prints no place');
+    // Where the design splits the stage from the round's plaque, the leader opens the stage.
     const stage = app.querySelector('.pokale-split__stage');
-    if (stage) {
-      assert.ok(stage.contains(lead) && stage.contains(rest), 'leader and rest line belong to the stage column');
-      assert.equal(stage.firstElementChild, lead, 'the leader opens the stage');
-    }
+    if (stage) assert.equal(stage.firstElementChild, lead, 'the leader opens the stage');
   });
 }
 

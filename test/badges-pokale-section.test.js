@@ -43,14 +43,16 @@ function collection(dom, mid) {
   return dom.document.querySelector('.badge-collection');
 }
 
-test('the round row comes first, then one row per member in the standings order (#1856)', async (t) => {
+test('one plaque per member in the standings order; the round\'s row sits on the round\'s plaque (#1857)', async (t) => {
   // Ben wins twice, Anna once: the standings put Ben first.
   const r = badgeRound([night('s1', 1), night('s2', 2, { winnerIds: ['m2'] }), night('s3', 3, { winnerIds: ['m2'] })]);
   const dom = await pokale(t, r);
-  assert.deepEqual(rows(dom).map((b) => b.dataset.mid), ['round', 'm2', 'm1']);
-  assert.ok(rows(dom)[0].classList.contains('badge-member--round'), 'the round row leads');
-  assert.equal(section(dom).querySelector('ol.badge-members').children.length, 3, 'an ordered list — standings order is meaning');
-  for (const row of rows(dom)) {
+  assert.deepEqual(rows(dom).map((b) => b.dataset.mid), ['m2', 'm1']);
+  assert.equal(section(dom).querySelector('ol.badge-members').children.length, 2, 'an ordered list — standings order is meaning');
+  const roundRow = dom.app.querySelector('.pokale-plaque #abzeichen-round');
+  assert.ok(roundRow && roundRow.classList.contains('badge-member--round'), "the round's own row is on its plaque");
+  assert.equal(section(dom).querySelector('#abzeichen-round'), null, 'and nowhere else');
+  for (const row of rows(dom).concat(roundRow)) {
     assert.equal(row.tagName, 'BUTTON', 'the whole row is a button');
     assert.equal(row.type, 'button');
   }
@@ -71,7 +73,7 @@ test('a row is one line: earned pins only, the counts, a chevron — no legend, 
   assert.ok([...anna.querySelectorAll('.badge-member__pin')].every((p) => p.dataset.state === 'earned'), 'only earned pins');
   assert.equal(anna.querySelector('.badge-member__pins').getAttribute('aria-hidden'), 'true', 'a pin is decorative');
   assert.ok(anna.querySelector('.badge-member__go'), 'a chevron');
-  assert.match(anna.getAttribute('aria-label'), new RegExp(`^Anna, ${earned} verdient`), 'the name carries the counts');
+  assert.match(anna.getAttribute('aria-label'), new RegExp(`^Anna, 1 Sieg, ${earned} verdient`), 'the name carries the wins and the counts');
 });
 
 test('a row draws at most BADGE_ROW_PINS pins and says the rest as „+N"', async (t) => {
