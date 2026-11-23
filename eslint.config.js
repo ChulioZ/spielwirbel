@@ -607,7 +607,7 @@ const frontendGlobals = {
   pokaleMostPlayed: 'readonly', pokaleLatestSession: 'readonly', pokaleNewsItems: 'readonly', POKALE_RECORD_NEWS: 'readonly',
   pokaleBadgeHolder: 'readonly', renderPokaleNews: 'readonly', renderPokaleRoundPlaque: 'readonly', pokaleMemberPins: 'readonly',
   badgeName: 'readonly', openBadgeCollection: 'readonly', openChallengeOverview: 'readonly', badgeHolderRow: 'readonly',
-  BADGE_ROW_PINS: 'readonly', BADGE_ROW_PINS_NARROW: 'readonly', badgeContext: 'readonly',
+  BADGE_ROW_PINS: 'readonly', BADGE_ROW_PINS_NARROW: 'readonly', BADGE_ROW_CUTS: 'readonly', badgeContext: 'readonly',
   CHRONIK_MILESTONES: 'readonly', chronikTier: 'readonly', isShelfChange: 'readonly',
   pokaleStatCard: 'readonly', pokaleGameCard: 'readonly', recapGames: 'readonly',
   roundStandings: 'readonly',

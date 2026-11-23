@@ -180,7 +180,7 @@ function pokaleMemberPins(ctx, m) {
   const progress = holder.entries.filter((e) => e.state === 'progress').length;
   const counts = [tn(earned.length, 'badges.count.earnedOne', 'badges.count.earned')];
   if (progress) counts.push(tn(progress, 'badges.count.progressOne', 'badges.count.progress'));
-  const more = [BADGE_ROW_PINS_NARROW, BADGE_ROW_PINS].filter((cut) => earned.length > cut)
+  const more = BADGE_ROW_CUTS.filter((cut) => earned.length > cut)
     .map((cut) => `<span class="badge-member__more" data-cut="${cut}">+${earned.length - cut}</span>`).join('');
   // With nothing earned there are no pins to speak for the row, so the text
   // says the count instead of leaving a bare chevron.
