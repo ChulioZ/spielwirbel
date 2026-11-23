@@ -7223,7 +7223,7 @@
 }
 
 /* The records stand BESIDE the stage from 1280px (#1276, T13.2; a list since
-   #1856): the podium and its summary line on the left, the records in a 340px
+   #1856, on the round's plaque since #1857): the podium on the left, the plaque in a 340px
    column on the right, where the sheet drew its plaques. `.pokale-split` exists only under this design
    (renderPokaleTab), and below 1280px it is a plain block, so the plaques follow
    the podium — the DOM order is the reading order at every width and nothing
@@ -7240,7 +7240,7 @@
     flex: 1 1 0;
     min-width: 0;
   }
-  :root[data-design="tisch"][data-scheme="dark"] .pokale-split > .pokale-records {
+  :root[data-design="tisch"][data-scheme="dark"] .pokale-split > .pokale-plaque {
     flex: 0 0 340px;
     margin-top: 0;
   }

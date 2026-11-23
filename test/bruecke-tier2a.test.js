@@ -184,7 +184,7 @@ test('Brücke ranks every member with their place and no crown, plaques beside',
   ]);
   assert.deepEqual(rows, [['1', 'Anna', '3'], ['2', 'Ben', '1'], ['2', 'Cem', '1'], ['–', 'Dora', '0']],
     'every member on the board, a tie sharing its place, Dora at 0 with no place');
-  assert.equal(dom.app.querySelector('.pokale-bars .ti-crown'), null, 'the lead is the cyan place, not a crown');
+  assert.equal(dom.app.querySelector('.pokale-bars__face .ti-crown'), null, 'the lead is the cyan place, not a crown');
   assert.ok(dom.app.querySelector('.pokale-bars__row.is-lead'));
   assert.ok(dom.app.querySelector('.pokale-split .pokale-split__stage .pokale-bars'), 'the board sits in the split\'s stage');
   assert.equal(dom.app.querySelector('.podium'), null);
@@ -200,7 +200,7 @@ test('a young Brücke round keeps the sentence; Ocean keeps its crowned bars wit
   const ocean = boot(t, 'ocean');
   await ocean.call('showRound', RID, 'pokale');
   assert.equal(ocean.app.querySelector('.pokale-bars__rank'), null);
-  assert.ok(ocean.app.querySelector('.pokale-bars .ti-crown'));
+  assert.ok(ocean.app.querySelector('.pokale-bars__face .ti-crown'));
   assert.equal(text(ocean.app.querySelector('.section-head h1')), 'Ruhmeshalle', 'other designs keep their title');
 });
 

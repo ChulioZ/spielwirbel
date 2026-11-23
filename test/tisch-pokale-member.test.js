@@ -99,7 +99,9 @@ test('Klassisch: the Pokale section keeps its single column — no split wrapper
   const dom = boot(t, 'klassisch', pokaleRound());
   dom.call('renderPokaleTab', pokaleRound());
   const sec = dom.app.querySelector('.section');
-  assert.deepEqual(shapeOf(sec), ['section-head', 'podium', 'muted podium__rest', 'pokale-records'],
+  // #1857: the „Neu seit" band under the heading, no summary line under the
+  // podium (everyone has a plaque), the records on the round's plaque.
+  assert.deepEqual(shapeOf(sec), ['section-head', 'pokale-news', 'podium', 'pokale-plaque'],
     'the Klassisch Pokale section changed shape');
   assert.equal(dom.app.querySelector('.pokale-split'), null, 'a Tisch wrapper leaked into Klassisch');
 });
@@ -108,19 +110,19 @@ test('Der Tisch: the plaques sit in the split, AFTER the stage that holds the po
   const dom = boot(t, 'tisch', pokaleRound());
   dom.call('renderPokaleTab', pokaleRound());
   const sec = dom.app.querySelector('.section');
-  assert.deepEqual(shapeOf(sec), ['section-head', 'pokale-split'],
+  assert.deepEqual(shapeOf(sec), ['section-head', 'pokale-news', 'pokale-split'],
     'the stage and the plaques are not wrapped in one split');
   const split = sec.querySelector('.pokale-split');
-  assert.deepEqual(shapeOf(split), ['pokale-split__stage', 'pokale-records'],
-    'the plaques must follow the stage — DOM order is the reading order');
-  assert.deepEqual(shapeOf(split.firstElementChild), ['podium', 'muted podium__rest'],
-    'the podium and its summary line belong to the stage');
-  assert.ok(split.querySelectorAll('.pokale-records .pokale-record').length >= 1, 'no record rendered');
+  assert.deepEqual(shapeOf(split), ['pokale-split__stage', 'pokale-plaque'],
+    "the round's plaque must follow the stage — DOM order is the reading order");
+  assert.deepEqual(shapeOf(split.firstElementChild), ['podium'],
+    'the podium alone is the stage — everyone is named on a plaque below');
+  assert.ok(split.querySelectorAll('.pokale-plaque .pokale-records .pokale-record').length >= 1, 'no record rendered');
   // The Rückblick used to follow; since #1855 it lives at the foot of the Regal.
   assert.equal(dom.app.querySelector('.section.recap'), null, 'the Rückblick is back on Pokale');
 });
 
-test('Der Tisch: a round with no award yet renders the stage alone in the split', (t) => {
+test('Der Tisch: a round with no record yet keeps its plaque, with no records list on it', (t) => {
   // One game, played once, no ratings, no streak: no plaque qualifies.
   const round = roundWith({
     games: [{ id: 'g1', title: 'Catan', tagIds: [] }],
@@ -130,7 +132,9 @@ test('Der Tisch: a round with no award yet renders the stage alone in the split'
   dom.call('renderPokaleTab', round);
   const split = dom.app.querySelector('.pokale-split');
   assert.ok(split, 'the split is missing');
-  assert.deepEqual(shapeOf(split), ['pokale-split__stage'], 'an empty plaque column was rendered');
+  // The plaque still carries the round's name, span and Abzeichen row (#1857).
+  assert.deepEqual(shapeOf(split), ['pokale-split__stage', 'pokale-plaque']);
+  assert.equal(split.querySelector('.pokale-records'), null, 'an empty records list was rendered');
 });
 
 // --- Member page ------------------------------------------------------------
@@ -247,7 +251,7 @@ test('tisch.css sets the records column beside the stage only from 1280px, and r
   const block = css.match(/@media \(min-width: 1280px\) \{\s*:root\[data-design="tisch"\]\[data-scheme="dark"\] \.pokale-split \{[\s\S]*?\n\}/);
   assert.ok(block, 'no 1280px block lays out .pokale-split');
   assert.match(block[0], /\.pokale-split \{[^}]*display: flex/);
-  assert.match(block[0], /\.pokale-split > \.pokale-records \{[^}]*flex: 0 0 340px/);
+  assert.match(block[0], /\.pokale-split > \.pokale-plaque \{[^}]*flex: 0 0 340px/);
   // DOM order = visual order (WCAG 2.4.3): nothing in the split may reorder.
   const splitRules = [...css.matchAll(/([^{}]*\.pokale-split[^{}]*)\{([^{}]*)\}/g)];
   assert.ok(splitRules.length >= 3, 'the split rules were not found');

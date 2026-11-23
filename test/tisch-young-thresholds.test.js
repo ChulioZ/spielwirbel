@@ -203,8 +203,10 @@ test('Klassisch Pokale tab below the threshold: the crowned leader and the sente
   assert.equal(young.querySelector('.pokale-young__lead').textContent, 'Anna führt mit 2 Siegen');
   assert.equal(young.querySelector('.pokale-young__when').textContent, PODIUM);
   assert.equal(young.querySelector('a.pokale-young__seat').getAttribute('href'), '/round/r1/member/m1');
-  assert.deepEqual([...dom.app.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m2', 'm3'],
-    'everyone not named stays reachable');
+  // Everyone has a plaque since #1857 — the leader too — and none prints a place.
+  assert.deepEqual([...dom.app.querySelectorAll('.badge-section .badge-member')].map((e) => e.dataset.mid), ['m1', 'm2', 'm3'],
+    'everyone stays reachable');
+  assert.equal(dom.app.querySelector('.badge-member__place'), null, 'no place off two evenings');
   assert.doesNotMatch(dom.app.textContent, /Siegesserie/, 'the streak waits for the series threshold');
 });
 
@@ -226,8 +228,9 @@ test('Der Tisch Pokale tab below the threshold: the crowned leader and the sente
   assert.equal(seat.getAttribute('href'), '/round/r1/member/m1', 'the leader stays a link to their page');
   assert.equal(seat.getAttribute('aria-label'), 'Anna');
   assert.ok(seat.querySelector('.ti-crown'));
-  // Everyone NOT named stays reachable, on the summary line.
-  assert.deepEqual([...dom.app.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m2', 'm3']);
+  // Everyone stays reachable on a plaque of their own (#1857), without a place.
+  assert.deepEqual([...dom.app.querySelectorAll('.badge-section .badge-member')].map((e) => e.dataset.mid), ['m1', 'm2', 'm3']);
+  assert.equal(dom.app.querySelector('.badge-member__place'), null);
   assert.doesNotMatch(dom.app.textContent, /Siegesserie/, 'a series before the sentence says series exist');
 });
 

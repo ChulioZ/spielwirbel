@@ -55,12 +55,18 @@ const wideAt = (dom, wide) => dom.run(
   `window.matchMedia = (q) => ({ matches: ${wide} && /min-width/.test(q), addEventListener() {}, removeEventListener() {} });`
 );
 
-/* Pokale draws one ROW per holder since #1856; the tiles live in each
+/* Pokale draws one control per holder since #1856; the tiles live in each
    holder's collection. Open every holder's in turn and hand back their tiles
    — the overlay each click opens replaces the previous one, and a detached
-   tile is still a node to assert on. `mid` limits it to one holder. */
+   tile is still a node to assert on. `mid` limits it to one holder.
+
+   Since #1857 a holder's control is wherever its plaque is: the round's row on
+   the round's plaque, a person's row in the badge section — or, in a bar or
+   table design, the pins inside their standings row. Each carries the id
+   `abzeichen-<mid>` and a `data-mid`, which is what this selects by (the
+   section heading's `abzeichen-title` shares the prefix). */
 function collectionTiles(dom, mid) {
-  const rows = [...dom.app.querySelectorAll('.badge-section .badge-member')]
+  const rows = [...dom.app.querySelectorAll('[id^="abzeichen-"][data-mid]')]
     .filter((row) => !mid || row.dataset.mid === mid);
   const tiles = [];
   for (const row of rows) {

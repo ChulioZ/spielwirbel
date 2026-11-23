@@ -85,7 +85,9 @@ async function placements(t, design) {
   wideAt(dom, true);
   const out = {};
   await dom.call('renderPokaleTab', r);
-  out.section = dom.app.querySelector('.badge-section').outerHTML;
+  // The round's row on its plaque (#1857) — a person's sits in Ocean's bar row,
+  // which is Ocean's standings and so its own markup by design.
+  out.section = dom.app.querySelector('#abzeichen-round').outerHTML;
   out.member = dom.call('memberCardBadges', r, r.members[1]).outerHTML;
   out.hub = dom.call('hubBadgeLine', r).outerHTML;
   out.chronik = dom.call('chronikBadgeRows', r, [...dom.call('badgeChronikIndex', r, []).values()][0])
@@ -95,7 +97,7 @@ async function placements(t, design) {
   dom.call('fillBadgeMoment', el, r, r.sessions[3]);
   out.moment = el.outerHTML;
   // The holder's collection (#1856), and a card opened inside it.
-  dom.app.querySelector('.badge-section #abzeichen-m1').click();
+  dom.app.querySelector('#abzeichen-m1').click();
   await flush();
   out.collection = dom.document.querySelector('.badge-collection').outerHTML;
   dom.document.querySelector('.badge-collection .badge').click();

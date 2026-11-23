@@ -155,7 +155,7 @@ const bars = (dom) => [...dom.app.querySelectorAll('.pokale-bars__row')].map((r)
   n: text(r.querySelector('.pokale-bars__n')),
   w: r.querySelector('.pokale-bars__link').style.getPropertyValue('--w'),
   lead: r.classList.contains('is-lead'),
-  crown: !!r.querySelector('.ti-crown'),
+  crown: !!r.querySelector('.pokale-bars__face .ti-crown'),
   href: r.querySelector('a').getAttribute('href'),
 }));
 

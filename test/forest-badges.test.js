@@ -62,7 +62,7 @@ async function surfaces(t, design) {
   await dom.call('renderPokaleTab', r);
   out.pokale = squash(dom.app.querySelector('.badge-section').outerHTML);
   // The holder's collection (#1856), and a card opened inside it.
-  dom.app.querySelector('.badge-section #abzeichen-m1').click();
+  dom.app.querySelector('#abzeichen-m1').click();
   await flush();
   out.collection = squash(dom.document.querySelector('.badge-collection').outerHTML);
   dom.document.querySelector('.badge-collection .badge').click();
@@ -259,7 +259,9 @@ async function forestPokale(t, sessions, memberCount = 2, design = 'forest') {
   const r = badgeRound(sessions, memberCount);
   const dom = boot(t, design, r);
   await dom.call('renderPokaleTab', r);
-  return { dom, r, sec: dom.app.querySelector('.badge-section') };
+  // The whole page: since #1857 the round's row is on its plaque and, in a
+  // mature Forest round, a person's pins sit in their table row.
+  return { dom, r, sec: dom.app };
 }
 // The tiles of one holder's collection (#1856), as live nodes.
 const tilesOf = (dom, mid) => collectionTiles(dom, mid);
@@ -339,7 +341,10 @@ test('a secret round mark is a leaf with ti-lock-question and „Geheim"', async
 
 test('the rubric reads „Abzeichen" and the Tischkarte shows earned marks only', async (t) => {
   const { dom, r, sec } = await forestPokale(t, nights(10, ['m1', 'm2']));
-  assert.equal(sec.querySelector('h2').textContent.trim(), 'Abzeichen');
+  // #1857: a mature Forest round names them on the round's plaque row and in
+  // the standings table's last column, not under a section heading.
+  assert.equal(sec.querySelector('#abzeichen-round .badge-member__name').textContent.trim(), 'Abzeichen');
+  assert.equal(sec.querySelector('.pokale-table thead th:last-child').textContent.trim(), 'Abzeichen');
   assert.ok(!/Auszeichnung/.test(dom.app.textContent), 'a rubric reads „Auszeichnungen"');
   const row = dom.call('memberCardBadges', r, r.members[0]);
   const states = [...row.querySelectorAll('.badge')].map((b) => b.dataset.state);

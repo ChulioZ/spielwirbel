@@ -339,8 +339,12 @@ test('the table ranks every member like the podium, with the member page\'s Sess
   assert.deepEqual(heads, [
     dom.run("t('pokale.col.place')"), dom.run("t('pokale.col.name')"),
     dom.run("t('member.wins')"), dom.run("t('member.sessions')"), dom.run("t('member.winRate')"),
+    dom.run("t('badges.title')"),
   ]);
-  const rows = [...dom.app.querySelectorAll('.pokale-table tbody tr')].map((r) => [...r.children].map(text));
+  // The last column is the person's Abzeichen (#1857): the row IS their plaque.
+  const body = [...dom.app.querySelectorAll('.pokale-table tbody tr')];
+  assert.ok(body.every((r) => r.lastElementChild.querySelector('button.pokale-pins')), 'a row without its pins');
+  const rows = body.map((r) => [...r.children].slice(0, 5).map(text));
   const stat = (mid) => {
     const s = dom.call('memberStats', roundWith(SESSIONS), mid);
     return [String(s.joined), s.winRate === null ? '–' : Math.round(s.winRate * 100) + '%'];

@@ -323,6 +323,10 @@ I18N.ko = {
   'pokale.streakN': '{n}연승',
   'pokale.longest': '가장 긴 세션',
   'pokale.bestBuy': '최고의 구매',
+  'pokale.news.title': '{game} 이후 새 소식 · {date}',
+  'pokale.news.titleBare': '지난 세션 이후 새 소식 · {date}',
+  'pokale.news.record': '새 기록: {record} · {game}',
+  'pokale.plaque.place': '{n}위',
 
   'recap.title': '요약',
   'recap.lead': '선반이 말해 주는 여러분 — 이 모임의 모든 평가로부터.',

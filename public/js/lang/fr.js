@@ -347,6 +347,10 @@ I18N.fr = {
   'pokale.streakN': '{n} victoires d’affilée',
   'pokale.longest': 'Session la plus longue',
   'pokale.bestBuy': 'Meilleur achat',
+  'pokale.news.title': 'Nouveau depuis {game} · {date}',
+  'pokale.news.titleBare': 'Nouveau depuis la dernière session · {date}',
+  'pokale.news.record': 'Nouveau record : {record} · {game}',
+  'pokale.plaque.place': 'Place {n}',
 
   'recap.title': 'Bilan',
   'recap.lead': 'Ce que ton étagère dit de toi — d’après chaque note de ce groupe.',

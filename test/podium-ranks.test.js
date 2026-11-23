@@ -388,12 +388,14 @@ test('an unheld rank beside two held ones is a painted riser, not a hole', async
   assert.equal(spacer.getAttribute('aria-hidden'), 'true');
 });
 
-test('members ranked below the third step still appear in the rest line', async (t) => {
+test('members ranked below the third step still appear — on their own plaque, with their place (#1857)', async (t) => {
   const dom = await pokale(t, memberList(4), { m1: 4, m2: 3, m3: 2, m4: 1 });
   assert.deepEqual(colOrder(dom), ['2', '1', '3']);
-  const rest = dom.app.querySelector('.podium__rest');
-  assert.ok(rest, 'the fourth-placed member vanished from the screen entirely');
-  assert.deepEqual([...rest.querySelectorAll('.podium__rest-name')].map((e) => e.dataset.mid), ['m4']);
+  assert.equal(dom.app.querySelector('.podium__rest'), null, 'no summary line under the stage since #1857');
+  const fourth = dom.app.querySelector('.badge-section .badge-member[data-mid="m4"]');
+  assert.ok(fourth, 'the fourth-placed member vanished from the screen entirely');
+  assert.equal(fourth.querySelector('.badge-member__place').textContent, '4');
+  assert.match(fourth.querySelector('.badge-member__summary').textContent, /1 Sieg\b/);
 });
 
 test('a member who has never won STANDS, rather than leaving a step empty', async (t) => {
