@@ -25,11 +25,12 @@ comment is the authoritative list. The table mirrors it, in two groups:
 | one author's chat messages per tenant — the share of the cap above any single account may hold, so one invitee cannot exhaust the owner's | `lib/routes/round-messages.js` | `quota_messages_author` | #1781 |
 | accepted friends per user | `lib/routes/friends.js` | `quota_friends` | #325 |
 | open outgoing friend requests per user | `lib/routes/friends.js` | `quota_requests` | #325 |
+| direct messages one account has written, across every conversation | `lib/routes/direct-messages.js` | `quota_direct_messages` | #1783 |
 | passkeys per user | `lib/routes/passkeys.js` | `quota_passkeys` | #418 |
 | price alerts per user | `lib/routes/price-watches.js` | `quota_price_watches` | #680 |
 
-The last four are per **account**, not per tenant — a friendship is a
-cross-account social surface, a passkey is a credential and a price alert is a
+The last five are per **account**, not per tenant — a friendship and a
+direct message are cross-account social surfaces, a passkey is a credential and a price alert is a
 personal watch, none of which is tenant data — but they take the same shape
 (env-tunable, read per call, distinct 403 → localized toast). They need no
 `enforced()` gate of their own: the friend, passkey and price-alert routes 404

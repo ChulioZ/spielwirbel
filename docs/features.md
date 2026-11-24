@@ -1328,6 +1328,24 @@ What the app does, in detail. For a short overview see the
   (issue #1357). A friendship shares
   **no round data**; it is purely social. Unfriending is unilateral and immediate in both
   directions. With accounts off the whole feature is inert.
+- **Direct messages** – *accounts mode only* (issue #1783). Two confirmed
+  friends can write to each other. The Freundeskreis screen has a **Nachrichten**
+  band — one row per friend (and per ex-friend you have history with), newest
+  conversation first, an unread dot on the ones with something new — and each
+  row opens the conversation at `/freunde/nachrichten/<account>`. It is the round
+  chat's thread: plain text up to 2000 characters, clickable links, older pages
+  on request, a light poll while open, edit and delete for the author. A new
+  message puts one collapsed **inbox item per conversation** into the
+  recipient's inbox („2 neue Nachrichten von bo"), under the same Konto switch as
+  the round chat; never the text, never an e-mail. **Ending the friendship is the
+  block**: neither side can write anything new (not even an edit), the history
+  stays readable to both, and each can still delete their own messages. Deleting
+  either account deletes the **whole conversation**. Guest-demo accounts have no
+  access at all. Every message from the other side carries a **report** link; the
+  operator looks it up by id in the same admin card as a round-chat message and
+  can remove it (logged as `remove_direct_message`). Posting shares the chat's
+  per-account rate limit (`CHAT_RATE_LIMIT_MAX`); one account may hold
+  `MAX_DIRECT_MESSAGES_PER_USER` direct messages (default 5000).
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
   round invitation or a friend request is also **e-mailed** to its recipient, not
   only dropped in the in-app inbox — an invitation exists to reach someone who is

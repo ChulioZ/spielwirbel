@@ -54,8 +54,14 @@ async function showFriends(opts) {
 
   let lists;
   let feed;
+  let convs;
   try {
-    [lists, feed] = await Promise.all([accountApi('GET', '/friends'), accountApi('GET', '/friends/feed')]);
+    [lists, feed, convs] = await Promise.all([
+      accountApi('GET', '/friends'),
+      accountApi('GET', '/friends/feed'),
+      // Direct messages (#1783). A failure here must not cost the screen.
+      accountApi('GET', '/messages').catch(() => ({ conversations: [] })),
+    ]);
   } catch { return; } // accountApi already handled a dead session (→ login)
 
   app.innerHTML = '';
@@ -106,6 +112,10 @@ async function showFriends(opts) {
     roster.appendChild(tiles);
   }
   screen.appendChild(roster);
+  // Direct messages (#1783): after the people they are with, before the news —
+  // a conversation is something somebody may be waiting on, the feed is not.
+  const messages = renderMessagesBand(convs.conversations);
+  if (messages) screen.appendChild(messages);
 
   const news = renderBand(t('friends.newsTitle'));
   if (feed.events.length) {

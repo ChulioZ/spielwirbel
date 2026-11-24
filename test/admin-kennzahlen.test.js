@@ -88,11 +88,11 @@ const STATUS = (over = {}) => ({
       // reading its neighbour's key cannot pass.
       lastWeek: {
         registrations: 4, activeAccounts: 11, sessionsStarted: 9, sessionsPlayed: 7, sessionsCancelled: 1,
-        sessionsImported: 14, roundsShared: 2, friendships: 3, messages: 19,
+        sessionsImported: 14, roundsShared: 2, friendships: 3, messages: 19, directMessages: 6,
       },
     },
     designAdoption: { byDesign: { ...DESIGNS } },
-    social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5 },
+    social: { sharedRounds: 2, invitationsOpen: 1, friendships: 5, friendshipsWithMessages: 2 },
     demo: { live: 1, max: 5 },
     mail: { sent: 2, limit: 200 },
     peaks: { roundsPerTenant: 3, gamesPerRound: 12, tagsPerRound: 4, messagesPerTenant: 7, photosPerTenant: 5 },
@@ -319,6 +319,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Geteilte Runden', '2', '', 0],
         ['Neue Freundschaften', '3', '', 0],
         ['Chat-Nachrichten', '19', '', 0],
+        ['Direktnachrichten', '6', '', 0],
       ],
     },
     {
@@ -399,7 +400,7 @@ test('every card renders exactly: parent first, then count + share of its parent
     {
       title: 'Freundschaften & Einladungen',
       total: '',
-      lines: [['Freundschaften', '5', '', 0], ['offene Einladungen', '1', '', 0]],
+      lines: [['Freundschaften', '5', '', 0], ['mit Direktnachricht', '2', '40 %', 1], ['offene Einladungen', '1', '', 0]],
     },
   ]);
 });
@@ -505,7 +506,7 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
       lastWeek: Object.fromEntries(Object.keys(zero.adoption.lastWeek).map((k) => [k, 0])),
     },
     designAdoption: { byDesign: { klassisch: 0 } },
-    social: { sharedRounds: 0, invitationsOpen: 0, friendships: 0 },
+    social: { sharedRounds: 0, invitationsOpen: 0, friendships: 0, friendshipsWithMessages: 0 },
   };
   const { doc, dom } = await panel({ '/status': { status: STATUS(empty) } });
   t.after(() => dom.window.close());
@@ -517,7 +518,9 @@ test('a fresh instance renders „—" for every share, never NaN or „0 / 0"',
   assert.equal(/0 \/ 0/.test(text), false, 'a 0 / 0 claims a share of nothing');
   // The five population cards — the seven-day card and the rest card have no parent.
   assert.deepEqual(cardOf(doc, 'Letzte sieben Tage').lines.map(([, n, share]) => [n, share]),
-    Array(9).fill(['0', '']), 'a quiet week reads 0, never a share');
+    Array(10).fill(['0', '']), 'a quiet week reads 0, never a share');
+  // The rest card's one share (#1783) over zero friendships.
+  assert.deepEqual(cardOf(doc, 'Freundschaften & Einladungen').lines[1], ['mit Direktnachricht', '0', '—', 1]);
   for (const card of cards.slice(1, 6)) {
     assert.equal(card.total, '0', `${card.title}: a zero population still reads 0`);
     for (const [label, n, share] of card.lines) {

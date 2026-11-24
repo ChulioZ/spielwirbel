@@ -85,6 +85,10 @@ const GLOBAL_DISPOSITION = {
   quiz_submissions: { erase: true, export: true },
   // #1781: the account's read markers on round chats (its own and others').
   round_message_reads: { erase: true, export: true },
+  // #1783: direct messages (every conversation the account is part of goes
+  // whole) and their read markers.
+  direct_messages: { erase: true, export: true },
+  direct_message_reads: { erase: true, export: true },
   quiz_rounds: {
     erase: false,
     export: false,
@@ -245,6 +249,8 @@ if (!process.env.DATABASE_URL) {
       price_watches: 'priceWatches',
       quiz_submissions: 'quizSubmissions',
       round_message_reads: 'roundMessageReads',
+      direct_messages: 'directMessages',
+      direct_message_reads: 'directMessageReads',
     };
     for (const [table, d] of Object.entries(GLOBAL_DISPOSITION)) {
       if (!d.export) continue;
@@ -290,6 +296,11 @@ if (!process.env.DATABASE_URL) {
     const mine = await repo.createRoundMessage('t-erase-other', otherRound.id, { authorUserId: uid, text: 'von mir', at: now });
     const theirs = await repo.createRoundMessage('t-erase-other', otherRound.id, { authorUserId: other, text: 'von dir', at: now });
     await repo.markRoundMessagesRead(uid, otherRound.id, theirs.seq);
+    // #1783: a conversation with the other account, from both sides — erasure
+    // takes it whole, so the reply goes too.
+    await repo.createDirectMessage({ authorUserId: uid, recipientUserId: other, text: 'hi', at: now });
+    const reply = await repo.createDirectMessage({ authorUserId: other, recipientUserId: uid, text: 'ho', at: now });
+    await repo.markDirectMessagesRead(uid, other, reply.seq);
 
     // Every fixture landed — otherwise the counts below are all zero before the
     // erase and the whole test passes against an eraseAccount that does nothing.

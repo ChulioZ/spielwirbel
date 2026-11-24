@@ -73,3 +73,9 @@ only fork. Three things fail silently:
 - **The JSON backend has no cascade.** `dropOrphanSessionMessages` runs after
   every session removal (deleteSession, scrubGames, moveGames). They mask each
   other in a combined fixture, so the contract asserts after EACH step.
+
+## Direct messages (#1783) reuse this machinery
+
+`mountChatThread`, the `chat_unread` item (key `dm:<account id>`) and
+`round-chat.js`'s cap and normaliser serve direct conversations too; their own
+store and traps are `.claude/rules/direct-messages.md`.

@@ -88,6 +88,11 @@ function bootApp(t, { loggedIn = true, profile = null } = {}) {
     if (/^\/api\/rounds\/[^/]+$/.test(url)) return round;
     if (url === '/api/rounds') return [SUMMARY];
     if (url === '/api/price-watches') return { watches: [], limit: 50 };
+    // A direct conversation (#1783), and its not-found branch.
+    if (url === '/api/account/messages/u-bo') {
+      return { partner: { userId: 'u-bo', username: 'bo', avatar: null }, friend: true, canPost: true, messages: [], hasMore: false, lastRead: 0 };
+    }
+    if (url === '/api/account/messages/u-gone') throw new Error('not_found');
     return {};
   });
   dom.set('accountsActive', () => true);
@@ -144,6 +149,7 @@ const NON_MAIN = [
   ['profile', (dom) => dom.call('showProfile', 'ada')],
   ['new round', (dom) => dom.call('showNewRound')],
   ['quiz archive', (dom) => dom.call('showQuizArchive')],
+  ['direct conversation', (dom) => dom.call('showDirectThread', 'u-bo')],
 ];
 
 /** Every screen persistent chrome reaches, which must therefore offer none. */

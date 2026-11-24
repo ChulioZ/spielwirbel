@@ -104,6 +104,9 @@ lib/
     saved-filters.js a round's saved session filters (#1328): the unique-name,
                      per-round cap and exact-permutation rules, run by both
                      backends inside their own lock
+    direct-messages-json.js     the direct-message store (#1783): global,
+    direct-messages-postgres.js keyed by an account pair — one module per
+                     backend, spread into json.js / postgres.js
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
@@ -479,6 +482,10 @@ lib/
                                              link (#1515): preview + join, the
                                              token in the body; 404 unless
                                              ACCOUNTS_ENABLED)
+    direct-messages.js /api/account/messages (direct messages between friends —
+                                             conversation list, page, post, edit,
+                                             delete, mark read; an ex-friend reads
+                                             but cannot write, issue #1783)
     friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
                                              list, feed paged by ?before= (#325, #1357) —
@@ -1179,6 +1186,9 @@ public/
                           lightly polled, with edit/delete/report (#1781); the
                           same thread on a session's result + the Chronik
                           comment count (#1782)
+    views-messages.js     direct messages (#1783): the Freundeskreis „Nachrichten"
+                          band and the one-conversation screen, on the round
+                          chat's thread machinery
     views-round-lookup.js the add-game lookup sheet, incl. its guest-game mode
                           (#1681)
     views-game-link.js    the other lookup sheet: link an existing game to a
