@@ -5926,6 +5926,7 @@ a.k-tile:focus-visible,
    same name; a parallel class would have to re-declare this rule, which is the
    drift that makes an icon sit flush against its label. */
 .rs-row .ds-row__main,
+.dm-row .ds-row__main,
 .wish-pick__row .ds-row__main,
 .off-shelf__row .ds-row__main,
 .saved-filter-row .ds-row__main { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -13213,6 +13214,15 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
 .chat, .chat__thread { display: flex; flex-direction: column; gap: 12px; }
 .chat__note { margin: 0; font-size: var(--text-sm); }
 .chat__older { align-self: center; }
+/* Direct messages (#1783): the conversation band on the Freundeskreis screen
+   and the one-conversation screen. The rows are a host of the shared
+   .ds-row__main flex rule above, not a parallel component
+   (.claude/rules/ds-row-is-a-click-target.md). An unread row's name is bold as
+   well as dotted, so the state is not carried by the dot alone. */
+.dm-row--unread .dm-row__name { font-weight: 700; }
+.dm-row__dot { margin-left: 2px; }
+.dm-head h1 { display: flex; align-items: center; gap: 10px; margin: 0; }
+.chat__closed { margin: 0; font-size: var(--text-sm); }
 /* .link-btn sets its own display, which beats the bare `hidden` attribute
    (.claude/rules/hidden-attribute-vs-display-rule.md) — and Der Tisch's
    `:root[data-design="tisch"] .link-btn` (0,3,1) beats a plain guard too,

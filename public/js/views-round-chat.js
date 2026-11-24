@@ -35,6 +35,10 @@ function chatErrorText(err) {
   if (code === 'rate_limited') return t('chat.toast.rateLimited');
   if (code === 'quota_messages') return t('chat.toast.quota');
   if (code === 'quota_messages_author') return t('chat.toast.quotaAuthor');
+  // A direct conversation (#1783): the per-account cap, and a friendship that
+  // ended while the screen was open.
+  if (code === 'quota_direct_messages') return t('dm.toast.quota');
+  if (code === 'not_friends') return t('dm.toast.notFriends');
   return t('chat.toast.failed');
 }
 
@@ -111,11 +115,18 @@ function chatSessionLabel(round, sid) {
 }
 
 /* One thread mounted into `wrap`: the list, paging, polling, the composer and
-   the per-message actions. `base` is the thread's API path — the round's, or
-   one session's. On the round's own thread a session comment carries a
-   context line linking to its session; a session's thread needs none. */
-async function mountChatThread(wrap, round, { base, inputId, placeholder, empty: emptyText, purge }) {
-  const moderator = roundCan(round, 'chat.moderate');
+   the per-message actions. `base` is the thread's API path — the round's, one
+   session's, or (since #1783) a direct conversation's. On the round's own
+   thread a session comment carries a context line linking to its session; a
+   session's thread needs none.
+
+   A direct conversation passes `round: null` — there is no round, so nobody
+   moderates and nothing is purged — plus `readOnly` once the friendship has
+   ended (the history stays readable; the composer goes) and `onRead`, which
+   hears whether the newest message on screen was marked read, so the caller
+   can put out its own dot. */
+async function mountChatThread(wrap, round, { base, inputId, placeholder, empty: emptyText, purge, readOnly, readOnlyNote, onRead }) {
+  const moderator = round ? roundCan(round, 'chat.moderate') : false;
   const state = { messages: [], hasMore: false, lastRead: 0, timer: null };
 
   wrap.appendChild(h(`<div class="chat__thread">
@@ -139,6 +150,10 @@ async function mountChatThread(wrap, round, { base, inputId, placeholder, empty:
   if (inputId !== 'chatInput') {
     input.id = inputId;
     form.querySelector('label').htmlFor = inputId;
+  }
+  // An ended friendship (#1783): the history stays, nothing new may be added.
+  if (readOnly) {
+    form.replaceWith(h(`<p class="muted chat__closed">${esc(readOnlyNote || '')}</p>`));
   }
 
   function messageRow(m) {
@@ -171,7 +186,7 @@ async function mountChatThread(wrap, round, { base, inputId, placeholder, empty:
       b.addEventListener('click', run);
       actions.appendChild(b);
     };
-    if (m.own) action('ti-pencil', t('chat.edit'), () => editMessage(li, m));
+    if (m.own && !readOnly) action('ti-pencil', t('chat.edit'), () => editMessage(li, m));
     if (m.own || moderator) action('ti-trash', t('chat.delete'), () => deleteMessage(m));
     // The flood clean-up: every message by this person in this round.
     if (purge && !m.own && moderator) action('ti-user-x', t('chat.purge', { name: name || t('chat.deletedAccount') }), () => purgeAuthor(m, name));
@@ -207,6 +222,7 @@ async function mountChatThread(wrap, round, { base, inputId, placeholder, empty:
         round.chatUnread = false;
         document.querySelectorAll('.hub-chat-dot').forEach((d) => d.remove());
       }
+      if (onRead) onRead(out.lastRead >= newest);
     } catch { /* the dot simply stays; the server is the record */ }
   }
 
@@ -366,22 +382,29 @@ function hubChatDot() {
    per thread, carrying a name and a count — never a message's text, which the
    item does not hold. Opening the chat is what clears it: the thread's own read
    marker removes the item server-side, so this row needs no read/dismiss call
-   of its own beyond the shared dismiss button. Only round threads exist today:
-   session comments (#1782) are part of their round's thread and its count, so
-   they need no key of their own; a direct thread (#1783) adds one here. */
+   of its own beyond the shared dismiss button. Session comments (#1782) are
+   part of their round's thread and its count, so they need no key of their
+   own; a direct conversation (#1783, `dm:<account>`) names the other person and
+   opens the conversation instead of a round. */
 function renderChatUnreadItem(item) {
   const p = item.payload || {};
   const count = Number(p.count) || 1;
+  const direct = typeof p.thread === 'string' && p.thread.startsWith('dm:');
+  const title = direct
+    ? tn(count, 'inbox.dm.titleOne', 'inbox.dm.titleMany', { name: p.username || t('chat.deletedAccount') })
+    : tn(count, 'inbox.chat.titleOne', 'inbox.chat.titleMany', { round: p.roundName || '' });
   const row = h(`<div class="ds-row inbox-row inbox-row--chat${item.read ? ' ds-row--static' : ' inbox-row--unread'}">
       <div class="ds-row__main">
-        <div class="ds-row__date">${unreadDot(item)}${esc(tn(count, 'inbox.chat.titleOne', 'inbox.chat.titleMany', { round: p.roundName || '' }))}</div>
-        <a class="inbox-row__chat">${esc(t('inbox.chat.open'))}</a>
+        <div class="ds-row__date">${unreadDot(item)}${esc(title)}</div>
+        <a class="inbox-row__chat">${esc(t(direct ? 'inbox.dm.open' : 'inbox.chat.open'))}</a>
       </div>
       <div class="ds-row__meta">
         <button class="link-btn inbox-row__del" type="button" aria-label="${esc(t('inbox.dismiss'))}"><i class="ti ti-trash" aria-hidden="true"></i></button>
       </div>
     </div>`);
-  if (p.roundId) {
+  if (direct && p.otherUserId) {
+    navLink(row.querySelector('.inbox-row__chat'), directThreadPath(p.otherUserId), () => showDirectThread(p.otherUserId));
+  } else if (p.roundId) {
     navLink(row.querySelector('.inbox-row__chat'), roundPath(p.roundId, 'chat'), () => showRound(p.roundId, 'chat'));
   }
   row.querySelector('.inbox-row__del').addEventListener('click', async (ev) => {

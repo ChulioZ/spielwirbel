@@ -506,6 +506,8 @@
         line('Neue Freundschaften', w.friendships, null),
         // Round-level messages and session comments together (#1823).
         line('Chat-Nachrichten', w.messages, null),
+        // Between friends, counted apart from the round chat (#1783).
+        line('Direktnachrichten', w.directMessages, null),
       ],
     };
 
@@ -647,12 +649,14 @@
     };
 
     // No parent population: a friendship row carries no tenant and an
-    // invitation is not a share of anything on this card, so bare counts.
+    // invitation is not a share of anything on this card, so bare counts —
+    // except the one line that IS a share of the line above it (#1783).
     const rest = {
       title: 'Freundschaften & Einladungen',
       total: null,
       lines: [
         line('Freundschaften', m.social.friendships, null),
+        line('mit Direktnachricht', m.social.friendshipsWithMessages, m.social.friendships, 1),
         line('offene Einladungen', m.social.invitationsOpen, null),
       ],
     };
@@ -1431,7 +1435,10 @@
     try {
       const { message: m } = await api(`/messages/${encodeURIComponent($('chatMessageId').value.trim())}`);
       chatMessageId = m.id;
-      $('chatMeta').textContent = `${m.authorUsername || 'unbekanntes Konto'} · Runde „${m.roundName || '—'}“ · ${m.createdAt} · Mandant ${m.tenantId}`;
+      // A direct message (#1783) has a recipient instead of a round and a tenant.
+      $('chatMeta').textContent = m.kind === 'direct'
+        ? `${m.authorUsername || 'unbekanntes Konto'} → ${m.recipientUsername || 'unbekanntes Konto'} · Direktnachricht · ${m.createdAt}`
+        : `${m.authorUsername || 'unbekanntes Konto'} · Runde „${m.roundName || '—'}“ · ${m.createdAt} · Mandant ${m.tenantId}`;
       $('chatText').textContent = m.text;
       $('chatResult').hidden = false;
     } catch (err) {

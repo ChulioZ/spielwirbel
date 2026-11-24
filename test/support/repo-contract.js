@@ -6862,6 +6862,7 @@ module.exports = function repoContract(repo) {
         {
           registrations: 1, activeAccounts: 2, sessionsStarted: 2, sessionsPlayed: 1, sessionsCancelled: 1,
           sessionsImported: 1, roundsShared: 1, friendships: 1, messages: 2,
+          directMessages: 0, // counted in test/support/direct-messages-contract.js (#1783)
         },
       );
 
@@ -7981,7 +7982,7 @@ module.exports = function repoContract(repo) {
     // Exactly the five named keys — this is the export/erasure symmetry guard: it
     // must stay in step with the stores eraseAccount deletes (the erase tests below
     // pin the delete side), so a sixth store added to one shows up as a shape drift.
-    assert.deepEqual(Object.keys(mine).sort(), ['feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions', 'roundMessageReads', 'roundMessages']);
+    assert.deepEqual(Object.keys(mine).sort(), ['directMessageReads', 'directMessages', 'feedEvents', 'friendships', 'grants', 'inbox', 'invitations', 'priceWatches', 'quizSubmissions', 'roundMessageReads', 'roundMessages']);
     assert.equal(mine.grants.length, 1);
     assert.equal(mine.grants[0].roundId, round.id);
     assert.equal(mine.grants[0].userId, me.id);
@@ -8007,7 +8008,7 @@ module.exports = function repoContract(repo) {
     const bystander = await repo.createUser(userFields({ tenantId: bTenant }));
     assert.deepEqual(await repo.exportAccountData(bystander.id, bTenant), {
       grants: [], invitations: [], inbox: [], friendships: [], feedEvents: [], priceWatches: [], quizSubmissions: [],
-      roundMessages: [], roundMessageReads: [],
+      roundMessages: [], roundMessageReads: [], directMessages: [], directMessageReads: [],
     });
   });
 

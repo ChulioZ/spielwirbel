@@ -54,6 +54,13 @@ Security issues especially relevant given the current architecture:
   deleting one without being its author or the round's owner/co-owner, any way
   to make message text execute or render as markup, a link with a scheme other
   than http(s), or message text reaching the logs is in scope.
+- **Direct messages** (#1783, `/api/account/messages`) — user-authored text
+  between two accounts, reached ahead of the tenant gate and scoped to the
+  caller by the route itself. Reading a conversation you are not part of,
+  writing to someone who is not (or no longer) your friend, editing or deleting
+  the other side's message, reaching it at all from a guest-demo account, or
+  learning whether two other accounts ever talked is in scope, as is anything
+  the round chat bullet above names.
 - **The weekly quiz's answer key** (#743). `GET /api/quiz/sample` is public by
   design: one teaser question, without its answer, from games the week's scored
   questions do not use. Reading the answer to a **scored** question before

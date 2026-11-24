@@ -64,7 +64,7 @@ const frontendGlobals = {
   CHAT_MESSAGE_MAX: 'readonly', CHAT_PAGE_SIZE: 'readonly', normalizeChatText: 'readonly',
   chatSegments: 'readonly', chatUnread: 'readonly',
   chatAvailable: 'readonly', renderChatTab: 'readonly', renderSessionComments: 'readonly', mountChatThread: 'readonly',
-  sessionCommentBadge: 'readonly', loadSessionCommentBadges: 'readonly', hubChatDot: 'readonly', renderChatUnreadItem: 'readonly', hubSections: 'readonly',
+  sessionCommentBadge: 'readonly', loadSessionCommentBadges: 'readonly', hubChatDot: 'readonly', renderChatUnreadItem: 'readonly', renderMessagesBand: 'readonly', showDirectThread: 'readonly', hubSections: 'readonly',
   // views-friends.js (#1092)
   renderPersonCard: 'readonly', renderPersonTile: 'readonly', personTileLine: 'readonly',
   renderAddTile: 'readonly', renderBand: 'readonly',
@@ -801,7 +801,7 @@ const frontendGlobals = {
   // router.js
   routing: 'writable', navIndex: 'writable', roundPath: 'readonly',
   gamePath: 'readonly', memberPath: 'readonly', resultsPath: 'readonly',
-  profilePath: 'readonly', votePath: 'readonly',
+  profilePath: 'readonly', directThreadPath: 'readonly', votePath: 'readonly',
   syncUrl: 'readonly', navBack: 'readonly', resolveRoute: 'readonly',
   routeTo: 'readonly', showResultsById: 'readonly',
   activeFlow: 'writable', activeGuard: 'writable',

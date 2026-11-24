@@ -41,7 +41,8 @@ issue #1836),
 default 60 — higher because it is an ordinary user action, not a signup), and
 `CHAT_RATE_LIMIT_MAX` (round-chat posts per **account** per minute, default 20,
 issue #1781 — keyed by account rather than by IP, since a whole table shares one
-address), and
+address; direct messages between friends, issue #1783, use the same ceiling in
+a bucket of their own), and
 `AVATAR_RATE_LIMIT_MAX` (profile-picture uploads, per 15 min, default 10 — the
 one endpoint whose cost is decoding attacker-supplied bytes, so it gets a much
 lower ceiling than the account surface around it), and
@@ -186,7 +187,9 @@ bounds the hub's quick-start chip row rather than abuse. The round chat's messag
 are capped per tenant (`MAX_MESSAGES_PER_TENANT`, default 20000, issue #1781); a
 grantee's message counts against the round owner's tenant, where it is stored, and
 one account may hold at most `MAX_MESSAGES_PER_AUTHOR` of them (default 5000), so a
-single invitee cannot exhaust the owner's cap alone. Session photos are capped per
+single invitee cannot exhaust the owner's cap alone. Direct messages between
+friends are capped per account instead (`MAX_DIRECT_MESSAGES_PER_USER`, default
+5000, issue #1783), since a conversation belongs to no tenant. Session photos are capped per
 tenant too (`MAX_PHOTOS_PER_TENANT`, default 500, issue #1774) — only a first photo
 counts against it, so replacing one at the ceiling still works. Per
 **account** rather than per

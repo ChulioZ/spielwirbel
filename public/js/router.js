@@ -76,6 +76,9 @@ function roundPath(rid, sub) {
 // encoded here rather than at each link site — usernames are user-chosen and
 // need not be URL-safe.
 const profilePath = (username) => `/u/${encodeURIComponent(username)}`;
+// One direct conversation (#1783), keyed by the other account's id rather than
+// its username: a rename must not break a link already sitting in the inbox.
+const directThreadPath = (uid) => `/freunde/nachrichten/${encodeURIComponent(uid)}`;
 // The public vote link (#652) lives in js/vote-path.js — the server builds the
 // same path when it draws the QR code (#1170), so the shape has one home.
 const gamePath = (rid, gid) => `/round/${rid}/game/${gid}`;
@@ -169,6 +172,11 @@ function resolveRoute(pathname) {
   const parts = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
   if (parts.length === 0) return () => showHome();
   if (parts[0] === 'inbox') return () => showInbox(); // #207; showInbox sends a logged-out visitor Home
+  // A direct conversation (#1783); guarded in the view like the screen it hangs off.
+  if (parts[0] === 'freunde' && parts[1] === 'nachrichten' && parts[2]) {
+    const uid = safeDecodeSegment(parts[2]);
+    return () => showDirectThread(uid);
+  }
   if (parts[0] === 'freunde') return () => showFriends(); // #325; showFriends sends a logged-out visitor Home
   if (parts[0] === 'konto') return () => showAccount(); // #482; showAccount sends a logged-out visitor Home
   // „Was ist neu" (#741). Guarded in the view like its neighbours, but one step

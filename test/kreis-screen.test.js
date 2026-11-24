@@ -222,7 +222,8 @@ test('a recent event reads relatively, and an old one falls back to the date', a
 
 test('neither line needs a request the view does not already make', async () => {
   // `since` has been in the /friends payload since #325 and nothing rendered it;
-  // the events come from the feed the screen fetches anyway. Two calls, as before.
+  // the events come from the feed the screen fetches anyway. The third call is
+  // the direct-message band (#1783), which is not one of these two lines.
   const calls = [];
   dom.set('accountApi', async (method, path) => {
     calls.push(path);
@@ -231,7 +232,7 @@ test('neither line needs a request the view does not already make', async () => 
       : { events: [] };
   });
   await dom.call('showFriends');
-  assert.deepEqual(calls.sort(), ['/friends', '/friends/feed']);
+  assert.deepEqual(calls.sort(), ['/friends', '/friends/feed', '/messages']);
 });
 
 test('a request card keeps its buttons, and only its name half is a link', async () => {

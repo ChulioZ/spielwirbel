@@ -50,6 +50,49 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1783, direct messages between friends. A new capability.
+   */
+  {
+    revision: '2026-11-24',
+    kind: 'new',
+    de: {
+      title: "Direktnachrichten unter Freund:innen",
+      body: "Wer befreundet ist, kann sich jetzt direkt schreiben: Im Freundeskreis unter „Nachrichten“ steht eine Zeile pro Person, mit Punkt, wenn etwas Neues da ist. Lesen könnt nur ihr beide. Endet die Freundschaft, bleibt die Unterhaltung lesbar, Neues geht dann nicht mehr.",
+    },
+    en: {
+      title: "Direct messages between friends",
+      body: "Friends can now write to each other directly: on the Friends screen, under “Messages” there is one row per person, with a dot when something new has arrived. Only the two of you can read it. If the friendship ends, the conversation stays readable, but nothing new can be sent.",
+    },
+    es: {
+      title: "Mensajes directos entre amigos",
+      body: "Los amigos ahora pueden escribirse directamente: en Amigos, bajo «Mensajes», hay una fila por persona, con un punto cuando llega algo nuevo. Solo vosotros dos podéis leerlo. Si la amistad termina, la conversación sigue siendo legible, pero ya no se puede enviar nada nuevo.",
+    },
+    fr: {
+      title: "Messages directs entre amis",
+      body: "Les amis peuvent désormais s’écrire directement : dans Amis, sous « Messages », une ligne par personne, avec un point quand il y a du nouveau. Vous seuls pouvez la lire. Si l’amitié prend fin, la conversation reste lisible, mais plus rien de nouveau ne peut être envoyé.",
+    },
+    it: {
+      title: "Messaggi diretti tra amici",
+      body: "Gli amici ora possono scriversi direttamente: in Amici, sotto «Messaggi», c’è una riga per persona, con un punto quando arriva qualcosa di nuovo. Solo voi due potete leggerla. Se l’amicizia finisce, la conversazione resta leggibile, ma non si può più inviare niente di nuovo.",
+    },
+    nl: {
+      title: "Directe berichten tussen vrienden",
+      body: "Vrienden kunnen elkaar nu rechtstreeks schrijven: bij Vrienden, onder „Berichten”, staat één rij per persoon, met een stip als er iets nieuws is. Alleen jullie tweeën kunnen het lezen. Eindigt de vriendschap, dan blijft het gesprek leesbaar, maar kan er niets nieuws meer bij.",
+    },
+    pt: {
+      title: "Mensagens diretas entre amigos",
+      body: "Amigos agora podem trocar mensagens diretamente: em Amigos, na seção “Mensagens”, há uma linha por pessoa, com um ponto quando chega algo novo. Só vocês dois podem ler. Se a amizade terminar, a conversa continua legível, mas não é mais possível enviar nada novo.",
+    },
+    fi: {
+      title: "Yksityisviestit kaverien kesken",
+      body: "Kaverit voivat nyt kirjoittaa toisilleen suoraan: Kaverit-näkymän kohdassa ”Viestit” on rivi jokaiselle, ja piste kertoo, kun jotain uutta on tullut. Vain te kaksi voitte lukea sen. Jos ystävyys päättyy, keskustelu pysyy luettavana, mutta uutta ei voi enää lähettää.",
+    },
+    ko: {
+      title: "친구끼리 개인 메시지",
+      body: "이제 친구끼리 직접 메시지를 주고받을 수 있어요. 친구 화면의 “메시지”에 사람마다 한 줄씩 있고, 새 메시지가 오면 점이 표시돼요. 두 사람만 읽을 수 있어요. 친구 관계가 끝나도 대화는 계속 읽을 수 있지만 새 메시지는 보낼 수 없어요.",
+    },
+  },
+  /*
    * #1756, a round read back in from its data export. A new capability.
    */
   {

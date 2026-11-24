@@ -29,7 +29,7 @@ Abschnitt 7 (Maßnahmen + Begründung), Abschnitt 10 (Kontaktstellen
 Art. 11/12). **Jede Entfernung stützt sich auf eine dort benannte Regel** —
 die Begründung (unten) zeigt auf die konkrete Ziffer.
 
-**Stand:** 2026-11-14
+**Stand:** 2026-11-24
 
 ## Kanäle (Art. 16 Abs. 1)
 
@@ -38,7 +38,8 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
   sehen — an jedem Eintrag des Freundeskreis-Feeds (#559) und, seit #841, am
   Kontoprofil (Nutzername, Profilbild) sowie an den Personen-Karten im
   Freundeskreis, sowie seit #1781 an jeder fremden Nachricht im Runden-Chat
-  (Betreff vorbelegt mit „Chat-Nachricht <Kennung>"). Jeder öffnet dasselbe
+  und seit #1783 in jeder Direktnachricht-Unterhaltung (Betreff vorbelegt mit
+  „Chat-Nachricht <Kennung>"). Jeder öffnet dasselbe
   Formular mit Kategorie „Sonstiges" und vorbelegtem gemeldetem Konto (beim Feed
   und im Chat auch dem Betreff). Kein eigener Kanal,
   sondern weitere Zugänge zum obigen, dort, wo fremde Inhalte zu sehen sind
@@ -87,7 +88,9 @@ die Begründung (unten) zeigt auf die konkrete Ziffer.
    (`takedownImage`, `redactText` — seit #1825 samt der Kopien eines Spieltitels
    oder Mitgliedsnamens in der Chronik und im Freundeskreis-Feed —, Konto-Sperre, seit #1781 „Chat-Nachricht
    entfernen" — Nachschlagen über die Kennung aus dem Betreff, Löschen mit
-   Grund, der Text bleibt als `previous` auf dem Log-Eintrag; ist der **Nutzername selbst**
+   Grund, der Text bleibt als `previous` auf dem Log-Eintrag; seit #1783 findet
+   dieselbe Kennung auch eine Direktnachricht, deren Entfernung als
+   `remove_direct_message` protokolliert wird; ist der **Nutzername selbst**
    der Verstoß, `Name neutralisieren` — ersetzt ihn durch eine aus der Konto-Id
    abgeleitete neutrale Bezeichnung und hält den vorherigen Namen als Nachweis
    auf dem Log-Eintrag fest, #320); jede Maßnahme schreibt einen
