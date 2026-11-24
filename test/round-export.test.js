@@ -273,7 +273,15 @@ test('the zip holds the seven tables and the complete round as JSON (#1702, #178
   const files = unzipSync(new Uint8Array(bytes));
   assert.deepEqual(Object.keys(files).sort(),
     ['games.csv', 'members.csv', 'point-categories.csv', 'points.csv', 'round.json', 'sessions.csv', 'tags.csv', 'votes.csv']);
-  assert.deepEqual(JSON.parse(strFromU8(files['round.json'])), round);
+  // The round as fetched, with the import's format marker in front (#1756).
+  const json = JSON.parse(strFromU8(files['round.json']));
+  assert.deepEqual(Object.keys(json).slice(0, 3), ['format', 'formatVersion', 'exportedAt']);
+  assert.equal(json.format, 'spielwirbel-round');
+  assert.equal(json.formatVersion, 1);
+  assert.ok(!Number.isNaN(Date.parse(json.exportedAt)));
+  const { format, formatVersion, exportedAt, ...rest } = json;
+  assert.ok(format && formatVersion && exportedAt);
+  assert.deepEqual(rest, round);
   assert.ok(strFromU8(files['members.csv']).includes('지민'), 'UTF-8 survives the zip');
 });
 

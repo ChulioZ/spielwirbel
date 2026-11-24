@@ -54,6 +54,8 @@ const STATUS = (over = {}) => ({
          the card instead of the line above it. */
       roundsWithInviteLink: 4, roundsWithChat: 6, roundsWithChallenge: 5, roundsWithActiveChallenge: 2,
       roundsWithDrawBoost: 7,
+      // #1756: 1 of roundsTotal (10) is 10 %; of rounds.total (11) it would be 9 %.
+      roundsImported: 1,
       /* #1803. Chosen so a line dividing by `content.games` (90) instead of
          `gamesTotal` (80) renders a different share for every one of them. */
       gamesWithPurchasePrice: 20, gamesLent: 8, gamesWithScoreCategories: 16, gamesWithPlaytimeOverride: 12,
@@ -351,6 +353,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Gruppen-Challenge genutzt', '5', '50 %', 0],
         ['aktiv', '2', '40 %', 1],
         ['Ziehungs-Bonus an', '7', '70 %', 0],
+        ['aus Export importiert', '1', '10 %', 0],
         ['mit Gastspiel', '3', '30 %', 0],
         // Top level since #1823, so plain shares of Runden.
         ['Aussortiert', '3', '30 %', 0],

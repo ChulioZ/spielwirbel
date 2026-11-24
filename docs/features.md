@@ -376,6 +376,25 @@ What the app does, in detail. For a short overview see the
   the Chronik's outcome and ending, and a session logged without a time states
   its day only. The zip is built in the browser, so the server only answers the
   ordinary round read. Covers travel as their URL or path, not as image files.
+  Since #1756 `round.json` opens with a format marker (`format`,
+  `formatVersion`, `exportedAt`), which is what the import reads it back by.
+- **Importing a round from its export** (issue #1756) – „Aus Export
+  importieren" on the new-round screen reads the export's zip (or a bare
+  `round.json`) in the browser and creates a **new** round owned by the
+  importer: on the same host, in another account, or across instances
+  (hosted ↔ self-hosted). Never a merge into an existing round. Every id is
+  re-minted, so importing one file twice gives two independent rounds. What
+  does not come along, on purpose: unfinished sessions (a split counts as
+  unfinished when none of its tables was played), uploaded covers and session
+  photos (`/uploads` paths are dead on another host and would grant access to
+  another tenant's object — a provider-linked game falls back to the
+  provider's cover), account links (every seat arrives unlinked; people claim
+  their seat afterwards), grant flags, the activity log, shares and
+  invitations. The confirmation states the round's name and counts first; the
+  toast afterwards names what was left out. Quotas refuse the whole import
+  rather than truncating it, and a #1702-era export without the marker still
+  imports. The translation is `lib/round-import.js`; the format check and the
+  session selection are shared with the browser (`public/js/round-import-file.js`).
 - **Tags** – every round can define its own free-form tags (e.g. "outside",
   "quick lunch break", "co-op") on a dedicated screen, reached from
   the Start tab or, on a wide screen, the round rail. Tags are the single way to categorize games. Assign

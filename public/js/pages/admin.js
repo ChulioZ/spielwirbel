@@ -577,6 +577,8 @@
         line('Gruppen-Challenge genutzt', a.roundsWithChallenge, rounds),
         line('aktiv', a.roundsWithActiveChallenge, a.roundsWithChallenge, 1),
         line('Ziehungs-Bonus an', a.roundsWithDrawBoost, rounds),
+        // Read back in from a data export (#1756), by the stored provenance.
+        line('aus Export importiert', a.roundsImported, rounds),
         // A guest brought a game along (#1681).
         line('mit Gastspiel', a.roundsWithGuestGame, rounds),
         // Rounds USING each shelf state. One round can be in several, so the

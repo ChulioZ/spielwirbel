@@ -134,6 +134,8 @@ function renderChronikTab(round, activities) {
       // the same reason as the two moves above: an import is routinely 100+
       // games and a row each would bury every other event on the round.
       games_imported: { icon: 'ti-download', text: tn(a.count, 'activity.gamesImportedOne', 'activity.gamesImported') },
+      // The round itself read back in from a data export (#1756) — one entry, both counts.
+      round_imported: { icon: 'ti-file-import', text: t('activity.roundImported', { games: a.games, sessions: a.sessions }) },
       // Bulk shelf tidying (#832) — counts for the same reason as the three
       // above, and the reason bites hardest here: undoing a 200-game import
       // would otherwise bury every other event the round has ever had.

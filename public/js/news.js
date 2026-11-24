@@ -50,6 +50,49 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1756, a round read back in from its data export. A new capability.
+   */
+  {
+    revision: '2026-11-23',
+    kind: 'new',
+    de: {
+      title: "Runden aus einem Export holen",
+      body: "Die ZIP-Datei aus „Daten exportieren“ bringt eine Runde jetzt auch wieder zurück: Beim Gründen einer neuen Runde liest „Aus Export importieren“ sie als neue Runde ein – hier, in einem anderen Konto oder auf einer anderen Spielwirbel-Instanz. Spiele, Sessions, Punkte und Bewertungen kommen mit; alle Plätze kommen ohne Kontoverknüpfung an.",
+    },
+    en: {
+      title: "Bring rounds back from an export",
+      body: "The zip from “Export data” now brings a round back as well: when you start a new round, “Bring in a round from a data export” reads it in as a new round – here, in another account, or on another Spielwirbel instance. Games, sessions, points and ratings come along; every seat arrives without an account link.",
+    },
+    es: {
+      title: "Traer grupos desde una exportación",
+      body: "El zip de «Exportar datos» ahora también trae un grupo de vuelta: al crear un grupo nuevo, «Traer un grupo desde una exportación de datos» lo carga como grupo nuevo, aquí, en otra cuenta o en otra instancia de Spielwirbel. Juegos, sesiones, puntos y valoraciones vienen con él; todas las plazas llegan sin cuenta vinculada.",
+    },
+    fr: {
+      title: "Reprendre des groupes depuis un export",
+      body: "Le zip de « Exporter les données » ramène désormais aussi un groupe : à la création d’un groupe, « Reprendre un groupe depuis un export de données » le charge comme nouveau groupe, ici, dans un autre compte ou sur une autre instance de Spielwirbel. Jeux, sessions, points et notes suivent ; chaque place arrive sans compte lié.",
+    },
+    it: {
+      title: "Riportare gruppi da un’esportazione",
+      body: "Lo zip di «Esporta i dati» ora riporta anche indietro un gruppo: quando crei un nuovo gruppo, «Riporta un gruppo da un’esportazione dei dati» lo carica come gruppo nuovo, qui, in un altro account o su un’altra istanza di Spielwirbel. Giochi, sessioni, punti e valutazioni arrivano con lui; ogni posto arriva senza account collegato.",
+    },
+    nl: {
+      title: "Groepen terughalen uit een export",
+      body: "De zip uit „Gegevens exporteren” brengt een groep nu ook weer terug: bij het starten van een nieuwe groep leest „Een groep binnenhalen uit een gegevensexport” hem in als nieuwe groep – hier, in een ander account of op een andere Spielwirbel-instantie. Spellen, sessies, punten en beoordelingen gaan mee; elke plek komt binnen zonder gekoppeld account.",
+    },
+    pt: {
+      title: "Trazer grupos de uma exportação",
+      body: "O zip de “Exportar dados” agora também traz um grupo de volta: ao criar um novo grupo, “Trazer um grupo de uma exportação de dados” carrega-o como grupo novo, aqui, em outra conta ou em outra instância do Spielwirbel. Jogos, sessões, pontos e avaliações vêm junto; todos os lugares chegam sem conta vinculada.",
+    },
+    fi: {
+      title: "Porukat takaisin viennistä",
+      body: "”Vie tiedot” -toiminnon zip-tiedosto tuo nyt porukan myös takaisin: uutta porukkaa aloittaessa ”Tuo porukka tietojen viennistä” lukee sen uudeksi porukaksi – täällä, toisella tilillä tai toisessa Spielwirbel-instanssissa. Pelit, sessiot, pisteet ja arviot tulevat mukana; jokainen paikka saapuu ilman tiliyhteyttä.",
+    },
+    ko: {
+      title: "내보내기 파일에서 모임 되돌리기",
+      body: "“데이터 내보내기”의 zip 파일로 이제 모임을 되돌릴 수도 있어요. 새 모임을 시작할 때 “데이터 내보내기 파일에서 모임 가져오기”를 누르면 새 모임으로 들어와요. 여기서든, 다른 계정이든, 다른 Spielwirbel 인스턴스든 돼요. 게임, 세션, 점수, 평가가 함께 오고, 모든 자리는 계정 연결 없이 들어와요.",
+    },
+  },
+  /*
    * #1838, „Wie war's?" after a played session. A new capability, and it moves
    * shelf scores people have seen (they can now go DOWN), so the entry says so
    * (.claude/rules/keep-readme-current.md).

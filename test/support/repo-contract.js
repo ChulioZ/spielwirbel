@@ -835,6 +835,51 @@ module.exports = function repoContract(repo) {
     assert.deepEqual(copy.games[0].tagIds, copy.tags.map((t) => t.id), 'the game points at the new ids');
   });
 
+  // #1756: a round read back in from its export. The translation is
+  // lib/round-import.js (pure, shared); this pins what each backend STORES.
+  test('importRound writes the whole translated round, with a provenance no read names (#1756)', async () => {
+    const { buildRoundImport } = require('../../lib/round-import');
+    const file = {
+      id: 'src-round', name: 'Aus dem Export',
+      members: [{ id: 'm1', name: 'Ann', userId: 'gone' }, { id: 'm2', name: 'Ben', retired: true, retiredAt: '2026-01-01T00:00:00.000Z' }],
+      games: [{ id: 'g1', title: 'Azul', minPlayers: 2, maxPlayers: 4, tagIds: ['t1'], ownerIds: ['m1'], retired: false, image: null }],
+      tags: [{ id: 't1', name: 'Familie', icon: 'users' }],
+      savedFilters: [{ id: 'f1', name: 'Schnell', tagIds: ['t1'], memberIds: ['m1'] }],
+      drawBoost: true,
+      sessions: [
+        { id: 's1', createdAt: '2026-02-01T19:00:00.000Z', memberIds: ['m1', 'm2'], gameIds: ['g1'], chosenGameId: 'g1',
+          votes: { m1: { g1: { rating: 5 } } }, finished: true, finishedAt: '2026-02-01T21:00:00.000Z', winnerIds: ['m2'], scores: { m1: 3, m2: 9 } },
+        { id: 's2', createdAt: '2026-03-01T19:00:00.000Z', memberIds: ['m1'], gameIds: ['g1'], finished: false },
+      ],
+    };
+    const built = buildRoundImport(file, () => crypto.randomBytes(8).toString('hex'));
+    const before = (await repo.instanceMetrics()).adoption.roundsImported;
+    const round = await repo.importRound(T, built);
+    // The operator's line (#1756) counts it; a round created by hand does not.
+    await repo.createRound(T, { name: 'Von Hand', members: ['Z'] });
+    assert.equal((await repo.instanceMetrics()).adoption.roundsImported, before + 1);
+    assert.deepEqual(round, await repo.getRound(T, round.id), 'the write answers what a read answers');
+    assert.equal(round.name, 'Aus dem Export');
+    assert.equal(round.importedFrom, undefined, 'the provenance is never in a snapshot');
+    assert.equal(round.drawBoost, true);
+    assert.deepEqual(round.members.map((m) => m.name), ['Ann', 'Ben']);
+    assert.ok(round.members.every((m) => !('userId' in m)));
+    assert.equal(round.sessions.length, 1, 'the open session is not written');
+    const [s] = round.sessions;
+    const [ann, ben] = round.members;
+    const [g] = round.games;
+    assert.equal(s.chosenGameId, g.id);
+    assert.deepEqual(s.winnerIds, [ben.id]);
+    assert.deepEqual(s.votes, { [ann.id]: { [g.id]: { rating: 5 } } });
+    assert.deepEqual(s.scores, { [ann.id]: 3, [ben.id]: 9 });
+    assert.deepEqual(g.tagIds, [round.tags[0].id]);
+    assert.deepEqual(round.savedFilters[0].tagIds, [round.tags[0].id]);
+    assert.deepEqual(round.savedFilters[0].memberIds, [ann.id]);
+    const activities = await repo.listActivities(T, round.id);
+    assert.deepEqual(activities.map((a) => [a.type, a.games, a.sessions]), [['round_imported', 1, 1]]);
+    assert.equal(await repo.getRound(OTHER, round.id), null, 'written into the importer\'s tenant only');
+  });
+
   // #921 decision: a tag cap is capped SILENTLY, in shelf order — round creation
   // must not fail over a secondary field the user did not ask for. A game whose
   // tag did not fit simply keeps the ids that exist.
