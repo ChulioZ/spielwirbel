@@ -63,6 +63,8 @@ const OFF = {
   // #680: whether prices (and so price alerts) exist — off unless PRICES_ENABLED.
   prices: false,
   quiz: false,
+  // #1785: whether web push exists — off unless all three VAPID vars are set.
+  push: false,
 };
 
 test.afterEach(() => {

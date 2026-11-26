@@ -61,6 +61,9 @@ const CLIENT_ERROR_KINDS = [
   // The game page's "also change it in your other rounds" sheet (#1843) —
   // building it is client-only, after a save that already succeeded.
   'game_twins',
+  // Subscribing this browser to web push (#1785) — PushManager runs on the
+  // device and talks to the browser's push service, never to us.
+  'push_subscribe',
 ];
 
 // Truncation is applied on BOTH sides: here so the request stays small, and at

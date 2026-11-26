@@ -50,6 +50,49 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1785, push notifications for new messages. A new capability.
+   */
+  {
+    revision: '2026-11-26',
+    kind: 'new',
+    de: {
+      title: "Benachrichtigungen bei neuen Nachrichten",
+      body: "Unter Konto kannst du jetzt für jedes Gerät einschalten, dass es dich bei neuen Chat-Nachrichten, Kommentaren und Direktnachrichten benachrichtigt. Die Benachrichtigung nennt nur die Runde oder die Person, nie den Text. Mit der Glocke im Chat schaltest du einzelne Chats stumm. Auf iPhone und iPad klappt das, sobald Spielwirbel auf dem Home-Bildschirm liegt.",
+    },
+    en: {
+      title: "Notifications for new messages",
+      body: "Under Account you can now turn on, for each device, notifications about new chat messages, comments and direct messages. A notification names only the round or the person, never the text. The bell in a chat mutes that chat. On iPhone and iPad it works once Spielwirbel is on your home screen.",
+    },
+    es: {
+      title: "Avisos de mensajes nuevos",
+      body: "En Cuenta ahora puedes activar, para cada dispositivo, avisos de mensajes nuevos del chat, comentarios y mensajes directos. El aviso solo nombra el grupo o la persona, nunca el texto. La campana de un chat lo silencia. En iPhone y iPad funciona cuando Spielwirbel está en la pantalla de inicio.",
+    },
+    fr: {
+      title: "Notifications pour les nouveaux messages",
+      body: "Dans Compte, tu peux désormais activer, pour chaque appareil, les notifications des nouveaux messages du chat, des commentaires et des messages directs. La notification ne nomme que le groupe ou la personne, jamais le texte. La cloche d’un chat le met en sourdine. Sur iPhone et iPad, cela fonctionne dès que Spielwirbel est sur l’écran d’accueil.",
+    },
+    it: {
+      title: "Notifiche per i nuovi messaggi",
+      body: "In Account ora puoi attivare, per ogni dispositivo, le notifiche dei nuovi messaggi della chat, dei commenti e dei messaggi diretti. La notifica nomina solo il gruppo o la persona, mai il testo. La campanella di una chat la silenzia. Su iPhone e iPad funziona quando Spielwirbel è nella schermata Home.",
+    },
+    nl: {
+      title: "Meldingen bij nieuwe berichten",
+      body: "Onder Account kun je nu per apparaat meldingen inschakelen voor nieuwe chatberichten, reacties en directe berichten. Een melding noemt alleen de groep of de persoon, nooit de tekst. Met de bel in een chat demp je die chat. Op iPhone en iPad werkt het zodra Spielwirbel op je beginscherm staat.",
+    },
+    pt: {
+      title: "Notificações de mensagens novas",
+      body: "Em Conta, agora você pode ativar, para cada dispositivo, notificações de mensagens novas do chat, comentários e mensagens diretas. A notificação mostra só o grupo ou a pessoa, nunca o texto. O sino de um chat o silencia. No iPhone e no iPad funciona quando o Spielwirbel está na tela de início.",
+    },
+    fi: {
+      title: "Ilmoitukset uusista viesteistä",
+      body: "Tili-näkymässä voit nyt ottaa käyttöön ilmoitukset uusista chat-viesteistä, kommenteista ja yksityisviesteistä, laite kerrallaan. Ilmoitus kertoo vain porukan tai henkilön, ei koskaan tekstiä. Chatin kellosta mykistät sen. iPhonessa ja iPadissa tämä toimii, kun Spielwirbel on kotivalikossa.",
+    },
+    ko: {
+      title: "새 메시지 알림",
+      body: "이제 계정에서 기기마다 새 채팅 메시지, 댓글, 개인 메시지 알림을 켤 수 있어요. 알림에는 모임이나 사람 이름만 나오고 메시지 내용은 절대 나오지 않아요. 채팅의 종 아이콘으로 그 채팅만 알림을 끌 수 있어요. iPhone과 iPad에서는 Spielwirbel을 홈 화면에 추가하면 돼요.",
+    },
+  },
+  /*
    * #1783, direct messages between friends. A new capability.
    */
   {

@@ -13214,6 +13214,12 @@ a.member-points__row:focus-visible { outline: 3px solid var(--brand-edge); outli
 .chat, .chat__thread { display: flex; flex-direction: column; gap: 12px; }
 .chat__note { margin: 0; font-size: var(--text-sm); }
 .chat__older { align-self: center; }
+/* The thread's push bell (#1785): a quiet icon control at the thread's top
+   right. Pressed (muted) reads by its crossed-out glyph AND aria-pressed, never
+   by colour alone. */
+.chat__bell { align-self: flex-end; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; font-size: var(--text-xl); }
+.chat__bell[aria-pressed="true"] { color: var(--ink-soft); }
+.chat__bell:disabled { opacity: 0.6; cursor: default; }
 /* Direct messages (#1783): the conversation band on the Freundeskreis screen
    and the one-conversation screen. The rows are a host of the shared
    .ds-row__main flex rule above, not a parallel component

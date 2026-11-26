@@ -89,6 +89,8 @@ async function showDirectThread(uid) {
     purge: false,
     readOnly: !first.canPost,
     readOnlyNote: t('dm.closed'),
+    // No bell on an ended friendship: nothing new can arrive there.
+    pushThread: first.canPost ? `dm:${uid}` : null,
     // Reading clears the inbox item server-side; bring the badge along.
     onRead: (all) => { if (all) refreshInboxBadge(); },
   });

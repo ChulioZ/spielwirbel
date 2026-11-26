@@ -539,6 +539,20 @@ raising the ceiling later only pays for the newly admitted games.
 Nothing in the corpus is personal data — it is public metadata about published
 games, fetched server-side — so it needs no privacy-policy or VVT entry.
 
+Web push for chat messages (issue #1785) is **off** unless all three of
+`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` are set
+(`npx web-push generate-vapid-keys` makes the pair; the subject is a `mailto:`
+or `https:` contact for the push services). With them set, `/api/config` reports
+`push: true`, the Konto screen offers a per-device switch, every chat thread gets
+a mute bell, and a new message notifies the recipient's opted-in devices with the
+thread's name and one fixed line — never the text. Without them the route answers
+`available: false`, nothing renders, and nothing is ever sent. **Keep the key
+pair stable**: rotating it orphans every existing subscription. Delivery goes
+through the browser's own push service (Google, Apple, Mozilla or Microsoft), and
+subscription endpoints are accepted only on those hosts, since the server POSTs
+to them. The unread-burst collapse window lives in memory, which is sound only
+while `numReplicas` stays pinned at 1.
+
 Wish-list prices (issue #679) are **off** unless `PRICES_ENABLED=true`: opening a
 wished-for game that carries a provider link then shows what it costs right now —
 board games through the

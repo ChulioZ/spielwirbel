@@ -177,6 +177,11 @@ I18N.it = {
   'chat.delete': 'Elimina',
   'chat.deleteConfirm': 'Eliminare questo messaggio? L’operazione non si può annullare.',
   'chat.report': 'Segnala',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Disattiva le notifiche di questa chat',
+  'chat.push.muted': 'Questa chat non invia più notifiche.',
+  'chat.push.unmuted': 'Questa chat invia di nuovo notifiche.',
+  'push.newMessage': 'Nuovo messaggio',
   'chat.reportSubject': 'Messaggio di chat {id}',
   'chat.unread': 'Nuovi messaggi',
   'chat.toast.rateLimited': 'Stai scrivendo molto velocemente. Aspetta un momento e riprova.',
@@ -2380,6 +2385,14 @@ I18N.it = {
   'konto.notify.chat': 'Nuovi messaggi della chat nella posta in arrivo',
   'konto.notify.chatOn': 'I messaggi della chat compaiono nella posta in arrivo.',
   'konto.notify.chatOff': 'I messaggi della chat non compaiono più nella posta in arrivo.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'Su questo dispositivo puoi ricevere un avviso per i nuovi messaggi. L’avviso nomina solo il gruppo o la persona, mai il testo.',
+  'konto.push.label': 'Avvisami dei nuovi messaggi (questo dispositivo)',
+  'konto.push.on': 'Questo dispositivo ora ti avvisa dei nuovi messaggi.',
+  'konto.push.off': 'Questo dispositivo non ti avvisa più.',
+  'konto.push.denied': 'Il tuo browser blocca le notifiche di Spielwirbel. Puoi consentirle nelle impostazioni del sito del browser.',
+  'konto.push.install': 'Su iPhone e iPad le notifiche funzionano solo dopo aver aggiunto Spielwirbel alla schermata Home e averlo aperto da lì.',
+  'konto.push.failed': 'Non è stato possibile attivare le notifiche su questo dispositivo.',
 
   'konto.passkey.title': 'Passkey',
   'konto.passkey.intro': 'Una passkey ti fa accedere con l’impronta digitale, il volto o il PIN del dispositivo — senza password. La tua password resta valida, quindi puoi continuare ad accedere anche con quella.',

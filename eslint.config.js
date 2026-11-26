@@ -64,6 +64,12 @@ const frontendGlobals = {
   CHAT_MESSAGE_MAX: 'readonly', CHAT_PAGE_SIZE: 'readonly', normalizeChatText: 'readonly',
   chatSegments: 'readonly', chatUnread: 'readonly',
   chatAvailable: 'readonly', renderChatTab: 'readonly', renderSessionComments: 'readonly', mountChatThread: 'readonly',
+  mountPushBell: 'readonly', buildPushToggle: 'readonly',
+  // push-client.js (#1785) — web push on this device, and the per-thread mutes.
+  pushSupported: 'readonly', pushNeedsInstall: 'readonly', loadPushState: 'readonly',
+  resetPushState: 'readonly', pushKeyBytes: 'readonly', currentPushSubscription: 'readonly',
+  enablePush: 'readonly', disablePush: 'readonly', pushOffered: 'readonly',
+  syncPushSubscription: 'readonly', isPushMuted: 'readonly', setPushMuted: 'readonly',
   sessionCommentBadge: 'readonly', loadSessionCommentBadges: 'readonly', hubChatDot: 'readonly', renderChatUnreadItem: 'readonly', renderMessagesBand: 'readonly', showDirectThread: 'readonly', hubSections: 'readonly',
   // views-friends.js (#1092)
   renderPersonCard: 'readonly', renderPersonTile: 'readonly', personTileLine: 'readonly',

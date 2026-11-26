@@ -171,6 +171,11 @@ I18N.de = {
   'chat.delete': 'Löschen',
   'chat.deleteConfirm': 'Diese Nachricht löschen? Das lässt sich nicht rückgängig machen.',
   'chat.report': 'Melden',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Benachrichtigungen für diesen Chat stummschalten',
+  'chat.push.muted': 'Dieser Chat schickt keine Benachrichtigungen mehr.',
+  'chat.push.unmuted': 'Dieser Chat schickt wieder Benachrichtigungen.',
+  'push.newMessage': 'Neue Nachricht',
   'chat.reportSubject': 'Chat-Nachricht {id}',
   'chat.unread': 'Neue Nachrichten',
   'chat.toast.rateLimited': 'Du schreibst gerade sehr schnell. Warte kurz und versuch es dann noch einmal.',
@@ -2454,6 +2459,14 @@ I18N.de = {
   'konto.notify.chat': 'Neue Chat-Nachrichten im Postfach',
   'konto.notify.chatOn': 'Chat-Nachrichten erscheinen im Postfach.',
   'konto.notify.chatOff': 'Chat-Nachrichten erscheinen nicht mehr im Postfach.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'Auf diesem Gerät kannst du dich bei neuen Nachrichten benachrichtigen lassen. Die Benachrichtigung nennt nur die Runde oder die Person, nie den Text.',
+  'konto.push.label': 'Benachrichtigungen bei neuen Nachrichten (dieses Gerät)',
+  'konto.push.on': 'Dieses Gerät benachrichtigt dich bei neuen Nachrichten.',
+  'konto.push.off': 'Dieses Gerät benachrichtigt dich nicht mehr.',
+  'konto.push.denied': 'Dein Browser blockiert Benachrichtigungen für Spielwirbel. Du kannst sie in den Website-Einstellungen des Browsers erlauben.',
+  'konto.push.install': 'Auf iPhone und iPad gehen Benachrichtigungen erst, wenn du Spielwirbel zum Home-Bildschirm hinzugefügt hast und von dort öffnest.',
+  'konto.push.failed': 'Benachrichtigungen ließen sich auf diesem Gerät nicht einschalten.',
 
   // Passkeys (#418). Zusätzlich zum Passwort, nie an seiner Stelle — deshalb
   // sagt der Einleitungstext ausdrücklich, dass das Passwort bestehen bleibt.

@@ -169,6 +169,11 @@ I18N.en = {
   'chat.delete': 'Delete',
   'chat.deleteConfirm': 'Delete this message? This cannot be undone.',
   'chat.report': 'Report',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Mute notifications for this chat',
+  'chat.push.muted': 'This chat no longer sends notifications.',
+  'chat.push.unmuted': 'This chat sends notifications again.',
+  'push.newMessage': 'New message',
   'chat.reportSubject': 'Chat message {id}',
   'chat.unread': 'New messages',
   'chat.toast.rateLimited': 'You are writing very fast. Wait a moment and try again.',
@@ -2458,6 +2463,14 @@ I18N.en = {
   'konto.notify.chat': 'New chat messages in the inbox',
   'konto.notify.chatOn': 'Chat messages now appear in your inbox.',
   'konto.notify.chatOff': 'Chat messages no longer appear in your inbox.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'On this device you can be notified about new messages. A notification names only the round or the person, never the text.',
+  'konto.push.label': 'Notify me about new messages (this device)',
+  'konto.push.on': 'This device now notifies you about new messages.',
+  'konto.push.off': 'This device no longer notifies you.',
+  'konto.push.denied': 'Your browser is blocking notifications for Spielwirbel. You can allow them in the browser’s site settings.',
+  'konto.push.install': 'On iPhone and iPad, notifications only work once you have added Spielwirbel to your home screen and open it from there.',
+  'konto.push.failed': 'Notifications could not be turned on for this device.',
 
   // Passkeys (#418). In addition to the password, never instead of it — which
   // is why the intro says so outright.

@@ -3,7 +3,7 @@
 Internal record (German). Requests arrive via the published e-mail address or
 the contact form; answer within **one month** (Art. 12 Abs. 3).
 
-**Stand:** 2026-11-24
+**Stand:** 2026-11-26
 
 ## Eingang & Identitätsprüfung
 
@@ -48,7 +48,9 @@ the contact form; answer within **one month** (Art. 12 Abs. 3).
   Preisalarme, — seit #743 — die Antworten im Wochenquiz und — seit #1781 —
   alle Chat-Nachrichten, die das Konto in irgendeiner Runde geschrieben hat,
   samt seinen Lesemarkierungen, und — seit #1783 — seine Direktnachrichten
-  (mit der Kennung des Gegenübers) samt Lesemarkierungen** — genau die
+  (mit der Kennung des Gegenübers) samt Lesemarkierungen, und — seit #1785 — seine
+  Push-Geräte (nur der Push-Dienst, nie Zustelladresse oder Schlüssel) und
+  Stummschaltungen** — genau die
   Kategorien, die die Kontolöschung (Art. 17) ebenfalls entfernt. Auskunft und
   Löschung decken damit dieselben Datensätze ab — mit **einer bewussten
   Ausnahme**: die **Abstimmungslinks** (#652, VVT Zeile 19) werden bei der

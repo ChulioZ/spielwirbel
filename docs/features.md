@@ -1346,6 +1346,20 @@ What the app does, in detail. For a short overview see the
   can remove it (logged as `remove_direct_message`). Posting shares the chat's
   per-account rate limit (`CHAT_RATE_LIMIT_MAX`); one account may hold
   `MAX_DIRECT_MESSAGES_PER_USER` direct messages (default 5000).
+- **Push notifications for messages** – *accounts mode only, and only where the
+  operator has set the VAPID keys* (issue #1785). Under Konto → Benachrichtigungen
+  a per-**device** switch („Benachrichtigungen bei neuen Nachrichten") asks the
+  browser's permission — only on that tap, never on load. A new round-chat
+  message, session comment or direct message then notifies every other account
+  with access on each device they switched on: the round's name (or the sender's
+  username) and „Neue Nachricht", **never the text**; tapping opens the thread.
+  One push per thread per ten minutes while it stays unread (a read resets it),
+  and a second push replaces the first notification rather than stacking. Each
+  thread carries a **bell** that mutes it for the account on every device;
+  muting a round also mutes its session comments. Signing out removes this
+  device's subscription; a subscription the push service reports dead is
+  deleted. On iPhone and iPad it works once the app is on the home screen —
+  the Konto row says so instead of offering a switch that cannot work.
 - **E-mail for actionable inbox items** – *accounts mode only* (issue #618). A
   round invitation or a friend request is also **e-mailed** to its recipient, not
   only dropped in the in-app inbox — an invitation exists to reach someone who is

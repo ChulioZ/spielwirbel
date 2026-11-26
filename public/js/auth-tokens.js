@@ -240,6 +240,10 @@ async function accountApi(method, path, body, _retried) {
 }
 
 async function logout() {
+  // #1785: signing out stops this device's pushes — the server forgets it while
+  // the access token is still valid, then the browser drops the subscription.
+  // push-client.js loads later; this runs on a click, long after it has.
+  await disablePush({ leaving: true });
   try { await authFetch('/logout', { refreshToken: getRefreshToken() }); } catch {}
   clearTokens();
   invalidateRoundCache(); // the next login may be a different account/tenant
