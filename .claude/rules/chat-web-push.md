@@ -34,19 +34,29 @@ silently:
    endpoint), so the first account stops reaching it.
 4. **The collapse keys off the recount, not a timer alone.** `unread === 1` (the
    first unread after a read) always pushes; a larger count inside
-   `COLLAPSE_MS` is the same burst. The window is in memory — sound only with
-   `numReplicas: 1` (`.claude/rules/deploy-invariants-are-pinned-in-code.md`);
-   a deploy overlap can at worst send one extra push.
+   `COLLAPSE_MS` is the same burst. The slot is CLAIMED before the first await
+   (sends run concurrently) and HANDED BACK when nothing is sent — otherwise a
+   mute swallows the first push after it is lifted. The map is in memory —
+   sound only with `numReplicas: 1`
+   (`.claude/rules/deploy-invariants-are-pinned-in-code.md`) — and swept of
+   expired slots past `COLLAPSE_SWEEP_AT`. Each break has its own named spec.
 5. **Muting a round mutes its session comments** (`parentThread`, read off the
    comment's url). The session bell therefore renders disabled-and-pressed while
    its round is muted — a bell that toggles its own key under a muted round
    would be a control that changes nothing.
 
+**The routes never wait for a push service.** `chat-inbox.js` calls
+`notifyChatLater` (fire-and-forget); awaiting `notifyChat` there passes every
+payload assertion and holds the sender's POST for up to 5 s per slow device.
+Specs await `drainPushes()` after a post instead.
+
 The permission prompt runs only inside the Konto toggle's `change` handler —
 the issue's acceptance criterion, and Safari refuses a prompt no gesture
 started. `test/push-client-view.test.js` asserts rendering the row never
-prompts. Logout calls `disablePush()` BEFORE the logout request, while the
-access token still authorizes the DELETE.
+prompts. Logout calls `disablePush({ leaving: true })` BEFORE the logout
+request, while the access token still authorizes the DELETE — as a plain
+`fetch`, because `api()`'s 401 recovery would route to the login screen
+mid-sign-out.
 
 **Related:** `.claude/rules/round-chat.md` (the inbox recount this rides on),
 `.claude/rules/pwa-service-worker.md` (the `push`/`notificationclick` handlers

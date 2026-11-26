@@ -105,3 +105,19 @@ test('Konto: the push row exists only with VAPID, and rendering it never prompts
 test('pushKeyBytes decodes the base64url VAPID key into raw bytes', () => {
   assert.deepEqual([...pushKeyBytes('AQID_-8')], [1, 2, 3, 255, 239]);
 });
+
+test('logout removes this device with a plain fetch, never through api()', async (t) => {
+  const { dom, calls } = boot(t);
+  const fetches = [];
+  let unsubscribed = false;
+  dom.set('currentPushSubscription', async () => ({
+    endpoint: 'https://fcm.googleapis.com/fcm/send/dev-1',
+    unsubscribe: async () => { unsubscribed = true; },
+  }));
+  dom.set('fetch', async (url, opts) => { fetches.push([url, opts && opts.method]); return { ok: true }; });
+  dom.set('getAccessToken', () => 'tok');
+  await dom.call('disablePush', { leaving: true });
+  assert.deepEqual(fetches, [['/api/account/push/subscription', 'DELETE']]);
+  assert.ok(!calls.some(([, url]) => url === '/api/account/push/subscription'), 'api() was not used');
+  assert.equal(unsubscribed, true, 'the browser subscription goes too');
+});

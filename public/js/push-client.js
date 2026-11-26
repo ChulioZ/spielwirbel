@@ -76,12 +76,28 @@ async function enablePush() {
 
 /* Opt out on this device: the server forgets it first (so no push is sent to a
    device that just said no), then the browser drops the subscription. Used by
-   the toggle and by logout; never throws. */
-async function disablePush() {
+   the toggle and by logout; never throws.
+
+   `leaving` is logout's form: a plain fetch with the current token, never
+   api(), whose 401 handling would try to recover the session — and on failure
+   route to the login screen — in the middle of signing out. A refused DELETE
+   still unsubscribes the browser, so the device stops receiving either way. */
+async function disablePush({ leaving = false } = {}) {
   try {
     const sub = await currentPushSubscription();
     if (!sub) return;
-    try { await api('DELETE', '/api/account/push/subscription', { endpoint: sub.endpoint }); } catch {}
+    const body = { endpoint: sub.endpoint };
+    try {
+      if (leaving) {
+        await fetch('/api/account/push/subscription', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getAccessToken()}` },
+          body: JSON.stringify(body),
+        });
+      } else {
+        await api('DELETE', '/api/account/push/subscription', body);
+      }
+    } catch {}
     await sub.unsubscribe();
   } catch {}
 }

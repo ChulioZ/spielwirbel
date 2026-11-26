@@ -61,11 +61,14 @@ async function sharedRound(prefix) {
 // the status code the "push service" answers it with.
 let sent = [];
 let fail = new Map();
+let hang = false;
 beforeEach(() => {
   sent = [];
   fail = new Map();
+  hang = false;
   push.resetCollapse();
   push.setSender(async (sub, body, options) => {
+    if (hang) return new Promise(() => {}); // a push service that never answers
     sent.push({ endpoint: sub.endpoint, keys: sub.keys, payload: JSON.parse(body), options });
     if (fail.has(sub.endpoint)) throw Object.assign(new Error('push service says no'), { statusCode: fail.get(sub.endpoint) });
     return { statusCode: 201 };
@@ -85,7 +88,7 @@ test('a round message pushes every OTHER subscribed member once — thread name,
   const ep = await subscribe(guest, { locale: 'de' });
   await subscribe(owner);
   const MESSAGE_TEXT = 'Geheimer-Inhalt-91c';
-  const res = await request(app).post(base).set(auth(owner.token)).send({ text: MESSAGE_TEXT });
+  const res = await request(app).post(base).set(auth(owner.token)).send({ text: MESSAGE_TEXT }); await push.drainPushes();
   assert.equal(res.status, 201);
   assert.equal(sent.length, 1, 'the guest only — never the author');
   assert.equal(sent[0].endpoint, ep);
@@ -101,23 +104,23 @@ test('a round message pushes every OTHER subscribed member once — thread name,
   // would be pushed about their own message. The guest writes first, so the
   // owner holds one unread when posting.
   push.resetCollapse();
-  await request(app).post(base).set(auth(guest.token)).send({ text: 'vorher' });
+  await request(app).post(base).set(auth(guest.token)).send({ text: 'vorher' }); await push.drainPushes();
   sent = [];
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'danach' });
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'danach' }); await push.drainPushes();
   assert.deepEqual(sent.map((x) => x.endpoint), [ep], 'only the guest — the owner is not pushed about their own post');
 });
 
 test('an unread burst collapses inside the window; the first unread after a read always pushes', async () => {
   const { owner, guest, round, base } = await sharedRound('push-collapse');
   await subscribe(guest);
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'eins' });
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'zwei' });
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'eins' }); await push.drainPushes();
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'zwei' }); await push.drainPushes();
   assert.equal(sent.length, 1, 'the second unread message is the same burst');
   // The guest reads the thread: the next message is the first unread again.
   const page = await request(app).get(base).set(auth(guest.token));
   const top = page.body.messages[page.body.messages.length - 1].seq;
-  await request(app).post(`${base}/read`).set(auth(guest.token)).send({ seq: top });
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'drei' });
+  await request(app).post(`${base}/read`).set(auth(guest.token)).send({ seq: top }); await push.drainPushes();
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'drei' }); await push.drainPushes();
   assert.equal(sent.length, 2, 'read, then a new message: pushed despite the window');
   assert.equal(sent[1].payload.tag, `round:${round.id}`);
 });
@@ -138,17 +141,17 @@ test('a muted round thread pushes nothing — and muting the round mutes its ses
   const mute = await request(app).put('/api/account/push/mutes').set(auth(guest.token))
     .send({ thread: `round:${round.id}`, muted: true });
   assert.deepEqual(mute.body, { thread: `round:${round.id}`, muted: true });
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'still' });
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'still' }); await push.drainPushes();
   const session = await repo.createSession(owner.user.tenantId, round.id, {
     createdAt: new Date().toISOString(), gameIds: [], votes: {}, chosenGameId: null, chosenAt: null,
     finished: true, finishedAt: null, winnerIds: [], cancelled: false, cancelledAt: null, done: true,
   });
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/messages`).set(auth(owner.token))
-    .send({ text: 'Kommentar' });
+    .send({ text: 'Kommentar' }); await push.drainPushes();
   assert.equal(sent.length, 0);
   await request(app).put('/api/account/push/mutes').set(auth(guest.token)).send({ thread: `round:${round.id}`, muted: false });
   await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/messages`).set(auth(owner.token))
-    .send({ text: 'Noch einer' });
+    .send({ text: 'Noch einer' }); await push.drainPushes();
   assert.equal(sent.length, 1, 'unmuted: the comment pushes');
   assert.deepEqual(sent[0].payload, {
     title: 'Pushrunde', body: push.newMessageLine('de'),
@@ -157,8 +160,8 @@ test('a muted round thread pushes nothing — and muting the round mutes its ses
   // A session muted on its own stays quiet while the round does not.
   push.resetCollapse();
   await request(app).put('/api/account/push/mutes').set(auth(guest.token)).send({ thread: `session:${session.id}`, muted: true });
-  await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/messages`).set(auth(owner.token)).send({ text: 'x' });
-  await request(app).post(base).set(auth(owner.token)).send({ text: 'y' });
+  await request(app).post(`/api/rounds/${round.id}/sessions/${session.id}/messages`).set(auth(owner.token)).send({ text: 'x' }); await push.drainPushes();
+  await request(app).post(base).set(auth(owner.token)).send({ text: 'y' }); await push.drainPushes();
   assert.deepEqual(sent.slice(1).map((s) => s.payload.tag), [`round:${round.id}`]);
 });
 
@@ -169,7 +172,7 @@ test('a direct message pushes the recipient, named after the author, and never t
   await repo.acceptFriendRequest(f.id, ben.id);
   await subscribe(ana);
   await subscribe(ben, { locale: 'en' });
-  await request(app).post(`/api/account/messages/${ben.id}`).set(auth(ana.token)).send({ text: 'Freitag?' });
+  await request(app).post(`/api/account/messages/${ben.id}`).set(auth(ana.token)).send({ text: 'Freitag?' }); await push.drainPushes();
   assert.equal(sent.length, 1);
   assert.deepEqual(sent[0].payload, {
     title: ana.username, body: push.newMessageLine('en'), url: `/freunde/nachrichten/${ana.id}`, tag: `dm:${ana.id}`,
@@ -183,7 +186,7 @@ test('a 404/410 from the push service deletes that device; any other failure kee
   fail.set(dead, 410);
   fail.set(flaky, 500);
   clearLogs();
-  const res = await request(app).post(base).set(auth(owner.token)).send({ text: 'hallo' });
+  const res = await request(app).post(base).set(auth(owner.token)).send({ text: 'hallo' }); await push.drainPushes();
   assert.equal(res.status, 201, 'a push failure never fails the post');
   assert.deepEqual((await repo.listPushSubscriptions(guest.id)).map((s) => s.endpoint), [flaky]);
   const logs = JSON.stringify(recentLogs());
@@ -247,4 +250,37 @@ test('a guest demo account is refused the whole router', async () => {
     assert.equal(res.body.error, 'demo_forbidden');
   }
   assert.deepEqual(await repo.listPushSubscriptions(tourist.id), []);
+});
+
+test('the post never waits for a push service — a hanging one costs the sender nothing', async () => {
+  const { owner, guest, base } = await sharedRound('push-hang');
+  await subscribe(guest);
+  hang = true;
+  const t0 = Date.now();
+  const res = await request(app).post(base).set(auth(owner.token)).send({ text: 'schnell' });
+  assert.equal(res.status, 201);
+  assert.ok(Date.now() - t0 < 2000, `the post answered in ${Date.now() - t0}ms, well inside the 5s send timeout`);
+  await push.drainPushes(); // the send itself still ends, by its timeout
+});
+
+test('two sends to one thread started together collapse to ONE push', async () => {
+  const guest = await makeAccount('push-race');
+  await subscribe(guest);
+  const args = { thread: 'round:race', name: 'R', url: '/round/race/chat' };
+  push.notifyChatLater(guest.id, { ...args, unread: 1 });
+  push.notifyChatLater(guest.id, { ...args, unread: 2 });
+  await push.drainPushes();
+  assert.equal(sent.length, 1, 'the second is the same burst, even though both started before either finished');
+});
+
+test('the collapse map stays bounded: expired slots are dropped once it fills', async () => {
+  const guest = await makeAccount('push-bound');
+  await subscribe(guest); // a slot is only kept when a push was actually sent
+  const t0 = 5_000_000;
+  for (let i = 0; i < push.COLLAPSE_SWEEP_AT; i += 1) {
+    await push.notifyChat(guest.id, { thread: `round:b${i}`, name: 'B', url: '/round/b/chat', unread: 1, now: t0 });
+  }
+  assert.equal(push.collapseSize(), push.COLLAPSE_SWEEP_AT);
+  await push.notifyChat(guest.id, { thread: 'round:late', name: 'B', url: '/round/b/chat', unread: 1, now: t0 + push.COLLAPSE_MS });
+  assert.equal(push.collapseSize(), 1, 'every expired slot went; only the fresh one is left');
 });
