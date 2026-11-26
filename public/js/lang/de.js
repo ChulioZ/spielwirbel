@@ -1168,6 +1168,8 @@ I18N.de = {
   'member.pointsBetteredOne': '{n} Bestleistung verbessert',
   'member.pointsBettered': '{n} Bestleistungen verbessert',
   'member.pointsRecord': 'Rekord der Runde',
+  'member.pointsSwRecord': 'Rekord {points}',
+  'member.pointsSwRecordHeld': 'Spielwirbel-Rekord',
   'member.pointsCategories': 'Nach Kategorie',
   'member.bestGameNone': 'Noch kein Spiel gewonnen',
   'member.favorite': 'Lieblingsspiel',
@@ -1593,6 +1595,9 @@ I18N.de = {
   'points.top': '{name}: {points}',
   'points.record': 'Rekord: {points} · {name} · {date}',
   'points.lowWins': 'Niedrigere Punktzahl gewinnt',
+  'points.swRecord': 'Spielwirbel-Rekord: {points}',
+  'points.swRecordNew': 'Neuer Spielwirbel-Rekord!',
+  'points.swRecordPending': 'Neuer Spielwirbel-Rekord? Wird geprüft',
   'points.lowWinsLocked': 'Für alle Runden festgelegt',
   'points.automa.add': 'Automa hinzufügen',
   'points.automa.remove': 'Automa entfernen',
@@ -2013,6 +2018,9 @@ I18N.de = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbels Dauerbrenner',
+  'stats.records': 'Spielwirbel-Rekorde',
+  'stats.recordValue': 'Rekord: {points}',
+  'stats.recordValueLow': 'Rekord: {points} · niedrigste gewinnt',
   'stats.bestRated': 'Am besten bewertet',
   'stats.shelves.one': 'in {n} Regal',
   'stats.shelves.many': 'in {n} Regalen',
@@ -2753,6 +2761,9 @@ I18N.de = {
   'badges.complete.line': 'Die Runde hat jedes Spiel im Regal gespielt',
   'badges.accountGames.name': 'Spiele',
   'badges.accountGames.line': '{n} verschiedene Spiele in allen Runden',
+  'badges.accountRecords.name': 'Spielwirbel-Rekord',
+  'badges.accountRecords.line': 'In {n} Spielen einen Spielwirbel-Rekord aufgestellt',
+  'badges.accountRecords.lineOne': 'In {n} Spiel einen Spielwirbel-Rekord aufgestellt',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.

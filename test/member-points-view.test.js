@@ -139,6 +139,24 @@ for (const design of ENABLED) {
   });
 }
 
+// #1788: on the profile the medal means holding the SPIELWIRBEL-Rekord, and each
+// best shows the value to chase („128 · Rekord 142").
+test('profile: each best names the Spielwirbel-Rekord to chase, and the medal says which record', async (t) => {
+  const dom = bootProfile(t, 'klassisch', PROFILE({
+    bests: [{ title: 'Azul', image: null, points: 128, record: false, swRecord: 142 },
+      { title: 'Wingspan', image: null, points: 90, record: true, swRecord: 90 },
+      { title: 'Hausspiel', image: null, points: 9, record: false, swRecord: null }],
+    held: 1,
+    bettered: 0,
+  }));
+  await dom.call('showProfile', 'ada');
+  const rows = [...dom.app.querySelectorAll('.profile-card .member-points__row')];
+  assert.deepEqual(rows.map((r) => text(r.querySelector('.member-points__value'))), ['128 · Rekord 142', '9', '90 · Rekord 90']);
+  const medal = dom.app.querySelector('.profile-card .member-points__record');
+  assert.equal(medal.getAttribute('aria-label'), 'Spielwirbel-Rekord');
+  assert.equal(text(dom.app.querySelector('.member-points__meta')), 'Hält 1 Rekord');
+});
+
 test('profile: no panel when the payload carries no points', async (t) => {
   const dom = bootProfile(t, 'klassisch', PROFILE(null));
   await dom.call('showProfile', 'ada');

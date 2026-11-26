@@ -26,6 +26,15 @@
    restyles `.verdict` / `.result-party`, it must not fork this. Part of the
    frontend; all files share one global script scope. */
 
+// The Spielwirbel-Rekord beside a personal score (#1788) — „Neuer
+// Spielwirbel-Rekord!", or „…? Wird geprüft" while an outlier waits for the
+// operator. Never a holder: the line already names whose score it is.
+function swMarkHtml(mark) {
+  if (!mark) return '';
+  return `<span class="result-points__record result-points__sw${mark === 'pending' ? ' is-pending' : ''}">${iconText('ti-world',
+    t(mark === 'pending' ? 'points.swRecordPending' : 'points.swRecordNew'))}</span>`;
+}
+
 function resultRenderParties(rs, slot) {
   const { round, session, parties } = rs;
   slot.innerHTML = '';
@@ -65,7 +74,7 @@ function resultRenderParties(rs, slot) {
       const row = h(`<li class="result-party${winner ? ' is-winner' : ''}${solo ? ' result-party--solo' : ''}">
           <span class="result-party__name">${winner ? '<i class="ti ti-crown result-party__crown" aria-hidden="true"></i> ' : ''}${esc(party.name)}${winner ? ` <span class="sr-only">${esc(tn(party.people.length, 'result.wonSeatsOne', 'result.wonSeats'))}</span>` : ''}</span>
           ${line ? `<span class="result-party__points"><span class="result-points__value">${esc(fmtCount(line.points))}</span>${line.newRecord
-            ? `<span class="result-points__record">${iconText('ti-medal', t('points.newRecord'))}</span>` : ''}</span>` : ''}
+            ? `<span class="result-points__record">${iconText('ti-medal', t('points.newRecord'))}</span>` : ''}${swMarkHtml(swLineMark(round, session, line, lines))}</span>` : ''}
           <span class="verdict__seats result-party__seats"></span>
         </li>`);
       const seatsEl = row.querySelector('.verdict__seats');

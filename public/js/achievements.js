@@ -30,7 +30,8 @@
      roundBadges(round, opts)   -> { round: [entry], members: { [mid]: [entry] } }
      newSince(round, sid, opts) -> [{ key, holder, memberId, tier, sessionId, at, gameId? }]
      accountBadges(stats, createdAt, now) -> [entry]
-     BADGE_CATALOGUE            -> the 43 definitions, in display order
+     BADGE_CATALOGUE            -> the 44 definitions, in display order (#1788 added
+                                  the account's Spielwirbel-Rekord ladder)
 
    One entry:
      { key, holder, glyph, secret,
@@ -162,6 +163,9 @@ const BADGE_CATALOGUE = [
   { key: 'accountRounds', holder: 'account', glyph: 'ti-world', tiers: [2, 3, 5], counted: true, measure: (c) => badgeTotal(c.stats.rounds) },
   { key: 'accountYears', holder: 'account', glyph: 'ti-hourglass', tiers: [1, 2, 3], counted: true, lineOne: true, measure: (c) => badgeYearsSince(c.createdAt, c.now) },
   { key: 'accountGames', holder: 'account', glyph: 'ti-puzzle', tiers: [10, 25, 50, 100], counted: true, measure: (c) => badgeTotal(c.stats.gamesPlayed) },
+  // #1788: BGG games in which the account SET a Spielwirbel-Rekord — dated,
+  // since the recompute knows the session that set each one.
+  { key: 'accountRecords', holder: 'account', glyph: 'ti-sparkles', tiers: [1, 3, 10], counted: true, lineOne: true, measure: (c) => badgeDated(c.stats.recordsSet) },
 ];
 
 // --- helpers every condition shares ------------------------------------------
@@ -182,6 +186,13 @@ function badgeRunning(list) {
 function badgeTotal(n) {
   const count = Number.isFinite(n) ? n : 0;
   return { steps: [{ sessionId: null, at: null, count }], count };
+}
+
+// A count whose steps are dates with no session the client could name (the
+// account's Spielwirbel-Rekorde, #1788): one step per date, oldest first.
+function badgeDated(dates) {
+  const list = (Array.isArray(dates) ? dates : []).filter((d) => typeof d === 'string').slice().sort();
+  return { steps: list.map((at, i) => ({ sessionId: null, at, count: i + 1 })), count: list.length };
 }
 
 const badgeWon = (s, mid) => (s.winnerIds || []).includes(mid);
@@ -731,10 +742,11 @@ function newSince(round, sessionId, opts) {
   return out;
 }
 
-/* The five account-tier entries, from the aggregate lib/user-stats.js already
-   computes (`sessions`, `wins`, `rounds`, `gamesPlayed`) plus the account's createdAt. Totals
-   only, never a round or a person — the profile-stats disclosure rule. Only
-   Jahre has a date; the play totals have no single session behind them. */
+/* The six account-tier entries, from the aggregate lib/user-stats.js already
+   computes (`sessions`, `wins`, `rounds`, `gamesPlayed`, `recordsSet`) plus the
+   account's createdAt. Totals and dates only, never a round or a person — the
+   profile-stats disclosure rule. Jahre and Spielwirbel-Rekord have dates; the
+   play totals have no single session behind them. */
 function accountBadges(stats, createdAt, now) {
   const c = { stats: stats || {}, createdAt, now: Number.isFinite(now) ? now : Date.now() };
   return BADGE_CATALOGUE

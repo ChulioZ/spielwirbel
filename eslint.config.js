@@ -655,6 +655,8 @@ const frontendGlobals = {
   // route) and session-points.js (the sheet and the result's block).
   POINTS_MIN: 'readonly', POINTS_MAX: 'readonly', isValidPoints: 'readonly', AUTOMA_NAME_MAX: 'readonly', parseAutoma: 'readonly', pointsBeat: 'readonly',
   gamePointRecords: 'readonly', sessionPointLines: 'readonly', memberPointRecords: 'readonly',
+  // game-records.js (#1788) — the Spielwirbel-Rekord's mark on the result screen.
+  swRecordMark: 'readonly', swLineMark: 'readonly',
   // Scoring categories (#1780): point-records.js too.
   SCORE_CATEGORY_MAX: 'readonly', SCORE_CATEGORY_NAME_MAX: 'readonly', scoreCategoryList: 'readonly', activeScoreCategories: 'readonly',
   mergeScoreCategories: 'readonly', parseScoreParts: 'readonly', consistentScoreParts: 'readonly', seatScoreParts: 'readonly',

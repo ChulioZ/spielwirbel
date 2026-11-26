@@ -50,6 +50,53 @@
 // AFTER, which is the exact unearned interruption this design exists to avoid.
 const NEWS = [
   /*
+   * #1788, Spielwirbel-Rekorde. A new capability — and it changes what the
+   * profile's medal means, so a user who knew their medals needs to read why
+   * they moved (.claude/rules/keep-readme-current.md, „moves numbers people
+   * have already seen"). Dated a day after the push entry so the dot lights
+   * for accounts that already saw that one today.
+   */
+  {
+    revision: '2026-11-27',
+    kind: 'new',
+    de: {
+      title: "Spielwirbel-Rekorde",
+      body: "Für jedes Spiel von BoardGameGeek gibt es jetzt einen Spielwirbel-Rekord: die beste persönliche Punktzahl aus allen Runden auf Spielwirbel. Du siehst ihn auf der Spielseite, am Ergebnis und in deinem Profil — nur den Wert, nie, wer ihn hält. Die Medaille im Profil steht deshalb jetzt für einen Spielwirbel-Rekord statt für den Rekord einer Runde; die Rekorde deiner Runden bleiben auf den Mitgliederseiten. Ein neues Abzeichen zählt die Spiele, in denen du einen aufgestellt hast.",
+    },
+    en: {
+      title: "Spielwirbel records",
+      body: "Every BoardGameGeek game now has a Spielwirbel record: the best personal score across all rounds on Spielwirbel. You see it on the game page, on the result and on your profile — just the value, never who holds it. So the medal on your profile now stands for a Spielwirbel record rather than a round's record; your rounds' records stay on the member pages. A new badge counts the games in which you set one.",
+    },
+    es: {
+      title: "Récords Spielwirbel",
+      body: "Cada juego de BoardGameGeek tiene ahora un récord Spielwirbel: la mejor puntuación personal de todos los grupos de Spielwirbel. Lo ves en la página del juego, en el resultado y en tu perfil; solo el valor, nunca quién lo tiene. Por eso la medalla de tu perfil indica ahora un récord Spielwirbel y no el récord de un grupo; los récords de tus grupos siguen en las páginas de los miembros. Una insignia nueva cuenta los juegos en los que lograste uno.",
+    },
+    fr: {
+      title: "Records Spielwirbel",
+      body: "Chaque jeu de BoardGameGeek a désormais un record Spielwirbel : le meilleur score personnel de tous les groupes sur Spielwirbel. Tu le vois sur la page du jeu, sur le résultat et sur ton profil — seulement la valeur, jamais qui le détient. La médaille de ton profil désigne donc maintenant un record Spielwirbel plutôt que le record d’un groupe ; les records de tes groupes restent sur les pages des membres. Un nouveau badge compte les jeux où tu en as établi un.",
+    },
+    it: {
+      title: "Record Spielwirbel",
+      body: "Ogni gioco di BoardGameGeek ha ora un record Spielwirbel: il miglior punteggio personale di tutti i gruppi su Spielwirbel. Lo vedi nella pagina del gioco, nel risultato e nel tuo profilo — solo il valore, mai chi lo detiene. Perciò la medaglia nel profilo ora indica un record Spielwirbel invece del record di un gruppo; i record dei tuoi gruppi restano nelle pagine dei membri. Un nuovo distintivo conta i giochi in cui ne hai stabilito uno.",
+    },
+    nl: {
+      title: "Spielwirbel-records",
+      body: "Elk spel van BoardGameGeek heeft nu een Spielwirbel-record: de beste persoonlijke score uit alle groepen op Spielwirbel. Je ziet het op de spelpagina, bij de uitslag en op je profiel — alleen de waarde, nooit wie het heeft. De medaille op je profiel staat daarom nu voor een Spielwirbel-record in plaats van het record van een groep; de records van je groepen blijven op de ledenpagina’s. Een nieuwe badge telt de spellen waarin jij er een neerzette.",
+    },
+    pt: {
+      title: "Recordes Spielwirbel",
+      body: "Cada jogo do BoardGameGeek tem agora um recorde Spielwirbel: a melhor pontuação pessoal de todos os grupos no Spielwirbel. Vês-o na página do jogo, no resultado e no teu perfil — só o valor, nunca quem o detém. Por isso, a medalha do teu perfil passa a indicar um recorde Spielwirbel em vez do recorde de um grupo; os recordes dos teus grupos continuam nas páginas dos membros. Uma nova insígnia conta os jogos em que fizeste um.",
+    },
+    fi: {
+      title: "Spielwirbel-ennätykset",
+      body: "Jokaisella BoardGameGeekin pelillä on nyt Spielwirbel-ennätys: paras henkilökohtainen tulos kaikista Spielwirbelin ryhmistä. Näet sen pelisivulla, tuloksissa ja profiilissasi — vain arvon, et koskaan sitä, kenen se on. Profiilisi mitali tarkoittaa siksi nyt Spielwirbel-ennätystä eikä ryhmän ennätystä; ryhmiesi ennätykset pysyvät jäsensivuilla. Uusi merkki laskee pelit, joissa teit sellaisen.",
+    },
+    ko: {
+      title: "Spielwirbel 기록",
+      body: "이제 BoardGameGeek의 모든 게임에 Spielwirbel 기록이 있습니다. Spielwirbel의 모든 모임에서 나온 최고 개인 점수입니다. 게임 페이지, 결과 화면, 프로필에서 볼 수 있으며, 값만 보이고 누가 가졌는지는 절대 보이지 않습니다. 그래서 프로필의 메달은 이제 모임 기록이 아니라 Spielwirbel 기록을 뜻합니다. 모임의 기록은 멤버 페이지에 그대로 있습니다. 새 배지는 내가 기록을 세운 게임 수를 셉니다.",
+    },
+  },
+  /*
    * #1785, push notifications for new messages. A new capability.
    */
   {

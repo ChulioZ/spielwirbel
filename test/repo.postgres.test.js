@@ -978,7 +978,16 @@ if (!process.env.DATABASE_URL) {
           await repo.putGameCategorySetting(${JSON.stringify(bggId)}, { state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
           const catStored = await repo.getGameCategorySetting(${JSON.stringify(bggId)});
           const catRemoved = await repo.deleteGameCategorySetting(${JSON.stringify(bggId)});
-          console.log('RESULT:' + JSON.stringify({ rows, stored, removed, catRows, catStored, catRemoved }));
+          // #1788: the records recompute reads the same RLS tables, and its two
+          // global tables must need no tenant setting either.
+          const recSources = (await repo.gameRecordSources()).filter((r) => r.id === ${JSON.stringify(round.id)});
+          const reviewKey = 'probe/' + ${JSON.stringify(bggId)};
+          await repo.putScoreReview(reviewKey, { state: 'flagged' });
+          const reviewSeen = (await repo.listScoreReviews()).some((r) => r.key === reviewKey);
+          const reviewDropped = await repo.deleteScoreReviews([reviewKey]);
+          const recordsListed = Array.isArray(await repo.listGameRecords());
+          console.log('RESULT:' + JSON.stringify({ rows, stored, removed, catRows, catStored, catRemoved,
+            recSources, reviewSeen, reviewDropped, recordsListed }));
           await repo.end();
         })().catch((err) => { console.error(err.stack); process.exit(1); });
       `], { env: { ...process.env, DATABASE_URL: url.toString() }, encoding: 'utf8' });
@@ -998,6 +1007,10 @@ if (!process.env.DATABASE_URL) {
     assert.deepEqual(out.catRows, [{ bggId, sets: [['Löcher']], titles: ['Golf'] }],
       'the category set was invisible without the admin escape — not reading under atx()');
     assert.deepEqual(out.catStored, { bggId, state: 'dismissed', dismissedAtRounds: 1, dismissedAtSets: 1 });
+    assert.equal(out.recSources.length, 1,
+      'the scored round was invisible to the records recompute — not reading under atx()');
+    assert.deepEqual([out.recSources[0].sessions.length, out.recSources[0].games.length, out.recSources[0].members.length], [1, 1, 1]);
+    assert.deepEqual([out.reviewSeen, out.reviewDropped, out.recordsListed], [true, 1, true]);
     assert.equal(out.catRemoved, true);
     await repo.deleteRound(tenant, round.id);
   });

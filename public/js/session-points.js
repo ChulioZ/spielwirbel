@@ -384,6 +384,18 @@ function playTopPointsText(round, play) {
 // so the switch shows the fixed value, disabled, with a line saying why — the
 // server refuses a change anyway (409), this keeps the refusal off the screen.
 // Per-category records (#1780) follow as a short list — „Vögel: 48 · Anna".
+/* The Spielwirbel-Rekord mark beside one result line (#1788): 'set', 'pending'
+   or null. Only a PERSONAL score can hold one — a team's shared result and a
+   guest's seat never count (lib/game-records.js) — and its peers are the
+   session's other personal scores, the input of the in-session outlier check. */
+function swLineMark(round, session, line, lines) {
+  const game = ((round && round.games) || []).find((g) => g.id === (session && session.chosenGameId));
+  const personal = (l) => !l.party.team && !l.party.people[0].guest;
+  if (!game || !game.swRecord || !personal(line)) return null;
+  const peers = lines.filter((l) => l !== line && personal(l)).map((l) => l.points);
+  return swRecordMark(game, session.id, line.party.id, line.points, peers);
+}
+
 function renderGamePointRecord(round, game, records, onToggle) {
   if (!records.record) return null;
   const { points, session } = records.record;
@@ -392,6 +404,8 @@ function renderGamePointRecord(round, game, records, onToggle) {
   const cats = gameCategoryRecords(round, game);
   const el = h(`<div class="gd-record">
       <p class="gd-record__line">${iconText('ti-medal', t('points.record', { points: fmtCount(points), name, date: fmtDate(session.createdAt) }))}</p>
+      ${game.swRecord && Number.isFinite(game.swRecord.value)
+    ? `<p class="gd-record__sw">${iconText('ti-world', t('points.swRecord', { points: fmtCount(game.swRecord.value) }))}</p>` : ''}
       <label class="gd-record__dir"><input type="checkbox"${game.lowScoreWins ? ' checked' : ''}${game.scoringLocked ? ' disabled' : ''}> ${esc(t('points.lowWins'))}</label>
       ${game.scoringLocked ? `<p class="gd-record__locked">${esc(t('points.lowWinsLocked'))}</p>` : ''}
       ${cats.length ? `<ul class="gd-record__cats">${cats.map(({ category, record }) => `<li>${esc(t('points.categoryRecord', {

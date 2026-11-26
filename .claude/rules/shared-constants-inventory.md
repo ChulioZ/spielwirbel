@@ -948,6 +948,17 @@ confirmation, so the number the user approves is the number that lands.
 `roundImportSessions` takes `sessionOutcome`/`sessionChildIds` injected (a
 public/js file cannot require a sibling).
 
+**The forty-eighth is `public/js/game-records.js`** (#1788): the
+Spielwirbel-Rekord's three outlier checks, their thresholds, the quantile the
+distribution check reads, and `swRecordMark`. `lib/game-records.js` runs the
+checks in the scheduler's recompute; the result screen runs the SAME checks the
+moment points are saved, for a score the recompute has not seen yet (it lags by
+up to one tick). Logic, and nothing is validated across the boundary: a drifted
+copy would announce „Neuer Spielwirbel-Rekord!" for a score the server then
+holds back as an outlier — or say „Wird geprüft" for one it counts — with
+nothing red. The ratio checks apply only while both numbers are positive; a copy
+without that guard would hold back every below-zero score of a lowest-wins game.
+
 **Each new instance must be named above.** `test/rule-enumerations.test.js`
 asserts every `require('../public/js/…')` under `lib/routes/` and `lib/` appears
 in it, because the list had already gone stale by one before anyone noticed. The

@@ -1109,6 +1109,8 @@ I18N.ko = {
   'member.pointsBetteredOne': '개인 최고 기록 {n}회 경신',
   'member.pointsBettered': '개인 최고 기록 {n}회 경신',
   'member.pointsRecord': '모임 기록',
+  'member.pointsSwRecord': '기록 {points}',
+  'member.pointsSwRecordHeld': 'Spielwirbel 기록',
   'member.pointsCategories': '항목별',
   'member.bestGameNone': '아직 이긴 게임이 없어요',
   'member.favorite': '가장 좋아하는 게임',
@@ -1508,6 +1510,9 @@ I18N.ko = {
   'points.top': '{name}: {points}',
   'points.record': '기록: {points} · {name} · {date}',
   'points.lowWins': '낮은 점수가 이겨요',
+  'points.swRecord': 'Spielwirbel 기록: {points}',
+  'points.swRecordNew': '새 Spielwirbel 기록!',
+  'points.swRecordPending': '새 Spielwirbel 기록? 검토 중',
   'points.lowWinsLocked': '모든 모임에 고정됨',
   'points.automa.add': '오토마 추가',
   'points.automa.remove': '오토마 삭제',
@@ -1893,6 +1898,9 @@ I18N.ko = {
   'stats.playedMonth': '{month} 최다 플레이',
   'stats.playedYear': '{year} 최다 플레이',
   'stats.playedAll': 'Spielwirbel의 스테디셀러',
+  'stats.records': 'Spielwirbel 기록',
+  'stats.recordValue': '기록: {points}',
+  'stats.recordValueLow': '기록: {points} · 낮은 점수 승리',
   'stats.bestRated': '최고 평가',
   'stats.shelves.one': '선반 {n}곳에',
   'stats.shelves.many': '선반 {n}곳에',
@@ -2561,6 +2569,9 @@ I18N.ko = {
   'badges.complete.line': '모임이 선반의 모든 게임을 플레이',
   'badges.accountGames.name': '게임',
   'badges.accountGames.line': '모든 모임에서 서로 다른 게임 {n}개',
+  'badges.accountRecords.name': 'Spielwirbel 기록',
+  'badges.accountRecords.line': '{n}개 게임에서 Spielwirbel 기록 달성',
+  'badges.accountRecords.lineOne': '{n}개 게임에서 Spielwirbel 기록 달성',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.

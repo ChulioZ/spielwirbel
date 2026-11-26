@@ -104,7 +104,8 @@ test('a tie for first lists every tied game, the one that got there first leadin
 const realDetail = bgg.detail;
 const realHistory = repo.publicPlayHistory;
 const ENV = ['PUBLIC_STATS_MIN_SHELVES', 'PUBLIC_STATS_MIN_OWNER_TENANTS', 'PUBLIC_STATS_RESOLVE_MAX',
-  'PUBLIC_STATS_MIN_PLAYS_WEEK', 'PUBLIC_STATS_MIN_PLAY_TENANTS_WEEK', 'PUBLIC_STATS_ENABLED'];
+  'PUBLIC_STATS_MIN_PLAYS_WEEK', 'PUBLIC_STATS_MIN_PLAY_TENANTS_WEEK', 'PUBLIC_STATS_ENABLED',
+  'PUBLIC_STATS_MIN_PLAY_TENANTS_ALL'];
 const seeded = [];
 afterEach(async () => {
   bgg.detail = realDetail;
@@ -199,6 +200,40 @@ test('the longer lists are spent LAST: a budget the cards use up publishes none 
   const built = await publicStats.rebuild();
   assert.deepEqual(ids(built.games.mostOwned), ['b1', 'b2', 'b3'], 'the card gets the whole budget');
   assert.equal((await request(app).get('/api/stats/public/more')).body.games.mostOwned, undefined);
+});
+
+// #1788: the „Rekorde" card — the Spielwirbel-Rekord VALUE of the most-played
+// games that have one, on the longer-lists payload only, named by the provider.
+test('the records card carries the value of the most-played games that have one, and nothing else', async () => {
+  process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL = '1';
+  stubProvider();
+  const scoped = repo.forTenant('default');
+  const scoredPlay = async (rid, gid, members, points) => scoped.createSession(rid, {
+    createdAt: '2026-08-01T19:00:00.000Z', gameIds: [gid], votes: {}, chosenGameId: gid, finished: true, cancelled: false,
+    memberIds: members, winnerIds: [], scores: { [members[0]]: points },
+  });
+  const round = await scoped.createRound({ name: 'Rekorde', members: ['Ann', 'Bo'], importFromRoundId: null });
+  seeded.push(round.id);
+  const ids2 = round.members.map((m) => m.id);
+  const azul = await scoped.createGame(round.id, { title: 'GETIPPT Azul', minPlayers: 1, maxPlayers: 4, image: null, source: { provider: 'bgg', externalId: 'rec1' } });
+  await scoredPlay(round.id, azul.id, ids2, 77);
+  await scoredPlay(round.id, azul.id, ids2, 70);
+  // Played, but nobody counted points: on the played walk, never on this card.
+  const ra = await scoped.createGame(round.id, { title: 'Ra', minPlayers: 1, maxPlayers: 4, image: null, source: { provider: 'bgg', externalId: 'rec2' } });
+  await scoped.createSession(round.id, { createdAt: '2026-08-02T19:00:00.000Z', gameIds: [ra.id], votes: {}, chosenGameId: ra.id,
+    finished: true, cancelled: false, memberIds: ids2, winnerIds: [] });
+  // The record table is the recompute's (lib/game-records.js), which a real rebuild runs beside.
+  const realRecords = repo.listGameRecords;
+  repo.listGameRecords = async () => [{ bggId: 'rec1', value: 77, lowWins: false }, { bggId: 'rec9', value: 5, lowWins: true }];
+  try {
+    await publicStats.rebuild();
+  } finally {
+    repo.listGameRecords = realRecords;
+  }
+  const res = await request(app).get('/api/stats/public/more');
+  assert.deepEqual(res.body.records.map((e) => [e.title, e.value, e.lowWins, e.rank]), [['Provider-Titel rec1', 77, false, 1]]);
+  assert.ok(!JSON.stringify(res.body.records).includes('GETIPPT'), 'the provider names it, never a round');
+  assert.equal((await request(app).get('/api/stats/public')).body.records, undefined, 'never on the landing payload');
 });
 
 test('the route 404s while the feature is off', async () => {

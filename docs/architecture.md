@@ -222,6 +222,13 @@ lib/
                      categories of the same name map onto it (session parts
                      re-keyed on read, translated back on write), extras after;
                      plus the lock on an edit and the admin fold of the sets
+  game-records.js    the Spielwirbel-Rekord (#1788): the scheduler's recompute
+                     of the instance-wide record per BGG game from every
+                     round's personal scores, the outlier review, and the
+                     admin lists — values only, never a holder
+  game-record-overlay.js its read overlay: `game.swRecord` on every BGG-linked
+                     game a round read hands out — the value plus that round's
+                     OWN score keys; repo-free, since the facade requires it
   bgg-links.js       the instance-wide BGG link table's write and server-side
                      read (#1638): every BGG parse's category/mechanic/designer
                      ids are recorded best-effort, so a name can link to its
@@ -555,6 +562,9 @@ lib/
                      typed per BGG game, confirm (spelling correctable) /
                      dismiss / revoke a base set for every round, CSV/copy —
                      names and counts, never a round or person
+      game-records.js „Spielwirbel-Rekorde" (#1788): flagged scores to mark
+                     valid or exclude, the current records, CSV/copy — values,
+                     counts and an opaque ref, never a round or person
       storage.js     object-storage usage + the orphan estimate (issue #941),
                      behind a button because it lists the whole bucket; reports
                      only, never deletes
@@ -687,6 +697,7 @@ public/
       admin-scoring.js the panel's „Spieleinstellungen" card (#1786), started
                      by admin.js's `admin:panel` event
       admin-categories.js the „Wertungskategorien" card (#1787), the same way
+      admin-records.js the „Spielwirbel-Rekorde" card (#1788), the same way
       face.js        stamps FACE_DESIGN onto login.html's and kontakt.html's
                      <html data-design> from <head>, after designs.js (#1198)
     error-report.js  browser-side fault reporting (#1149): the fault-kind enum,
@@ -922,6 +933,9 @@ public/
                      route also validates with, and the personal bests and group
                      records derived from the sessions, never stored (issue #1630),
                      and the automa opponent's shape, which no record can see (#1672)
+    game-records.js  the Spielwirbel-Rekord's outlier checks and thresholds,
+                     shared with the recompute, and the result screen's mark
+                     for a score the recompute has not seen yet (#1788)
     session-duration.js a played session's minutes: the bounds the route also
                      validates with, the timer's stamp both repo backends run
                      on the finish, and the round's median per game (#1770)

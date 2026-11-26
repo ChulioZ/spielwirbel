@@ -464,7 +464,7 @@ test('#1389: the account badges reach the subject and a friend, never a stranger
 
   const keys = (body) => body.stats.badges.map((b) => b.key);
   const own = (await profile(alice, alice.username)).body;
-  assert.deepEqual(keys(own), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
+  assert.deepEqual(keys(own), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames', 'accountRecords']);
 
   assert.equal('stats' in (await profile(bob, alice.username)).body, false, 'a stranger gets no stats, so no badges');
   await sendReq(bob, alice.username);

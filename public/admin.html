@@ -433,6 +433,37 @@
           <p class="msg" id="categoriesMsg" role="alert" hidden></p>
         </section></div>
 
+        <!-- „Spielwirbel-Rekorde" (#1788): the outlier review and the current
+             instance-wide records per BGG game. Values, counts and dates only —
+             never a round, tenant, member or account. Driven by
+             js/pages/admin-records.js. -->
+        <div class="card-slot"><section class="card" id="recordsCard">
+          <h2>Spielwirbel-Rekorde</h2>
+          <p class="sub" style="margin-bottom: 0.9rem;">
+            Auffällige persönliche Punkte aus allen Runden. Zurückgehaltene Werte zählen erst,
+            wenn sie als gültig markiert sind; später auffällig gewordene zählen weiter, bis
+            entschieden ist. „Nicht werten" nimmt einen Wert dauerhaft aus dem Spielwirbel-Rekord —
+            die Rekorde und Punkte der Runde selbst bleiben unverändert. Demo-Runden zählen nicht.
+          </p>
+          <h3>Zu prüfen</h3>
+          <p class="sub count" id="reviewsCount" hidden></p>
+          <div class="scroll"><table id="reviewsTable"><tbody></tbody></table></div>
+          <div class="row" style="margin-top: 1rem;">
+            <button class="ghost small" id="reviewsCsv">CSV herunterladen</button>
+            <button class="ghost small" id="reviewsJson">JSON herunterladen</button>
+            <button class="ghost small" id="reviewsCopy">Kopieren</button>
+          </div>
+          <h3 style="margin-top: 1.4rem;">Aktuelle Rekorde</h3>
+          <p class="sub count" id="recordsCount" hidden></p>
+          <div class="scroll"><table id="recordsTable"><tbody></tbody></table></div>
+          <div class="row" style="margin-top: 1rem;">
+            <button class="ghost small" id="recordsCsv">CSV herunterladen</button>
+            <button class="ghost small" id="recordsJson">JSON herunterladen</button>
+            <button class="ghost small" id="recordsCopy">Kopieren</button>
+          </div>
+          <p class="msg" id="recordsMsg" role="alert" hidden></p>
+        </section></div>
+
         <div class="card-slot"><section class="card">
           <h2>Protokoll</h2>
           <!-- Filtering (#275): the log is also what gets handed over on a
@@ -610,5 +641,6 @@
   <script src="/js/pages/admin.js"></script>
   <script src="/js/pages/admin-scoring.js"></script>
   <script src="/js/pages/admin-categories.js"></script>
+  <script src="/js/pages/admin-records.js"></script>
 </body>
 </html>

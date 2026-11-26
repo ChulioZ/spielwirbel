@@ -1151,6 +1151,8 @@ I18N.fr = {
   'member.pointsBetteredOne': '{n} record perso battu',
   'member.pointsBettered': '{n} records perso battus',
   'member.pointsRecord': 'Record du groupe',
+  'member.pointsSwRecord': 'Record {points}',
+  'member.pointsSwRecordHeld': 'Record Spielwirbel',
   'member.pointsCategories': 'Par catégorie',
   'member.bestGameNone': 'Aucun jeu gagné pour l’instant',
   'member.favorite': 'Jeu préféré',
@@ -1558,6 +1560,9 @@ I18N.fr = {
   'points.top': '{name} : {points}',
   'points.record': 'Record : {points} · {name} · {date}',
   'points.lowWins': 'Le score le plus bas gagne',
+  'points.swRecord': 'Record Spielwirbel : {points}',
+  'points.swRecordNew': 'Nouveau record Spielwirbel !',
+  'points.swRecordPending': 'Nouveau record Spielwirbel ? En cours de vérification',
   'points.lowWinsLocked': 'Fixé pour tous les groupes',
   'points.automa.add': 'Ajouter un automa',
   'points.automa.remove': 'Retirer l’automa',
@@ -1959,6 +1964,9 @@ I18N.fr = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'L\'incontournable de Spielwirbel',
+  'stats.records': 'Records Spielwirbel',
+  'stats.recordValue': 'Record : {points}',
+  'stats.recordValueLow': 'Record : {points} · le plus bas gagne',
   'stats.bestRated': 'Le mieux noté',
   'stats.shelves.one': 'sur {n} étagère',
   'stats.shelves.many': 'sur {n} étagères',
@@ -2638,6 +2646,9 @@ I18N.fr = {
   'badges.complete.line': 'Le groupe a joué chaque jeu de l’étagère',
   'badges.accountGames.name': 'Jeux',
   'badges.accountGames.line': '{n} jeux différents dans tous les groupes',
+  'badges.accountRecords.name': 'Record Spielwirbel',
+  'badges.accountRecords.line': 'Record Spielwirbel établi dans {n} jeux',
+  'badges.accountRecords.lineOne': 'Record Spielwirbel établi dans {n} jeu',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.

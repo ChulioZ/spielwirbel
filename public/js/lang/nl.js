@@ -1146,6 +1146,8 @@ I18N.nl = {
   'member.pointsBetteredOne': '{n} persoonlijk record verbeterd',
   'member.pointsBettered': '{n} persoonlijke records verbeterd',
   'member.pointsRecord': 'Groepsrecord',
+  'member.pointsSwRecord': 'Record {points}',
+  'member.pointsSwRecordHeld': 'Spielwirbel-record',
   'member.pointsCategories': 'Per categorie',
   'member.bestGameNone': 'Nog geen spel gewonnen',
   'member.favorite': 'Favoriete spel',
@@ -1553,6 +1555,9 @@ I18N.nl = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Laagste score wint',
+  'points.swRecord': 'Spielwirbel-record: {points}',
+  'points.swRecordNew': 'Nieuw Spielwirbel-record!',
+  'points.swRecordPending': 'Nieuw Spielwirbel-record? Wordt gecontroleerd',
   'points.lowWinsLocked': 'Vastgelegd voor alle groepen',
   'points.automa.add': 'Automa toevoegen',
   'points.automa.remove': 'Automa verwijderen',
@@ -1951,6 +1956,9 @@ I18N.nl = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbels blijvertje',
+  'stats.records': 'Spielwirbel-records',
+  'stats.recordValue': 'Record: {points}',
+  'stats.recordValueLow': 'Record: {points} · laagste wint',
   'stats.bestRated': 'Best beoordeeld',
   'stats.shelves.one': 'in {n} kast',
   'stats.shelves.many': 'in {n} kasten',
@@ -2630,6 +2638,9 @@ I18N.nl = {
   'badges.complete.line': 'De groep heeft elk spel in de kast gespeeld',
   'badges.accountGames.name': 'Spellen',
   'badges.accountGames.line': '{n} verschillende spellen in alle groepen',
+  'badges.accountRecords.name': 'Spielwirbel-record',
+  'badges.accountRecords.line': 'Spielwirbel-record gevestigd in {n} spellen',
+  'badges.accountRecords.lineOne': 'Spielwirbel-record gevestigd in {n} spel',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.
