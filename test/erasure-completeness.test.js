@@ -89,6 +89,10 @@ const GLOBAL_DISPOSITION = {
   // whole) and their read markers.
   direct_messages: { erase: true, export: true },
   direct_message_reads: { erase: true, export: true },
+  // #1785: the account's push devices and per-thread mutes. Exported as the
+  // push service's origin only — the endpoint and keys are a capability.
+  push_subscriptions: { erase: true, export: true },
+  push_mutes: { erase: true, export: true },
   quiz_rounds: {
     erase: false,
     export: false,
@@ -251,6 +255,8 @@ if (!process.env.DATABASE_URL) {
       round_message_reads: 'roundMessageReads',
       direct_messages: 'directMessages',
       direct_message_reads: 'directMessageReads',
+      push_subscriptions: 'pushSubscriptions',
+      push_mutes: 'pushMutes',
     };
     for (const [table, d] of Object.entries(GLOBAL_DISPOSITION)) {
       if (!d.export) continue;
@@ -301,6 +307,12 @@ if (!process.env.DATABASE_URL) {
     await repo.createDirectMessage({ authorUserId: uid, recipientUserId: other, text: 'hi', at: now });
     const reply = await repo.createDirectMessage({ authorUserId: other, recipientUserId: uid, text: 'ho', at: now });
     await repo.markDirectMessagesRead(uid, other, reply.seq);
+    // #1785: a push device and a mute.
+    await repo.putPushSubscription(uid, {
+      endpoint: 'https://fcm.googleapis.com/fcm/send/erase-probe',
+      keys: { p256dh: 'BPp256dhprobekey0000', auth: 'authprobe00' }, locale: 'de', createdAt: now,
+    });
+    await repo.setPushMute(uid, `round:${round.id}`, true);
 
     // Every fixture landed — otherwise the counts below are all zero before the
     // erase and the whole test passes against an eraseAccount that does nothing.

@@ -80,6 +80,7 @@ async function renderChatTab(round) {
     placeholder: t('chat.placeholder'),
     empty: t('chat.empty'),
     purge: true,
+    pushThread: `round:${round.id}`,
   });
 }
 
@@ -100,6 +101,8 @@ function renderSessionComments(round, session) {
     placeholder: t('comments.placeholder'),
     empty: t('comments.empty'),
     purge: false,
+    pushThread: `session:${session.id}`,
+    pushParent: `round:${round.id}`,
   }).catch((err) => toast(chatErrorText(err), { tone: 'error' }));
   return wrap;
 }
@@ -114,6 +117,44 @@ function chatSessionLabel(round, sid) {
   return { session: s, label: game ? `${game.title}, ${fmtSessionWhen(s)}` : fmtSessionWhen(s) };
 }
 
+/* The thread's push bell (#1785): mutes this thread's pushes for the ACCOUNT
+   (every device). Only where push is offered and this browser can do it, so a
+   self-hosted instance without VAPID keys never shows it. A session's bell
+   reads as muted, and cannot be unmuted from here, while its round is muted —
+   the server mutes comments with their round (lib/push.js parentThread), and a
+   bell claiming otherwise would be a control that changes nothing. A fixed
+   label with aria-pressed, the toggle-button pattern. */
+function mountPushBell(host, thread, parent) {
+  withAppConfig((cfg) => {
+    if (!pushOffered(cfg) || !pushSupported()) return;
+    loadPushState().then((state) => {
+      if (!state.available || !host.isConnected) return;
+      const label = t('chat.push.mute');
+      const btn = h(`<button type="button" class="link-btn chat__bell" aria-label="${esc(label)}" title="${esc(label)}"><i class="ti" aria-hidden="true"></i></button>`);
+      const paint = () => {
+        const byParent = !!parent && isPushMuted(parent);
+        const muted = byParent || isPushMuted(thread);
+        btn.setAttribute('aria-pressed', String(muted));
+        btn.disabled = byParent;
+        btn.querySelector('i').className = `ti ${muted ? 'ti-bell-off' : 'ti-bell'}`;
+      };
+      paint();
+      btn.addEventListener('click', async () => {
+        const want = !isPushMuted(thread);
+        btn.disabled = true;
+        try {
+          await setPushMuted(thread, want);
+          toast(t(want ? 'chat.push.muted' : 'chat.push.unmuted'));
+        } catch (err) {
+          toast(chatErrorText(err), { tone: 'error' });
+        }
+        paint();
+      });
+      host.prepend(btn);
+    }).catch(() => {});
+  });
+}
+
 /* One thread mounted into `wrap`: the list, paging, polling, the composer and
    the per-message actions. `base` is the thread's API path — the round's, one
    session's, or (since #1783) a direct conversation's. On the round's own
@@ -125,7 +166,7 @@ function chatSessionLabel(round, sid) {
    ended (the history stays readable; the composer goes) and `onRead`, which
    hears whether the newest message on screen was marked read, so the caller
    can put out its own dot. */
-async function mountChatThread(wrap, round, { base, inputId, placeholder, empty: emptyText, purge, readOnly, readOnlyNote, onRead }) {
+async function mountChatThread(wrap, round, { base, inputId, placeholder, empty: emptyText, purge, readOnly, readOnlyNote, onRead, pushThread, pushParent }) {
   const moderator = round ? roundCan(round, 'chat.moderate') : false;
   const state = { messages: [], hasMore: false, lastRead: 0, timer: null };
 
@@ -140,6 +181,7 @@ async function mountChatThread(wrap, round, { base, inputId, placeholder, empty:
         <button type="submit" class="btn chat__send"><i class="ti ti-send" aria-hidden="true"></i>${esc(t('chat.send'))}</button>
       </form>
     </div>`));
+  if (pushThread) mountPushBell(wrap.querySelector('.chat__thread'), pushThread, pushParent);
   const list = wrap.querySelector('.chat__list');
   const older = wrap.querySelector('.chat__older');
   const empty = wrap.querySelector('.chat__empty');

@@ -107,6 +107,9 @@ lib/
     direct-messages-json.js     the direct-message store (#1783): global,
     direct-messages-postgres.js keyed by an account pair — one module per
                      backend, spread into json.js / postgres.js
+    push-subscriptions-json.js     web push devices + per-thread mutes
+    push-subscriptions-postgres.js (#1785): global, keyed by account — one
+                     module per backend, spread into json.js / postgres.js
     import-copy.js   what travels when a new round imports another round's
                      games (#921) — shared by both backends so a copy carries
                      the same fields whichever one is running
@@ -386,6 +389,10 @@ lib/
                      one collapsed item per account and thread, its count
                      recomputed from the read marker on every post, read and
                      delete; never mailed, never the message text
+  push.js            web push for chat messages (issue #1785): off without
+                     the VAPID vars; sends a thread's name and one fixed line,
+                     never the text; collapses an unread burst, deletes a
+                     subscription the push service answers 404/410 for
   legal.js           server-rendered Impressum / privacy policy /
                      Nutzungsbedingungen in DE + EN (issues #134/#140)
   account-design.js  which design an account wears (resolved against the
@@ -486,6 +493,10 @@ lib/
                                              conversation list, page, post, edit,
                                              delete, mark read; an ex-friend reads
                                              but cannot write, issue #1783)
+    push.js          /api/account/push      (web push on this device (#1785):
+                                             status + key, subscribe / unsubscribe,
+                                             per-thread mutes; endpoints only on a
+                                             known push service)
     friends.js       /api/account/friends   (friendships + Freundeskreis feed:
                                              send / accept / decline / unfriend,
                                              list, feed paged by ?before= (#325, #1357) —
@@ -1054,6 +1065,9 @@ public/
     round-chat.js    the round chat's message cap, page size, text
                      normalisation, link splitting and unread rule — shared
                      with lib/routes/round-messages.js (issue #1781)
+    push-client.js   web push in the browser (issue #1785): subscribe /
+                     unsubscribe this device, the per-thread mute cache, the
+                     re-sync on login
     install-prompt.js stashes the browser's install event and decides which
                      install affordance a screen may offer — a real button, the
                      iOS Share-sheet steps, or nothing (issue #616)

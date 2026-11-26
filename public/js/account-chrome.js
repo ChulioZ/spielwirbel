@@ -93,7 +93,12 @@ function setupAccountUi() {
   setupDemoBanner();
   setupTermsBanner(); // #521, same transitions
   // Warm the cached /api/config, which the menu's price-watch row reads (#680).
-  withAppConfig(() => {});
+  withAppConfig((cfg) => {
+    // #1785, same transitions: the mute cache belongs to the account that was
+    // signed in, and a subscription this browser holds follows the new one.
+    resetPushState();
+    if (pushOffered(cfg)) syncPushSubscription();
+  });
   // #841, same transitions. Seats the CALLER'S OWN picture into the avatar cache
   // so their linked seat renders it without a batch request — and so a login as
   // a different account overwrites the previous one's entry rather than

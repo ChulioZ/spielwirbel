@@ -27,7 +27,7 @@
  * See .claude/rules/frontend-build-cache-busting.md.
  */
 
-const CACHE = 'spielwirbel-shell-v582';
+const CACHE = 'spielwirbel-shell-v583';
 
 // Everything the app needs to boot offline. Kept in sync with the <script>/<link>
 // order in index.html; each entry must be a real, servable path or install fails
@@ -165,6 +165,7 @@ const SHELL = [
   '/js/topbar-fit.js',
   '/js/report-link.js',
   '/js/round-chat.js',
+  '/js/push-client.js',
   '/js/install-prompt.js',
   '/js/popover.js',
   '/js/tag-chips.js',
@@ -389,6 +390,48 @@ async function cacheFirst(request) {
     return Response.error();
   }
 }
+
+/* Web push for chat messages (#1785). The server sends { title, body, url, tag }
+   and nothing else — never a message's text (lib/push.js). `tag` is the thread
+   key, so a second push for the same thread REPLACES the first notification
+   instead of stacking, and `renotify` lets that replacement still buzz. */
+self.addEventListener('push', (event) => {
+  let data;
+  try { data = event.data ? event.data.json() : {}; } catch { data = {}; }
+  if (!data || typeof data !== 'object') data = {};
+  const title = typeof data.title === 'string' && data.title ? data.title : 'Spielwirbel';
+  event.waitUntil(self.registration.showNotification(title, {
+    body: typeof data.body === 'string' ? data.body : '',
+    tag: typeof data.tag === 'string' ? data.tag : undefined,
+    renotify: typeof data.tag === 'string',
+    icon: '/icons/icon-192.png',
+    data: { url: pushTarget(data.url) },
+  }));
+});
+
+// Only an in-app path may be opened: a payload is ours, but a value that would
+// navigate the app off-origin must never come out of it.
+function pushTarget(url) {
+  return typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') ? url : '/';
+}
+
+// Tapping opens the thread: focus a window already on the app and send it
+// there, else open one.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = pushTarget(event.notification.data && event.notification.data.url);
+  event.waitUntil((async () => {
+    const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const w of wins) {
+      if (new URL(w.url).origin === self.location.origin && 'focus' in w) {
+        await w.focus();
+        if ('navigate' in w) return w.navigate(target);
+        return undefined;
+      }
+    }
+    return self.clients.openWindow(target);
+  })());
+});
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;

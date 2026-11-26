@@ -107,6 +107,11 @@ test('configured: the privacy policy covers the real processors and no ODR link'
     // §16 sharing scope (#878 widened it; the 2026-09-06 audit found EN still
     // on the pre-#878 promise). Paired DE + EN markers so one language cannot
     // drift behind the other again: both must name the profile and vote links.
+    // Web push (#1785): the recipient is the browser's push service, and the
+    // promise that matters is that no message text reaches it. Paired DE + EN.
+    'Push-Dienst deines Browsers', "your browser's push service",
+    'nie den Text der Nachricht', 'never the message text',
+    'Push-Abonnement', 'Push subscription',
     'dein Profil und von dir geteilte',
     'your profile and the voting links you share',
     legal.OPERATOR_NAME,

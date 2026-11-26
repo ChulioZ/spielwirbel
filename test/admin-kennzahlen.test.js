@@ -64,7 +64,7 @@ const STATUS = (over = {}) => ({
       // #1675: the automa is NOT a subset of points (it may be stored alone),
       // so 4 > 3 here and a renderer dividing by „mit Punkten" would read 133 %.
       sessionsWithPoints: 3, sessionsWithAutoma: 4,
-      accountsWithPasskey: 11, accountsWithPriceWatch: 6,
+      accountsWithPasskey: 11, accountsWithPriceWatch: 6, accountsWithPush: 5,
       /* The card's own denominators (#1174), DELIBERATELY DIFFERENT from the
          instance-wide twins above — `accounts.total` is 42 against 40 here,
          `rounds.total` 11 against 10, `content.games` 90 against 80 and
@@ -330,6 +330,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['Passkey', '11', '28 %', 0],
         ['BG-Stats-Weitergabe', '4', '10 %', 0],
         ['mit Preisalarm', '6', '15 %', 0],
+        ['mit Push-Abo', '5', '13 %', 0],
         ['Einfacher Modus', '5', '13 %', 0],
         ['komplett', '1', '20 %', 1],
         // One line per feature, in the shared list's order (#1646).

@@ -178,6 +178,11 @@ I18N.fr = {
   'chat.delete': 'Supprimer',
   'chat.deleteConfirm': 'Supprimer ce message ? Cette action est irréversible.',
   'chat.report': 'Signaler',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Couper les notifications de ce chat',
+  'chat.push.muted': 'Ce chat n’envoie plus de notifications.',
+  'chat.push.unmuted': 'Ce chat envoie à nouveau des notifications.',
+  'push.newMessage': 'Nouveau message',
   'chat.reportSubject': 'Message de chat {id}',
   'chat.unread': 'Nouveaux messages',
   'chat.toast.rateLimited': 'Tu écris très vite. Attends un instant puis réessaie.',
@@ -2381,6 +2386,14 @@ I18N.fr = {
   'konto.notify.chat': 'Nouveaux messages du chat dans la boîte de réception',
   'konto.notify.chatOn': 'Les messages du chat apparaissent dans ta boîte de réception.',
   'konto.notify.chatOff': 'Les messages du chat n’apparaissent plus dans ta boîte de réception.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'Sur cet appareil, tu peux être averti des nouveaux messages. La notification ne nomme que le groupe ou la personne, jamais le texte.',
+  'konto.push.label': 'M’avertir des nouveaux messages (cet appareil)',
+  'konto.push.on': 'Cet appareil t’avertira désormais des nouveaux messages.',
+  'konto.push.off': 'Cet appareil ne t’avertit plus.',
+  'konto.push.denied': 'Ton navigateur bloque les notifications de Spielwirbel. Tu peux les autoriser dans les paramètres du site de ton navigateur.',
+  'konto.push.install': 'Sur iPhone et iPad, les notifications ne fonctionnent qu’une fois Spielwirbel ajouté à l’écran d’accueil et ouvert depuis celui-ci.',
+  'konto.push.failed': 'Impossible d’activer les notifications sur cet appareil.',
 
   'konto.passkey.title': 'Clés d’accès',
   'konto.passkey.intro': 'Une clé d’accès te connecte avec ton empreinte, ton visage ou le code de ton appareil — sans mot de passe. Ton mot de passe reste en place, tu peux donc toujours t’en servir.',

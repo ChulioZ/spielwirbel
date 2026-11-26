@@ -544,7 +544,64 @@ function buildNotifyForm(me) {
   wrap.appendChild(buildPrefToggle(
     'notifyChatInbox', t('konto.notify.chat'), me.notifyChatInbox,
     (want) => (want ? 'konto.notify.chatOn' : 'konto.notify.chatOff')));
+  buildPushToggle(wrap);
   return wrap;
+}
+
+/* Web push on THIS device (#1785). Appended once /api/config answers, and only
+   where the server has VAPID keys and the browser could do it — elsewhere the
+   section simply does not exist. Not a buildPrefToggle: the state is this
+   browser's subscription, not a field on the account, and turning it on must
+   ask the browser's permission inside this very change event (the only user
+   gesture the prompt may follow). */
+function buildPushToggle(wrap) {
+  withAppConfig((cfg) => {
+    if (!pushOffered(cfg)) return;
+    wrap.appendChild(h(`<p class="muted konto-notify__intro">${esc(t('konto.push.intro'))}</p>`));
+    if (!pushSupported()) {
+      wrap.appendChild(h(`<p class="field__hint muted">${esc(t('konto.push.install'))}</p>`));
+      return;
+    }
+    const row = h(`<label class="ds-row konto-notify__row">
+        <div class="ds-row__main"><span>${esc(t('konto.push.label'))}</span></div>
+        <div class="ds-row__meta"><input type="checkbox" class="provider-row__box" /></div>
+      </label>`);
+    const hint = h(`<p class="field__hint muted" hidden>${esc(t('konto.push.denied'))}</p>`);
+    const box = row.querySelector('input');
+    wrap.appendChild(row);
+    wrap.appendChild(hint);
+    const showDenied = () => {
+      const denied = Notification.permission === 'denied';
+      hint.hidden = !denied;
+      box.disabled = denied;
+      if (denied) box.checked = false;
+    };
+    currentPushSubscription()
+      .then((sub) => { box.checked = !!sub && Notification.permission === 'granted'; showDenied(); })
+      .catch(() => {});
+    box.addEventListener('change', async () => {
+      const want = box.checked;
+      box.disabled = true;
+      try {
+        if (want) {
+          const result = await enablePush();
+          box.checked = result === 'on';
+          toast(t(result === 'on' ? 'konto.push.on' : 'konto.push.denied'), result === 'on' ? {} : { tone: 'error' });
+        } else {
+          await disablePush();
+          toast(t('konto.push.off'));
+        }
+      } catch (ex) {
+        box.checked = false;
+        if (ex.message !== 'auth') toast(t('konto.push.failed'), { tone: 'error' });
+        // Only the browser's own failures (a DOMException from PushManager):
+        // an api() error is already in the server's log.
+        if (ex && ex.name && ex.name !== 'Error') reportClientError('push_subscribe', ex);
+      }
+      box.disabled = false;
+      showDenied();
+    });
+  });
 }
 
 /* Whether accepted friends see this account's play statistics on its profile

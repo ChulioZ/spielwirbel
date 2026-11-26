@@ -71,6 +71,7 @@ if (!process.env.DATABASE_URL) {
   require('./support/repo-contract')(repo);
   // #1783: the direct-message store, a contract of its own.
   require('./support/direct-messages-contract')(repo);
+  require('./support/push-contract')(repo);
 
   // Row-Level Security is fail-closed (#136): a NON-SUPERUSER connection that
   // has NOT set the app.tenant_id transaction setting must see ZERO rows in the

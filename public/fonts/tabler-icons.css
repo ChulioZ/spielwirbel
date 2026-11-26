@@ -31,6 +31,7 @@
 .ti-tags::before { content: "\ef86"; }
 .ti-ban::before { content: "\ea2e"; }
 .ti-bell::before { content: "\ea35"; }
+.ti-bell-off::before { content: "\ece9"; }
 .ti-tornado::before { content: "\ece2"; }
 .ti-camera-plus::before { content: "\ec3b"; }
 .ti-cards::before { content: "\f510"; }

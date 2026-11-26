@@ -520,6 +520,8 @@
         line('BG-Stats-Weitergabe', a.accountsWithBgStats, accounts),
         // Price alerts (#680): accounts holding at least one watch.
         line('mit Preisalarm', a.accountsWithPriceWatch, accounts),
+        // Web push (#1785): accounts with at least one subscribed device.
+        line('mit Push-Abo', a.accountsWithPush, accounts),
         /* „Einfacher Modus" (#1646): accounts hiding at least one feature,
            then — as shares of THOSE — komplett and the EFFECTIVE hide per
            feature (an „alles aus" account counts on every line it did not

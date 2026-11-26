@@ -159,6 +159,11 @@ I18N.fi = {
   'chat.delete': 'Poista',
   'chat.deleteConfirm': 'Poistetaanko tämä viesti? Toimintoa ei voi perua.',
   'chat.report': 'Ilmoita',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Mykistä tämän keskustelun ilmoitukset',
+  'chat.push.muted': 'Tämä keskustelu ei enää lähetä ilmoituksia.',
+  'chat.push.unmuted': 'Tämä keskustelu lähettää taas ilmoituksia.',
+  'push.newMessage': 'Uusi viesti',
   'chat.reportSubject': 'Chat-viesti {id}',
   'chat.unread': 'Uusia viestejä',
   'chat.toast.rateLimited': 'Kirjoitat todella nopeasti. Odota hetki ja yritä uudelleen.',
@@ -2341,6 +2346,14 @@ I18N.fi = {
   'konto.notify.chat': 'Uudet chat-viestit saapuneissa',
   'konto.notify.chatOn': 'Chat-viestit näkyvät saapuneissa.',
   'konto.notify.chatOff': 'Chat-viestit eivät enää näy saapuneissa.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'Tällä laitteella voit saada ilmoituksen uusista viesteistä. Ilmoitus kertoo vain porukan tai henkilön, ei koskaan tekstiä.',
+  'konto.push.label': 'Ilmoita uusista viesteistä (tämä laite)',
+  'konto.push.on': 'Tämä laite ilmoittaa nyt uusista viesteistä.',
+  'konto.push.off': 'Tämä laite ei enää ilmoita.',
+  'konto.push.denied': 'Selaimesi estää Spielwirbelin ilmoitukset. Voit sallia ne selaimen sivustoasetuksista.',
+  'konto.push.install': 'iPhonessa ja iPadissa ilmoitukset toimivat vasta, kun olet lisännyt Spielwirbelin kotivalikkoon ja avaat sen sieltä.',
+  'konto.push.failed': 'Ilmoituksia ei voitu ottaa käyttöön tällä laitteella.',
 
   'konto.passkey.title': 'Avaimet',
   'konto.passkey.intro': 'Avain kirjaa sinut sisään sormenjäljellä, kasvoilla tai laitteen PIN-koodilla — ilman salasanaa. Salasanasi säilyy, joten voit yhä kirjautua sillä.',

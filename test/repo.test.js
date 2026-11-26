@@ -12,6 +12,7 @@ const repo = require('../lib/repo');
 require('./support/repo-contract')(repo);
 // #1783: the direct-message store, a contract of its own.
 require('./support/direct-messages-contract')(repo);
+require('./support/push-contract')(repo);
 
 /*
  * The half the shared contract cannot reach (#744).

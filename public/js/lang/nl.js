@@ -182,6 +182,11 @@ I18N.nl = {
   'chat.delete': 'Verwijderen',
   'chat.deleteConfirm': 'Dit bericht verwijderen? Dit kan niet ongedaan worden gemaakt.',
   'chat.report': 'Melden',
+  // #1785: the thread's bell, and the one line a push says (sent by the server).
+  'chat.push.mute': 'Meldingen voor deze chat dempen',
+  'chat.push.muted': 'Deze chat stuurt geen meldingen meer.',
+  'chat.push.unmuted': 'Deze chat stuurt weer meldingen.',
+  'push.newMessage': 'Nieuw bericht',
   'chat.reportSubject': 'Chatbericht {id}',
   'chat.unread': 'Nieuwe berichten',
   'chat.toast.rateLimited': 'Je schrijft heel snel. Wacht even en probeer het opnieuw.',
@@ -2373,6 +2378,14 @@ I18N.nl = {
   'konto.notify.chat': 'Nieuwe chatberichten in de inbox',
   'konto.notify.chatOn': 'Chatberichten verschijnen in je inbox.',
   'konto.notify.chatOff': 'Chatberichten verschijnen niet meer in je inbox.',
+  // Web push for chat (#1785) — per device, set on the Konto screen.
+  'konto.push.intro': 'Op dit apparaat kun je een melding krijgen bij nieuwe berichten. De melding noemt alleen de groep of de persoon, nooit de tekst.',
+  'konto.push.label': 'Meld nieuwe berichten (dit apparaat)',
+  'konto.push.on': 'Dit apparaat meldt je nu nieuwe berichten.',
+  'konto.push.off': 'Dit apparaat meldt je niets meer.',
+  'konto.push.denied': 'Je browser blokkeert meldingen van Spielwirbel. Je kunt ze toestaan in de site-instellingen van je browser.',
+  'konto.push.install': 'Op iPhone en iPad werken meldingen pas als je Spielwirbel aan je beginscherm hebt toegevoegd en het daarvandaan opent.',
+  'konto.push.failed': 'Meldingen konden op dit apparaat niet worden ingeschakeld.',
 
   'konto.passkey.title': 'Passkeys',
   'konto.passkey.intro': 'Met een passkey log je in met je vingerafdruk, gezicht of de pincode van je apparaat — zonder wachtwoord. Je wachtwoord blijft bestaan, dus daarmee inloggen kan ook nog.',
