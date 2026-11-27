@@ -22,6 +22,7 @@ const assert = require('node:assert/strict');
 
 const { store } = require('./helpers');
 const { accountStats, gameKey } = require('../lib/user-stats');
+const repo = require('../lib/repo');
 
 const UID = 'u-ada';
 
@@ -77,7 +78,14 @@ function reset() {
   store.data.rounds = [];
   store.data.users = [];
   store.data.roundGrants = [];
+  // The Spielwirbel-Rekorde (#1788) are a recompute's output, not a read.
+  store.data.gameRecords.splice(0);
+  store.data.scoreReviews.splice(0);
+  repo.recordsIndex.invalidate();
 }
+
+// What the scheduler does, run now so the profile reads its result.
+const recompute = () => require('../lib/game-records').recompute();
 
 // --- the merge identity -----------------------------------------------------
 
@@ -268,7 +276,7 @@ test('the account-tier Abzeichen read the same totals, plus the account age', as
 
   const st = await accountStats(UID);
   const by = Object.fromEntries(st.badges.map((b) => [b.key, b]));
-  assert.deepEqual(Object.keys(by), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
+  assert.deepEqual(Object.keys(by), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames', 'accountRecords']);
   assert.deepEqual([by.accountSessions.state, by.accountSessions.count, by.accountSessions.of], ['progress', st.sessions, 25]);
   assert.deepEqual([by.accountWins.count, by.accountWins.of], [st.wins, 10]);
   assert.deepEqual([by.accountRounds.state, by.accountRounds.tier], ['earned', 2], 'two seats is Runden 2');
@@ -368,39 +376,54 @@ const scored = (id, gid, day, scores, over = {}) => ({
   ...played(id, gid), createdAt: `2026-02-${String(day).padStart(2, '0')}T20:00:00.000Z`, scores, ...over,
 });
 
-test('points: one best per game across rounds, records held summed, bettered summed', async () => {
+test('points: one best per game across rounds; the medal is the SPIELWIRBEL-Rekord, not a round record (#1788)', async () => {
   reset();
   seatUser();
   const src = { provider: 'bgg', externalId: '230802' };
-  // Round 1: Azul 40 then 55 (a bettered best, and the group record).
+  // Round 1: Azul 40 then 55 — a bettered best, and that round's group record.
   round({ games: [game('g1', 'Azul', { source: src })], sessions: [
     scored('s1', 'g1', 1, { 'm-me': 40, 'm-other': 50 }),
     scored('s2', 'g1', 2, { 'm-me': 55, 'm-other': 10 }),
   ] });
-  // Round 2: the same Azul, best 61 — but Bo holds that round's record.
+  // Round 2: the same Azul, best 61 — but Bo's 70 is the instance-wide record.
   round({ games: [game('g2', 'Azul', { source: src })], sessions: [
     scored('s3', 'g2', 3, { 'm-me': 61, 'm-other': 70 }),
   ] });
+  // An unlinked game: the round record is Ada's, and it is no medal any more.
+  round({ games: [game('g3', 'Hausspiel')], sessions: [scored('s4', 'g3', 4, { 'm-me': 9, 'm-other': 3 })] });
+  await recompute();
   const st = await accountStats(UID);
   assert.deepEqual(st.points, {
-    bests: [{ title: 'Azul', image: null, points: 61, record: true }],
-    held: 1,
+    bests: [
+      { title: 'Azul', image: null, points: 61, record: false, swRecord: 70 },
+      { title: 'Hausspiel', image: null, points: 9, record: false, swRecord: null },
+    ],
+    held: 0,
     bettered: 1,
   });
 });
 
-test('points: a team record counts as held with no row; lower-wins merges downward', async () => {
+test('points: holding a Spielwirbel-Rekord is the medal; a team score never counts, an unlinked game has none', async () => {
   reset();
   seatUser();
-  round({ games: [game('g1', 'Codenames')], sessions: [
+  const golf = { provider: 'bgg', externalId: '111' };
+  // Codenames: a TEAM's 9 is the round record — never a Spielwirbel-Rekord.
+  round({ games: [game('g1', 'Codenames', { source: { provider: 'bgg', externalId: '222' } })], sessions: [
     scored('s1', 'g1', 1, { 'm-other': 3 }),
     scored('s2', 'g1', 2, { t1: 9 }, { teams: [{ id: 't1', personIds: ['m-me', 'm-other'] }] }),
   ] });
-  round({ games: [game('g2', 'Golf', { lowScoreWins: true })], sessions: [scored('s3', 'g2', 3, { 'm-me': 40 })] });
-  round({ games: [game('g3', 'golf', { lowScoreWins: true })], sessions: [scored('s4', 'g3', 4, { 'm-me': 36 })] });
+  // Golf in two rounds, lowest wins in both: the merged best is 36, and it IS the record.
+  round({ games: [game('g2', 'Golf', { lowScoreWins: true, source: golf })], sessions: [scored('s3', 'g2', 3, { 'm-me': 40 })] });
+  round({ games: [game('g3', 'golf', { lowScoreWins: true, source: golf })], sessions: [scored('s4', 'g3', 4, { 'm-me': 36 })] });
+  await recompute();
   const st = await accountStats(UID);
-  assert.equal(st.points.held, 3, 'the Codenames team record plus both Golf rounds');
-  assert.deepEqual(st.points.bests.map((b) => [b.title, b.points]), [['Golf', 36]]);
+  assert.equal(st.points.held, 1, 'Golf only — the Codenames record was a team score');
+  assert.deepEqual(st.points.bests.map((b) => [b.title, b.points, b.record, b.swRecord]), [['Golf', 36, true, 36]]);
+  // The ladder: Golf's first score set the record (40, 2026-02-03), the 36 set it again —
+  // ONE game, dated at the earliest; Codenames had no personal score of Ada's at all.
+  const badge = st.badges.find((b) => b.key === 'accountRecords');
+  assert.deepEqual([badge.state, badge.tier, badge.count], ['earned', 1, 1]);
+  assert.equal(badge.earnedAt.at, '2026-02-03T20:00:00.000Z');
 });
 
 test('points: absent — not empty — when the account has none', async () => {

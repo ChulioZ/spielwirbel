@@ -1165,6 +1165,8 @@ I18N.en = {
   'member.pointsBetteredOne': '{n} personal best beaten',
   'member.pointsBettered': '{n} personal bests beaten',
   'member.pointsRecord': 'Round record',
+  'member.pointsSwRecord': 'Record {points}',
+  'member.pointsSwRecordHeld': 'Spielwirbel record',
   'member.pointsCategories': 'Per category',
   'member.bestGameNone': 'No game won yet',
   'member.favorite': 'Favorite game',
@@ -1597,6 +1599,9 @@ I18N.en = {
   'points.top': '{name}: {points}',
   'points.record': 'Record: {points} · {name} · {date}',
   'points.lowWins': 'Lower score wins',
+  'points.swRecord': 'Spielwirbel record: {points}',
+  'points.swRecordNew': 'New Spielwirbel record!',
+  'points.swRecordPending': 'New Spielwirbel record? Under review',
   'points.lowWinsLocked': 'Set for all rounds',
   // #1672: the bot opponent of a solo/co-op game — a line beside the people, never one of them.
   'points.automa.add': 'Add an automa',
@@ -2022,6 +2027,9 @@ I18N.en = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbel\'s evergreen',
+  'stats.records': 'Spielwirbel records',
+  'stats.recordValue': 'Record: {points}',
+  'stats.recordValueLow': 'Record: {points} · lower wins',
   'stats.bestRated': 'Best rated',
   'stats.shelves.one': 'on {n} shelf',
   'stats.shelves.many': 'on {n} shelves',
@@ -2754,6 +2762,9 @@ I18N.en = {
   'badges.complete.line': 'The round has played every game on the shelf',
   'badges.accountGames.name': 'Games',
   'badges.accountGames.line': '{n} different games across all rounds',
+  'badges.accountRecords.name': 'Spielwirbel record',
+  'badges.accountRecords.line': 'Set a Spielwirbel record in {n} games',
+  'badges.accountRecords.lineOne': 'Set a Spielwirbel record in {n} game',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.

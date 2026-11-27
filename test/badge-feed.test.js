@@ -95,6 +95,12 @@ test('crossedTiers names only the tiers the second snapshot added, never Jahre',
   const young = accountBadges({}, new Date().toISOString());
   const old = accountBadges({}, '2020-01-01T00:00:00.000Z');
   assert.deepEqual(crossedTiers(young, old), []);
+  // #1788: the Spielwirbel-Rekord ladder moves with the scheduler's recompute,
+  // never with a finish — a crossing between two snapshots is a cache refresh.
+  const none = accountBadges({ sessions: 1 }, '2020-01-01T00:00:00.000Z');
+  const set = accountBadges({ sessions: 1, recordsSet: ['2026-05-01T20:00:00.000Z'] }, '2020-01-01T00:00:00.000Z');
+  assert.equal(set.find((e) => e.key === 'accountRecords').tier, 1, 'control: the tier really was crossed');
+  assert.deepEqual(crossedTiers(none, set), []);
 });
 
 test('affectedAccounts: the table on the transition, the flipped winners on a re-save', () => {

@@ -139,6 +139,8 @@ const GLOBAL_DISPOSITION = {
   bgg_links: { erase: false, export: false, why: 'BGG ids for category/mechanic/designer names (#1638); holds no personal data' },
   last_prices: { erase: false, export: false, why: 'cached third-party prices per game; holds no personal data' },
   game_scoring_settings: { erase: false, export: false, why: 'the operator\'s confirmed scoring direction per BGG id (#1786); no round, tenant or person' },
+  game_records: { erase: false, export: false, why: 'the Spielwirbel-Rekord per BGG id (#1788): a value plus round-local score keys, no tenant or account id; a deleted round\'s keys go on the next recompute (lib/game-records.js), and the account export already carries the scores themselves' },
+  score_reviews: { erase: false, export: false, why: 'the operator\'s outlier review (#1788), keyed by round-local score keys, no tenant or account id; a row whose session is gone is dropped on the next recompute, decided or not' },
   game_category_settings: { erase: false, export: false, why: 'the operator\'s confirmed base scoring categories per BGG id (#1787); category names only, no round, tenant or person' },
 };
 

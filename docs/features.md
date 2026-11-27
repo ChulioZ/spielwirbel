@@ -1016,8 +1016,29 @@ What the app does, in detail. For a short overview see the
   per game with its date, a medal on the games whose round record they hold,
   and how many records they hold and bests they have beaten — a record their
   team set counts for every member of it. The account profile shows the same
-  across every round the account sits in (titles and scores only, no dates).
-  Both are hidden while a member has no points.
+  bests across every round the account sits in (titles and scores only, no
+  dates) — but since issue #1788 its medal and „hält N Rekorde" mean the
+  **Spielwirbel-Rekord**, below. Both are hidden while a member has no points.
+  **Spielwirbel-Rekord** (issue #1788) – the best PERSONAL score for a
+  BoardGameGeek-linked game across every round on the instance, one per BGG id
+  over all player counts. Only the value is shown, never who holds it: on the
+  Spielepass under the round's own record („Spielwirbel-Rekord: 142"), on the
+  result screen („Neuer Spielwirbel-Rekord!", or „…? Wird geprüft" while an
+  outlier waits), beside each best on the profile („128 · Rekord 142") and as a
+  „Rekorde" card on `/entdecken`. The profile's medal means holding it (ties
+  share), and a sixth account Abzeichen, **Spielwirbel-Rekord** 1 · 3 · 10,
+  counts the games in which the account SET one — never lost by being beaten.
+  Team, guest and automa scores and demo rounds never count; unlinked games
+  have none. The direction is the operator-confirmed one (#1786), else the
+  majority of rounds with points, a tie going to highest-wins. A background job
+  recomputes it every 15 minutes; the result screen judges a fresh score itself
+  with the same checks, so its mark is immediate. Three outlier checks (more than
+  3× the session's median, more than 2× over the record, beyond Q3 + 3×IQR from
+  20 scores) hold a score flagged on entry back until the operator marks it
+  „Gültig"; one flagged only later keeps counting until decided. The operator
+  panel's „Spielwirbel-Rekorde" card lists both — values, counts and dates, never
+  a round or a person — and „Nicht werten" excludes a score for good. A round's
+  own points and records are never changed by any of it.
   **„Wertungskategorien"** (scoring categories, issue #1780) – the game page's
   „…" (Der Tisch: its Aktionen panel) edits an ordered list of up to 12
   category names (≤ 30 characters) for a game on the shelf. „Punkte eintragen"
@@ -1425,10 +1446,11 @@ What the app does, in detail. For a short overview see the
   describe breadth rather than performance, the
   round and game counts, are the line under your name. The favourite and
   strongest game are the two ribboned boxes at the foot of the card.
-  Under the figures sit the five **account Abzeichen** (issue #1389) —
+  Under the figures sit the six **account Abzeichen** (issue #1389) —
   Sessions 25 · 100 · 250 · 500 · 1000, Siege 10 · 25 · 50 · 100 · 250,
-  Runden 2 · 3 · 5, Jahre 1 · 2 · 3 (ladders lengthened in issue #1463) and
-  Spiele 10 · 25 · 50 · 100 (distinct games played, issue #1464) —
+  Runden 2 · 3 · 5, Jahre 1 · 2 · 3 (ladders lengthened in issue #1463),
+  Spiele 10 · 25 · 50 · 100 (distinct games played, issue #1464) and
+  Spielwirbel-Rekord 1 · 3 · 10 (issue #1788) —
   the round badges' own tiles and card, counted from the same totals the card
   prints (Jahre from the registration date). They reach exactly who the record
   reaches, and a demo account shows none.
@@ -1529,6 +1551,9 @@ What the app does, in detail. For a short overview see the
   minimum in left out. The history is recomputed from the sessions on every
   rebuild rather than stored, so raising a floor can remove an old winner. The
   landing page and the home tile stay at three places with neither control.
+  A „Spielwirbel-Rekorde" card (issue #1788) is on `/entdecken` only too: the
+  record VALUE for the most-played games that have one, behind the all-time
+  card's floors and named by the provider — never a holder, round or date.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

@@ -82,15 +82,16 @@ const ours = (round, key, opts) => all(round, opts).round.find((e) => e.key === 
 
 // --- the catalogue -------------------------------------------------------------
 
-test('the catalogue is the 43 decided entries: 20 member · 18 round · 5 account', () => {
+test('the catalogue is the 44 decided entries: 20 member · 18 round · 6 account', () => {
   const by = (h) => BADGE_CATALOGUE.filter((d) => d.holder === h).map((d) => d.key);
   assert.deepEqual(by('member'), ['firstWin', 'regular', 'streak', 'versatile', 'allPlayed', 'teamPlayer', 'host', 'comeback', 'explorer',
     'founder', 'firstChoice', 'specialist', 'present', 'variety', 'defender', 'beginnersLuck', 'rematch', 'double',
     'recordHolder', 'personalBest']);
   assert.deepEqual(by('round'), ['founded', 'sessions', 'shelf', 'unanimous', 'tie', 'bigTable', 'completed', 'evergreen',
     'openHouse', 'twoTables', 'campaign', 'allWin', 'vintage', 'anniversary', 'marathon', 'rediscovered', 'againstTheTide', 'complete']);
-  assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
-  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 43, 'keys are unique');
+  // #1788 added the Spielwirbel-Rekord ladder.
+  assert.deepEqual(by('account'), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames', 'accountRecords']);
+  assert.equal(new Set(BADGE_CATALOGUE.map((d) => d.key)).size, 44, 'keys are unique');
   // Vollzählig was dropped (operator, 2026-10-02): its first evening was full by construction.
   assert.equal(BADGE_CATALOGUE.some((d) => d.key === 'fullHouse'), false);
 });
@@ -127,6 +128,8 @@ test('exactly ten secrets, and the tier ladders the review decided', () => {
     accountRounds: [2, 3, 5],
     accountYears: [1, 2, 3],
     accountGames: [10, 25, 50, 100],
+    // #1788: games in which the account SET a Spielwirbel-Rekord.
+    accountRecords: [1, 3, 10],
     // The two record ladders of #1631 (operator, 2026-10-11).
     recordHolder: [1, 3, 10],
     personalBest: [3, 10, 25],
@@ -539,5 +542,5 @@ test('account Jahre: each anniversary, both sides of it', () => {
   assert.equal(y.tier, 3);
   assert.deepEqual(y.earnedAt, { sessionId: null, at: '2027-03-10T12:00:00.000Z' });
   assert.equal(accountBadges({}, 'not a date', T0).find((e) => e.key === 'accountYears').state, 'locked');
-  assert.equal(accountBadges(null, created).length, 5, 'now defaults to the clock');
+  assert.equal(accountBadges(null, created).length, 6, 'now defaults to the clock');
 });

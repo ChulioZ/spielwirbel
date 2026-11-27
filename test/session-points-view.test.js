@@ -120,6 +120,36 @@ test('the result lists the points best first and marks a beaten best', async () 
   assert.match(pointsButton().textContent, /Punkte bearbeiten/);
 });
 
+// #1788: the Spielwirbel-Rekord beside a personal score. The recompute's marks
+// (`swRecord.set` / `.pending`) and, for a score it has not seen yet, the same
+// outlier checks against the cached value. A team's shared score never gets one.
+test('the result marks a new Spielwirbel-Rekord, a held-back one, and never a team score', async () => {
+  const sw = (over) => ({ swRecord: { value: 45, lowWins: false, held: [], set: [], pending: [], excluded: [], ...over } });
+  const s1 = finished('s1', '2026-03-01T19:00:00.000Z', { m1: 48, m2: 44, m3: 30 });
+  const marks = () => Object.fromEntries([...dom.app.querySelectorAll('.result-party')].map((li) => [
+    li.querySelector('.result-party__name').textContent.trim(),
+    (li.querySelector('.result-points__sw') || { textContent: '' }).textContent.trim(),
+  ]));
+  // Not yet recomputed: Anna's 48 beats the cached 45 and passes the checks.
+  await results(roundFixture([s1], sw()), s1);
+  assert.deepEqual(marks(), { Anna: 'Neuer Spielwirbel-Rekord!', Ben: '', Clara: '' });
+  // Recomputed with Anna's score held back for review.
+  await results(roundFixture([s1], sw({ value: 44, pending: ['s1/m1'] })), s1);
+  assert.equal(marks().Anna, 'Neuer Spielwirbel-Rekord? Wird geprüft');
+  assert.ok(dom.app.querySelector('.result-points__sw.is-pending'));
+  // A 200 against a record of 45 is a jump: judged pending before any recompute.
+  const s2 = finished('s2', '2026-03-02T19:00:00.000Z', { m1: 200, m2: 44 });
+  await results(roundFixture([s2], sw()), s2);
+  assert.equal(marks().Anna, 'Neuer Spielwirbel-Rekord? Wird geprüft');
+  // A team's 90 is the round's best, and still no Spielwirbel-Rekord.
+  const team = finished('s3', '2026-03-03T19:00:00.000Z', { t1: 90, m3: 10 }, { teams: [{ id: 't1', personIds: ['m1', 'm2'] }] });
+  await results(roundFixture([team], sw()), team);
+  assert.equal(dom.app.querySelectorAll('.result-points__sw').length, 0);
+  // An unlinked game (no swRecord) shows nothing at all.
+  await results(roundFixture([s1]), s1);
+  assert.equal(dom.app.querySelectorAll('.result-points__sw').length, 0);
+});
+
 test('a running session offers no points and shows none', async () => {
   const s = finished('s3', '2026-03-10T19:00:00.000Z', { m1: 9 }, { finished: false });
   const round = roundFixture([s]);
@@ -147,6 +177,22 @@ test('the game page shows the record, the stamp’s best line, and switches the 
   box.dispatchEvent(new dom.window.Event('change'));
   const patch = await waitFor(() => sent.find((c) => c.method === 'PATCH'), { label: 'the game PATCH' });
   assert.deepEqual(patch.body, { lowScoreWins: true });
+});
+
+test('the game page names the Spielwirbel-Rekord under the round\'s own (#1788)', async () => {
+  const s1 = finished('s1', '2026-03-01T19:00:00.000Z', { m1: 40, m2: 55 });
+  const round = roundFixture([s1], { swRecord: { value: 142, lowWins: false, held: [], set: [], pending: [], excluded: [] } });
+  recordApi((method, path) => (path === `/api/rounds/${round.id}` ? round : {}));
+  dom.set('fetchRoundFresh', async () => round);
+  await dom.call('showGameDetail', round.id, 'g1');
+  assert.match(dom.app.querySelector('.gd-record__line').textContent, /Rekord: 55 · Ben/);
+  assert.equal(dom.app.querySelector('.gd-record__sw').textContent.trim(), 'Spielwirbel-Rekord: 142');
+  // Value only: no holder, no date beside it.
+  const none = roundFixture([s1], { swRecord: { value: null, lowWins: false, held: [], set: [], pending: [], excluded: [] } });
+  dom.set('fetchRoundFresh', async () => none);
+  recordApi((method, path) => (path === `/api/rounds/${none.id}` ? none : {}));
+  await dom.call('showGameDetail', none.id, 'g1');
+  assert.equal(dom.app.querySelector('.gd-record__sw'), null, 'no value yet, no line');
 });
 
 // #1786: the operator confirmed the direction for every round. The read overlay

@@ -37,12 +37,18 @@ function pointsPanelShell(held, bettered) {
 
 // One row's inner markup. `when` is the date of the best (member page only —
 // the profile payload carries no dates, see lib/user-stats.js).
-function pointsRowInner(title, points, when, record) {
+// `sw` (profile only, #1788): the game's Spielwirbel-Rekord, shown as the value
+// to chase („128 · Rekord 142"); there the medal means holding THAT record, not
+// a round's, so it carries its own label.
+function pointsRowInner(title, points, when, record, sw) {
+  const profile = sw !== undefined;
+  const label = t(profile ? 'member.pointsSwRecordHeld' : 'member.pointsRecord');
   return `<span class="member-points__name"><span class="member-points__game">${esc(title)}</span>${when
     ? `<span class="member-points__when">${esc(when)}</span>` : ''}</span>`
-    + `<span class="member-points__value">${esc(fmtCount(points))}</span>
+    + `<span class="member-points__value">${esc(fmtCount(points))}${Number.isFinite(sw)
+      ? `<span class="member-points__sw"> · ${esc(t('member.pointsSwRecord', { points: fmtCount(sw) }))}</span>` : ''}</span>
     <span class="member-points__mark">${record
-    ? `<i class="ti ti-medal member-points__record" role="img" aria-label="${esc(t('member.pointsRecord'))}" title="${esc(t('member.pointsRecord'))}"></i>`
+    ? `<i class="ti ti-medal member-points__record" role="img" aria-label="${esc(label)}" title="${esc(label)}"></i>`
     : ''}</span>`;
 }
 
@@ -96,8 +102,9 @@ function memberCategoryBestsBlock(round, mid) {
 }
 
 /* The profile's panel, or null. `points` is the payload's `stats.points`:
-   { bests: [{ title, image, points, record }], held, bettered }, absent when the
-   account has no points anywhere. Plain rows — a profile has no round context
+   { bests: [{ title, image, points, record, swRecord }], held, bettered }, absent
+   when the account has no points anywhere. Since #1788 `record` and `held` mean
+   the Spielwirbel-Rekord (instance-wide), and `swRecord` is its value. Plain rows — a profile has no round context
    to link into (.claude/rules/in-app-nav-links.md, views-profile.js). */
 function profilePointsPanel(points) {
   if (!points || (!(points.bests || []).length && !points.held)) return null;
@@ -106,7 +113,8 @@ function profilePointsPanel(points) {
   (points.bests || [])
     .slice()
     .sort((a, b) => pointsByTitle(a.title, b.title))
-    .forEach((b) => list.appendChild(h(`<li><span class="member-points__row">${pointsRowInner(b.title, b.points, null, b.record)}</span></li>`)));
+    .forEach((b) => list.appendChild(h(`<li><span class="member-points__row">${pointsRowInner(b.title, b.points, null, b.record,
+      Number.isFinite(b.swRecord) ? b.swRecord : null)}</span></li>`)));
   if (!list.children.length) list.remove();
   return panel;
 }

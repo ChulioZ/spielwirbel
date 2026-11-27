@@ -43,14 +43,15 @@ function bootWith(t_, stats, over = {}) {
 
 const tiles = (dom) => [...dom.app.querySelectorAll('.profile-card__badges .badge')];
 
-test('a friend\'s card carries the five account tiles, under the figures', async (t_) => {
+test('a friend\'s card carries the six account tiles, under the figures', async (t_) => {
   const dom = bootWith(t_, withBadges());
   await dom.call('showProfile', 'lea');
   const row = dom.app.querySelector('.profile-card .profile-card__badges');
   assert.ok(row, 'no .profile-card__badges');
   assert.equal(row.previousElementSibling.className, 'member-card__figures', 'the row sits right under the totals');
-  assert.deepEqual(tiles(dom).map((b) => b.dataset.key), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames']);
-  assert.deepEqual(tiles(dom).map((b) => b.dataset.state), ['earned', 'earned', 'earned', 'earned', 'progress']);
+  assert.deepEqual(tiles(dom).map((b) => b.dataset.key), ['accountSessions', 'accountWins', 'accountRounds', 'accountYears', 'accountGames', 'accountRecords']);
+  // The Spielwirbel-Rekord ladder (#1788) is open until a record is set.
+  assert.deepEqual(tiles(dom).map((b) => b.dataset.state), ['earned', 'earned', 'earned', 'earned', 'progress', 'locked']);
   // Spiele counts the gamesPlayed figure printed above it: nine of ten.
   assert.equal(tiles(dom)[4].querySelector('.badge__line').textContent, '9 / 10');
 
@@ -103,9 +104,9 @@ test('an empty record shows the row only once something is earned', async (t_) =
   const none = bootWith(t_, { ...empty, badges: accountBadges(empty, '2026-09-01T00:00:00.000Z', NOW) });
   await none.call('showProfile', 'lea');
   assert.ok(none.app.querySelector('.profile-card .empty-note'), 'control: the empty record rendered');
-  assert.equal(none.app.querySelector('.profile-card__badges'), null, 'five open tiles say nothing');
+  assert.equal(none.app.querySelector('.profile-card__badges'), null, 'six open tiles say nothing');
 
   const veteran = bootWith(t_, { ...empty, badges: accountBadges(empty, CREATED, NOW) });
   await veteran.call('showProfile', 'lea');
-  assert.equal(veteran.app.querySelectorAll('.profile-card__badges .badge').length, 5, 'Jahre 1 is earned');
+  assert.equal(veteran.app.querySelectorAll('.profile-card__badges .badge').length, 6, 'Jahre 1 is earned');
 });

@@ -1120,6 +1120,8 @@ I18N.fi = {
   'member.pointsBetteredOne': '{n} oma ennätys parannettu',
   'member.pointsBettered': '{n} omaa ennätystä parannettu',
   'member.pointsRecord': 'Ryhmän ennätys',
+  'member.pointsSwRecord': 'Ennätys {points}',
+  'member.pointsSwRecordHeld': 'Spielwirbel-ennätys',
   'member.pointsCategories': 'Luokittain',
   'member.bestGameNone': 'Mitään peliä ei ole vielä voitettu',
   'member.favorite': 'Lempipeli',
@@ -1524,6 +1526,9 @@ I18N.fi = {
   'points.top': '{name}: {points}',
   'points.record': 'Ennätys: {points} · {name} · {date}',
   'points.lowWins': 'Pienin pistemäärä voittaa',
+  'points.swRecord': 'Spielwirbel-ennätys: {points}',
+  'points.swRecordNew': 'Uusi Spielwirbel-ennätys!',
+  'points.swRecordPending': 'Uusi Spielwirbel-ennätys? Tarkistetaan',
   'points.lowWinsLocked': 'Asetettu kaikille porukoille',
   'points.automa.add': 'Lisää automa',
   'points.automa.remove': 'Poista automa',
@@ -1919,6 +1924,9 @@ I18N.fi = {
   'stats.playedMonth': 'Pelatuin kuussa {month}',
   'stats.playedYear': 'Pelatuin vuonna {year}',
   'stats.playedAll': 'Spielwirbelin ikivihreä',
+  'stats.records': 'Spielwirbel-ennätykset',
+  'stats.recordValue': 'Ennätys: {points}',
+  'stats.recordValueLow': 'Ennätys: {points} · pienin voittaa',
   'stats.bestRated': 'Parhaiten arvioitu',
   'stats.shelves.one': '{n} hyllyssä',
   'stats.shelves.many': '{n} hyllyssä',
@@ -2598,6 +2606,9 @@ I18N.fi = {
   'badges.complete.line': 'Ryhmä on pelannut jokaisen hyllyn pelin',
   'badges.accountGames.name': 'Pelit',
   'badges.accountGames.line': '{n} eri peliä kaikissa ryhmissä',
+  'badges.accountRecords.name': 'Spielwirbel-ennätys',
+  'badges.accountRecords.line': 'Spielwirbel-ennätys {n} pelissä',
+  'badges.accountRecords.lineOne': 'Spielwirbel-ennätys {n} pelissä',
   // The Klassisch rendering (#1388): the Pokale section, the hub line, the
   // result moment, the Chronik row and the tap-open card. Counts go through
   // tn(); names and conditions stay the catalogue keys above.

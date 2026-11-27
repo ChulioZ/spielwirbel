@@ -8888,6 +8888,65 @@ module.exports = function repoContract(repo) {
     assert.equal(await repo.getGameScoringSetting(bgg), null);
   });
 
+  // #1788: the recompute's whole input. One entry per non-demo round with a
+  // finished, uncancelled, scored session on a BGG-linked game: the round's
+  // members, ONLY those sessions, and ONLY the games they played — as stored.
+  test('gameRecordSources reads scored BGG sessions across tenants, with members and games; demo excluded', async () => {
+    const bgg = String(700000000 + crypto.randomInt(1e8));
+    const src = { provider: 'bgg', externalId: bgg, url: null };
+    const session = (gid, members, over = {}) => ({
+      createdAt: '2026-05-01T20:00:00.000Z', gameIds: [gid], votes: {}, chosenGameId: gid, chosenAt: 't',
+      finished: true, finishedAt: 't', winnerIds: [], cancelled: false, cancelledAt: null, done: true,
+      memberIds: members, scores: { [members[0]]: 12 }, ...over,
+    });
+    const round = await repo.createRound(T, { name: 'R', members: ['A', 'B'], importFromRoundId: null });
+    const ids = round.members.map((m) => m.id);
+    const g = await repo.createGame(T, round.id, gameFields({ title: 'Azul', source: src }));
+    await repo.updateGame(T, round.id, g.id, { lowScoreWins: true });
+    const other = await repo.createGame(T, round.id, gameFields({ title: 'Frei' }));
+    const kept = await repo.createSession(T, round.id, session(g.id, ids));
+    await repo.createSession(T, round.id, session(g.id, ids, { finished: false, done: false }));
+    await repo.createSession(T, round.id, session(g.id, ids, { cancelled: true, cancelledAt: 't' }));
+    await repo.createSession(T, round.id, session(g.id, ids, { scores: undefined }));
+    await repo.createSession(T, round.id, session(other.id, ids));
+    const demo = await repo.createRound('demo-gr', { name: 'D', members: ['A'], importFromRoundId: null });
+    const dg = await repo.createGame('demo-gr', demo.id, gameFields({ title: 'Azul', source: src }));
+    await repo.createSession('demo-gr', demo.id, session(dg.id, demo.members.map((m) => m.id)));
+
+    const mine = (await repo.gameRecordSources()).filter((r) => r.id === round.id || r.id === demo.id);
+    assert.equal(mine.length, 1, 'the demo round is not read');
+    const [r] = mine;
+    assert.deepEqual(r.members.map((m) => [m.id, m.name]), [[ids[0], 'A'], [ids[1], 'B']]);
+    assert.deepEqual(r.games.map((x) => [x.id, x.lowScoreWins]), [[g.id, true]], 'only the played game, as stored');
+    assert.deepEqual(r.sessions.map((x) => x.id), [kept.id]);
+    assert.deepEqual(r.sessions[0].scores, { [ids[0]]: 12 });
+    await repo.deleteRound(T, round.id);
+    await repo.deleteRound('demo-gr', demo.id);
+  });
+
+  test('game records replace whole; score reviews upsert, and onlyUndecided never touches a decision', async () => {
+    const id = String(600000000 + crypto.randomInt(1e8));
+    await repo.replaceGameRecords([{ bggId: id, value: 5, held: ['a/b/c'], set: [{ key: 'a/b/c', at: null }], counted: ['a/b/c'] }]);
+    await repo.replaceGameRecords([{ bggId: id, value: 9, held: [], set: [], counted: [] }]);
+    const rows = (await repo.listGameRecords()).filter((r) => r.bggId === id);
+    assert.deepEqual(rows, [{ bggId: id, value: 9, held: [], set: [], counted: [] }], 'replaced, not merged');
+    await repo.replaceGameRecords([]);
+    assert.equal((await repo.listGameRecords()).some((r) => r.bggId === id), false);
+
+    const k1 = `k1-${id}`;
+    const k2 = `k2-${id}`;
+    assert.deepEqual(await repo.putScoreReview(k1, { state: 'flagged', points: 3 }), { key: k1, state: 'flagged', points: 3 });
+    assert.deepEqual(await repo.putScoreReview(k1, { state: 'flagged', points: 4 }, { onlyUndecided: true }), { key: k1, state: 'flagged', points: 4 });
+    await repo.putScoreReview(k2, { state: 'valid' });
+    assert.equal(await repo.putScoreReview(k2, { state: 'flagged' }, { onlyUndecided: true }), null);
+    assert.equal(await repo.deleteScoreReviews([k1, k2], { onlyUndecided: true }), 1, 'only the undecided one goes');
+    const left = (await repo.listScoreReviews()).filter((r) => r.key === k1 || r.key === k2);
+    assert.deepEqual(left, [{ key: k2, state: 'valid' }]);
+    assert.equal(typeof await repo.deleteScoreReviews([k2]), 'number');
+    assert.equal((await repo.listScoreReviews()).some((r) => r.key === k2), false);
+    assert.equal(await repo.deleteScoreReviews([]), 0);
+  });
+
   // #1787: the rows behind „Wertungskategorien". One row per (round, BGG id)
   // whose games with that id carry ACTIVE categories — every such game's list,
   // in order, no session needed. Excluded: demo tenants, unlinked games, a game

@@ -79,6 +79,21 @@ test('on /entdecken each card gets the control its longer list supports, and no 
   assert.equal(dom.document.querySelectorAll('.stats-card__expand').length, 3);
 });
 
+// #1788: the „Rekorde" card draws from the longer-lists payload, so it is on
+// /entdecken only. Value and direction, never a holder.
+test('the records card shows each game\'s Spielwirbel-Rekord on /entdecken, and never elsewhere', async (t) => {
+  const more = { ...MORE, records: [
+    { title: 'Azul', image: null, url: null, value: 142, lowWins: false, rank: 1 },
+    { title: 'Golf', image: null, url: null, value: 31, lowWins: true, rank: 2 },
+  ] };
+  const { dom } = boot(t, { more });
+  await dom.call('showEntdecken');
+  const rec = card(dom, 'Spielwirbel-Rekorde');
+  assert.ok(rec, 'the card is there');
+  assert.match(rec.textContent, /Azul\s+Rekord: 142/);
+  assert.match(rec.textContent, /Golf\s+Rekord: 31 · niedrigste gewinnt/);
+});
+
 test('a 404 from the longer lists renders the cards exactly as before', async (t) => {
   const { dom } = boot(t, { more: null });
   await dom.call('showEntdecken');

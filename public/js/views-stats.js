@@ -116,6 +116,16 @@ const STATS_FAVOURITES = [
   line: (e) => tn(e.games, 'stats.favGamesOne', 'stats.favGames', { score: fmtAvg(e.score) }),
 }));
 
+/* The „Rekorde" card (#1788): the Spielwirbel-Rekord VALUE of the most-played
+   games that have one, from /api/stats/public/more's `records` — so it renders
+   on /entdecken only, never on the landing page or the hub panel, which do not
+   load that payload. Value and direction only; nothing names who holds it. */
+const STATS_RECORDS = {
+  key: 'records',
+  icon: 'ti-world',
+  line: (e) => t(e.lowWins ? 'stats.recordValueLow' : 'stats.recordValue', { points: fmtCount(e.value) }),
+};
+
 /* A card's ranked entries (#1424). An ARRAY since #1424 — a single entry
    object before it — and both are read: the service worker can serve a client
    from before the deploy against the new payload or the reverse for a load, so
@@ -126,7 +136,7 @@ const statsList = (v) => (Array.isArray(v) ? v : v ? [v] : []).filter(Boolean);
 // ranked entries it draws: game podiums first, then the favourites. One list,
 // so the full block and the home panel's first few cannot order them
 // differently.
-function statsEntries(stats) {
+function statsEntries(stats, more = null) {
   const games = stats.games || {};
   const names = stats.names || {};
   // A favourite links its name to the BGG page when the payload carries the
@@ -136,6 +146,7 @@ function statsEntries(stats) {
   return [
     ...STATS_PODIUMS.map((p) => [p, statsList(games[p.key])]),
     ...STATS_FAVOURITES.map((f) => [f, statsList(names[f.key]).map(asTitle(f))]),
+    [STATS_RECORDS, statsList(more && more.records)],
   ].filter(([, list]) => list.length);
 }
 
@@ -348,7 +359,7 @@ function renderPublicStats(stats, more = null) {
         </li>`).join('')}</ul>`
     : '';
 
-  const entries = statsEntries(stats);
+  const entries = statsEntries(stats, more);
   const cards = entries.length
     ? `<ul class="stats-cards">${statsCardsHtml(entries, more)}</ul>`
     : '';
