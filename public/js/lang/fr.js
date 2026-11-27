@@ -1964,9 +1964,6 @@ I18N.fr = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'L\'incontournable de Spielwirbel',
-  'stats.records': 'Records Spielwirbel',
-  'stats.recordValue': 'Record : {points}',
-  'stats.recordValueLow': 'Record : {points} · le plus bas gagne',
   'stats.bestRated': 'Le mieux noté',
   'stats.shelves.one': 'sur {n} étagère',
   'stats.shelves.many': 'sur {n} étagères',

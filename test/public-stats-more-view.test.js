@@ -79,19 +79,18 @@ test('on /entdecken each card gets the control its longer list supports, and no 
   assert.equal(dom.document.querySelectorAll('.stats-card__expand').length, 3);
 });
 
-// #1788: the „Rekorde" card draws from the longer-lists payload, so it is on
-// /entdecken only. Value and direction, never a holder.
-test('the records card shows each game\'s Spielwirbel-Rekord on /entdecken, and never elsewhere', async (t) => {
+// The „Rekorde" card (#1788) was removed again: a stale payload that still
+// carries `records` (the service worker can pair an old server with a new
+// client) must not bring it back.
+test('a payload that still carries records draws no records card', async (t) => {
   const more = { ...MORE, records: [
     { title: 'Azul', image: null, url: null, value: 142, lowWins: false, rank: 1 },
-    { title: 'Golf', image: null, url: null, value: 31, lowWins: true, rank: 2 },
   ] };
   const { dom } = boot(t, { more });
   await dom.call('showEntdecken');
-  const rec = card(dom, 'Spielwirbel-Rekorde');
-  assert.ok(rec, 'the card is there');
-  assert.match(rec.textContent, /Azul\s+Rekord: 142/);
-  assert.match(rec.textContent, /Golf\s+Rekord: 31 · niedrigste gewinnt/);
+  assert.ok(card(dom, 'im Regal'), 'the page rendered its cards');
+  assert.ok(!card(dom, 'Spielwirbel-Rekorde'), 'no records card');
+  assert.doesNotMatch(dom.document.body.textContent, /Rekord: 142/);
 });
 
 test('a 404 from the longer lists renders the cards exactly as before', async (t) => {

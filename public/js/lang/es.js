@@ -1978,9 +1978,6 @@ I18N.es = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'El clásico de Spielwirbel',
-  'stats.records': 'Récords Spielwirbel',
-  'stats.recordValue': 'Récord: {points}',
-  'stats.recordValueLow': 'Récord: {points} · gana el más bajo',
   'stats.bestRated': 'Lo mejor valorado',
   'stats.shelves.one': 'en {n} estantería',
   'stats.shelves.many': 'en {n} estanterías',

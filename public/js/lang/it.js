@@ -1963,9 +1963,6 @@ I18N.it = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'L\'intramontabile di Spielwirbel',
-  'stats.records': 'Record Spielwirbel',
-  'stats.recordValue': 'Record: {points}',
-  'stats.recordValueLow': 'Record: {points} · vince il più basso',
   'stats.bestRated': 'Meglio valutati',
   'stats.shelves.one': 'su {n} scaffale',
   'stats.shelves.many': 'su {n} scaffali',

@@ -2027,9 +2027,6 @@ I18N.en = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbel\'s evergreen',
-  'stats.records': 'Spielwirbel records',
-  'stats.recordValue': 'Record: {points}',
-  'stats.recordValueLow': 'Record: {points} · lower wins',
   'stats.bestRated': 'Best rated',
   'stats.shelves.one': 'on {n} shelf',
   'stats.shelves.many': 'on {n} shelves',

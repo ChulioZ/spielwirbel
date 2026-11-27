@@ -1956,9 +1956,6 @@ I18N.nl = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbels blijvertje',
-  'stats.records': 'Spielwirbel-records',
-  'stats.recordValue': 'Record: {points}',
-  'stats.recordValueLow': 'Record: {points} · laagste wint',
   'stats.bestRated': 'Best beoordeeld',
   'stats.shelves.one': 'in {n} kast',
   'stats.shelves.many': 'in {n} kasten',

@@ -204,7 +204,10 @@ test('the longer lists are spent LAST: a budget the cards use up publishes none 
 
 // #1788: the „Rekorde" card — the Spielwirbel-Rekord VALUE of the most-played
 // games that have one, on the longer-lists payload only, named by the provider.
-test('the records card carries the value of the most-played games that have one, and nothing else', async () => {
+// The „Rekorde" card was removed again: record values of different games are not
+// comparable, so a ranked card of them read as a ranking that does not exist.
+// A game WITH a record must still leave the payload without one.
+test('the longer lists carry no records, even for a played game that has one', async () => {
   process.env.PUBLIC_STATS_MIN_PLAY_TENANTS_ALL = '1';
   stubProvider();
   const scoped = repo.forTenant('default');
@@ -231,9 +234,9 @@ test('the records card carries the value of the most-played games that have one,
     repo.listGameRecords = realRecords;
   }
   const res = await request(app).get('/api/stats/public/more');
-  assert.deepEqual(res.body.records.map((e) => [e.title, e.value, e.lowWins, e.rank]), [['Provider-Titel rec1', 77, false, 1]]);
-  assert.ok(!JSON.stringify(res.body.records).includes('GETIPPT'), 'the provider names it, never a round');
-  assert.equal((await request(app).get('/api/stats/public')).body.records, undefined, 'never on the landing payload');
+  assert.ok(res.body.games, 'the rebuild published the longer lists');
+  assert.equal(res.body.records, undefined, 'no records card on /entdecken');
+  assert.equal((await request(app).get('/api/stats/public')).body.records, undefined, 'nor on the landing payload');
 });
 
 test('the route 404s while the feature is off', async () => {
