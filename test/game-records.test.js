@@ -165,12 +165,30 @@ test('a score that was already counted and only stands out now KEEPS COUNTING un
 });
 
 test('„Gültig" counts and is never flagged again; „Nicht werten" excludes for good', () => {
-  const valid = run(jumpy(), { reviews: new Map([['r1/r1-s1/a', { state: 'valid' }]]) });
+  const valid = run(jumpy(), { reviews: new Map([['r1/r1-s1/a', { state: 'valid', points: 50 }]]) });
   assert.equal(rec(valid, '7').value, 50);
   assert.equal(valid.reviews.size, 0);
-  const excluded = run(jumpy(), { reviews: new Map([['r1/r1-s1/a', { state: 'excluded' }]]), seen: new Set(['r1/r1-s1/a']) });
+  const excluded = run(jumpy(), { reviews: new Map([['r1/r1-s1/a', { state: 'excluded', points: 50 }]]), seen: new Set(['r1/r1-s1/a']) });
   assert.equal(rec(excluded, '7').value, 10);
   assert.equal(excluded.reviews.size, 0);
+});
+
+test('a decision applies to the points it was made on — an EDITED score is judged again, as new', () => {
+  // The operator marked a 50 valid; the round then edited it to 500.
+  const sources = [src('r1', [{ id: 'g1', source: bgg('7') }], [['g1', { a: 10 }], ['g1', { a: 500 }]])];
+  const key = 'r1/r1-s1/a';
+  const out = run(sources, { reviews: new Map([[key, { state: 'valid', points: 50 }]]), seen: new Set([key]) });
+  assert.equal(rec(out, '7').value, 10, 'the 500 is not waved through by a decision about a 50');
+  assert.deepEqual([out.reviews.get(key).heldBack, out.reviews.get(key).points], [true, 500]);
+  assert.deepEqual(out.stale, [key], 'the stale decision is reported, so the job may overwrite it');
+  // An excluded 50 edited to 12 counts again once it passes the checks.
+  const back = run([src('r1', [{ id: 'g1', source: bgg('7') }], [['g1', { a: 10 }], ['g1', { a: 12 }]])],
+    { reviews: new Map([[key, { state: 'excluded', points: 50 }]]), seen: new Set([key]) });
+  assert.equal(rec(back, '7').value, 12);
+  assert.deepEqual(back.stale, [key]);
+  // A decision on the SAME points still holds.
+  const same = run(sources, { reviews: new Map([[key, { state: 'valid', points: 500 }]]), seen: new Set([key]) });
+  assert.deepEqual([rec(same, '7').value, same.stale], [500, []]);
 });
 
 test('an undecided flag whose reason went away is dropped; a review whose session is gone is reported gone', () => {
@@ -261,4 +279,23 @@ test('recompute writes both tables, a round read carries swRecord, and a demo te
   assert.equal((await mine.scoped.getGame(mine.round.id, mine.game.id)).swRecord.value, 41);
   // The stored game is untouched: the overlay is read-only.
   assert.equal('swRecord' in store.findRound(mine.round.id).games[0], false);
+});
+
+test('a failed recompute logs the error CODE, never its message — a Knex message quotes the SQL', async () => {
+  const { recentLogs } = require('../lib/observability');
+  const real = repo.gameRecordSources;
+  repo.gameRecordSources = async () => {
+    const err = new Error('insert into "score_reviews" values (\'r-secret/s/m\', 500) - boom');
+    err.code = '23505';
+    throw err;
+  };
+  try {
+    assert.equal(await recompute(), null, 'a failure leaves the tables standing and reports null');
+  } finally {
+    repo.gameRecordSources = real;
+  }
+  const line = recentLogs().find((l) => l.event === 'game_records_recompute_failed');
+  assert.ok(line, 'the failure is logged');
+  assert.equal(line.code, '23505');
+  assert.ok(!JSON.stringify(recentLogs()).includes('r-secret'), 'the SQL\'s score key never reaches the log');
 });
