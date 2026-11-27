@@ -1024,8 +1024,9 @@ What the app does, in detail. For a short overview see the
   over all player counts. Only the value is shown, never who holds it: on the
   Spielepass under the round's own record („Spielwirbel-Rekord: 142"), on the
   result screen („Neuer Spielwirbel-Rekord!", or „…? Wird geprüft" while an
-  outlier waits), beside each best on the profile („128 · Rekord 142") and as a
-  „Rekorde" card on `/entdecken`. The profile's medal means holding it (ties
+  outlier waits), and beside each best on the profile („128 · Rekord 142") — not on
+  `/entdecken`, where a ranked card of values from different games would read
+  as a ranking that does not exist. The profile's medal means holding it (ties
   share), and a sixth account Abzeichen, **Spielwirbel-Rekord** 1 · 3 · 10,
   counts the games in which the account SET one — never lost by being beaten.
   Team, guest and automa scores and demo rounds never count; unlinked games
@@ -1551,9 +1552,6 @@ What the app does, in detail. For a short overview see the
   minimum in left out. The history is recomputed from the sessions on every
   rebuild rather than stored, so raising a floor can remove an old winner. The
   landing page and the home tile stay at three places with neither control.
-  A „Spielwirbel-Rekorde" card (issue #1788) is on `/entdecken` only too: the
-  record VALUE for the most-played games that have one, behind the all-time
-  card's floors and named by the provider — never a holder, round or date.
   The section appears on the logged-out landing
   page, on a shareable `/entdecken` screen and as a home-dashboard tile showing
   the first few rankings with their cover art —

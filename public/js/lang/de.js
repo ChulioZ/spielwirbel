@@ -2018,9 +2018,6 @@ I18N.de = {
   // period to state, and „meistgespielt insgesamt" reads as a fourth ranking
   // of the same kind rather than as the one durable fact.
   'stats.playedAll': 'Spielwirbels Dauerbrenner',
-  'stats.records': 'Spielwirbel-Rekorde',
-  'stats.recordValue': 'Rekord: {points}',
-  'stats.recordValueLow': 'Rekord: {points} · niedrigste gewinnt',
   'stats.bestRated': 'Am besten bewertet',
   'stats.shelves.one': 'in {n} Regal',
   'stats.shelves.many': 'in {n} Regalen',
