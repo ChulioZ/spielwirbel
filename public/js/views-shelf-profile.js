@@ -23,10 +23,12 @@
 // gives: the draw pool's own seat predicate, the (Uncredited) filter, and each
 // game's SHELF score from the caller's roundScoreIndex — the number the Regal
 // prints, so the ranked lists can never disagree with the shelf (#1556).
-const shelfProfileDeps = (statsByGame) => ({
+// `durations` (#1874): the round's measured playing times, for a game set to
+// „aus euren Sessions" — bound here so the profile never sees the flag.
+const shelfProfileDeps = (statsByGame, durations) => ({
   fitsPlayerCount,
   fitsPlayerCountFrom,
-  gamePlaytime,
+  gamePlaytime: (g) => gamePlaytime(g, durations),
   creditedDesigners,
   scoreOf: (g) => { const st = statsByGame[g.id]; return st ? st.score : null; },
 });
@@ -318,7 +320,7 @@ async function showShelfProfile(rid) {
   setDocTitle(t('shelfProfile.title'), round.name);
 
   const activeGames = round.games.filter(isActiveGame);
-  const deps = shelfProfileDeps(roundScoreIndex(round, activeGames).byGame);
+  const deps = shelfProfileDeps(roundScoreIndex(round, activeGames).byGame, roundDurations(round.sessions));
   const p = shelfProfile(activeGames, deps);
   // Every count on the screen opens the games behind it (#1668).
   const open = (btn, title, games, scored) => openShelfGames(btn, title, games, rid, scored ? deps.scoreOf : null);

@@ -58,7 +58,7 @@ const STATUS = (over = {}) => ({
       roundsImported: 1,
       /* #1803. Chosen so a line dividing by `content.games` (90) instead of
          `gamesTotal` (80) renders a different share for every one of them. */
-      gamesWithPurchasePrice: 20, gamesLent: 8, gamesWithScoreCategories: 16, gamesWithPlaytimeOverride: 12,
+      gamesWithPurchasePrice: 20, gamesLent: 8, gamesWithScoreCategories: 16, gamesWithPlaytimeOverride: 12, gamesWithPlaytimeFromSessions: 6,
       sessionsWithComment: 8, sessionsWithVerdicts: 5,
       sessionsImported: 8, sessionsImportedBgStats: 4, sessionsImportedBgg: 2, sessionsImportedMyludo: 2,
       // #1675: the automa is NOT a subset of points (it may be stored alone),
@@ -375,6 +375,7 @@ test('every card renders exactly: parent first, then count + share of its parent
         ['aktuell verliehen', '8', '10 %', 0],
         ['mit Wertungskategorien', '16', '20 %', 0],
         ['Spielzeit korrigiert', '12', '15 %', 0],
+        ['Spieldauer aus Sessions', '6', '8 %', 0],
       ],
     },
     {

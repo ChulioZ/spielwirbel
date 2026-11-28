@@ -58,15 +58,60 @@ function settlePlayDuration(s, nowIso) {
 // clearing its minutes removes its effect.
 const DURATION_MEDIAN_MIN_SESSIONS = 2;
 
-function roundGameDuration(sessions, gameId) {
-  const mins = (sessions || [])
-    .filter((s) => s && s.finished && !s.cancelled && s.chosenGameId === gameId && isValidDuration(s.durationMinutes))
-    .map((s) => s.durationMinutes)
-    .sort((a, b) => a - b);
+function durationMedianOf(mins) {
   if (mins.length < DURATION_MEDIAN_MIN_SESSIONS) return null;
-  const mid = mins.length >> 1;
-  const median = mins.length % 2 ? mins[mid] : (mins[mid - 1] + mins[mid]) / 2;
-  return { minutes: Math.max(5, Math.round(median / 5) * 5), count: mins.length };
+  const sorted = [...mins].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return { minutes: Math.max(5, Math.round(median / 5) * 5), count: sorted.length };
+}
+
+const countsTowardDuration = (s) => s && s.finished && !s.cancelled && isValidDuration(s.durationMinutes);
+
+function roundGameDuration(sessions, gameId) {
+  return durationMedianOf((sessions || [])
+    .filter((s) => countsTowardDuration(s) && s.chosenGameId === gameId)
+    .map((s) => s.durationMinutes));
+}
+
+// Every game's typical duration at once (#1874): a Map of game id → what
+// roundGameDuration answers, holding only the games that have one. This is the
+// index `gamePlaytime` (draw-pool.js) takes for a game whose round chose
+// „aus euren Sessions" — built once per render or request from the round's
+// sessions, never stored, so a newly timed session moves the figure everywhere
+// on the next read.
+function roundDurations(sessions) {
+  const byGame = new Map();
+  (sessions || []).forEach((s) => {
+    if (!countsTowardDuration(s) || !s.chosenGameId) return;
+    if (!byGame.has(s.chosenGameId)) byGame.set(s.chosenGameId, []);
+    byGame.get(s.chosenGameId).push(s.durationMinutes);
+  });
+  const index = new Map();
+  byGame.forEach((mins, gid) => {
+    const d = durationMedianOf(mins);
+    if (d) index.set(gid, d);
+  });
+  return index;
+}
+
+// Whether the Spielepass offers „Übernehmen" beside „Bei euch" (#1874): only
+// when the measured figure says something the current one does not. Inside the
+// range, or within BOTH 15 minutes and a fifth of the nearer bound, it would be
+// an invitation to freeze noise; with no current figure at all it always does.
+// `pair` is what gamePlaytime answers today ({ minPlaytime, maxPlaytime }).
+const PLAYTIME_ADOPT_MIN_DELTA = 15;
+const PLAYTIME_ADOPT_MIN_SHARE = 0.2;
+
+function offersMeasuredPlaytime(pair, minutes) {
+  if (!isValidDuration(minutes)) return false;
+  const p = pair || {};
+  const lo = Number.isFinite(p.minPlaytime) ? p.minPlaytime : (Number.isFinite(p.maxPlaytime) ? p.maxPlaytime : null);
+  const hi = Number.isFinite(p.maxPlaytime) ? p.maxPlaytime : lo;
+  if (lo == null) return true;
+  if (minutes >= lo && minutes <= hi) return false;
+  const bound = minutes > hi ? hi : lo;
+  return Math.abs(minutes - bound) > Math.max(PLAYTIME_ADOPT_MIN_DELTA, PLAYTIME_ADOPT_MIN_SHARE * bound);
 }
 
 // How long a set of played sessions took together (#1772): the period recap's
@@ -109,6 +154,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     DURATION_MIN, DURATION_MAX, DURATION_TIMER_FLOOR, DURATION_MEDIAN_MIN_SESSIONS,
     isValidDuration, elapsedMinutes, settlePlayDuration, roundGameDuration,
+    roundDurations, offersMeasuredPlaytime, PLAYTIME_ADOPT_MIN_DELTA, PLAYTIME_ADOPT_MIN_SHARE,
     sessionsPlayTime, longestSession,
   };
 }

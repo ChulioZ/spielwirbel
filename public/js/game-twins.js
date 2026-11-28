@@ -46,7 +46,9 @@ const TWIN_FIELDS = [
     // The override alone is what the round stored; a cleared one is the
     // provider's figure, which is the same BGG game on both sides.
     value: (g) => (g.playtimeOverride ? { min: g.playtimeOverride.min, max: g.playtimeOverride.max } : null),
-    text: (v, g) => playtimeRangeText(gamePlaytime({ ...g, playtimeOverride: v })) || '',
+    // The flag is dropped from the copy (#1874): this row states an OVERRIDE
+    // value, and „aus euren Sessions" is per round — never carried to a twin.
+    text: (v, g) => playtimeRangeText(gamePlaytime({ ...g, playtimeOverride: v, playtimeFromSessions: undefined })) || '',
     patch: (p) => ({ playtimeOverride: p.playtimeOverride }),
   },
   {

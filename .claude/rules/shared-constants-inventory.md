@@ -826,7 +826,15 @@ rather than two copies of a three-line function: the floor
 (`DURATION_TIMER_FLOOR`) and the "never over a recorded figure" rule decide what
 lands on disk, so a backend that restated them differently would store a
 different duration for the same evening, depending on `DATABASE_URL`, with the
-repo contract the only witness. `roundGameDuration` (the Spielepass median),
+repo contract the only witness. **#1874 gave the median server readers**: `roundDurations` (every game's
+median at once) is what `gamePlaytime` (draw-pool.js) takes for a game set to
+„aus euren Sessions", and `lib/draw.js`, `lib/draw-filters.js` and
+`lib/routes/vote-link.js` require it — so the draw, its filter options and the
+shared ballot measure the same median the Spielepass prints. A server copy
+that rounded or counted sessions differently would draw a game the setup
+screen's pot shows as too long, with nothing red. It is passed as an argument
+because draw-pool.js cannot require a sibling, and `gamePlaytime` throws for a
+flagged game without it. `offersMeasuredPlaytime` (when „Übernehmen" shows),
 `sessionsPlayTime` (the period recap's hours, #1772) and `longestSession`
 (Pokale's „Längste Session") are client-only.
 

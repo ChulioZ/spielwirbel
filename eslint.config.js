@@ -665,6 +665,7 @@ const frontendGlobals = {
   // route and both repo backends).
   DURATION_MIN: 'readonly', DURATION_MAX: 'readonly', DURATION_TIMER_FLOOR: 'readonly', DURATION_MEDIAN_MIN_SESSIONS: 'readonly',
   isValidDuration: 'readonly', elapsedMinutes: 'readonly', settlePlayDuration: 'readonly', roundGameDuration: 'readonly',
+  roundDurations: 'readonly', offersMeasuredPlaytime: 'readonly',
   sessionsPlayTime: 'readonly', longestSession: 'readonly', fmtPlayHours: 'readonly',
   // session-playtime.js (#1770): the band's timer and record lines, the sheet.
   fmtPlayMinutes: 'readonly', syncPlayClock: 'readonly', playTimerNote: 'readonly', playDurationNote: 'readonly',

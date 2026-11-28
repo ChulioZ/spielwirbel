@@ -6626,6 +6626,7 @@ module.exports = function repoContract(repo) {
       'roundsWithChat', 'roundsWithChallenge', 'roundsWithActiveChallenge', 'roundsWithDrawBoost',
       'roundsWithInviteLink', 'sessionsWithComment', 'sessionsWithVerdicts', 'accountsWithPriceWatch',
       'gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride',
+      'gamesWithPlaytimeFromSessions',
       'accountsWithPasskey',
       'sessionsImported', 'sessionsImportedBgStats',
       'sessionsWithPoints', 'sessionsWithAutoma',
@@ -6649,12 +6650,15 @@ module.exports = function repoContract(repo) {
       await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn });
       await repo.createRoundInviteLink({ roundId: r.id, ownerTenantId: tn, memberId: r.members[0].id });
 
-      // An ordinary linked game that uses none of the Spiele features.
-      await repo.createGame(tn, r.id, gameFields({
+      // An ordinary linked game that uses none of the Spiele features…
+      const linked = await repo.createGame(tn, r.id, gameFields({
         title: 'Verknüpft',
         image: 'https://cf.geekdo-images.test/x.jpg',
         source: { provider: 'bgg', externalId: '13' },
       }));
+      // …except „aus euren Sessions" (#1874), which excludes the override the
+      // „Eigen" game below carries, so it sits on a game of its own.
+      await repo.updateGame(tn, r.id, linked.id, { playtimeFromSessions: true });
       // The four Spiele features (#1803), all on ONE game.
       const own = await repo.createGame(tn, r.id, gameFields({ title: 'Eigen', image: '/uploads/a.webp' }));
       await repo.updateGame(tn, r.id, own.id, {
@@ -6708,7 +6712,7 @@ module.exports = function repoContract(repo) {
     });
 
     await t.test('the Spiele figures count presence only — not cleared, not BGG categories, not demos (#1803)', async () => {
-      const KEYS = ['gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride'];
+      const KEYS = ['gamesWithPurchasePrice', 'gamesLent', 'gamesWithScoreCategories', 'gamesWithPlaytimeOverride', 'gamesWithPlaytimeFromSessions'];
       const mid = await repo.instanceMetrics();
       const tn = `sp-${Math.random().toString(16).slice(2)}`;
       const r = await repo.createRound(tn, { name: 'Spiele', members: ['Ann'] });
@@ -6729,6 +6733,11 @@ module.exports = function repoContract(repo) {
         playtimeOverride: { min: 20, max: 30 },
       });
       await repo.updateGame(tn, r.id, cleared.id, { purchasePrice: null, scoreCategories: [], playtimeOverride: null });
+      // „Aus euren Sessions" on and off again (#1874) — the clear is absence too.
+      await repo.updateGame(tn, r.id, cleared.id, { playtimeFromSessions: true });
+      await repo.updateGame(tn, r.id, cleared.id, { playtimeFromSessions: null });
+      const reread = (await repo.getRound(tn, r.id)).games.find((g) => g.id === cleared.id);
+      assert.equal('playtimeFromSessions' in reread, false, 'a cleared flag is absence, never a stored null');
       await repo.setGameLoan(tn, r.id, cleared.id, { to: 'Bo', since: '2026-11-01' });
       await repo.setGameLoan(tn, r.id, cleared.id, null);
 
@@ -6740,6 +6749,10 @@ module.exports = function repoContract(repo) {
         playtimeOverride: { min: 45, max: 60 },
       });
       await repo.setGameLoan(tn, r.id, used.id, { to: 'Kim', since: '2026-11-02' });
+      // „Aus euren Sessions" (#1874) on a game of its own: it excludes the
+      // override above in every real request (the route drops one).
+      const measured = await repo.createGame(tn, r.id, gameFields({ title: 'Gemessen' }));
+      await repo.updateGame(tn, r.id, measured.id, { playtimeFromSessions: true });
 
       // A DEMO tenant's game using all four must not count.
       const dt = `demo-${tn}`;
@@ -6751,12 +6764,14 @@ module.exports = function repoContract(repo) {
         playtimeOverride: { min: 45, max: 60 },
       });
       await repo.setGameLoan(dt, dr.id, demo.id, { to: 'Kim', since: '2026-11-02' });
+      const demoMeasured = await repo.createGame(dt, dr.id, gameFields({ title: 'Demo gemessen' }));
+      await repo.updateGame(dt, dr.id, demoMeasured.id, { playtimeFromSessions: true });
 
       const m = await repo.instanceMetrics();
       for (const key of KEYS) {
         assert.equal(m.adoption[key] - mid.adoption[key], 1, `${key} counted ${m.adoption[key] - mid.adoption[key]}, not 1`);
       }
-      assert.equal(m.adoption.gamesTotal - mid.adoption.gamesTotal, 3, 'the denominator holds all three real games');
+      assert.equal(m.adoption.gamesTotal - mid.adoption.gamesTotal, 4, 'the denominator holds all four real games');
     });
 
     await t.test('an imported session counts under its own source, and in the total (#1665)', async () => {

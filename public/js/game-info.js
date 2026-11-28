@@ -33,9 +33,11 @@
 // empty, while on the detail screen — which does render it — that same game has
 // something to show. The two flags must agree, so both callers pass the same
 // options object.
-function hasGameInfo(game, { rating = false } = {}) {
+// `durations` (#1874) is the round's index from `roundDurations`, which a game
+// set to „aus euren Sessions" needs to name its playing time (gamePlaytime).
+function hasGameInfo(game, { rating = false, durations } = {}) {
   return !!game && (game.weight != null
-    || playtimeText(game) != null || game.minAge != null
+    || playtimeText(game, durations) != null || game.minAge != null
     || (game.categories || []).length > 0 || (game.mechanics || []).length > 0
     || creditedDesigners(game.designers).length > 0
     || (rating && game.rating != null));
@@ -80,8 +82,8 @@ function factList(values, cap) {
 // The pair read is the round's own when it set one (#1627, `gamePlaytime` in
 // draw-pool.js) — every surface showing a playing time goes through here, so
 // none of them can show BGG's number beside a filter acting on the group's.
-function playtimeText(game) {
-  return playtimeRangeText(gamePlaytime(game));
+function playtimeText(game, durations) {
+  return playtimeRangeText(gamePlaytime(game, durations));
 }
 
 // The same rule over a bare pair — also what the detail page's override note
@@ -117,11 +119,11 @@ function weightInner(game) {
 // caller that forgets the flag must fail SAFE. Only the game-detail section opts
 // in. The server-side half — the ballot projection in lib/routes/vote-link.js
 // omitting the field entirely — is the real enforcement; this is the view half.
-function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP } = {}) {
+function gameInfoBody(game, { rating = false, listCap = GAME_INFO_LIST_CAP, durations } = {}) {
   const box = h('<div class="game-info__body"></div>');
   if (game.weight != null) box.appendChild(h(`<div class="game-info__weight">${weightInner(game)}</div>`));
   const facts = h('<div class="game-info__facts"></div>');
-  const playtime = playtimeText(game);
+  const playtime = playtimeText(game, durations);
   if (playtime) facts.appendChild(factRow(t('gameInfo.playtime'), playtime));
   if (game.minAge != null) facts.appendChild(factRow(t('gameInfo.minAge'), t('gameInfo.minAgeValue', { n: game.minAge })));
   if ((game.categories || []).length) facts.appendChild(factRow(t('gameInfo.categories'), factList(game.categories, listCap)));
@@ -226,16 +228,16 @@ function refreshShelfGameInfo(rid, games, onFilled) {
 // The ⓘ affordance for the two vote cards, or null when the game has nothing
 // to show — the card's height budget and primary actions stay untouched either
 // way (.claude/rules/fitting-a-screen-to-the-viewport-height.md).
-function gameInfoButton(game) {
-  if (!hasGameInfo(game)) return null;
+function gameInfoButton(game, durations) {
+  if (!hasGameInfo(game, { durations })) return null;
   const b = h(`<button type="button" class="vote__info" aria-label="${esc(t('gameInfo.open', { title: game.title }))}"><i class="ti ti-info-circle" aria-hidden="true"></i></button>`);
-  b.addEventListener('click', () => openGameInfoSheet(game));
+  b.addEventListener('click', () => openGameInfoSheet(game, durations));
   return b;
 }
 
 // The sheet both vote cards open. Goes through openSheet for the focus trap,
 // page lock and Back-dismissal (#145/#333/#622) — never assign activeSheet.
-function openGameInfoSheet(game) {
+function openGameInfoSheet(game, durations) {
   const backdrop = h(`<div class="sheet-backdrop sheet-backdrop--center">
       <div class="sheet sheet--dialog" role="dialog" aria-modal="true" aria-label="${esc(t('gameInfo.title'))}">
         <div class="sheet__head">
@@ -245,7 +247,7 @@ function openGameInfoSheet(game) {
         <div class="game-info"></div>
       </div>
     </div>`);
-  backdrop.querySelector('.game-info').appendChild(gameInfoBody(game));
+  backdrop.querySelector('.game-info').appendChild(gameInfoBody(game, { durations }));
   document.body.appendChild(backdrop);
   const onKey = (e) => { if (e.key === 'Escape') closeSheet(); };
   document.addEventListener('keydown', onKey, true);
@@ -277,12 +279,20 @@ function openGameInfoSheet(game) {
 // `own` (#1770) is the round's measured duration for this game (roundGameDuration,
 // session-duration.js) — „Bei euch: ~110 Min." under the box figure, the pill's
 // value staying the box's (or the round's own override). Detail page only.
-function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false, own = null } = {}) {
+//
+// „Aus euren Sessions" (#1874): `onAdoptOwn` puts „Übernehmen" BESIDE the pill
+// — a sibling, never inside it, because an editable pill is itself a <button>
+// — when the measured figure says something the current one does not
+// (`offersMeasuredPlaytime`). Once adopted, the pill's value IS the median
+// (gamePlaytime reads it from `durations`) and its note says where it comes
+// from, so „Bei euch" is not repeated.
+function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false, own = null, durations, onAdoptOwn = null } = {}) {
   const box = h('<div class="gd-facts"></div>');
   if (game.weight != null) {
     box.appendChild(h(`<span class="fact fact--weight">${weightInner(game)}</span>`));
   }
-  const playtime = playtimeText(game);
+  const pt = gamePlaytime(game, durations);
+  const playtime = playtimeRangeText(pt);
   if (playtime || (editPlaytime && offerEmpty) || own) {
     // The empty pill is its own invitation, like the dashed players chip — a
     // label beside „Spieldauer angeben" would say the word twice.
@@ -291,18 +301,35 @@ function gameGlanceFacts(game, { editPlaytime = null, offerEmpty = false, own = 
     const value = playtime || ownText || t('detail.setPlaytime');
     const pill = factPill(playtime || ownText ? t('gameInfo.playtime') : null, value, editPlaytime);
     if (!playtime && !ownText) pill.classList.add('fact--empty');
-    if (gamePlaytime(game).overridden) {
-      const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime ?? null, maxPlaytime: game.maxPlaytime ?? null });
+    const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime ?? null, maxPlaytime: game.maxPlaytime ?? null });
+    if (pt.fromSessions || pt.overridden) {
       const note = h('<span class="fact__note"></span>');
-      note.textContent = bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn');
+      note.textContent = pt.fromSessions
+        ? (bgg ? t('detail.playtimeFromSessionsBgg', { value: bgg }) : t('detail.playtimeFromSessions'))
+        : (bgg ? t('detail.playtimeOwnBgg', { value: bgg }) : t('detail.playtimeOwn'));
       pill.appendChild(note);
     }
-    if (playtime && ownText) {
+    if (playtime && ownText && !pt.fromSessions) {
       const ownNote = h('<span class="fact__note fact__note--own"></span>');
       ownNote.textContent = ownText;
       pill.appendChild(ownNote);
     }
-    box.appendChild(pill);
+    // No `playtimeFromSessions` check here, deliberately: an adopted game's
+    // pair IS the median, so offersMeasuredPlaytime already answers no — a
+    // second guard would only make each untestable (measured, #1874).
+    if (onAdoptOwn && own && offersMeasuredPlaytime(pt, own.minutes)) {
+      const adopt = h(`<button type="button" class="link-btn fact-adopt">${esc(t('detail.adoptOwnDuration'))}</button>`);
+      adopt.setAttribute('aria-label', t('detail.adoptOwnDurationLabel', { time: fmtPlayMinutes(own.minutes) }));
+      adopt.addEventListener('click', () => onAdoptOwn());
+      // ONE item with its pill, so the wrapping facts row cannot break between
+      // them and seat „Übernehmen" beside the NEXT pill instead
+      // (.claude/rules/label-and-control-wrap-as-one-item.md).
+      const group = h('<div class="fact-group"></div>');
+      group.append(pill, adopt);
+      box.appendChild(group);
+    } else {
+      box.appendChild(pill);
+    }
   }
   if (game.minAge != null) {
     box.appendChild(factPill(t('gameInfo.minAge'), t('gameInfo.minAgeValue', { n: game.minAge })));
@@ -342,8 +369,8 @@ function factPill(label, value, onEdit) {
 // waits on the lookup and a failed one simply leaves them plain. Detail screen
 // only: the vote sheet (gameInfoBody) keeps its rows unlinked on purpose, so a
 // vote never leads out of the app.
-function gameInfoRest(game) {
-  if (!hasGameInfo(game, { rating: true })) return null;
+function gameInfoRest(game, durations) {
+  if (!hasGameInfo(game, { rating: true, durations })) return null;
   const box = h('<div class="game-info__body"></div>');
   const facts = h('<div class="game-info__facts"></div>');
   const linkable = [

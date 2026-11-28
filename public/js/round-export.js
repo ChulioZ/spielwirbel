@@ -94,6 +94,9 @@ function roundExportTables(round) {
   // the index carries (game-stats.js), and an off-shelf game's detail page
   // states exactly this number.
   const index = roundScoreIndex(round, games);
+  // The playing time the shelf shows (#1874): a game set to „aus euren
+  // Sessions" exports its median, the figure every screen and the draw use.
+  const durations = roundDurations(sessions);
   const gameState = (g) => {
     if (g.wish) return 'wished';
     if (g.retired) return 'retired';
@@ -107,7 +110,7 @@ function roundExportTables(round) {
       'purchase_price', 'currency', 'lent_to', 'lent_since', 'pitch'],
     games.map((g) => {
       const st = index.byGame[g.id] || {};
-      const pt = gamePlaytime(g);
+      const pt = gamePlaytime(g, durations);
       // What the pill prints: `displayScore` floors it at the scale's zero, and
       // `fmtAvg` shows one decimal.
       const score = Number.isFinite(st.score) ? Number(displayScore(st.score).toFixed(1)) : null;

@@ -57,7 +57,7 @@ function chronikPulseLine(round) {
    Modus" — the Start card's three gates. */
 function regalProfileLine(round, activeGames, statsByGame) {
   if (simpleHidden('stats')) return null; // „Einfacher Modus" (#1646)
-  const sentence = shelfHeadlineText(shelfHeadline(shelfProfile(activeGames, shelfProfileDeps(statsByGame))));
+  const sentence = shelfHeadlineText(shelfHeadline(shelfProfile(activeGames, shelfProfileDeps(statsByGame, roundDurations(round.sessions)))));
   if (!sentence) return null;
   const link = h(`<a class="regal-profile">
        <i class="ti ti-id" aria-hidden="true"></i>

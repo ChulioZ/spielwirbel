@@ -32,7 +32,7 @@ function brueckeTitleLong(title) {
    figure and evidence, the same number the pill prints in every other design;
    its tone comes from the data-stop rung, like the Brücke pill's band. The bar
    repeats the number as a length, so it is aria-hidden. */
-function brueckeCard(g, fallback, score, evidence, expBadge) {
+function brueckeCard(g, fallback, score, evidence, expBadge, durations) {
   const scored = score !== null;
   const shown = scored ? displayScore(score) : null;
   const pct = scored ? Math.max(0, Math.min(100, Math.round((shown / RATING_MAX) * 100))) : 0;
@@ -44,7 +44,7 @@ function brueckeCard(g, fallback, score, evidence, expBadge) {
        <div class="game-card__body">
          <div class="game-card__title${brueckeTitleLong(g.title) ? ' is-long' : ''}">${esc(g.title)}</div>
          <div class="bruecke-card__row">
-           <span class="bruecke-card__meta">${cardMeta(g)}${expBadge}</span>
+           <span class="bruecke-card__meta">${cardMeta(g, durations)}${expBadge}</span>
            <span class="bruecke-card__score${scored ? '' : ' is-new'}"${stop}>${esc(scored ? fmtAvg(shown) : t('games.scoreNew'))}</span>
          </div>
          <span class="bruecke-card__bar" aria-hidden="true"><span style="width:${pct}%"></span></span>

@@ -34,7 +34,7 @@ function forestNoCover(game) {
    rung; „neu" when the game has none yet. The bulk-select tick stays on the
    frame, where the selection ring is drawn. The title wraps (two lines at F7.8's
    density), never an ellipsis. */
-function forestShelfCard(round, g, score, evidence, expBadge) {
+function forestShelfCard(round, g, score, evidence, expBadge, durations) {
   const scored = score !== null;
   const pill = scored
     ? `<span class="score-pill" style="--sc:${scoreColor(score)}" data-stop="${scoreStop(score)}" title="${esc(evidence)}">${fmtAvg(displayScore(score))}</span>`
@@ -48,7 +48,7 @@ function forestShelfCard(round, g, score, evidence, expBadge) {
        </div>
        <div class="game-card__body">
          <div class="forest-card__head"><div class="game-card__title">${esc(g.title)}</div>${pill}</div>
-         ${cardMeta(g) || expBadge ? `<div class="forest-card__meta">${cardMeta(g)}${expBadge}</div>` : ''}
+         ${cardMeta(g, durations) || expBadge ? `<div class="forest-card__meta">${cardMeta(g, durations)}${expBadge}</div>` : ''}
          ${owners.length ? `<div class="forest-card__owner">${esc(t('detail.owners', { names: owners.join(', ') }))}</div>` : ''}
        </div>
      </a>`);

@@ -34,16 +34,18 @@
    below cannot each assemble a slightly different set. Every entry is the app's
    own function, passed through rather than restated — the injection shape
    hub-insights.js's header explains. */
-const hubDeps = () => ({
+// `durations` (#1874): the round's measured playing times — the quick chips
+// gate and narrow on the same figure the setup screen filters on.
+const hubDeps = (durations) => ({
   outcomeOf: sessionOutcome,
   endingOf: sessionEnding,
   monthKeyOf: periodKeyOf,
   dayIndexOf,
   monthsBetween,
   neutralScore: PRIOR_DEFAULT,
-  filterOptions: metadataFilterOptions,
+  filterOptions: (games) => metadataFilterOptions(games, durations),
   normalizeMetadata: normalizeMetadataFilters,
-  fitsMetadata: fitsMetadataFilters,
+  fitsMetadata: (g, f) => fitsMetadataFilters(g, f, durations),
   newestFirst: newestSessionsFirst,
   longLoans,
 });
@@ -208,7 +210,7 @@ function hubPresetChips(round, activeGames) {
   row.appendChild(direct);
   if (!activeGames.length) return row;
   const saved = Array.isArray(round.savedFilters) ? round.savedFilters : [];
-  const chips = saved.length ? [] : quickPresets(activeGames, hubDeps());
+  const chips = saved.length ? [] : quickPresets(activeGames, hubDeps(roundDurations(round.sessions)));
   // The Start tab's copy is `rail-owned` (see the caller); the rail builds its
   // own from the same function, so the two can never offer different chips.
   saved.forEach((sf) => {

@@ -302,7 +302,9 @@ const WEIGHT_CHOICES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
 // instance without BGG_API_TOKEN) the entire shelf. Under-filtering is
 // recoverable — the user sees a game they can skip; over-filtering hides games
 // with nothing on screen to say so.
-function fitsMetadataFilters(game, filters) {
+// `durations` is the round's index from `roundDurations` (session-duration.js),
+// read by `gamePlaytime` for a game set to „aus euren Sessions" (#1874).
+function fitsMetadataFilters(game, filters, durations) {
   const f = filters || {};
   const g = game || {};
   // Playing time is a CONTAINMENT test (#1025), reversing the overlap doctrine
@@ -327,7 +329,7 @@ function fitsMetadataFilters(game, filters) {
   //
   // Both bounds stay INCLUSIVE: a game pinned at the ceiling (120–120 under "at
   // most 120") takes exactly two hours and belongs in the pool.
-  const pt = gamePlaytime(g);
+  const pt = gamePlaytime(g, durations);
   if (isFiniteNum(f.maxPlaytime) && isFiniteNum(pt.maxPlaytime) && pt.maxPlaytime > f.maxPlaytime)
     return false;
   if (isFiniteNum(f.minPlaytime) && isFiniteNum(pt.minPlaytime) && pt.minPlaytime < f.minPlaytime)
@@ -364,8 +366,28 @@ function fitsMetadataFilters(game, filters) {
 // Deliberately NOT read through this: the recommender and the weekly quiz,
 // which compare BGG figures with BGG figures from the cross-tenant corpus — a
 // round's correction would put two scales into one comparison.
-function gamePlaytime(game) {
+//
+// „Aus euren Sessions" (#1874): a game carrying `playtimeFromSessions` takes
+// the round's measured median as both bounds, read from `durations` — the Map
+// `roundDurations` (session-duration.js) builds from the round's sessions. It
+// is an argument rather than a lookup because a public/js file cannot require a
+// sibling, and it is REQUIRED for such a game: a reader that forgot it would
+// silently fall back to BGG, i.e. show and filter on a number the group
+// switched away from, with nothing anywhere saying so. So it throws instead —
+// every reader is wired, and a new one fails on the first flagged game. With
+// the index present but no median for the game (fewer than two timed
+// sessions), the stored pair applies, flag kept, until the median returns.
+function gamePlaytime(game, durations) {
   const g = game || {};
+  if (g.playtimeFromSessions === true) {
+    // Duck-typed, not `instanceof Map`: the jsdom harness runs these scripts in a
+    // vm context, where a Map built by the test belongs to another realm.
+    if (!durations || typeof durations.get !== 'function') throw new TypeError('gamePlaytime: a game set to playtimeFromSessions needs the round\'s duration index');
+    const d = durations.get(g.id);
+    if (d && isFiniteNum(d.minutes)) {
+      return { minPlaytime: d.minutes, maxPlaytime: d.minutes, overridden: false, fromSessions: true };
+    }
+  }
   const o = g.playtimeOverride;
   if (o && isFiniteNum(o.min) && isFiniteNum(o.max)) {
     return { minPlaytime: o.min, maxPlaytime: o.max, overridden: true };
@@ -431,12 +453,12 @@ function excludesAnyOf(values, excluded) {
 // A shelf carrying none of a field reports it unavailable, and the UI drops that
 // control entirely rather than rendering an empty one — the same thing the tag
 // field already does with no round tags.
-function metadataFilterOptions(games) {
+function metadataFilterOptions(games, durations) {
   const list = Array.isArray(games) ? games : [];
   const anyNumber = (key) => list.some((g) => isFiniteNum((g || {})[key]));
   // Through gamePlaytime, so a hand-set time on a game BGG has none for still
   // offers the control that filters on it.
-  const anyPlaytime = (key) => list.some((g) => isFiniteNum(gamePlaytime(g)[key]));
+  const anyPlaytime = (key) => list.some((g) => isFiniteNum(gamePlaytime(g, durations)[key]));
   const valuesOf = (key) => {
     const seen = new Set();
     list.forEach((g) => {

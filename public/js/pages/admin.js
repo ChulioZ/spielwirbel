@@ -608,6 +608,7 @@
         line('aktuell verliehen', a.gamesLent, games),
         line('mit Wertungskategorien', a.gamesWithScoreCategories, games),
         line('Spielzeit korrigiert', a.gamesWithPlaytimeOverride, games),
+        line('Spieldauer aus Sessions', a.gamesWithPlaytimeFromSessions, games),
       ],
     };
 

@@ -123,7 +123,16 @@ What the app does, in detail. For a short overview see the
   **two played sessions with a recorded duration** (#1770), its page adds the
   round's own typical length under the box figure — „Bei euch: ~110 Min.", the
   median rounded to 5 minutes, computed from the sessions (so deleting one or
-  clearing its minutes corrects it). BGG's **community rating** is shown on the detail page
+  clearing its minutes corrects it). When that figure falls clearly outside the
+  current one (more than 15 minutes and a fifth of the bound), „Übernehmen"
+  beside the pill makes it the game's playing time (#1874): the duration filter,
+  the draw, both voting screens, the Regal, the shelf profile and the export
+  then use the round's median — recomputed on every read, so each new timed
+  session moves it — and the pill notes „aus euren Sessions · BGG: …". It
+  replaces a hand-set time (typing one later replaces it in turn), the editor's
+  reset switches it back to BGG, and it is per round: copying a game elsewhere
+  does not carry it. The recommender and the weekly quiz keep comparing BGG
+  figures. BGG's **community rating** is shown on the detail page
   only, and never on either voting screen — a score next to a ballot anchors the
   vote. BGG's *rank* and *geek rating* are not imported at all, and neither is
   the game's **description** — publisher blurbs turned out to put readers off

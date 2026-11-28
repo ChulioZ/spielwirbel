@@ -69,7 +69,10 @@ function renderRegalTab(round, activeGames) {
   // for a freshly reset round, and it drops a category whose last game has since
   // been archived — the counterpart of the deleted-tag pruning below, and what
   // stops a filter surviving as an active count over a chip nobody can see.
-  regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames));
+  // The round's measured playing times (#1874): a game set to „aus euren
+  // Sessions" filters, and prints its time on the card, from its median.
+  const durations = roundDurations(round.sessions);
+  regalFilters.metadata = normalizeMetadataFilters(regalFilters.metadata, metadataFilterOptions(activeGames, durations));
   // The owner filter (#1433), over the members who own a game on THIS shelf —
   // none on an unmarked shelf, which is what keeps the section away there (the
   // setup screen's `shelfIsMarked` question; no second check, it would be
@@ -370,6 +373,7 @@ function renderRegalTab(round, activeGames) {
       // repaint keeps it.
       filterPanel = renderFilterPanel(activeGames, regalFilters.metadata, () => renderGames(), tagSection, {
         countBadge: composed,
+        durations,
         owners: { round, members: ownerMembers, picked: ownerPicks },
         players: shelfHasPlayerCounts ? playerPick : null,
       });
@@ -411,7 +415,7 @@ function renderRegalTab(round, activeGames) {
       mountFilterPanel();
       // renderGames() only reorders the cards built below, so the playing time
       // the fill just brought would not reach a tile until the next visit.
-      activeGames.forEach((g) => refreshCardMeta(cardById[g.id], g));
+      activeGames.forEach((g) => refreshCardMeta(cardById[g.id], g, durations));
       renderGames();
       swrStore.set('round:' + rid, round);
     });
@@ -452,15 +456,15 @@ function renderRegalTab(round, activeGames) {
         ? `<span class="exp-pill exp-pill--loan" role="img" aria-label="${esc(loanChipText(round, g.loan))}" title="${esc(loanChipText(round, g.loan))}"><i class="ti ti-share" aria-hidden="true"></i></span>`
         : '';
       expBadge = loanBadge + expBadge;
-      const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge)
-        : forest ? forestShelfCard(round, g, score, evidence, expBadge)
-        : bruecke ? brueckeCard(g, fallback, score, evidence, expBadge) : h(`<a class="game-card game-card--clickable">
+      const gc = ph ? phCard(round, g, fallback, score, evidence, expBadge, durations)
+        : forest ? forestShelfCard(round, g, score, evidence, expBadge, durations)
+        : bruecke ? brueckeCard(g, fallback, score, evidence, expBadge, durations) : h(`<a class="game-card game-card--clickable">
            <div class="game-card__img">${fallback}
              <div class="game-card__badges">${expBadge}${scorePill}</div>
              <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
            </div>
            <div class="game-card__body">
-             <div class="game-card__title">${esc(g.title)}</div>${cardMeta(g)}
+             <div class="game-card__title">${esc(g.title)}</div>${cardMeta(g, durations)}
            </div>
          </a>`);
       if (g.image) loadCover(gc, coverUrl(g.image, COVER_CARD), gc.querySelector('.game-card__img'));
@@ -490,7 +494,7 @@ function renderRegalTab(round, activeGames) {
       // The same predicate the draw applies (#725) — the Regal filters in the
       // browser only, so there is no route change here, but the semantics must
       // be the shelf's and the draw's alike.
-      if (!fitsMetadataFilters(g, regalFilters.metadata)) return false;
+      if (!fitsMetadataFilters(g, regalFilters.metadata, durations)) return false;
       if (!matchesOwnerFilter(ownerPicks, g.ownerIds)) return false;
       if (!matchesPlayerFilter(g, playerPick.count)) return false;
       const q = query.trim().toLowerCase();
@@ -621,10 +625,10 @@ function renderRegalTab(round, activeGames) {
 // wording is what a screen reader hears (`.sr-only`), so the bare digits never
 // reach it unexplained. Empty when the game carries neither, so a hand-typed
 // game keeps a one-line body.
-function cardMeta(g) {
+function cardMeta(g, durations) {
   const hasPl = Number.isInteger(g.minPlayers) && Number.isInteger(g.maxPlayers);
   const range = hasPl ? (g.minPlayers === g.maxPlayers ? String(g.minPlayers) : `${g.minPlayers}–${g.maxPlayers}`) : '';
-  const time = playtimeText(g);
+  const time = playtimeText(g, durations);
   if (!range && !time) return '';
   const players = range
     ? `<span aria-hidden="true"><i class="ti ti-users"></i> ${esc(range)}</span><span class="sr-only">${esc(playersText(g.minPlayers, g.maxPlayers))}</span>`
@@ -635,9 +639,9 @@ function cardMeta(g) {
 // Re-render a built card's meta line in place after the backfill fills its game
 // (#736). Each design seats the line somewhere else; Forest drops its row
 // entirely when there is nothing to put in it, so that one is recreated.
-function refreshCardMeta(gc, g) {
+function refreshCardMeta(gc, g, durations) {
   if (!gc) return;
-  const html = cardMeta(g);
+  const html = cardMeta(g, durations);
   const old = gc.querySelector('.game-card__meta');
   if (old) { if (html) old.replaceWith(h(html)); else old.remove(); return; }
   if (!html) return;
@@ -653,12 +657,12 @@ function refreshCardMeta(gc, g) {
 // display numeral in its ramp tone rather than as a badge. There is no running
 // number (#1507): it was only the card's position on the page and it squeezed
 // the meta (players · play time) into an ellipsis on a phone.
-function phCard(round, g, fallback, score, evidence, expBadge) {
+function phCard(round, g, fallback, score, evidence, expBadge, durations) {
   const owners = ownerNames(round, g.ownerIds);
   const scored = score !== null;
   const scoreAttrs = scored ? ` data-stop="${scoreStop(score)}" title="${esc(evidence)}"` : '';
   return h(`<a class="game-card game-card--clickable ph-card">
-       <div class="ph-card__kicker">${cardMeta(g)}${expBadge}</div>
+       <div class="ph-card__kicker">${cardMeta(g, durations)}${expBadge}</div>
        <div class="game-card__img">${fallback}
          <span class="game-card__pick" aria-hidden="true"><i class="ti ti-check"></i></span>
        </div>

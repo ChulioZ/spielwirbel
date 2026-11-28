@@ -8056,6 +8056,10 @@ a.k-tile:focus-visible,
    COLUMN, where a 100% basis sends the note into a second column outside the
    pill. A full width breaks the line in a row and is inert in a column. */
 .fact__note { width: 100%; color: var(--ink-soft); font-size: var(--text-xs); }
+/* „Übernehmen" (#1874) — beside the playing-time pill, never inside it (an
+   editable pill is a <button>). A quiet link so the pill stays the figure. */
+.fact-group { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.fact-group .fact-adopt { align-self: flex-start; font-size: var(--text-sm); }
 
 /* „Mehr zum Spiel" — the reference half, collapsed by default. A native
    <details>, so the platform owns the state, the keyboard and the accessible

@@ -169,7 +169,10 @@ function voteHandoffLine(turn, sharedDevice) {
 // owner part needs the round's members, which the link ballot does not have —
 // so the link card simply prints the first two.
 function voteMetaLine(game, round) {
-  const parts = [playersText(game.minPlayers, game.maxPlayers), playtimeText(game)];
+  // The round's measured times (#1874); the link ballot has no round, and its
+  // games carry no „aus euren Sessions" flag (the server resolved it).
+  const durations = round ? roundDurations(round.sessions) : undefined;
+  const parts = [playersText(game.minPlayers, game.maxPlayers), playtimeText(game, durations)];
   const owners = round ? ownerNames(round, game.ownerIds) : [];
   if (owners.length) parts.push(t('result.ownedBy', { names: joinNames(owners) }));
   return parts.filter(Boolean).join(' · ');

@@ -11,7 +11,7 @@
    the frontend; all files share one global script scope. */
 
 function setupPoolPreview(setup) {
-  const { round, form, activeGames, selectedTags, tagFilterState, tableState, metaFilters,
+  const { round, form, activeGames, durations, selectedTags, tagFilterState, tableState, metaFilters,
     joining, guests, guestList, playerCount, shelfSeats, tisch, ocean, bruecke, ph, forest } = setup;
   // Games matching the tag filter, whose player range fits the joining count.
   // Guests sit at the table, so they count here, and a team counts once however
@@ -33,7 +33,7 @@ function setupPoolPreview(setup) {
     (tableState.multiTable
       ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
       : fitsPlayerCount(g, playerCount())) &&
-    fitsMetadataFilters(g, metaFilters) &&
+    fitsMetadataFilters(g, metaFilters, durations) &&
     (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended));
   // Read live: a guest's sheet pushes a newly created guest game onto
   // `round.games`, so the brought list is re-derived on every update.
@@ -68,7 +68,7 @@ function setupPoolPreview(setup) {
         (tableState.multiTable
           ? fitsSomeTable(g, playerCount(), fitsPlayerCount, tableState.minTableSeats)
           : fitsPlayerCount(g, playerCount())) &&
-        fitsMetadataFilters(g, metaFilters) &&
+        fitsMetadataFilters(g, metaFilters, durations) &&
         (tableState.multiTable || fitsRecommendedCount(g, playerCount(), metaFilters.onlyRecommended)) &&
         fitsLoanFilter(g, tableState.includeLent) &&
         !ownedByParty(g, shelfSeats())
@@ -101,7 +101,7 @@ function setupPoolPreview(setup) {
   // tile carries the playtime as a line of its own; a game without one prints
   // none rather than an empty cell.
   const phPlaytime = (g) => {
-    const time = playtimeText(g);
+    const time = playtimeText(g, durations);
     return time ? `<span class="pool-tile__meta">${esc(time)}</span>` : '';
   };
   const styleAttr = (...decls) => {

@@ -686,8 +686,14 @@ async function showGameDetail(rid, gameId) {
       if (moreBody.querySelector('.link-out, .game-info__body')) factsHost.appendChild(more);
     };
     const renderInfo = () => {
-      factsNode = swap(factsNode, gameGlanceFacts(game, { editPlaytime, offerEmpty: !sparse && !game.wish, own: roundGameDuration(round.sessions, game.id) }));
-      restNode = swap(restNode, gameInfoRest(game));
+      // The round's measured playing times (#1874), read by a game set to
+      // „aus euren Sessions" and by „Übernehmen", which switches it on.
+      const durations = roundDurations(round.sessions);
+      factsNode = swap(factsNode, gameGlanceFacts(game, {
+        editPlaytime, offerEmpty: !sparse && !game.wish, own: durations.get(game.id) || null, durations,
+        onAdoptOwn: () => updateGame({ playtimeFromSessions: true }),
+      }));
+      restNode = swap(restNode, gameInfoRest(game, durations));
       ensureMore();
     };
     renderInfo();

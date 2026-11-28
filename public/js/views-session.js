@@ -99,6 +99,9 @@ function showStartSession(round, prefill) {
   }
 
   const activeGames = round.games.filter(isActiveGame);
+  // The round's measured playing times (#1874) — a game set to „aus euren
+  // Sessions" filters and previews on its median, as the draw does.
+  const durations = roundDurations(round.sessions);
 
   // These two headings label a group of buttons, not a form control, so they are
   // <div class="label">, not <label> (#145): a <label> with no `for` and no
@@ -208,7 +211,7 @@ function showStartSession(round, prefill) {
   // disclosure no longer renders.
   const metaFilters = normalizeMetadataFilters(
     preset && preset.metadata,
-    metadataFilterOptions(activeGames)
+    metadataFilterOptions(activeGames, durations)
   );
   // All members join by default; the number of people joining filters the games
   // by their player count.
@@ -288,7 +291,7 @@ function showStartSession(round, prefill) {
      exists, and the preview reads it only from listeners, which run long after
      this function has finished. */
   const setup = {
-    round, form, activeGames, selectedTags, tagFilterState, tableState, metaFilters,
+    round, form, activeGames, durations, selectedTags, tagFilterState, tableState, metaFilters,
     joining, awayShelves, guests, guestList, playerCount, shelfSeats,
     tisch, ocean, bruecke, ph, forest,
     filterPanel: null,
@@ -501,7 +504,7 @@ function showStartSession(round, prefill) {
     // `partyCount`: a thunk, so the toggle's own label and its applied chip can
     // state the number they are filtering on rather than saying „hier".
     setup.filterPanel = renderFilterPanel(activeGames, metaFilters, () => updateHint(), tagSection,
-      { tableSized: !tableState.multiTable, partyCount: playerCount });
+      { tableSized: !tableState.multiTable, partyCount: playerCount, durations });
     filterMount.replaceChildren();
     if (setup.filterPanel) filterMount.appendChild(setup.filterPanel.el);
     filterMount.hidden = !setup.filterPanel;
@@ -751,7 +754,7 @@ function startVoting(round, session, games, people, opts = {}) {
         mergeGameInfo(game, info);
         const title = card.querySelector('.vote__title');
         if (!document.body.contains(title) || title.querySelector('.vote__info')) return;
-        const btn = gameInfoButton(game);
+        const btn = gameInfoButton(game, roundDurations(round.sessions));
         if (btn) title.append(' ', btn);
       })
       .catch(() => {}); // best-effort — the card stands without it
@@ -1095,7 +1098,7 @@ function startVoting(round, session, games, people, opts = {}) {
     // (.claude/rules/fitting-a-screen-to-the-viewport-height.md). Rendered
     // only when the game actually carries the data — and when it doesn't but
     // could, the card self-heals below.
-    const infoBtn = gameInfoButton(game);
+    const infoBtn = gameInfoButton(game, roundDurations(round.sessions));
     // A guest game (#1681) says so in the same title line, for the same height
     // reason: a short „Gastspiel" mark, with who brought it in its label.
     const guestNote = guestGameNote(session, game);

@@ -32,10 +32,13 @@ function playtimeOverrideFrom(minText, maxText) {
 }
 
 function openPlaytimePopover(ctx, anchor) {
-  const { game, updateGame } = ctx;
+  const { game, updateGame, round } = ctx;
   openEditor(anchor, 'playtime', t('gameInfo.playtime'), (el, close) => {
     const formRows = formSheetDesign();
-    const current = gamePlaytime(game);
+    // Pre-filled with what the page shows — the round's median when the game
+    // takes its time from the sessions (#1874). Applying a typed time sets an
+    // override, which the route turns the measured choice off for.
+    const current = gamePlaytime(game, roundDurations(round && round.sessions));
     const field = (key) => {
       const inp = h(`<input class="input" inputmode="numeric" maxlength="${String(PLAYTIME_OVERRIDE_MAX).length}" />`);
       inp.placeholder = t(key);
@@ -63,17 +66,21 @@ function openPlaytimePopover(ctx, anchor) {
       if (e.key === 'Enter') { e.preventDefault(); save(); }
     }));
 
-    // Back to BGG's figure — offered only while an override exists. Names the
-    // figure it returns to, or says plainly that the time goes away when BGG
-    // has none (a hand-typed game).
+    // Back to BGG's figure — offered while an override exists, or while the game
+    // takes its time from the sessions (#1874, even with no median yet: the
+    // choice is what is being undone). Names the figure it returns to, or says
+    // plainly that the time goes away when BGG has none (a hand-typed game).
+    const fromSessions = game.playtimeFromSessions === true;
     let reset = null;
-    if (current.overridden) {
+    if (current.overridden || fromSessions) {
       const bgg = playtimeRangeText({ minPlaytime: game.minPlaytime, maxPlaytime: game.maxPlaytime });
       const label = bgg ? t('detail.playtimeReset', { value: bgg }) : t('detail.playtimeClear');
       reset = formRows ? editorRowButton('ti-refresh', label) : h(`<button type="button" class="link-btn pp-reset">${esc(label)}</button>`);
       reset.addEventListener('click', () => {
         close();
-        updateGame({ playtimeOverride: null });
+        // One key per choice, so the twin prompt (#1843) offers to clear an
+        // override elsewhere only when it was an override that was cleared.
+        updateGame(fromSessions ? { playtimeFromSessions: null } : { playtimeOverride: null });
       });
     }
 
